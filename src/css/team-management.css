@@ -67,12 +67,12 @@
 
 .member-info h4 {
     margin: 0 10px 0 0;
-    font-size: 16px;
+    font-size: 14px;
 }
 
 .member-info p {
     margin: 5px 0 0 0;
-    font-size: 14px;
+    font-size: 12px;
     width: 100%;
     display: flex;
     align-items: center;
@@ -84,11 +84,11 @@
 
 .main-character-tag {
     display: inline-block;
-    padding: 2px 6px;
+    padding: 1px 5px;
     background-color: #4caf50;
     color: white;
     border-radius: 3px;
-    font-size: 12px;
+    font-size: 10px;
     margin-left: 10px;
 }
 
@@ -103,6 +103,36 @@
 #create-team-container {
     margin-bottom: 20px;
     text-align: center;
+}
+
+/* 角色操作区域样式 */
+.character-actions {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-left: 10px;
+}
+
+/* 添加角色按钮样式（绿色十字） */
+.plus-icon {
+    color: #4caf50;
+    font-size: 32px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-block;
+    line-height: 1;
+}
+
+.plus-icon:hover {
+    color: #45a049;
+    transform: scale(1.2);
+}
+
+.plus-icon.disabled {
+    color: #cccccc;
+    cursor: not-allowed;
+    transform: none;
 }
 
 /* 通用样式 */

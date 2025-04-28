@@ -152,12 +152,12 @@
 
 .character-info h4 {
     margin: 0 10px 0 0;
-    font-size: 16px;
+    font-size: 14px;
 }
 
 .character-info p {
     margin: 0;
-    font-size: 14px;
+    font-size: 12px;
     line-height: 1.4;
     display: flex;
     align-items: center;
@@ -166,11 +166,11 @@
 /* 稀有度标签 */
 .rarity-badge {
     display: inline-block;
-    padding: 2px 6px;
+    padding: 1px 5px;
     border-radius: 3px;
     font-weight: bold;
     margin-right: 10px;
-    font-size: 12px;
+    font-size: 10px;
     color: white;
 }
 
@@ -205,11 +205,11 @@
 }
 
 .attribute-circle.earth {
-    background-color: #4caf50; /* 绿色 */
+    background-color: #8B4513; /* 咖啡色 */
 }
 
 .attribute-circle.wind {
-    background-color: #00bcd4; /* 青色 */
+    background-color: #4caf50; /* 绿色 */
 }
 
 .attribute-circle.light {

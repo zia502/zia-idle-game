@@ -226,6 +226,10 @@
             const resultItem = document.createElement('div');
             resultItem.className = `recruit-result-item ${character.rarity}`;
 
+            // 获取类型和属性的中文名称
+            const typeDisplay = Character.types[character.type]?.name || character.type;
+            const attributeDisplay = Character.attributes[character.attribute]?.name || character.attribute;
+
             // 转换稀有度显示
             let rarityDisplay = 'R';
             if (character.rarity === 'epic') {
@@ -239,9 +243,9 @@
                     <h4>${character.name}</h4>
                     <span class="rarity-badge ${character.rarity}">${rarityDisplay}</span>
                     <p>
-                        类型: ${character.type}
+                        类型: ${typeDisplay}
                         <span class="info-separator">|</span>
-                        属性: ${character.attribute} <span class="attribute-circle ${character.attribute}"></span>
+                        属性: ${attributeDisplay} <span class="attribute-circle ${character.attribute}"></span>
                     </p>
                     <p>${character.description || ''}</p>
                 </div>
@@ -327,25 +331,34 @@
             const card = document.createElement('div');
             card.className = `character-card ${character.rarity}`;
 
-            // 转换稀有度显示
-            let rarityDisplay = 'R';
-            if (character.rarity === 'epic') {
-                rarityDisplay = 'SR';
-            } else if (character.rarity === 'legendary') {
-                rarityDisplay = 'SSR';
+            // 获取类型和属性的中文名称
+            const typeDisplay = Character.types[character.type]?.name || character.type;
+            const attributeDisplay = Character.attributes[character.attribute]?.name || character.attribute;
+
+            // 转换稀有度显示（主角不显示稀有度）
+            let rarityBadge = '';
+            if (!character.isMainCharacter) {
+                let rarityDisplay = 'R';
+                if (character.rarity === 'epic') {
+                    rarityDisplay = 'SR';
+                } else if (character.rarity === 'legendary') {
+                    rarityDisplay = 'SSR';
+                }
+                rarityBadge = `<span class="rarity-badge ${character.rarity}">${rarityDisplay}</span>`;
             }
 
             // 设置卡片内容
             card.innerHTML = `
                 <div class="character-info">
                     <h4>${character.name}</h4>
-                    <span class="rarity-badge ${character.rarity}">${rarityDisplay}</span>
+                    ${rarityBadge}
                     <p>
                         等级: ${character.level || 1}
                         <span class="info-separator">|</span>
-                        类型: ${character.type}
+                        类型: ${typeDisplay}
                         <span class="info-separator">|</span>
-                        属性: ${character.attribute} <span class="attribute-circle ${character.attribute}"></span>
+                        属性: ${attributeDisplay} <span class="attribute-circle ${character.attribute}"></span>
+                        ${character.isMainCharacter ? '<span class="main-character-tag">主角</span>' : ''}
                     </p>
                 </div>
             `;

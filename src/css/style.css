@@ -446,6 +446,13 @@ button:active, .btn:active {
     overflow-y: auto;
 }
 
+/* 角色列表滚动条 */
+#available-characters-list, #recruited-characters {
+    max-height: 400px;
+    overflow-y: auto;
+    padding-right: 5px;
+}
+
 .dialog-header {
     margin-bottom: 15px;
     padding-bottom: 5px;

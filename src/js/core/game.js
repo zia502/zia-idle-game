@@ -649,6 +649,24 @@ const Game = {
                 console.log("从外部文件加载的游戏数据已保存到本地存储");
             }
 
+            // 更新UI显示
+            if (typeof UI !== 'undefined') {
+                // 更新金币显示
+                if (typeof UI.updateGoldDisplay === 'function') {
+                    UI.updateGoldDisplay();
+                }
+
+                // 更新主角信息
+                if (typeof UI.renderMainCharacter === 'function') {
+                    UI.renderMainCharacter();
+                }
+
+                // 更新队伍显示
+                if (typeof UI.renderTeam === 'function') {
+                    UI.renderTeam();
+                }
+            }
+
             if (typeof Events !== 'undefined') {
                 Events.emit('game:loaded', { version: this.state.version });
             }

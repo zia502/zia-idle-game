@@ -1,0 +1,1376 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>职业战斗测试系统</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            line-height: 1.6;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1, h2, h3 {
+            color: #333;
+        }
+        .section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #eee;
+            border-radius: 8px;
+        }
+        .battle-log {
+            border: 1px solid #ccc;
+            padding: 15px;
+            height: 400px;
+            overflow-y: auto;
+            margin-bottom: 20px;
+            background-color: #f9f9f9;
+            font-family: monospace;
+            font-size: 14px;
+            border-radius: 4px;
+        }
+        .controls {
+            margin-bottom: 20px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        button {
+            padding: 10px 20px;
+            margin-right: 10px;
+            cursor: pointer;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        .job-selection, .boss-selection {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .job-card, .boss-card {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 15px;
+            width: 200px;
+            cursor: pointer;
+            transition: all 0.3s;
+            background-color: #f9f9f9;
+        }
+        .job-card:hover, .boss-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        .job-card.selected, .boss-card.selected {
+            border-color: #4CAF50;
+            background-color: #e8f5e9;
+        }
+        .job-card h3, .boss-card h3 {
+            margin-top: 0;
+            color: #333;
+        }
+        .job-card p, .boss-card p {
+            font-size: 14px;
+            color: #666;
+        }
+        .skills-list {
+            margin-top: 10px;
+        }
+        .skill-item {
+            background-color: #eee;
+            padding: 5px 10px;
+            margin: 5px 0;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        .battle-status {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+        .character-status, .boss-status {
+            flex: 1;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background-color: #f9f9f9;
+        }
+        .hp-bar {
+            height: 20px;
+            background-color: #e0e0e0;
+            border-radius: 10px;
+            margin-top: 5px;
+            overflow: hidden;
+        }
+        .hp-fill {
+            height: 100%;
+            background-color: #4CAF50;
+            width: 100%;
+            transition: width 0.3s;
+        }
+        .boss-hp-fill {
+            background-color: #f44336;
+        }
+        .instructions {
+            background-color: #e8f5e9;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .hidden {
+            display: none;
+        }
+        @media (max-width: 768px) {
+            .job-card, .boss-card {
+                width: 100%;
+            }
+            .battle-status {
+                flex-direction: column;
+                gap: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>职业战斗测试系统</h1>
+
+        <div class="instructions">
+            <h3>使用说明</h3>
+            <p>这个页面用于测试不同职业与BOSS的战斗过程。选择一个职业和一个BOSS，然后点击"开始战斗"按钮来模拟战斗过程。</p>
+            <p>每个职业都有自己独特的技能，战斗过程中会自动使用这些技能。战斗日志会显示详细的战斗过程。</p>
+        </div>
+
+        <div class="section">
+            <h2>选择职业</h2>
+            <div class="job-selection" id="job-selection">
+                <!-- 职业卡片将通过JavaScript动态添加 -->
+                <div class="job-card">
+                    <h3>加载中...</h3>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>选择BOSS</h2>
+            <div class="boss-selection" id="boss-selection">
+                <!-- BOSS卡片将通过JavaScript动态添加 -->
+                <div class="boss-card">
+                    <h3>加载中...</h3>
+                </div>
+            </div>
+        </div>
+
+        <div class="section hidden" id="battle-section">
+            <h2>战斗状态</h2>
+            <div class="battle-status">
+                <div class="character-status">
+                    <h3 id="character-name">角色</h3>
+                    <p>生命值: <span id="character-hp">0</span>/<span id="character-max-hp">0</span></p>
+                    <div class="hp-bar">
+                        <div class="hp-fill" id="character-hp-fill"></div>
+                    </div>
+                    <p>攻击力: <span id="character-attack">0</span></p>
+                    <p>防御力: <span id="character-defense">0</span></p>
+                    <p>速度: <span id="character-speed">0</span></p>
+                </div>
+                <div class="boss-status">
+                    <h3 id="boss-name">BOSS</h3>
+                    <p>生命值: <span id="boss-hp">0</span>/<span id="boss-max-hp">0</span></p>
+                    <div class="hp-bar">
+                        <div class="hp-fill boss-hp-fill" id="boss-hp-fill"></div>
+                    </div>
+                    <p>攻击力: <span id="boss-attack">0</span></p>
+                    <p>防御力: <span id="boss-defense">0</span></p>
+                    <p>速度: <span id="boss-speed">0</span></p>
+                </div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button id="start-battle" disabled>开始战斗</button>
+            <button id="reset">重置</button>
+        </div>
+
+        <div class="battle-log" id="battle-log"></div>
+    </div>
+
+    <!-- 核心游戏系统 -->
+    <script src="src/js/core/game.js"></script>
+    <script src="src/js/core/character.js"></script>
+    <script src="src/js/core/weapon.js"></script>
+    <script src="src/js/core/battle.js"></script>
+    <script src="src/js/core/buff-system.js"></script>
+    <script src="src/js/core/job-system.js"></script>
+    <script src="src/js/core/job-skills.js"></script>
+    <script src="src/js/core/job-skills-template.js"></script>
+
+    <!-- 游戏组件 -->
+    <script src="src/js/components/ui.js"></script>
+    <script src="src/js/components/events.js"></script>
+
+    <!-- 战斗系统更新 -->
+    <script src="src/js/core/battle-system-integration.js"></script>
+
+    <script>
+        // 战斗测试脚本
+        (function() {
+            // 全局变量
+            let selectedJob = null;
+            let selectedBoss = null;
+            let character = null;
+            let boss = null;
+            let battleInProgress = false;
+            let battleInterval = null;
+            let turnCount = 0;
+
+            // DOM元素
+            const battleLog = document.getElementById('battle-log');
+            const jobSelection = document.getElementById('job-selection');
+            const bossSelection = document.getElementById('boss-selection');
+            const startBattleBtn = document.getElementById('start-battle');
+            const resetBtn = document.getElementById('reset');
+            const battleSection = document.getElementById('battle-section');
+
+            // 角色状态元素
+            const characterName = document.getElementById('character-name');
+            const characterHp = document.getElementById('character-hp');
+            const characterMaxHp = document.getElementById('character-max-hp');
+            const characterHpFill = document.getElementById('character-hp-fill');
+            const characterAttack = document.getElementById('character-attack');
+            const characterDefense = document.getElementById('character-defense');
+            const characterSpeed = document.getElementById('character-speed');
+
+            // BOSS状态元素
+            const bossName = document.getElementById('boss-name');
+            const bossHp = document.getElementById('boss-hp');
+            const bossMaxHp = document.getElementById('boss-max-hp');
+            const bossHpFill = document.getElementById('boss-hp-fill');
+            const bossAttack = document.getElementById('boss-attack');
+            const bossDefense = document.getElementById('boss-defense');
+            const bossSpeed = document.getElementById('boss-speed');
+
+            // BOSS数据
+            const bosses = [
+                {
+                    id: 'dragon',
+                    name: '远古巨龙',
+                    description: '喷吐烈焰的远古巨龙，拥有强大的物理攻击和火焰魔法。',
+                    baseStats: { hp: 5000, attack: 150, defense: 80, speed: 30 },
+                    skills: ['dragonBreath', 'tailSwipe', 'fireStorm'],
+                    element: 'fire'
+                },
+                {
+                    id: 'lich',
+                    name: '巫妖王',
+                    description: '掌控死亡魔法的不死生物，能够召唤亡灵并施放强力诅咒。',
+                    baseStats: { hp: 4000, attack: 120, defense: 60, speed: 40 },
+                    skills: ['deathGrip', 'curseOfWeakness', 'soulDrain'],
+                    element: 'dark'
+                },
+                {
+                    id: 'golem',
+                    name: '远古石魔像',
+                    description: '由远古魔法创造的巨型石魔像，拥有极高的防御力和强力的物理攻击。',
+                    baseStats: { hp: 6000, attack: 100, defense: 120, speed: 20 },
+                    skills: ['rockSlide', 'earthShatter', 'stoneArmor'],
+                    element: 'earth'
+                },
+                {
+                    id: 'demonLord',
+                    name: '恶魔领主',
+                    description: '来自地狱的恶魔领主，擅长混乱魔法和精神控制。',
+                    baseStats: { hp: 4500, attack: 180, defense: 70, speed: 50 },
+                    skills: ['chaosBlast', 'mindControl', 'hellfire'],
+                    element: 'chaos'
+                }
+            ];
+
+            // BOSS技能数据
+            const bossSkills = {
+                dragonBreath: {
+                    name: '龙息',
+                    description: '喷吐烈焰，对敌方全体造成大量火属性伤害。',
+                    type: 'magic',
+                    power: 2.0,
+                    cooldown: 3,
+                    effectType: 'damage',
+                    targetType: 'all_enemies',
+                    effects: [
+                        {
+                            type: 'damage',
+                            multiplier: 2.0,
+                            element: 'fire'
+                        }
+                    ]
+                },
+                tailSwipe: {
+                    name: '龙尾横扫',
+                    description: '用尾巴横扫，对敌方全体造成物理伤害并有几率击退。',
+                    type: 'attack',
+                    power: 1.5,
+                    cooldown: 2,
+                    effectType: 'damage_and_debuff',
+                    targetType: 'all_enemies',
+                    effects: [
+                        {
+                            type: 'damage',
+                            multiplier: 1.5
+                        },
+                        {
+                            type: 'speedDown',
+                            value: 0.2,
+                            duration: 2,
+                            chance: 0.5
+                        }
+                    ]
+                },
+                fireStorm: {
+                    name: '烈焰风暴',
+                    description: '召唤烈焰风暴，对敌方全体造成持续伤害。',
+                    type: 'magic',
+                    power: 1.0,
+                    cooldown: 4,
+                    effectType: 'damage_and_debuff',
+                    targetType: 'all_enemies',
+                    effects: [
+                        {
+                            type: 'damage',
+                            multiplier: 1.0
+                        },
+                        {
+                            type: 'dot',
+                            value: 200,
+                            duration: 3,
+                            name: '灼烧',
+                            description: '每回合受到火焰伤害'
+                        }
+                    ]
+                },
+                deathGrip: {
+                    name: '死亡之握',
+                    description: '用死亡能量抓住敌人，造成伤害并吸取生命。',
+                    type: 'magic',
+                    power: 1.8,
+                    cooldown: 3,
+                    effectType: 'damage',
+                    targetType: 'enemy',
+                    effects: [
+                        {
+                            type: 'damage',
+                            multiplier: 1.8,
+                            element: 'dark',
+                            lifeSteal: 0.3
+                        }
+                    ]
+                },
+                curseOfWeakness: {
+                    name: '衰弱诅咒',
+                    description: '诅咒敌人，降低其攻击力和防御力。',
+                    type: 'magic',
+                    power: 0.5,
+                    cooldown: 4,
+                    effectType: 'debuff',
+                    targetType: 'all_enemies',
+                    effects: [
+                        {
+                            type: 'attackDown',
+                            value: 0.3,
+                            duration: 3
+                        },
+                        {
+                            type: 'defenseDown',
+                            value: 0.3,
+                            duration: 3
+                        }
+                    ]
+                },
+                soulDrain: {
+                    name: '灵魂汲取',
+                    description: '汲取敌人的灵魂，造成伤害并恢复自身生命。',
+                    type: 'magic',
+                    power: 1.5,
+                    cooldown: 3,
+                    effectType: 'damage',
+                    targetType: 'enemy',
+                    effects: [
+                        {
+                            type: 'damage',
+                            multiplier: 1.5,
+                            element: 'dark',
+                            lifeSteal: 0.5
+                        }
+                    ]
+                },
+                rockSlide: {
+                    name: '岩崩',
+                    description: '引发岩崩，对敌方全体造成地属性伤害。',
+                    type: 'magic',
+                    power: 1.7,
+                    cooldown: 3,
+                    effectType: 'damage',
+                    targetType: 'all_enemies',
+                    effects: [
+                        {
+                            type: 'damage',
+                            multiplier: 1.7,
+                            element: 'earth'
+                        }
+                    ]
+                },
+                earthShatter: {
+                    name: '大地震颤',
+                    description: '震动大地，对敌方全体造成伤害并有几率眩晕。',
+                    type: 'magic',
+                    power: 1.3,
+                    cooldown: 4,
+                    effectType: 'damage_and_debuff',
+                    targetType: 'all_enemies',
+                    effects: [
+                        {
+                            type: 'damage',
+                            multiplier: 1.3,
+                            element: 'earth'
+                        },
+                        {
+                            type: 'stun',
+                            duration: 1,
+                            chance: 0.3
+                        }
+                    ]
+                },
+                stoneArmor: {
+                    name: '石化护甲',
+                    description: '增强自身防御力，并反弹部分伤害。',
+                    type: 'defense',
+                    power: 0.5,
+                    cooldown: 5,
+                    effectType: 'buff',
+                    targetType: 'self',
+                    effects: [
+                        {
+                            type: 'defenseUp',
+                            value: 0.5,
+                            duration: 3
+                        },
+                        {
+                            type: 'damageReflect',
+                            value: 0.3,
+                            duration: 3
+                        }
+                    ]
+                },
+                chaosBlast: {
+                    name: '混沌爆破',
+                    description: '释放混沌能量，对敌方全体造成大量伤害。',
+                    type: 'magic',
+                    power: 2.2,
+                    cooldown: 4,
+                    effectType: 'damage',
+                    targetType: 'all_enemies',
+                    effects: [
+                        {
+                            type: 'damage',
+                            multiplier: 2.2,
+                            element: 'chaos'
+                        }
+                    ]
+                },
+                mindControl: {
+                    name: '精神控制',
+                    description: '控制敌人的精神，使其无法行动。',
+                    type: 'magic',
+                    power: 0.5,
+                    cooldown: 5,
+                    effectType: 'debuff',
+                    targetType: 'enemy',
+                    effects: [
+                        {
+                            type: 'stun',
+                            duration: 2
+                        }
+                    ]
+                },
+                hellfire: {
+                    name: '地狱之火',
+                    description: '召唤地狱之火，对敌方全体造成持续伤害。',
+                    type: 'magic',
+                    power: 1.5,
+                    cooldown: 3,
+                    effectType: 'damage_and_debuff',
+                    targetType: 'all_enemies',
+                    effects: [
+                        {
+                            type: 'damage',
+                            multiplier: 1.5,
+                            element: 'fire'
+                        },
+                        {
+                            type: 'dot',
+                            value: 250,
+                            duration: 3,
+                            name: '地狱火',
+                            description: '每回合受到火焰伤害'
+                        }
+                    ]
+                }
+            };
+
+            // 初始化函数
+            function init() {
+                // 初始化战斗系统更新
+                if (typeof initBattleSystemUpdates === 'function') {
+                    initBattleSystemUpdates();
+                }
+
+                // 加载职业数据
+                loadJobs();
+
+                // 加载BOSS数据
+                loadBosses();
+
+                // 添加事件监听器
+                startBattleBtn.addEventListener('click', startBattle);
+                resetBtn.addEventListener('click', reset);
+
+                // 记录初始化完成
+                log('战斗测试系统初始化完成');
+            }
+
+            // 日志记录函数
+            function log(message) {
+                const logEntry = document.createElement('div');
+
+                // 处理特殊格式
+                if (message.startsWith('=====')) {
+                    // 标题
+                    logEntry.style.fontWeight = 'bold';
+                    logEntry.style.color = '#4CAF50';
+                    logEntry.style.borderBottom = '1px solid #4CAF50';
+                    logEntry.style.marginTop = '10px';
+                } else if (message.startsWith('-----')) {
+                    // 分隔线
+                    logEntry.style.borderBottom = '1px dashed #ccc';
+                    logEntry.style.margin = '5px 0';
+                    logEntry.innerHTML = '&nbsp;';
+                    battleLog.appendChild(logEntry);
+                    return;
+                } else if (message.includes('被击败了')) {
+                    // 击败消息
+                    logEntry.style.color = '#f44336';
+                    logEntry.style.fontWeight = 'bold';
+                } else if (message.includes('获胜')) {
+                    // 胜利消息
+                    logEntry.style.color = '#2196F3';
+                    logEntry.style.fontWeight = 'bold';
+                } else if (message.includes('造成')) {
+                    // 伤害消息
+                    logEntry.style.color = '#E91E63';
+                } else if (message.includes('恢复')) {
+                    // 治疗消息
+                    logEntry.style.color = '#4CAF50';
+                } else if (message.includes('使用了')) {
+                    // 技能使用消息
+                    logEntry.style.color = '#9C27B0';
+                }
+
+                logEntry.textContent = message;
+                battleLog.appendChild(logEntry);
+                battleLog.scrollTop = battleLog.scrollHeight;
+            }
+
+            // 错误处理函数
+            function handleError(error, context) {
+                console.error(`Error in ${context}:`, error);
+                log(`错误: ${context} - ${error.message}`);
+
+                // 在开发环境中显示更详细的错误信息
+                const errorDetails = document.createElement('div');
+                errorDetails.style.color = 'red';
+                errorDetails.style.fontFamily = 'monospace';
+                errorDetails.style.whiteSpace = 'pre-wrap';
+                errorDetails.textContent = `错误详情:\n${error.stack || error}`;
+                battleLog.appendChild(errorDetails);
+                battleLog.scrollTop = battleLog.scrollHeight;
+            }
+
+            // 加载职业数据
+            function loadJobs() {
+                if (typeof JobSystem === 'undefined' || !JobSystem.jobs) {
+                    log('错误：职业系统未加载');
+                    return;
+                }
+
+                // 清空职业选择区域
+                jobSelection.innerHTML = '';
+
+                // 添加所有职业
+                for (const jobId in JobSystem.jobs) {
+                    const job = JobSystem.jobs[jobId];
+
+                    // 创建职业卡片
+                    const jobCard = document.createElement('div');
+                    jobCard.className = 'job-card';
+                    jobCard.dataset.jobId = jobId;
+
+                    // 添加职业信息
+                    const jobTitle = document.createElement('h3');
+                    jobTitle.textContent = job.name;
+
+                    const jobDesc = document.createElement('p');
+                    jobDesc.textContent = job.description;
+
+                    const jobStats = document.createElement('p');
+                    // 显示实际战斗中的生命值（乘以100）
+                    jobStats.textContent = `生命值: ${job.baseStats.hp * 100} | 攻击: ${job.baseStats.attack} | 防御: ${job.baseStats.defense} | 速度: ${job.baseStats.speed}`;
+
+                    // 添加技能列表
+                    const skillsList = document.createElement('div');
+                    skillsList.className = 'skills-list';
+
+                    // 获取职业技能
+                    const skills = job.skills || [];
+
+                    // 添加技能
+                    for (const skillId of skills) {
+                        const skill = JobSystem.getSkill(skillId);
+                        if (skill) {
+                            const skillItem = document.createElement('div');
+                            skillItem.className = 'skill-item';
+                            skillItem.textContent = `${skill.name}: ${skill.description}`;
+                            skillsList.appendChild(skillItem);
+                        }
+                    }
+
+                    // 组装职业卡片
+                    jobCard.appendChild(jobTitle);
+                    jobCard.appendChild(jobDesc);
+                    jobCard.appendChild(jobStats);
+                    jobCard.appendChild(skillsList);
+
+                    // 添加点击事件
+                    jobCard.addEventListener('click', () => {
+                        selectJob(jobId);
+                    });
+
+                    // 添加到职业选择区域
+                    jobSelection.appendChild(jobCard);
+                }
+            }
+
+            // 加载BOSS数据
+            function loadBosses() {
+                // 清空BOSS选择区域
+                bossSelection.innerHTML = '';
+
+                // 添加所有BOSS
+                for (const boss of bosses) {
+                    // 创建BOSS卡片
+                    const bossCard = document.createElement('div');
+                    bossCard.className = 'boss-card';
+                    bossCard.dataset.bossId = boss.id;
+
+                    // 添加BOSS信息
+                    const bossTitle = document.createElement('h3');
+                    bossTitle.textContent = boss.name;
+
+                    const bossDesc = document.createElement('p');
+                    bossDesc.textContent = boss.description;
+
+                    const bossStats = document.createElement('p');
+                    // 显示实际战斗中的生命值（乘以100）
+                    bossStats.textContent = `生命值: ${boss.baseStats.hp * 100} | 攻击: ${boss.baseStats.attack} | 防御: ${boss.baseStats.defense} | 速度: ${boss.baseStats.speed}`;
+
+                    // 添加技能列表
+                    const skillsList = document.createElement('div');
+                    skillsList.className = 'skills-list';
+
+                    // 获取BOSS技能
+                    const skills = boss.skills || [];
+
+                    // 添加技能
+                    for (const skillId of skills) {
+                        const skill = bossSkills[skillId];
+                        if (skill) {
+                            const skillItem = document.createElement('div');
+                            skillItem.className = 'skill-item';
+                            skillItem.textContent = `${skill.name}: ${skill.description}`;
+                            skillsList.appendChild(skillItem);
+                        }
+                    }
+
+                    // 组装BOSS卡片
+                    bossCard.appendChild(bossTitle);
+                    bossCard.appendChild(bossDesc);
+                    bossCard.appendChild(bossStats);
+                    bossCard.appendChild(skillsList);
+
+                    // 添加点击事件
+                    bossCard.addEventListener('click', () => {
+                        selectBoss(boss.id);
+                    });
+
+                    // 添加到BOSS选择区域
+                    bossSelection.appendChild(bossCard);
+                }
+            }
+
+            // 选择职业
+            function selectJob(jobId) {
+                // 移除之前的选择
+                const selectedCards = jobSelection.querySelectorAll('.job-card.selected');
+                selectedCards.forEach(card => card.classList.remove('selected'));
+
+                // 添加新的选择
+                const jobCard = jobSelection.querySelector(`.job-card[data-job-id="${jobId}"]`);
+                if (jobCard) {
+                    jobCard.classList.add('selected');
+                    selectedJob = jobId;
+
+                    // 检查是否可以开始战斗
+                    checkBattleReady();
+                }
+            }
+
+            // 选择BOSS
+            function selectBoss(bossId) {
+                // 移除之前的选择
+                const selectedCards = bossSelection.querySelectorAll('.boss-card.selected');
+                selectedCards.forEach(card => card.classList.remove('selected'));
+
+                // 添加新的选择
+                const bossCard = bossSelection.querySelector(`.boss-card[data-boss-id="${bossId}"]`);
+                if (bossCard) {
+                    bossCard.classList.add('selected');
+                    selectedBoss = bossId;
+
+                    // 检查是否可以开始战斗
+                    checkBattleReady();
+                }
+            }
+
+            // 检查是否可以开始战斗
+            function checkBattleReady() {
+                startBattleBtn.disabled = !(selectedJob && selectedBoss);
+            }
+
+            // 创建角色
+            function createCharacter() {
+                if (!selectedJob) return null;
+
+                const job = JobSystem.jobs[selectedJob];
+                if (!job) return null;
+
+                // 创建角色对象
+                const char = {
+                    id: 'player_character',
+                    name: `${job.name}`,
+                    type: 'player',
+                    baseStats: {
+                        ...job.baseStats,
+                        // 将血量乘以100倍，防止太快阵亡
+                        hp: job.baseStats.hp * 100
+                    },
+                    currentStats: {
+                        ...job.baseStats,
+                        // 将血量乘以100倍，防止太快阵亡
+                        hp: job.baseStats.hp * 100
+                    },
+                    skills: job.skills || [],
+                    job: {
+                        current: selectedJob,
+                        level: 1
+                    },
+                    buffs: [],
+                    traits: [], // 添加空的traits数组，避免"not iterable"错误
+                    skillCooldowns: {},
+                    stats: {
+                        totalDamage: 0,
+                        totalHealing: 0,
+                        daCount: 0,
+                        taCount: 0,
+                        critCount: 0
+                    }
+                };
+
+                // 确保有最大生命值
+                char.currentStats.maxHp = char.baseStats.hp;
+                char.currentStats.hp = char.baseStats.hp;
+
+                return char;
+            }
+
+            // 创建BOSS
+            function createBoss() {
+                if (!selectedBoss) return null;
+
+                const bossData = bosses.find(b => b.id === selectedBoss);
+                if (!bossData) return null;
+
+                // 创建BOSS对象
+                const bossObj = {
+                    id: bossData.id,
+                    name: bossData.name,
+                    type: 'boss',
+                    baseStats: {
+                        ...bossData.baseStats,
+                        // 将BOSS血量也乘以100倍，保持战斗平衡
+                        hp: bossData.baseStats.hp * 100
+                    },
+                    currentStats: {
+                        ...bossData.baseStats,
+                        // 将BOSS血量也乘以100倍，保持战斗平衡
+                        hp: bossData.baseStats.hp * 100
+                    },
+                    skills: bossData.skills || [],
+                    element: bossData.element,
+                    buffs: [],
+                    traits: [], // 添加空的traits数组，避免"not iterable"错误
+                    skillCooldowns: {},
+                    stats: {
+                        totalDamage: 0,
+                        totalHealing: 0
+                    }
+                };
+
+                // 确保有最大生命值
+                bossObj.currentStats.maxHp = bossObj.baseStats.hp;
+                bossObj.currentStats.hp = bossObj.baseStats.hp;
+
+                // 添加BOSS技能
+                for (const skillId of bossObj.skills) {
+                    if (bossSkills[skillId]) {
+                        // 将BOSS技能添加到JobSkillsTemplate.templates中
+                        if (typeof JobSkillsTemplate !== 'undefined' && JobSkillsTemplate.templates) {
+                            JobSkillsTemplate.templates[skillId] = bossSkills[skillId];
+                        }
+                    }
+                }
+
+                return bossObj;
+            }
+
+            // 更新战斗状态显示
+            function updateBattleStatus() {
+                if (!character || !boss) return;
+
+                // 更新角色状态
+                characterName.textContent = character.name;
+                characterHp.textContent = Math.max(0, Math.floor(character.currentStats.hp));
+                characterMaxHp.textContent = character.currentStats.maxHp;
+                characterAttack.textContent = Math.floor(character.currentStats.attack);
+                characterDefense.textContent = Math.floor(character.currentStats.defense);
+                characterSpeed.textContent = Math.floor(character.currentStats.speed);
+
+                // 更新角色生命条
+                const charHpPercent = Math.max(0, Math.min(100, (character.currentStats.hp / character.currentStats.maxHp) * 100));
+                characterHpFill.style.width = `${charHpPercent}%`;
+
+                // 更新BOSS状态
+                bossName.textContent = boss.name;
+                bossHp.textContent = Math.max(0, Math.floor(boss.currentStats.hp));
+                bossMaxHp.textContent = boss.currentStats.maxHp;
+                bossAttack.textContent = Math.floor(boss.currentStats.attack);
+                bossDefense.textContent = Math.floor(boss.currentStats.defense);
+                bossSpeed.textContent = Math.floor(boss.currentStats.speed);
+
+                // 更新BOSS生命条
+                const bossHpPercent = Math.max(0, Math.min(100, (boss.currentStats.hp / boss.currentStats.maxHp) * 100));
+                bossHpFill.style.width = `${bossHpPercent}%`;
+            }
+
+            // 开始战斗
+            function startBattle() {
+                try {
+                    if (battleInProgress) return;
+                    if (!selectedJob || !selectedBoss) {
+                        log('请先选择职业和BOSS');
+                        return;
+                    }
+
+                    // 创建角色和BOSS
+                    character = createCharacter();
+                    boss = createBoss();
+
+                    if (!character || !boss) {
+                        log('创建角色或BOSS失败');
+                        return;
+                    }
+                } catch (error) {
+                    handleError(error, '初始化战斗');
+                    return;
+                }
+
+                // 将角色添加到Character对象中，以便JobSkills.useSkill能够找到它
+                if (typeof Character !== 'undefined') {
+                    Character.characters = Character.characters || {};
+                    Character.characters[character.id] = character;
+
+                    // 添加getCharacter方法（如果不存在）
+                    if (typeof Character.getCharacter !== 'function') {
+                        Character.getCharacter = function(id) {
+                            return this.characters[id];
+                        };
+                    }
+
+                    // 确保Character.traits对象存在
+                    Character.traits = Character.traits || {};
+
+                    // 添加processTraitTriggers方法（如果不存在或需要覆盖）
+                    Character.processTraitTriggers = function(characterId, eventType, eventData) {
+                        const character = this.getCharacter(characterId);
+                        if (!character) return [];
+
+                        // 确保traits是一个数组
+                        if (!Array.isArray(character.traits)) {
+                            character.traits = [];
+                        }
+
+                        // 这里简化处理，直接返回空数组
+                        return [];
+                    };
+                }
+
+                // 显示战斗状态区域
+                battleSection.classList.remove('hidden');
+
+                // 更新战斗状态
+                updateBattleStatus();
+
+                // 设置战斗状态
+                battleInProgress = true;
+                turnCount = 0;
+
+                // 清空战斗日志
+                battleLog.innerHTML = '';
+
+                // 记录战斗开始
+                log(`战斗开始：${character.name} vs ${boss.name}`);
+
+                // 开始战斗模拟
+                simulateBattle();
+            }
+
+            // 模拟战斗
+            function simulateBattle() {
+                try {
+                    if (!character || !boss || !battleInProgress) return;
+
+                    // 创建队伍数组
+                    const team = [character];
+
+                // 确保Battle对象有必要的方法
+                if (typeof Battle !== 'undefined') {
+                    // 添加processBattleStartTraits方法（如果不存在）
+                    if (typeof Battle.processBattleStartTraits !== 'function') {
+                        Battle.processBattleStartTraits = function(character, teamMembers) {
+                            // 简化处理，不做任何操作
+                        };
+                    }
+
+                    // 确保isStunned方法存在
+                    if (typeof Battle.isStunned !== 'function') {
+                        Battle.isStunned = function(entity) {
+                            if (!entity || !entity.buffs) return false;
+                            return entity.buffs.some(buff => buff.type === 'stun');
+                        };
+                    }
+
+                    // 重写logBattle方法，将战斗日志显示在界面上
+                    const originalLogBattle = Battle.logBattle;
+                    Battle.logBattle = function(message) {
+                        // 调用原始方法
+                        if (originalLogBattle) {
+                            originalLogBattle.call(this, message);
+                        } else {
+                            // 如果原始方法不存在，至少保存到battleLog数组
+                            this.battleLog = this.battleLog || [];
+                            this.battleLog.push(message);
+                            console.log(`[战斗] ${message}`);
+                        }
+
+                        // 在界面上显示日志
+                        log(message);
+                    };
+                }
+
+                // 使用Battle.startBattle进行战斗
+                if (typeof Battle !== 'undefined' && typeof Battle.startBattle === 'function') {
+                    try {
+                        const result = Battle.startBattle(
+                            { id: 'test_team', name: '测试队伍', members: [character.id] },
+                            boss
+                        );
+
+                        // 处理战斗结果
+                        if (result.success) {
+                            // 由于我们已经重写了logBattle方法，战斗日志已经在战斗过程中显示
+                            // 所以这里不需要再次显示战斗日志
+
+                            // 只显示战斗开始的标题（如果还没有显示）
+                            if (!result.battleLog || result.battleLog.length === 0) {
+                                log('===== 战斗开始 =====');
+                                log(`${character.name} VS ${boss.name}`);
+                                log('===================');
+                            }
+
+                            // 更新战斗状态
+                            updateBattleStatus();
+
+                            // 显示战斗结果
+                            if (character.currentStats.hp <= 0) {
+                                log(`战斗结束：${boss.name} 获胜！`);
+                            } else if (boss.currentStats.hp <= 0) {
+                                log(`战斗结束：${character.name} 获胜！`);
+                            } else {
+                                log('战斗结束：平局');
+                            }
+
+                            // 战斗总结
+                            log('\n===== 战斗总结 =====');
+                            log(`总回合数: ${result.turns || 0}`);
+                            log(`${character.name} 剩余生命: ${Math.max(0, Math.floor(character.currentStats.hp))}/${character.currentStats.maxHp} (${Math.floor(character.currentStats.hp / character.currentStats.maxHp * 100)}%)`);
+                            log(`${boss.name} 剩余生命: ${Math.max(0, Math.floor(boss.currentStats.hp))}/${boss.currentStats.maxHp} (${Math.floor(boss.currentStats.hp / boss.currentStats.maxHp * 100)}%)`);
+
+                            // 显示伤害统计
+                            if (character.stats && character.stats.totalDamage) {
+                                log(`${character.name} 总伤害: ${character.stats.totalDamage}`);
+                            }
+
+                            if (boss.stats && boss.stats.totalDamage) {
+                                log(`${boss.name} 总伤害: ${boss.stats.totalDamage}`);
+                            }
+
+                            // 显示技能使用统计
+                            if (result.battleStats && result.battleStats.skillsUsed) {
+                                log('\n技能使用统计:');
+                                for (const skillId in result.battleStats.skillsUsed) {
+                                    const count = result.battleStats.skillsUsed[skillId];
+                                    const skill = JobSystem.getSkill(skillId);
+                                    if (skill) {
+                                        log(`- ${skill.name}: 使用了 ${count} 次`);
+                                    }
+                                }
+                            }
+                            log('=====================');
+                        } else {
+                            log(`战斗失败：${result.message}`);
+                        }
+                    } catch (error) {
+                        handleError(error, '战斗系统');
+                        // 如果Battle系统出错，使用简单的回合制战斗
+                        simulateSimpleBattle();
+                    }
+                } else {
+                    // 如果Battle系统不可用，使用简单的回合制战斗
+                    simulateSimpleBattle();
+                }
+
+                // 战斗结束
+                battleInProgress = false;
+                } catch (error) {
+                    handleError(error, '模拟战斗');
+                    battleInProgress = false;
+                }
+            }
+
+            // 简单的回合制战斗模拟
+            function simulateSimpleBattle() {
+                try {
+                    const MAX_TURNS = 30;
+                    turnCount = 0;
+
+                    // 战斗开始日志
+                    log('===== 简单战斗模拟开始 =====');
+                    log(`${character.name} (HP: ${Math.floor(character.currentStats.hp)}/${character.currentStats.maxHp}, ATK: ${Math.floor(character.currentStats.attack)}, DEF: ${Math.floor(character.currentStats.defense)}, SPD: ${Math.floor(character.currentStats.speed)})`);
+                    log(`VS`);
+                    log(`${boss.name} (HP: ${Math.floor(boss.currentStats.hp)}/${boss.currentStats.maxHp}, ATK: ${Math.floor(boss.currentStats.attack)}, DEF: ${Math.floor(boss.currentStats.defense)}, SPD: ${Math.floor(boss.currentStats.speed)})`);
+                    log('=============================');
+
+                // 战斗循环
+                while (turnCount < MAX_TURNS) {
+                    turnCount++;
+                    log(`\n===== 回合 ${turnCount} =====`);
+
+                    // 1. 回合开始触发事件
+                    log(`\n----- 回合开始触发事件 -----`);
+                    // 这里可以添加回合开始时的特殊效果处理
+                    log(`检查回合开始效果...`);
+
+                    // 2. 角色按顺序依次执行技能
+                    if (character.currentStats.hp > 0) {
+                        log(`\n----- ${character.name} 技能阶段 -----`);
+
+                        // 获取可用技能（没有冷却的技能）
+                        const availableSkills = character.skills.filter(skillId =>
+                            !character.skillCooldowns[skillId] || character.skillCooldowns[skillId] <= 0
+                        );
+
+                        if (availableSkills.length > 0) {
+                            // 随机选择一个技能
+                            const skillId = availableSkills[Math.floor(Math.random() * availableSkills.length)];
+                            const skill = JobSystem.getSkill(skillId);
+
+                            log(`${character.name} 选择使用技能: ${skill ? skill.name : skillId}`);
+
+                            // 使用技能
+                            if (typeof JobSkills !== 'undefined' && typeof JobSkills.useSkill === 'function') {
+                                const result = JobSkills.useSkill(character.id, skillId, [character], boss);
+
+                                if (result.success) {
+                                    log(result.message);
+
+                                    // 设置技能冷却
+                                    if (skill && skill.cooldown) {
+                                        character.skillCooldowns[skillId] = skill.cooldown;
+                                        log(`技能 ${skill.name} 进入冷却状态 (${skill.cooldown} 回合)`);
+                                    }
+                                } else {
+                                    log(`技能使用失败: ${result.message || '未知原因'}`);
+                                }
+                            } else {
+                                log(`技能系统不可用，跳过技能使用`);
+                            }
+                        } else {
+                            log(`${character.name} 没有可用的技能 (所有技能都在冷却中)`);
+                        }
+                    }
+
+                    // 3. 角色普通攻击
+                    if (character.currentStats.hp > 0 && boss.currentStats.hp > 0) {
+                        log(`\n----- ${character.name} 普通攻击阶段 -----`);
+
+                        // 增加基础伤害，以适应更高的生命值
+                        const damage = Math.floor(character.currentStats.attack * 10 * (1 - boss.currentStats.defense / 500));
+                        boss.currentStats.hp -= damage;
+                        log(`${character.name} 进行普通攻击，对 ${boss.name} 造成 ${damage} 点伤害！`);
+                    }
+
+                    // 更新战斗状态
+                    updateBattleStatus();
+
+                    // 显示角色状态
+                    log(`${character.name} 状态: HP ${Math.floor(character.currentStats.hp)}/${character.currentStats.maxHp}`);
+
+                    // 检查BOSS是否被击败
+                    if (boss.currentStats.hp <= 0) {
+                        log(`${boss.name} 被击败了！`);
+                        break;
+                    }
+
+                    // 4. 怪物执行技能
+                    if (boss.currentStats.hp > 0 && character.currentStats.hp > 0) {
+                        log(`\n----- ${boss.name} 技能阶段 -----`);
+
+                        // 选择技能
+                        const availableSkills = boss.skills.filter(skillId =>
+                            !boss.skillCooldowns[skillId] || boss.skillCooldowns[skillId] <= 0
+                        );
+
+                        if (availableSkills.length > 0) {
+                            // 随机选择一个技能
+                            const skillId = availableSkills[Math.floor(Math.random() * availableSkills.length)];
+                            const skill = bossSkills[skillId];
+
+                            if (skill) {
+                                log(`${boss.name} 选择使用技能: ${skill.name}`);
+
+                                // 使用技能
+                                if (skill.effectType === 'damage' || skill.effectType === 'damage_and_debuff') {
+                                    // 计算伤害
+                                    let damage = 0;
+                                    for (const effect of skill.effects) {
+                                        if (effect.type === 'damage') {
+                                            const multiplier = effect.multiplier || 1.0;
+                                            // 增加基础伤害，以适应更高的生命值
+                                            damage += Math.floor(boss.currentStats.attack * multiplier * 10 * (1 - character.currentStats.defense / 500));
+                                        }
+                                    }
+
+                                    // 应用伤害
+                                    character.currentStats.hp -= damage;
+                                    log(`${boss.name} 使用了 ${skill.name}，对 ${character.name} 造成 ${damage} 点伤害！`);
+
+                                    // 应用debuff
+                                    if (skill.effectType === 'damage_and_debuff') {
+                                        for (const effect of skill.effects) {
+                                            if (effect.type !== 'damage') {
+                                                log(`${character.name} 受到了 ${effect.type} 效果！`);
+                                            }
+                                        }
+                                    }
+                                } else if (skill.effectType === 'buff') {
+                                    // 应用buff
+                                    log(`${boss.name} 使用了 ${skill.name}，获得了增益效果！`);
+                                } else if (skill.effectType === 'debuff') {
+                                    // 应用debuff
+                                    log(`${boss.name} 使用了 ${skill.name}，对 ${character.name} 施加了减益效果！`);
+                                }
+
+                                // 设置技能冷却
+                                boss.skillCooldowns[skillId] = skill.cooldown || 3;
+                                log(`技能 ${skill.name} 进入冷却状态 (${skill.cooldown || 3} 回合)`);
+                            } else {
+                                log(`找不到技能 ${skillId} 的定义，${boss.name} 将进行普通攻击`);
+
+                                // 如果找不到技能，进行普通攻击
+                                // 增加基础伤害，以适应更高的生命值
+                                const damage = Math.floor(boss.currentStats.attack * 10 * (1 - character.currentStats.defense / 500));
+                                character.currentStats.hp -= damage;
+                                log(`${boss.name} 进行普通攻击，对 ${character.name} 造成 ${damage} 点伤害！`);
+                            }
+                        } else {
+                            log(`${boss.name} 没有可用的技能 (所有技能都在冷却中)`);
+
+                            // 如果没有可用技能，进行普通攻击
+                            log(`\n----- ${boss.name} 普通攻击阶段 -----`);
+
+                            // 增加基础伤害，以适应更高的生命值
+                            const damage = Math.floor(boss.currentStats.attack * 10 * (1 - character.currentStats.defense / 500));
+                            character.currentStats.hp -= damage;
+                            log(`${boss.name} 进行普通攻击，对 ${character.name} 造成 ${damage} 点伤害！`);
+                        }
+                    }
+
+                    // 5. 回合结束触发事件
+                    log(`\n----- 回合结束触发事件 -----`);
+                    // 这里可以添加回合结束时的特殊效果处理
+                    log(`检查回合结束效果...`);
+
+                    // 更新战斗状态
+                    updateBattleStatus();
+
+                    // 显示BOSS状态
+                    log(`${boss.name} 状态: HP ${Math.floor(boss.currentStats.hp)}/${boss.currentStats.maxHp}`);
+
+                    // 检查角色是否被击败
+                    if (character.currentStats.hp <= 0) {
+                        log(`${character.name} 被击败了！`);
+                        break;
+                    }
+
+                    // 更新技能冷却
+                    for (const skillId in character.skillCooldowns) {
+                        if (character.skillCooldowns[skillId] > 0) {
+                            character.skillCooldowns[skillId]--;
+                            if (character.skillCooldowns[skillId] === 0) {
+                                const skill = JobSystem.getSkill(skillId);
+                                if (skill) {
+                                    log(`${character.name} 的技能 ${skill.name} 冷却完成，可以再次使用`);
+                                }
+                            }
+                        }
+                    }
+
+                    for (const skillId in boss.skillCooldowns) {
+                        if (boss.skillCooldowns[skillId] > 0) {
+                            boss.skillCooldowns[skillId]--;
+                            if (boss.skillCooldowns[skillId] === 0) {
+                                const skill = bossSkills[skillId];
+                                if (skill) {
+                                    log(`${boss.name} 的技能 ${skill.name} 冷却完成，可以再次使用`);
+                                }
+                            }
+                        }
+                    }
+
+                    // 添加回合结束分隔线
+                    log('\n===== 回合 ' + turnCount + ' 结束 =====');
+                    log('-----------------------------');
+                }
+
+                // 如果达到最大回合数
+                if (turnCount >= MAX_TURNS) {
+                    log('战斗超过最大回合数，结束战斗！');
+                }
+
+                // 战斗总结
+                log('\n===== 战斗总结 =====');
+                log(`总回合数: ${turnCount}`);
+                log(`${character.name} 剩余生命: ${Math.max(0, Math.floor(character.currentStats.hp))}/${character.currentStats.maxHp} (${Math.floor(character.currentStats.hp / character.currentStats.maxHp * 100)}%)`);
+                log(`${boss.name} 剩余生命: ${Math.max(0, Math.floor(boss.currentStats.hp))}/${boss.currentStats.maxHp} (${Math.floor(boss.currentStats.hp / boss.currentStats.maxHp * 100)}%)`);
+
+                // 战斗结果
+                if (character.currentStats.hp <= 0 && boss.currentStats.hp <= 0) {
+                    log('战斗结果: 平局');
+                } else if (character.currentStats.hp <= 0) {
+                    log(`战斗结果: ${boss.name} 获胜`);
+                } else if (boss.currentStats.hp <= 0) {
+                    log(`战斗结果: ${character.name} 获胜`);
+                } else if (character.currentStats.hp > boss.currentStats.hp) {
+                    log(`战斗结果: ${character.name} 领先`);
+                } else {
+                    log(`战斗结果: ${boss.name} 领先`);
+                }
+                log('=====================');
+                } catch (error) {
+                    handleError(error, '简单战斗模拟');
+                }
+            }
+
+            // 重置
+            function reset() {
+                try {
+                    // 停止战斗
+                    battleInProgress = false;
+                    if (battleInterval) {
+                        clearInterval(battleInterval);
+                        battleInterval = null;
+                    }
+
+                    // 重置选择
+                    selectedJob = null;
+                    selectedBoss = null;
+
+                    // 重置角色和BOSS
+                    character = null;
+                    boss = null;
+
+                    // 重置UI
+                    const selectedJobCards = jobSelection.querySelectorAll('.job-card.selected');
+                    selectedJobCards.forEach(card => card.classList.remove('selected'));
+
+                    const selectedBossCards = bossSelection.querySelectorAll('.boss-card.selected');
+                    selectedBossCards.forEach(card => card.classList.remove('selected'));
+
+                    // 隐藏战斗状态区域
+                    battleSection.classList.add('hidden');
+
+                    // 禁用开始战斗按钮
+                    startBattleBtn.disabled = true;
+
+                    // 清空战斗日志
+                    battleLog.innerHTML = '';
+                    log('系统已重置');
+                } catch (error) {
+                    handleError(error, '重置系统');
+                }
+            }
+
+            // 在页面加载完成后初始化
+            window.addEventListener('load', init);
+        })();
+    </script>
+</body>
+</html>

@@ -220,8 +220,10 @@
 
         <footer class="game-footer">
             <div class="game-controls">
-                <button id="save-btn" class="btn">保存游戏</button>
+                <button id="export-save-btn" class="btn">导出存档</button>
+                <button id="import-save-btn" class="btn">载入存档</button>
                 <button id="reset-btn" class="btn btn-danger">重置游戏</button>
+                <input type="file" id="save-file-input" accept=".zia" style="display: none;">
             </div>
             <div class="game-message" id="game-message"></div>
         </footer>
@@ -250,6 +252,7 @@
     <script src="src/js/components/ui_init.js"></script>
     <script src="src/js/components/events.js"></script>
     <script src="src/js/components/character-creator.js"></script>
+    <script src="src/js/components/character-creation.js"></script>
     <script src="src/js/components/ui-main-character.js"></script>
     <script src="src/js/components/job-selection.js"></script>
     <script src="src/js/components/tavern.js"></script>
@@ -258,6 +261,7 @@
     <!-- 工具函数 -->
     <script src="src/js/utils/helpers.js"></script>
     <script src="src/js/utils/storage.js"></script>
+    <script src="src/js/utils/file-utils.js"></script>
     <script src="src/js/debug.js"></script>
 
     <!-- 主入口 -->

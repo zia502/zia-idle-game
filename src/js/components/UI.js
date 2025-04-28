@@ -72,6 +72,76 @@ const UI = {
             });
         }
 
+        // 导出存档按钮
+        const exportSaveBtn = document.getElementById('export-save-btn');
+        if (exportSaveBtn) {
+            // 移除可能存在的旧事件监听器
+            exportSaveBtn.replaceWith(exportSaveBtn.cloneNode(true));
+            const newExportSaveBtn = document.getElementById('export-save-btn');
+
+            newExportSaveBtn.addEventListener('click', () => {
+                if (typeof Game !== 'undefined' && typeof Game.saveGame === 'function' &&
+                    typeof FileUtils !== 'undefined') {
+                    const success = Game.saveGame(true); // 传入true表示导出为文件
+                    if (success) {
+                        this.showNotification('游戏存档已导出', 'success');
+                    } else {
+                        this.showNotification('导出存档失败', 'error');
+                    }
+                } else {
+                    this.showNotification('导出功能不可用', 'error');
+                }
+            });
+        }
+
+        // 载入存档按钮
+        const importSaveBtn = document.getElementById('import-save-btn');
+        const saveFileInput = document.getElementById('save-file-input');
+
+        if (importSaveBtn && saveFileInput) {
+            // 移除可能存在的旧事件监听器
+            importSaveBtn.replaceWith(importSaveBtn.cloneNode(true));
+            saveFileInput.replaceWith(saveFileInput.cloneNode(true));
+
+            const newImportSaveBtn = document.getElementById('import-save-btn');
+            const newSaveFileInput = document.getElementById('save-file-input');
+
+            // 点击载入存档按钮时，触发文件选择
+            newImportSaveBtn.addEventListener('click', () => {
+                newSaveFileInput.click();
+            });
+
+            // 选择文件后，加载存档
+            newSaveFileInput.addEventListener('change', (event) => {
+                const file = event.target.files[0];
+                if (!file) return;
+
+                this.showLoading(true, '正在加载存档...');
+
+                if (typeof Game !== 'undefined' && typeof Game.loadGameFromFile === 'function') {
+                    Game.loadGameFromFile(file)
+                        .then(() => {
+                            this.showNotification('游戏存档已加载', 'success');
+                            // 刷新界面
+                            if (typeof UI.switchScreen === 'function') {
+                                UI.switchScreen('main-screen');
+                            }
+                        })
+                        .catch(error => {
+                            this.showNotification(`加载存档失败: ${error.message}`, 'error');
+                        })
+                        .finally(() => {
+                            this.showLoading(false);
+                            // 清空文件输入，以便下次选择同一文件时也能触发change事件
+                            newSaveFileInput.value = '';
+                        });
+                } else {
+                    this.showLoading(false);
+                    this.showNotification('载入功能不可用', 'error');
+                }
+            });
+        }
+
         const resetBtn = document.getElementById('reset-btn');
         if (resetBtn) {
             // 移除可能存在的旧事件监听器

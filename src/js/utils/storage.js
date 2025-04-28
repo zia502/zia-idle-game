@@ -101,8 +101,20 @@ const Storage = {
      */
     remove(key) {
         try {
+            console.log(`正在删除本地存储数据: ${key}`);
+
+            // 检查数据是否存在
+            const exists = localStorage.getItem(key) !== null;
+            console.log(`数据${exists ? '存在' : '不存在'}`);
+
+            // 删除数据
             localStorage.removeItem(key);
-            return true;
+
+            // 验证是否删除成功
+            const stillExists = localStorage.getItem(key) !== null;
+            console.log(`删除${stillExists ? '失败' : '成功'}`);
+
+            return !stillExists;
         } catch (error) {
             console.error('删除数据失败:', error);
             return false;

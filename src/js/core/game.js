@@ -487,8 +487,10 @@ const Game = {
 
     /**
      * 保存游戏状态
+     * @param {boolean} exportFile - 是否导出为文件
+     * @returns {boolean} 是否保存成功
      */
-    saveGame() {
+    saveGame(exportFile = false) {
         try {
             const saveData = {
                 state: this.state,
@@ -517,41 +519,82 @@ const Game = {
             // 使用存储工具保存数据
             if (typeof Storage !== 'undefined') {
                 Storage.save('gameData', saveData);
-                console.log("游戏已保存");
+                console.log("游戏已保存到本地存储");
 
                 if (typeof Events !== 'undefined') {
                     Events.emit('game:saved', { timestamp: saveData.timestamp });
                 }
+
+                // 如果需要导出为文件
+                if (exportFile && typeof FileUtils !== 'undefined') {
+                    // 获取当前日期时间作为文件名的一部分
+                    const now = new Date();
+                    const dateStr = `${now.getFullYear()}${(now.getMonth()+1).toString().padStart(2, '0')}${now.getDate().toString().padStart(2, '0')}`;
+                    const timeStr = `${now.getHours().toString().padStart(2, '0')}${now.getMinutes().toString().padStart(2, '0')}`;
+
+                    // 获取主角名称（如果有）
+                    let characterName = "unknown";
+                    if (typeof Character !== 'undefined' && typeof Character.getMainCharacter === 'function') {
+                        const mainChar = Character.getMainCharacter();
+                        if (mainChar && mainChar.name) {
+                            characterName = mainChar.name.replace(/[^a-zA-Z0-9]/g, '_');
+                        }
+                    }
+
+                    // 创建文件名
+                    const filename = `zia_save_${characterName}_${dateStr}_${timeStr}.zia`;
+
+                    // 导出为文件
+                    const success = FileUtils.saveToFile(saveData, filename, true);
+                    if (success) {
+                        console.log(`游戏已导出为文件: ${filename}`);
+                        return true;
+                    } else {
+                        console.error("导出游戏存档文件失败");
+                        return false;
+                    }
+                }
+
+                return true;
             } else {
                 console.error("存储模块未加载，无法保存游戏");
+                return false;
             }
         } catch (error) {
             console.error("保存游戏失败:", error);
+            return false;
         }
     },
 
     /**
      * 加载游戏状态
+     * @param {object} [externalSaveData] - 外部存档数据（从文件加载）
+     * @returns {boolean} 是否加载成功
      */
-    loadGame() {
+    loadGame(externalSaveData = null) {
         try {
-            if (typeof Storage === 'undefined') {
-                console.error("存储模块未加载，无法加载游戏");
-                return;
-            }
+            let saveData = externalSaveData;
 
-            const saveData = Storage.load('gameData');
+            // 如果没有提供外部存档数据，则从本地存储加载
             if (!saveData) {
-                console.log("没有找到保存的游戏数据");
-                // 确保初始金币为10000
-                this.state.gold = 10000;
-
-                // 更新UI显示
-                const goldElement = document.getElementById('gold-display');
-                if (goldElement) {
-                    goldElement.textContent = `金币: ${this.state.gold}`;
+                if (typeof Storage === 'undefined') {
+                    console.error("存储模块未加载，无法加载游戏");
+                    return false;
                 }
-                return;
+
+                saveData = Storage.load('gameData');
+                if (!saveData) {
+                    console.log("没有找到保存的游戏数据");
+                    // 确保初始金币为10000
+                    this.state.gold = 10000;
+
+                    // 更新UI显示
+                    const goldElement = document.getElementById('gold-display');
+                    if (goldElement) {
+                        goldElement.textContent = `金币: ${this.state.gold}`;
+                    }
+                    return false;
+                }
             }
 
             // 恢复游戏状态
@@ -600,12 +643,71 @@ const Game = {
 
             console.log("游戏数据已加载");
 
+            // 如果是从外部文件加载的，保存到本地存储
+            if (externalSaveData && typeof Storage !== 'undefined') {
+                Storage.save('gameData', saveData);
+                console.log("从外部文件加载的游戏数据已保存到本地存储");
+            }
+
             if (typeof Events !== 'undefined') {
                 Events.emit('game:loaded', { version: this.state.version });
             }
+
+            return true;
         } catch (error) {
             console.error("加载游戏失败:", error);
+            return false;
         }
+    },
+
+    /**
+     * 从文件加载游戏
+     * @param {File} file - 存档文件
+     * @returns {Promise<boolean>} 是否加载成功
+     */
+    loadGameFromFile(file) {
+        return new Promise((resolve, reject) => {
+            if (!file) {
+                reject(new Error("未提供文件"));
+                return;
+            }
+
+            if (!file.name.toLowerCase().endsWith('.zia')) {
+                reject(new Error("文件格式不正确，请选择.zia格式的存档文件"));
+                return;
+            }
+
+            if (typeof FileUtils === 'undefined') {
+                reject(new Error("文件工具模块未加载"));
+                return;
+            }
+
+            // 验证文件格式
+            FileUtils.validateSaveFile(file)
+                .then(isValid => {
+                    if (!isValid) {
+                        reject(new Error("无效的存档文件"));
+                        return;
+                    }
+
+                    // 从文件加载数据
+                    return FileUtils.loadFromFile(file, true);
+                })
+                .then(saveData => {
+                    // 加载游戏数据
+                    const success = this.loadGame(saveData);
+                    if (success) {
+                        console.log("从文件加载游戏成功");
+                        resolve(true);
+                    } else {
+                        reject(new Error("加载游戏数据失败"));
+                    }
+                })
+                .catch(error => {
+                    console.error("从文件加载游戏失败:", error);
+                    reject(error);
+                });
+        });
     },
 
     /**
@@ -613,8 +715,19 @@ const Game = {
      */
     resetGame() {
         try {
+            console.log("开始重置游戏...");
+
+            // 清除本地存储 - 先执行这一步，确保数据被完全清除
             if (typeof Storage !== 'undefined') {
+                console.log("清除本地存储数据...");
                 Storage.remove('gameData');
+
+                // 双重检查，确保数据被清除
+                const stillExists = localStorage.getItem('gameData') !== null;
+                if (stillExists) {
+                    console.warn("警告：gameData仍然存在，尝试强制清除");
+                    localStorage.removeItem('gameData');
+                }
             }
 
             // 重置游戏状态
@@ -659,34 +772,108 @@ const Game = {
                 dungeonCompletions: {}
             };
 
+            console.log("游戏状态已重置");
+
             // 重置其他模块
             if (typeof Character !== 'undefined' && typeof Character.reset === 'function') {
+                console.log("重置角色系统...");
                 Character.reset();
+
+                // 检查主角是否被清除
+                const mainChar = Character.getMainCharacter();
+                if (mainChar) {
+                    console.warn("警告：主角未被清除，强制清除");
+                    Character.characters = {};
+                }
             }
 
             if (typeof Inventory !== 'undefined' && typeof Inventory.reset === 'function') {
+                console.log("重置物品栏系统...");
                 Inventory.reset();
             }
 
             if (typeof Shop !== 'undefined' && typeof Shop.reset === 'function') {
+                console.log("重置商店系统...");
                 Shop.reset();
             }
 
-            // 刷新UI显示，但不重新初始化事件监听器
-            if (typeof UI !== 'undefined') {
-                // 更新金币显示
-                const goldElement = document.getElementById('gold-display');
-                if (goldElement) {
-                    goldElement.textContent = `金币: ${this.state.gold}`;
-                }
+            if (typeof Team !== 'undefined' && typeof Team.reset === 'function') {
+                console.log("重置队伍系统...");
+                Team.reset();
 
-                // 切换到主屏幕
-                if (typeof UI.switchScreen === 'function') {
-                    UI.switchScreen('main-screen');
+                // 检查队伍是否被清除
+                if (Team.teams && Object.keys(Team.teams).length > 0) {
+                    console.warn("警告：队伍未被清除，强制清除");
+                    Team.teams = {};
+                    Team.activeTeamId = null;
                 }
             }
 
-            console.log("游戏已重置");
+            console.log("游戏已完全重置");
+
+            // 切换到主屏幕
+            if (typeof UI !== 'undefined' && typeof UI.switchScreen === 'function') {
+                UI.switchScreen('main-screen');
+            }
+
+            // 强制显示角色创建对话框
+            console.log("准备显示角色创建对话框...");
+
+            // 尝试关闭任何现有的对话框
+            try {
+                // 尝试使用CharacterCreation模块
+                if (typeof CharacterCreation !== 'undefined') {
+                    console.log("找到CharacterCreation模块");
+
+                    if (typeof CharacterCreation.closeDialog === 'function') {
+                        CharacterCreation.closeDialog();
+                    }
+
+                    // 延迟一点时间再显示对话框，确保其他操作已完成
+                    setTimeout(() => {
+                        try {
+                            if (typeof CharacterCreation.init === 'function') {
+                                console.log("强制初始化角色创建系统");
+                                // 使用forceShow参数调用init方法
+                                CharacterCreation.init(true);
+                            } else if (typeof CharacterCreation.showCharacterCreationDialog === 'function') {
+                                console.log("直接显示角色创建对话框");
+                                CharacterCreation.showCharacterCreationDialog();
+                            } else {
+                                console.error("无法找到CharacterCreation方法，尝试使用备用方法");
+                                // 尝试使用character-creator.js中的函数
+                                showCharacterCreationDialog();
+                            }
+                        } catch (e) {
+                            console.error("显示角色创建对话框时出错:", e);
+                            // 尝试使用character-creator.js中的函数
+                            if (typeof showCharacterCreationDialog === 'function') {
+                                console.log("尝试使用备用的showCharacterCreationDialog函数");
+                                showCharacterCreationDialog();
+                            } else {
+                                console.error("所有尝试都失败，无法显示角色创建对话框");
+                                alert("重置游戏成功，请刷新页面重新开始游戏。");
+                            }
+                        }
+                    }, 1000);
+                } else {
+                    console.warn("找不到CharacterCreation模块，尝试使用备用方法");
+
+                    // 尝试使用character-creator.js中的函数
+                    setTimeout(() => {
+                        if (typeof showCharacterCreationDialog === 'function') {
+                            console.log("使用备用的showCharacterCreationDialog函数");
+                            showCharacterCreationDialog();
+                        } else {
+                            console.error("无法找到任何角色创建函数");
+                            alert("重置游戏成功，请刷新页面重新开始游戏。");
+                        }
+                    }, 1000);
+                }
+            } catch (error) {
+                console.error("处理角色创建对话框时出错:", error);
+                alert("重置游戏成功，请刷新页面重新开始游戏。");
+            }
 
             if (typeof Events !== 'undefined') {
                 Events.emit('game:reset');

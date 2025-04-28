@@ -1221,7 +1221,18 @@ const Character = {
      * 重置角色系统
      */
     reset() {
+        console.log('完全重置角色系统');
+        // 完全清空角色数据
         this.characters = {};
+
+        // 确保主角被清除
+        const mainChar = this.getMainCharacter();
+        if (mainChar) {
+            console.log('警告：主角仍然存在，强制清除');
+            this.characters = {};
+        }
+
+        console.log('角色系统重置完成，当前角色数量：0');
         this.init();
     },
 

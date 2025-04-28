@@ -4,9 +4,17 @@
 const CharacterCreation = {
     /**
      * 初始化角色创建系统
+     * @param {boolean} forceShow - 是否强制显示角色创建对话框
      */
-    init() {
-        console.log('角色创建系统初始化');
+    init(forceShow = false) {
+        console.log('角色创建系统初始化', forceShow ? '(强制显示)' : '');
+
+        // 如果强制显示，直接显示对话框
+        if (forceShow) {
+            console.log('强制显示角色创建对话框');
+            this.showCharacterCreationDialog();
+            return;
+        }
 
         // 检查是否已经有主角
         if (this.hasMainCharacter()) {
@@ -30,6 +38,7 @@ const CharacterCreation = {
         }
 
         // 显示角色创建对话框
+        console.log('没有找到主角，显示角色创建对话框');
         this.showCharacterCreationDialog();
     },
 
@@ -50,6 +59,11 @@ const CharacterCreation = {
      * 显示角色创建对话框
      */
     showCharacterCreationDialog() {
+        console.log('显示角色创建对话框');
+
+        // 先移除可能存在的旧对话框
+        this.closeDialog();
+
         // 创建遮罩层，阻止点击其他元素
         const overlay = document.createElement('div');
         overlay.className = 'dialog-overlay';
@@ -219,6 +233,8 @@ const CharacterCreation = {
      * 关闭对话框
      */
     closeDialog() {
+        console.log('关闭角色创建对话框');
+
         // 移除遮罩层
         const overlay = document.getElementById('character-creation-overlay');
         if (overlay) {

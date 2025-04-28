@@ -1,6 +1,10 @@
 /**
  * 独立的角色创建模块 - 不依赖于其他模块
  */
+// 声明全局函数，以便Game.resetGame()可以调用
+let showCharacterCreationDialog;
+let closeCharacterCreationDialog;
+
 (function() {
     // 在页面加载完成后执行
     document.addEventListener('DOMContentLoaded', function() {
@@ -46,7 +50,7 @@
     /**
      * 显示角色创建对话框
      */
-    function showCharacterCreationDialog() {
+    showCharacterCreationDialog = function() {
         console.log('显示角色创建对话框');
 
         // 创建遮罩层
@@ -200,7 +204,7 @@
                 }
 
                 // 关闭对话框
-                closeDialog();
+                closeCharacterCreationDialog();
 
                 // 触发角色创建完成事件
                 if (typeof Events !== 'undefined' && typeof Events.emit === 'function') {
@@ -225,7 +229,7 @@
     /**
      * 关闭对话框
      */
-    function closeDialog() {
+    closeCharacterCreationDialog = function() {
         // 移除遮罩层
         const overlay = document.getElementById('character-creation-overlay');
         if (overlay) {

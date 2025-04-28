@@ -1,6 +1,13 @@
 /**
  * 角色创建模块 - 负责处理游戏开始时的角色创建流程
+ *
+ * 整合了character-creator.js和character-creation.js的功能
  */
+
+// 声明全局函数，以便Game.resetGame()可以调用
+let showCharacterCreationDialog;
+let closeCharacterCreationDialog;
+
 const CharacterCreation = {
     /**
      * 初始化角色创建系统
@@ -247,6 +254,15 @@ const CharacterCreation = {
             dialog.remove();
         }
     }
+};
+
+// 实现全局函数，以便Game.resetGame()可以调用
+showCharacterCreationDialog = function() {
+    CharacterCreation.showCharacterCreationDialog();
+};
+
+closeCharacterCreationDialog = function() {
+    CharacterCreation.closeDialog();
 };
 
 // 添加到Events监听器，在游戏加载完成后初始化

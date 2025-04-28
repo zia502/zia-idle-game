@@ -37,7 +37,7 @@ const JobSystem = {
             tier: 1,
             description: '擅长近战和防御的职业，拥有高生命值和防御力。',
             baseStats: { hp: 120, attack: 12, defense: 8, speed: 5 },
-            skills: ['warriorSlash', 'powerStrike'],
+            skills: ['warriorSlash', 'armorBreak'],
             fixedSkill: 'warriorSlash',
             nextTiers: ['berserker', 'beastLord'],
             unlocked: true // 默认解锁
@@ -47,7 +47,7 @@ const JobSystem = {
             tier: 1,
             description: '专注于防御和保护队友的职业，拥有极高的防御力。',
             baseStats: { hp: 150, attack: 8, defense: 12, speed: 4 },
-            skills: ['fortressGuard', 'shieldBash'],
+            skills: ['fortressGuard', 'shieldWall'],
             fixedSkill: 'fortressGuard',
             nextTiers: ['spartan', 'oathShielder'],
             unlocked: true // 默认解锁
@@ -57,7 +57,7 @@ const JobSystem = {
             tier: 1,
             description: '擅长治疗和辅助的职业，能够恢复队友生命值。',
             baseStats: { hp: 90, attack: 6, defense: 6, speed: 7 },
-            skills: ['clericLight', 'heal', 'bless'],
+            skills: ['clericLight', 'heal', 'flashSpell'],
             fixedSkill: 'clericLight',
             nextTiers: ['bishop', 'saint'],
             unlocked: true // 默认解锁
@@ -77,7 +77,7 @@ const JobSystem = {
             tier: 1,
             description: '将魔法与剑术结合的职业，拥有多样化的攻击手段。',
             baseStats: { hp: 100, attack: 10, defense: 6, speed: 8 },
-            skills: ['spellbladeStrike', 'magicSlash', 'elementalEnhance'],
+            skills: ['spellbladeStrike', 'weaken', 'enhance'],
             fixedSkill: 'spellbladeStrike',
             nextTiers: ['darkKnight', 'chaosLord'],
             unlocked: true // 默认解锁
@@ -99,7 +99,7 @@ const JobSystem = {
             tier: 2,
             description: '牺牲防御换取极高攻击力的职业，能够造成巨大伤害。',
             baseStats: { hp: 140, attack: 18, defense: 6, speed: 7 },
-            skills: ['berserkerRage', 'powerStrike', 'rage', 'whirlwind'],
+            skills: ['berserkerRage', 'armorBreak', 'fiercePounce', 'whirlwind'],
             fixedSkill: 'berserkerRage',
             requiredJob: 'warrior',
             requiredLevel: 20,
@@ -110,7 +110,7 @@ const JobSystem = {
             tier: 2,
             description: '能够驯服野兽的职业，与野兽一起战斗。',
             baseStats: { hp: 130, attack: 14, defense: 10, speed: 8 },
-            skills: ['beastLordCommand', 'powerStrike', 'beastCall', 'packTactics'],
+            skills: ['beastLordCommand', 'armorBreak', 'fiercePounce', 'whirlwind'],
             fixedSkill: 'beastLordCommand',
             requiredJob: 'warrior',
             requiredLevel: 20,
@@ -123,7 +123,7 @@ const JobSystem = {
             tier: 2,
             description: '精通盾牌与长矛的职业，兼具攻防能力。',
             baseStats: { hp: 160, attack: 12, defense: 14, speed: 5 },
-            skills: ['spartanStance', 'shieldBash', 'spearThrust', 'phalanx'],
+            skills: ['spartanStance', 'shieldWall', 'spearThrust', 'guardianFormation'],
             fixedSkill: 'spartanStance',
             requiredJob: 'fortress',
             requiredLevel: 20,
@@ -134,7 +134,7 @@ const JobSystem = {
             tier: 2,
             description: '以保护他人为誓言的职业，能够承受队友的伤害。',
             baseStats: { hp: 180, attack: 9, defense: 16, speed: 4 },
-            skills: ['oathShielderVow', 'shieldBash', 'guardianOath', 'bulwark'],
+            skills: ['oathShielderVow', 'shieldWall', 'cover', 'bulwark'],
             fixedSkill: 'oathShielderVow',
             requiredJob: 'fortress',
             requiredLevel: 20,
@@ -195,7 +195,7 @@ const JobSystem = {
             tier: 2,
             description: '掌握黑暗力量的剑士，能够吸取敌人生命力。',
             baseStats: { hp: 120, attack: 14, defense: 8, speed: 9 },
-            skills: ['darkKnightSlash', 'magicSlash', 'darkSlash', 'soulEater'],
+            skills: ['darkKnightSlash', 'weaken', 'shadowSlash', 'soulEater'],
             fixedSkill: 'darkKnightSlash',
             requiredJob: 'spellblade',
             requiredLevel: 20,
@@ -206,7 +206,7 @@ const JobSystem = {
             tier: 2,
             description: '掌握混沌魔法的剑士，能够造成不可预测的伤害。',
             baseStats: { hp: 110, attack: 16, defense: 7, speed: 10 },
-            skills: ['chaosLordDisruption', 'magicSlash', 'chaosStrike', 'realityWarp'],
+            skills: ['chaosLordDisruption', 'weaken', 'chaosStrike', 'realityWarp'],
             fixedSkill: 'chaosLordDisruption',
             requiredJob: 'spellblade',
             requiredLevel: 20,
@@ -230,7 +230,7 @@ const JobSystem = {
             tier: 2,
             description: '精通多种射击技巧的射手，能够支援队友。',
             baseStats: { hp: 100, attack: 14, defense: 6, speed: 14 },
-            skills: ['robinHoodArrow', 'multiShot', 'supportFire', 'rainOfArrows'],
+            skills: ['robinHoodArrow', 'multiShot', 'supportFire', 'arrowRain'],
             fixedSkill: 'robinHoodArrow',
             requiredJob: 'archer',
             requiredLevel: 20,
@@ -238,151 +238,7 @@ const JobSystem = {
         }
     },
 
-    /**
-     * 技能定义
-     * 注意：固定技能已移至JobSkillsTemplate，这里只保留普通技能
-     */
-    skills: {
 
-        // 战士技能
-        powerStrike: {
-            name: '护甲破坏',
-            description: '对敌方单体造成100%攻击力的伤害，并对敌方单位施加防御力-20%DEBUFF，持续3回合，CD5回合。',
-            type: 'attack',
-            power: 1.5,
-            cost: 10
-        },
-        rage: {
-            name: '猛袭',
-            description: '被动:自身DA+15%',
-            type: 'buff',
-            power: 1.3,
-            cost: 15
-        },
-        whirlwind: {
-            name: '旋风斩',
-            description: '被动:攻击时30%概率触发旋转攻击周围所有敌人，造成120%攻击力的伤害。',
-            type: 'aoe',
-            power: 1.2,
-            cost: 20
-        },
-
-        // 堡垒技能
-        shieldBash: {
-            name: '盾墙',
-            description: '我方全体获得50%伤害减免，持续一回合。CD5回合',
-            type: 'attack',
-            power: 0.8,
-            cost: 10
-        },
-        phalanx: {
-            name: '守护方阵',
-            description: '被动:组成防御阵型，增加全队20%防御力。',
-            type: 'buff',
-            power: 1.2,
-            cost: 18
-        },
-        guardianOath: {
-            name: '援护',
-            description: '被动:我方单位被攻击时，有40%概率代替承受伤害。',
-            type: 'buff',
-            power: 0.5,
-            cost: 15
-        },
-
-        // 牧师技能
-        heal: {
-            name: '治愈',
-            description: '恢复HP最低的我方单位1000hp，CD5回合',
-            type: 'heal',
-            power: 0.3,
-            cost: 15
-        },
-        bless: {
-            name: '闪光术',
-            description: '被动:攻击时有30%概率触发，对敌方全体造成100-150%攻击力的伤害。',
-            type: 'buff',
-            power: 1.1,
-            cost: 20
-        },
-        resurrection: {
-            name: '复活',
-            description: '复活倒下的队友，恢复30%生命值，CD10回合',
-            type: 'heal',
-            power: 0.5,
-            cost: 40
-        },
-
-
-        // 秘法师技能
-        fireball: {
-            name: '火球术',
-            description: '发射一个火球，对敌方单体造成200%-300%攻击力伤害。CD6回合',
-            type: 'magic',
-            power: 1.4,
-            cost: 15
-        },
-        frostBolt: {
-            name: '寒冰',
-            description: '被动:攻击时有15%概率发射一支冰箭，造成60%攻击力的冰属性伤害并施加攻击力-10%DEBUFF，持续2回合。',
-            type: 'magic',
-            power: 1.2,
-            cost: 12
-        },
-        thunderstorm: {
-            name: '雷暴',
-            description: '被动:回合结束时对敌方全体造成5次30%攻击力的伤害',
-            type: 'magic',
-            power: 1.3,
-            cost: 25
-        },
-
-        // 魔剑士技能
-        magicSlash: {
-            name: '虚弱',
-            description: '对敌方单体施加攻击力-20%DEBUFF，防御力-20%DEBUFF，持续2回合，CD5回合。',
-            type: 'attack',
-            power: 1.2,
-            cost: 12
-        },
-        elementalEnhance: {
-            name: '强化',
-            description: '被动:提高我方全体10%攻击力',
-            type: 'buff',
-            power: 1.2,
-            cost: 15
-        },
-        darkSlash: {
-            name: '暗影斩',
-            description: '被动:攻击时有15%概率触发，对敌方单体造成250%-350%攻击力的伤害。',
-            type: 'attack',
-            power: 1.4,
-            cost: 18
-        },
-
-        // 射手技能
-        preciseShot: {
-            name: '精准射击',
-            description: '被动:无视命中率降低DEBUFF，攻击必定命中',
-            type: 'attack',
-            power: 1.6,
-            cost: 15
-        },
-        multiShot: {
-            name: '多重射击',
-            description: '被动: 攻击时50%概率触发，对敌方单体造成80%-120%伤害',
-            type: 'attack',
-            power: 0.8,
-            cost: 18
-        },
-        rainOfArrows: {
-            name: '箭雨',
-            description: '同时射出多支箭，对全部敌人造成3次80%-100%攻击力的伤害。CD6回合',
-            type: 'aoe',
-            power: 1.2,
-            cost: 25
-        }
-    },
 
     /**
      * 获取职业信息
@@ -399,7 +255,7 @@ const JobSystem = {
      * @returns {object|null} 技能信息
      */
     getSkill(skillId) {
-        // 首先尝试从JobSkillsTemplate获取技能信息
+        // 从JobSkillsTemplate获取技能信息
         if (typeof JobSkillsTemplate !== 'undefined' && JobSkillsTemplate.templates) {
             const templateSkill = JobSkillsTemplate.templates[skillId];
             if (templateSkill) {
@@ -407,8 +263,8 @@ const JobSystem = {
             }
         }
 
-        // 如果在模板中找不到，则从本地skills对象获取
-        return this.skills[skillId] || null;
+        console.warn(`找不到技能: ${skillId}`);
+        return null;
     },
 
     /**

@@ -138,8 +138,36 @@ const MainUI = {
             }
 
             // 获取主角职业
-            const jobName = mainCharacter.job || '战士';
-            const jobLevel = mainCharacter.jobLevel || 1;
+            let hasJob = false;
+            let jobName = '';
+            let jobLevel = 1;
+
+            // 检查job是否存在
+            if (mainCharacter.job) {
+                hasJob = true;
+
+                // 检查job是否为对象
+                if (typeof mainCharacter.job === 'object' && mainCharacter.job.current) {
+                    // 尝试从JobSystem获取职业名称
+                    if (typeof JobSystem !== 'undefined' && JobSystem.jobs && JobSystem.jobs[mainCharacter.job.current]) {
+                        jobName = JobSystem.jobs[mainCharacter.job.current].name;
+                    } else {
+                        jobName = mainCharacter.job.current;
+                    }
+
+                    // 获取职业等级
+                    if (mainCharacter.job.level) {
+                        jobLevel = mainCharacter.job.level;
+                    }
+                } else if (typeof mainCharacter.job === 'string') {
+                    jobName = mainCharacter.job;
+
+                    // 获取职业等级
+                    if (mainCharacter.jobLevel) {
+                        jobLevel = mainCharacter.jobLevel;
+                    }
+                }
+            }
 
             // 获取主角属性（确保属性存在，否则使用默认值）
             const maxHp = mainCharacter.maxHp || mainCharacter.hp || 100;
@@ -152,9 +180,16 @@ const MainUI = {
                 <div class="hero-basic-info">
                     <div class="hero-avatar">${mainCharacter.name.charAt(0)}</div>
                     <div class="hero-details">
-                        <div class="hero-name">${mainCharacter.name}</div>
+                        <div class="hero-name">${mainCharacter.name}</div>`;
+
+            // 只有当有职业时才显示职业信息
+            if (hasJob) {
+                html += `
                         <div class="hero-class">${jobName}</div>
-                        <div class="hero-level">等级 ${jobLevel}</div>
+                        <div class="hero-level">等级 ${jobLevel}</div>`;
+            }
+
+            html += `
                     </div>
                 </div>
                 <div class="hero-stats">
@@ -186,7 +221,23 @@ const MainUI = {
                 `;
 
                 mainCharacter.skills.forEach(skill => {
-                    html += `<div class="skill-item" title="${skill.description || ''}">${skill.name}</div>`;
+                    // 检查技能是否为字符串ID
+                    if (typeof skill === 'string') {
+                        // 尝试从JobSystem获取技能信息
+                        if (typeof JobSystem !== 'undefined' && JobSystem.skills && JobSystem.skills[skill]) {
+                            const skillInfo = JobSystem.skills[skill];
+                            html += `<div class="skill-item" title="${skillInfo.description || ''}">${skillInfo.name}</div>`;
+                        } else {
+                            // 如果找不到技能信息，只显示技能ID
+                            html += `<div class="skill-item">${skill}</div>`;
+                        }
+                    } else if (typeof skill === 'object' && skill !== null) {
+                        // 如果技能是对象，直接使用其属性
+                        html += `<div class="skill-item" title="${skill.description || ''}">${skill.name || '未知技能'}</div>`;
+                    } else {
+                        // 处理其他情况
+                        html += `<div class="skill-item">未知技能</div>`;
+                    }
                 });
 
                 html += `
@@ -259,17 +310,52 @@ const MainUI = {
 
                     const character = Character.characters[memberId];
 
-                    const jobName = character.job || '未知';
-                    const jobLevel = character.jobLevel || 1;
+                    // 获取角色职业
+                    let hasJob = false;
+                    let jobName = '';
+                    let jobLevel = 1;
+
+                    // 检查job是否存在
+                    if (character.job) {
+                        hasJob = true;
+
+                        // 检查job是否为对象
+                        if (typeof character.job === 'object' && character.job.current) {
+                            // 尝试从JobSystem获取职业名称
+                            if (typeof JobSystem !== 'undefined' && JobSystem.jobs && JobSystem.jobs[character.job.current]) {
+                                jobName = JobSystem.jobs[character.job.current].name;
+                            } else {
+                                jobName = character.job.current;
+                            }
+
+                            // 获取职业等级
+                            if (character.job.level) {
+                                jobLevel = character.job.level;
+                            }
+                        } else if (typeof character.job === 'string') {
+                            jobName = character.job;
+
+                            // 获取职业等级
+                            if (character.jobLevel) {
+                                jobLevel = character.jobLevel;
+                            }
+                        }
+                    }
 
                     html += `
                         <div class="team-member">
                             <div class="member-avatar">${character.name.charAt(0)}</div>
                             <div class="member-info">
-                                <div class="member-name">${character.name}</div>
+                                <div class="member-name">${character.name}</div>`;
+
+                    // 只有当有职业时才显示职业信息
+                    if (hasJob) {
+                        html += `
                                 <div class="member-class">${jobName}</div>
-                                <div class="member-level">等级 ${jobLevel}</div>
-                    `;
+                                <div class="member-level">等级 ${jobLevel}</div>`;
+                    }
+
+                    html += ``;
 
                     // 添加技能信息
                     if (character.skills && character.skills.length > 0) {
@@ -278,7 +364,23 @@ const MainUI = {
                         // 最多显示3个技能
                         const displaySkills = character.skills.slice(0, 3);
                         displaySkills.forEach(skill => {
-                            html += `<div class="member-skill" title="${skill.description || ''}">${skill.name}</div>`;
+                            // 检查技能是否为字符串ID
+                            if (typeof skill === 'string') {
+                                // 尝试从JobSystem获取技能信息
+                                if (typeof JobSystem !== 'undefined' && JobSystem.skills && JobSystem.skills[skill]) {
+                                    const skillInfo = JobSystem.skills[skill];
+                                    html += `<div class="member-skill" title="${skillInfo.description || ''}">${skillInfo.name}</div>`;
+                                } else {
+                                    // 如果找不到技能信息，只显示技能ID
+                                    html += `<div class="member-skill">${skill}</div>`;
+                                }
+                            } else if (typeof skill === 'object' && skill !== null) {
+                                // 如果技能是对象，直接使用其属性
+                                html += `<div class="member-skill" title="${skill.description || ''}">${skill.name || '未知技能'}</div>`;
+                            } else {
+                                // 处理其他情况
+                                html += `<div class="member-skill">未知技能</div>`;
+                            }
                         });
 
                         if (character.skills.length > 3) {

@@ -143,7 +143,7 @@ const Team = {
         }
 
         // 检查队伍是否已满
-        if (team.members.length >= 4) {
+        if (team.members.length >= 6) {
             console.log(`队伍 ${team.name} 已满，无法添加更多角色`);
             return false;
         }

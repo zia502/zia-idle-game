@@ -9,7 +9,9 @@
     }
 
     // 队伍最大成员数
-    const MAX_TEAM_MEMBERS = 4;
+    const MAX_TEAM_MEMBERS = 6;
+    // 队伍前排成员数（参与战斗的成员数）
+    const FRONT_LINE_MEMBERS = 4;
 
     /**
      * 初始化队伍管理界面
@@ -202,49 +204,102 @@
                     </button>
                 </div>
                 <div class="team-members">
-                    ${members.length > 0 ?
-                        members.map(member => {
-                            // 获取类型和属性的中文名称
-                            const typeDisplay = Character.types[member.type]?.name || member.type;
-                            const attributeDisplay = Character.attributes[member.attribute]?.name || member.attribute;
+                    ${members.length > 0 ? `
+                        <div class="team-section">
+                            <h5>前排队员 (战斗中)</h5>
+                            <div class="front-line-members">
+                                ${members.slice(0, FRONT_LINE_MEMBERS).map((member, index) => {
+                                    // 获取类型和属性的中文名称
+                                    const typeDisplay = Character.types[member.type]?.name || member.type;
+                                    const attributeDisplay = Character.attributes[member.attribute]?.name || member.attribute;
 
-                            // 转换稀有度显示（主角不显示稀有度）
-                            let rarityBadge = '';
-                            if (!member.isMainCharacter) {
-                                let rarityDisplay = 'R';
-                                if (member.rarity === 'epic') {
-                                    rarityDisplay = 'SR';
-                                } else if (member.rarity === 'legendary') {
-                                    rarityDisplay = 'SSR';
-                                }
-                                rarityBadge = `<span class="rarity-badge ${member.rarity}">${rarityDisplay}</span>`;
-                            }
-
-                            return `
-                                <div class="team-member ${member.rarity}">
-                                    <div class="member-info">
-                                        <h4>${member.name}</h4>
-                                        ${rarityBadge}
-                                        <p>
-                                            等级: ${member.level || 1}
-                                            <span class="info-separator">|</span>
-                                            类型: ${typeDisplay}
-                                            <span class="info-separator">|</span>
-                                            属性: ${attributeDisplay} <span class="attribute-circle ${member.attribute}"></span>
-                                            ${member.isMainCharacter ? '<span class="main-character-tag">主角</span>' : ''}
-                                        </p>
-                                    </div>
-                                    <div class="member-actions">
-                                        ${member.isMainCharacter ?
-                                            '' :
-                                            `<button class="btn remove-from-team-btn" data-character-id="${member.id}">移除</button>`
+                                    // 转换稀有度显示（主角不显示稀有度）
+                                    let rarityBadge = '';
+                                    if (!member.isMainCharacter) {
+                                        let rarityDisplay = 'R';
+                                        if (member.rarity === 'epic') {
+                                            rarityDisplay = 'SR';
+                                        } else if (member.rarity === 'legendary') {
+                                            rarityDisplay = 'SSR';
                                         }
-                                    </div>
+                                        rarityBadge = `<span class="rarity-badge ${member.rarity}">${rarityDisplay}</span>`;
+                                    }
+
+                                    return `
+                                        <div class="team-member ${member.rarity}">
+                                            <div class="member-position">#${index + 1}</div>
+                                            <div class="member-info">
+                                                <h4>${member.name}</h4>
+                                                ${rarityBadge}
+                                                <p>
+                                                    等级: ${member.level || 1}
+                                                    <span class="info-separator">|</span>
+                                                    类型: ${typeDisplay}
+                                                    <span class="info-separator">|</span>
+                                                    属性: ${attributeDisplay} <span class="attribute-circle ${member.attribute}"></span>
+                                                    ${member.isMainCharacter ? '<span class="main-character-tag">主角</span>' : ''}
+                                                </p>
+                                            </div>
+                                            <div class="member-actions">
+                                                ${member.isMainCharacter ?
+                                                    '' :
+                                                    `<button class="btn remove-from-team-btn" data-character-id="${member.id}">移除</button>`
+                                                }
+                                            </div>
+                                        </div>
+                                    `;
+                                }).join('')}
+                            </div>
+                        </div>
+                        ${members.length > FRONT_LINE_MEMBERS ? `
+                            <div class="team-section">
+                                <h5>后排队员 (备用)</h5>
+                                <div class="back-line-members">
+                                    ${members.slice(FRONT_LINE_MEMBERS).map((member, index) => {
+                                        // 获取类型和属性的中文名称
+                                        const typeDisplay = Character.types[member.type]?.name || member.type;
+                                        const attributeDisplay = Character.attributes[member.attribute]?.name || member.attribute;
+
+                                        // 转换稀有度显示（主角不显示稀有度）
+                                        let rarityBadge = '';
+                                        if (!member.isMainCharacter) {
+                                            let rarityDisplay = 'R';
+                                            if (member.rarity === 'epic') {
+                                                rarityDisplay = 'SR';
+                                            } else if (member.rarity === 'legendary') {
+                                                rarityDisplay = 'SSR';
+                                            }
+                                            rarityBadge = `<span class="rarity-badge ${member.rarity}">${rarityDisplay}</span>`;
+                                        }
+
+                                        return `
+                                            <div class="team-member ${member.rarity}">
+                                                <div class="member-position">#${index + 5}</div>
+                                                <div class="member-info">
+                                                    <h4>${member.name}</h4>
+                                                    ${rarityBadge}
+                                                    <p>
+                                                        等级: ${member.level || 1}
+                                                        <span class="info-separator">|</span>
+                                                        类型: ${typeDisplay}
+                                                        <span class="info-separator">|</span>
+                                                        属性: ${attributeDisplay} <span class="attribute-circle ${member.attribute}"></span>
+                                                        ${member.isMainCharacter ? '<span class="main-character-tag">主角</span>' : ''}
+                                                    </p>
+                                                </div>
+                                                <div class="member-actions">
+                                                    ${member.isMainCharacter ?
+                                                        '' :
+                                                        `<button class="btn remove-from-team-btn" data-character-id="${member.id}">移除</button>`
+                                                    }
+                                                </div>
+                                            </div>
+                                        `;
+                                    }).join('')}
                                 </div>
-                            `;
-                        }).join('') :
-                        '<p>没有队员</p>'
-                    }
+                            </div>
+                        ` : ''}
+                    ` : '<p>没有队员</p>'}
                 </div>
             `;
 
@@ -369,7 +424,7 @@
                 </div>
                 <div class="character-actions">
                     <span class="plus-icon ${activeTeam.members.length >= MAX_TEAM_MEMBERS ? 'disabled' : ''}"
-                          data-character-id="${character.id}">+</span>
+                          data-character-id="${character.id}" title="添加到队伍">+</span>
                 </div>
             `;
 

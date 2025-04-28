@@ -33,6 +33,38 @@
     gap: 10px;
 }
 
+/* 队伍部分 */
+.team-section {
+    margin-bottom: 15px;
+}
+
+.team-section h5 {
+    margin: 5px 0;
+    padding: 5px;
+    background-color: #f0f0f0;
+    border-radius: 3px;
+    font-size: 14px;
+}
+
+.front-line-members, .back-line-members {
+    margin-top: 5px;
+}
+
+.member-position {
+    background-color: #4CAF50;
+    color: white;
+    padding: 2px 5px;
+    border-radius: 3px;
+    font-size: 12px;
+    margin-right: 5px;
+    min-width: 20px;
+    text-align: center;
+}
+
+.back-line-members .member-position {
+    background-color: #FFA726;
+}
+
 .team-member {
     padding: 10px;
     border-radius: 5px;
@@ -56,6 +88,11 @@
 .team-member.legendary {
     background-color: #fffbe8;
     border-left: 4px solid #fc0;
+}
+
+.back-line-members .team-member {
+    background-color: #f5f5f5;
+    opacity: 0.95;
 }
 
 .member-info {

@@ -461,6 +461,7 @@
     min-height: 0; /* 覆盖可能的最小高度设置 */
     height: auto; /* 自适应高度 */
     box-sizing: border-box; /* 确保内边距不会增加元素的总高度 */
+    width: 100%; /* 确保宽度填满容器 */
 }
 
 .member-avatar {
@@ -480,8 +481,9 @@
     display: flex;
     flex-direction: row;
     align-items: center;
-    flex-wrap: wrap;
+    flex-wrap: nowrap; /* 防止换行 */
     gap: 8px;
+    overflow: hidden; /* 防止内容溢出 */
 }
 
 .member-name {
@@ -490,6 +492,11 @@
     line-height: 1.2;
     margin: 0;
     padding: 0;
+    white-space: nowrap; /* 防止文本换行 */
+    overflow: hidden; /* 防止文本溢出 */
+    text-overflow: ellipsis; /* 文本溢出时显示省略号 */
+    min-width: 80px; /* 增加最小宽度，避免中文换行 */
+    max-width: 120px; /* 增加最大宽度 */
 }
 
 .member-class {
@@ -498,6 +505,11 @@
     line-height: 1.2;
     margin: 0;
     padding: 0;
+    white-space: nowrap; /* 防止文本换行 */
+    overflow: hidden; /* 防止文本溢出 */
+    text-overflow: ellipsis; /* 文本溢出时显示省略号 */
+    min-width: 60px; /* 增加最小宽度 */
+    max-width: 80px; /* 增加最大宽度 */
 }
 
 .member-level {
@@ -506,14 +518,21 @@
     line-height: 1.2;
     margin: 0;
     padding: 0;
+    white-space: nowrap; /* 防止文本换行 */
+    overflow: hidden; /* 防止文本溢出 */
+    text-overflow: ellipsis; /* 文本溢出时显示省略号 */
+    min-width: 50px; /* 增加最小宽度 */
+    max-width: 70px; /* 增加最大宽度 */
 }
 
 .member-skills {
     display: flex;
-    flex-wrap: wrap; /* 允许技能换行 */
+    flex-wrap: nowrap; /* 防止技能换行 */
     gap: 3px;
     margin: 0;
     padding: 0;
+    flex-shrink: 0; /* 防止技能区域被压缩 */
+    min-width: 60px; /* 设置最小宽度 */
 }
 
 .member-skill {

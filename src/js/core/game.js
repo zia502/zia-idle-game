@@ -672,9 +672,18 @@ const Game = {
                 Shop.reset();
             }
 
-            // 重新初始化UI
-            if (typeof UI !== 'undefined' && typeof UI.init === 'function') {
-                UI.init();
+            // 刷新UI显示，但不重新初始化事件监听器
+            if (typeof UI !== 'undefined') {
+                // 更新金币显示
+                const goldElement = document.getElementById('gold-display');
+                if (goldElement) {
+                    goldElement.textContent = `金币: ${this.state.gold}`;
+                }
+
+                // 切换到主屏幕
+                if (typeof UI.switchScreen === 'function') {
+                    UI.switchScreen('main-screen');
+                }
             }
 
             console.log("游戏已重置");

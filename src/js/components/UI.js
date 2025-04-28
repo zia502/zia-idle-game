@@ -33,6 +33,14 @@ const UI = {
      * 设置UI事件监听
      */
     setupEventListeners() {
+        // 防止重复绑定事件
+        if (this.eventsInitialized) {
+            console.log('UI事件已初始化，跳过重复绑定');
+            return;
+        }
+
+        console.log('初始化UI事件监听器');
+
         // 监听窗口大小变化
         window.addEventListener('resize', () => {
             this.adjustLayout();
@@ -52,7 +60,11 @@ const UI = {
         // 添加保存和重置按钮事件
         const saveBtn = document.getElementById('save-btn');
         if (saveBtn) {
-            saveBtn.addEventListener('click', () => {
+            // 移除可能存在的旧事件监听器
+            saveBtn.replaceWith(saveBtn.cloneNode(true));
+            const newSaveBtn = document.getElementById('save-btn');
+
+            newSaveBtn.addEventListener('click', () => {
                 if (typeof Game !== 'undefined' && typeof Game.saveGame === 'function') {
                     Game.saveGame();
                     this.showNotification('游戏已保存', 'success');
@@ -62,7 +74,11 @@ const UI = {
 
         const resetBtn = document.getElementById('reset-btn');
         if (resetBtn) {
-            resetBtn.addEventListener('click', () => {
+            // 移除可能存在的旧事件监听器
+            resetBtn.replaceWith(resetBtn.cloneNode(true));
+            const newResetBtn = document.getElementById('reset-btn');
+
+            newResetBtn.addEventListener('click', () => {
                 if (confirm('确定要重置游戏吗？所有进度将会丢失。')) {
                     if (typeof Game !== 'undefined' && typeof Game.resetGame === 'function') {
                         Game.resetGame();
@@ -71,6 +87,9 @@ const UI = {
                 }
             });
         }
+
+        // 标记事件已初始化
+        this.eventsInitialized = true;
     },
 
     /**

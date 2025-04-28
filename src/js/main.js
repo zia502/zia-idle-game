@@ -42,25 +42,56 @@ document.addEventListener('DOMContentLoaded', function() {
         if (typeof JobSkillsTemplate !== 'undefined') {
             console.log('初始化职业技能模板系统...');
             JobSkillsTemplate.init();
+
+            // 监听技能模板加载完成事件，然后再初始化职业系统
+            Events.on('jobSkillsTemplate:loaded', function() {
+                console.log('技能模板加载完成，现在初始化职业系统...');
+
+                // 初始化职业系统
+                if (typeof JobSystem !== 'undefined') {
+                    console.log('初始化职业系统...');
+                    JobSystem.init();
+
+                    // 监听职业系统就绪事件，然后再触发游戏加载完成事件
+                    Events.on('jobSystem:ready', function() {
+                        // 通知游戏加载完成（只触发一次）
+                        if (!window.gameLoadedEmitted) {
+                            window.gameLoadedEmitted = true;
+                            console.log('职业系统就绪，现在触发游戏加载完成事件');
+
+                            // 延迟一点时间，确保所有系统都已初始化
+                            setTimeout(() => {
+                                Events.emit('game:loaded');
+                            }, 100);
+                        }
+                    });
+                } else {
+                    console.warn('找不到JobSystem模块，跳过初始化');
+                }
+            });
         } else {
             console.warn('找不到JobSkillsTemplate模块，跳过初始化');
+
+            // 如果没有技能模板系统，仍然初始化职业系统
+            if (typeof JobSystem !== 'undefined') {
+                console.log('初始化职业系统...');
+                JobSystem.init();
+            } else {
+                console.warn('找不到JobSystem模块，跳过初始化');
+            }
         }
 
-        // 初始化职业系统
-        if (typeof JobSystem !== 'undefined') {
-            console.log('初始化职业系统...');
-            JobSystem.init();
-        } else {
-            console.warn('找不到JobSystem模块，跳过初始化');
-        }
+        // 初始化角色系统 - 在职业系统就绪后初始化
+        Events.on('jobSystem:ready', function() {
+            console.log('职业系统就绪，现在初始化角色系统...');
 
-        // 初始化角色系统
-        if (typeof Character !== 'undefined') {
-            console.log('初始化角色系统...');
-            Character.init();
-        } else {
-            console.warn('找不到Character模块，跳过初始化');
-        }
+            if (typeof Character !== 'undefined') {
+                console.log('初始化角色系统...');
+                Character.init();
+            } else {
+                console.warn('找不到Character模块，跳过初始化');
+            }
+        });
 
         // 初始化背包系统
         if (typeof Inventory !== 'undefined') {
@@ -86,21 +117,26 @@ document.addEventListener('DOMContentLoaded', function() {
             console.warn('找不到Team模块，跳过初始化');
         }
 
-        // 初始化UI系统
-        if (typeof UI !== 'undefined') {
-            console.log('初始化UI系统...');
-            UI.init();
-        } else {
-            console.warn('找不到UI模块，跳过初始化');
-        }
+        // 在职业系统就绪后初始化UI系统
+        Events.on('jobSystem:ready', function() {
+            console.log('职业系统就绪，现在初始化UI系统...');
 
-        // 初始化技能提示框
-        if (typeof SkillTooltip !== 'undefined') {
-            console.log('初始化技能提示框...');
-            SkillTooltip.init();
-        } else {
-            console.warn('找不到SkillTooltip模块，跳过初始化');
-        }
+            // 初始化UI系统
+            if (typeof UI !== 'undefined') {
+                console.log('初始化UI系统...');
+                UI.init();
+            } else {
+                console.warn('找不到UI模块，跳过初始化');
+            }
+
+            // 初始化技能提示框
+            if (typeof SkillTooltip !== 'undefined') {
+                console.log('初始化技能提示框...');
+                SkillTooltip.init();
+            } else {
+                console.warn('找不到SkillTooltip模块，跳过初始化');
+            }
+        });
 
         // 最后初始化游戏核心
         if (typeof Game !== 'undefined') {
@@ -113,8 +149,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 goldElement.textContent = `金币: ${Game.state.gold}`;
             }
 
-            // 通知游戏加载完成
-            Events.emit('game:loaded');
+            // 游戏初始化完成，但不在这里触发game:loaded事件
+            // 而是在JobSystem就绪后触发
             console.log('游戏初始化完成!');
 
             // 输出调试信息

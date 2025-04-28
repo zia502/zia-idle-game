@@ -200,49 +200,77 @@ const UI = {
      * @param {string} screenId - 屏幕元素ID
      */
     switchScreen(screenId) {
+        // 检查当前是否已经在目标屏幕上
+        const targetScreen = document.getElementById(screenId);
+        if (!targetScreen) {
+            console.warn(`屏幕 ${screenId} 不存在`);
+            return;
+        }
+
+        // 如果当前屏幕已经是活跃的，不需要重复切换
+        if (this.activeScreen === screenId) {
+            console.log(`已经在屏幕 ${screenId} 上，无需切换`);
+            return;
+        }
+
         // 隐藏所有屏幕
         document.querySelectorAll('.game-screen').forEach(screen => {
             screen.classList.add('hidden');
         });
 
         // 显示目标屏幕
-        const targetScreen = document.getElementById(screenId);
-        if (targetScreen) {
-            targetScreen.classList.remove('hidden');
-            this.activeScreen = screenId;
+        targetScreen.classList.remove('hidden');
+        this.activeScreen = screenId;
 
-            // 创建并触发自定义事件
-            const screenEvent = new CustomEvent('screenChanged', {
-                detail: { screen: screenId }
-            });
-            document.dispatchEvent(screenEvent);
+        // 创建并触发自定义事件
+        const screenEvent = new CustomEvent('screenChanged', {
+            detail: { screen: screenId }
+        });
+        document.dispatchEvent(screenEvent);
 
-            // 更新导航按钮的活跃状态
-            document.querySelectorAll('.nav-button').forEach(button => {
-                if (button.getAttribute('data-target') === screenId) {
-                    button.classList.add('active');
-                } else {
-                    button.classList.remove('active');
-                }
-            });
+        // 更新导航按钮的活跃状态
+        document.querySelectorAll('.nav-button').forEach(button => {
+            if (button.getAttribute('data-target') === screenId) {
+                button.classList.add('active');
+            } else {
+                button.classList.remove('active');
+            }
+        });
 
-            // 如果切换到主屏幕，更新主界面UI
-            if (screenId === 'main-screen' && typeof MainUI !== 'undefined') {
-                try {
+        // 如果切换到主屏幕，更新主界面UI
+        if (screenId === 'main-screen' && typeof MainUI !== 'undefined') {
+            try {
+                // 检查JobSystem是否已就绪
+                const jobSystemReady = typeof JobSystem !== 'undefined' &&
+                                      typeof JobSkillsTemplate !== 'undefined' &&
+                                      JobSkillsTemplate.templates;
+
+                if (jobSystemReady) {
                     MainUI.updateMainHeroInfo();
                     MainUI.updateCurrentTeam();
                     MainUI.updateWeaponBoard();
                     MainUI.updateCurrentDungeon();
                     MainUI.updateBattleLog();
-                } catch (error) {
-                    console.error('更新主界面时出错:', error);
+                } else {
+                    console.log('JobSystem未就绪，暂不更新主界面UI');
+                    // 监听JobSystem就绪事件
+                    if (typeof Events !== 'undefined') {
+                        Events.once('jobSystem:ready', () => {
+                            console.log('JobSystem就绪，现在更新主界面UI');
+                            MainUI.updateMainHeroInfo();
+                            MainUI.updateCurrentTeam();
+                            MainUI.updateWeaponBoard();
+                            MainUI.updateCurrentDungeon();
+                            MainUI.updateBattleLog();
+                        });
+                    }
                 }
+            } catch (error) {
+                console.error('更新主界面时出错:', error);
             }
-
-            console.log(`切换到屏幕: ${screenId}`);
-        } else {
-            console.warn(`屏幕 ${screenId} 不存在`);
         }
+
+        console.log(`切换到屏幕: ${screenId}`);
     },
 
     /**

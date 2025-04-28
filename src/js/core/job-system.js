@@ -8,23 +8,30 @@ const JobSystem = {
     init() {
         console.log('初始化职业系统');
 
-        // 确保JobSkillsTemplate已初始化
-        if (typeof JobSkillsTemplate !== 'undefined' && typeof JobSkillsTemplate.init === 'function') {
-            JobSkillsTemplate.init();
+        // 检查JobSkillsTemplate是否已加载
+        if (typeof JobSkillsTemplate !== 'undefined' && JobSkillsTemplate.templates) {
+            console.log('JobSkillsTemplate已加载，职业系统就绪');
+
+            // 触发职业系统就绪事件
+            if (typeof Events !== 'undefined' && typeof Events.emit === 'function') {
+                Events.emit('jobSystem:ready');
+            }
         } else {
-            console.warn('JobSkillsTemplate模块未就绪，职业技能可能无法正常工作');
-        }
+            console.log('等待JobSkillsTemplate加载...');
 
-        // 监听JobSkillsTemplate加载完成事件
-        if (typeof Events !== 'undefined' && typeof Events.on === 'function') {
-            Events.on('jobSkillsTemplate:loaded', () => {
-                console.log('JobSkillsTemplate加载完成，职业系统就绪');
+            // 监听JobSkillsTemplate加载完成事件
+            if (typeof Events !== 'undefined' && typeof Events.on === 'function') {
+                Events.on('jobSkillsTemplate:loaded', () => {
+                    console.log('JobSkillsTemplate加载完成，职业系统就绪');
 
-                // 触发职业系统就绪事件
-                if (typeof Events.emit === 'function') {
-                    Events.emit('jobSystem:ready');
-                }
-            });
+                    // 触发职业系统就绪事件
+                    if (typeof Events.emit === 'function') {
+                        Events.emit('jobSystem:ready');
+                    }
+                });
+            } else {
+                console.warn('Events模块未就绪，无法监听JobSkillsTemplate加载事件');
+            }
         }
     },
     /**
@@ -255,16 +262,95 @@ const JobSystem = {
      * @returns {object|null} 技能信息
      */
     getSkill(skillId) {
-        // 从JobSkillsTemplate获取技能信息
-        if (typeof JobSkillsTemplate !== 'undefined' && JobSkillsTemplate.templates) {
-            const templateSkill = JobSkillsTemplate.templates[skillId];
-            if (templateSkill) {
-                return templateSkill;
-            }
+        // 检查技能模板是否已加载
+        if (typeof JobSkillsTemplate === 'undefined') {
+            console.warn(`JobSkillsTemplate未定义，无法获取技能: ${skillId}`);
+            return this.getFallbackSkill(skillId);
         }
 
+        // 检查templates属性是否存在
+        if (!JobSkillsTemplate.templates) {
+            console.warn(`JobSkillsTemplate.templates未定义，可能技能模板尚未加载，无法获取技能: ${skillId}`);
+            return this.getFallbackSkill(skillId);
+        }
+
+        // 从JobSkillsTemplate获取技能信息
+        const templateSkill = JobSkillsTemplate.templates[skillId];
+        if (templateSkill) {
+            return templateSkill;
+        }
+
+        // 如果找不到技能，返回备用技能
         console.warn(`找不到技能: ${skillId}`);
-        return null;
+        return this.getFallbackSkill(skillId);
+    },
+
+    /**
+     * 获取备用技能信息
+     * 当技能模板未加载或找不到技能时使用
+     * @param {string} skillId - 技能ID
+     * @returns {object} 备用技能信息
+     */
+    getFallbackSkill(skillId) {
+        // 常见技能的备用信息
+        const commonSkills = {
+            'warriorSlash': {
+                name: '狂怒',
+                description: '所有参战者获得攻击力+20%,持续3回合。CD5回合',
+                type: 'buff',
+                power: 1.0,
+                effectType: 'buff',
+                targetType: 'all_allies',
+                effects: [{ type: 'attackUp', value: 0.2, duration: 3 }]
+            },
+            'armorBreak': {
+                name: '护甲破坏',
+                description: '对敌方单体造成100%攻击力的伤害，并对敌方单位施加防御力-20%DEBUFF，持续3回合，CD5回合。',
+                type: 'attack',
+                power: 1.0,
+                effectType: 'damage_and_debuff',
+                targetType: 'enemy',
+                effects: [{ type: 'damage', multiplier: 1.0 }]
+            },
+            'fiercePounce': {
+                name: '猛袭',
+                description: '被动:自身DA+15%',
+                type: 'buff',
+                power: 0.5,
+                effectType: 'buff',
+                targetType: 'self',
+                effects: [{ type: 'daBoost', value: 0.15, passive: true }]
+            },
+            'whirlwind': {
+                name: '旋风斩',
+                description: '对所有敌人造成伤害',
+                type: 'attack',
+                power: 1.2,
+                effectType: 'damage',
+                targetType: 'all_enemies',
+                effects: [{ type: 'damage', multiplier: 1.2 }]
+            }
+        };
+
+        // 如果是常见技能，返回预定义的备用信息
+        if (commonSkills[skillId]) {
+            return {
+                id: skillId,
+                ...commonSkills[skillId]
+            };
+        }
+
+        // 否则创建一个基本的技能对象
+        return {
+            id: skillId,
+            name: skillId, // 使用ID作为名称
+            description: "技能信息尚未加载",
+            type: "unknown",
+            power: 1.0,
+            effectType: "unknown",
+            targetType: "unknown",
+            effects: []
+        };
     },
 
     /**

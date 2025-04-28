@@ -22,12 +22,24 @@ const Events = {
         // 监听游戏加载完成事件
         this.on('game:loaded', () => {
             console.log('游戏加载完成');
-            // 确保主屏幕显示，但不重新初始化UI
-            if (typeof UI !== 'undefined' && typeof UI.switchScreen === 'function') {
-                UI.switchScreen('main-screen');
-            } else {
-                console.warn('UI模块未定义，无法切换到主屏幕');
-            }
+
+            // 始终等待JobSystem就绪后再切换到主屏幕
+            console.log('等待JobSystem就绪后再切换到主屏幕');
+
+            // 监听JobSystem就绪事件
+            this.once('jobSystem:ready', () => {
+                console.log('JobSystem就绪，现在切换到主屏幕');
+
+                // 确保UI系统已初始化
+                if (typeof UI !== 'undefined' && typeof UI.switchScreen === 'function') {
+                    // 延迟一点时间，确保技能模板数据已完全加载
+                    setTimeout(() => {
+                        UI.switchScreen('main-screen');
+                    }, 100);
+                } else {
+                    console.warn('UI模块未定义，无法切换到主屏幕');
+                }
+            });
         });
 
         // 监听角色升级事件

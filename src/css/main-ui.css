@@ -442,6 +442,35 @@
     background-color: #d0d0d0;
 }
 
+/* 加载中的技能样式 */
+.skill-item.loading {
+    background-color: #f0f0f0;
+    color: #999;
+    border: 1px dashed #ccc;
+    animation: pulse 1.5s infinite;
+}
+
+.retry-button {
+    margin-top: 5px;
+    padding: 3px 8px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+    font-size: 12px;
+}
+
+.retry-button:hover {
+    background-color: #45a049;
+}
+
+@keyframes pulse {
+    0% { opacity: 0.6; }
+    50% { opacity: 1; }
+    100% { opacity: 0.6; }
+}
+
 /* 当前队伍样式 */
 #main-current-team {
     display: flex;
@@ -558,6 +587,13 @@
 
 .skill-heal {
     background-color: #66cc66; /* 绿色 - 治疗技能 */
+}
+
+/* 加载中的技能点样式 */
+.skill-loading {
+    background-color: #e0e0e0;
+    border: 1px dashed #ccc;
+    animation: pulse 1.5s infinite;
 }
 
 /* 当前地下城信息 */

@@ -1,0 +1,170 @@
+/* 队伍武器盘样式 */
+#team-weapon-board {
+    padding: 10px;
+    background-color: #f9f9f9;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+}
+
+.team-weapon-board-container {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.team-weapon-board-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.team-weapon-board-title {
+    font-size: 16px;
+    font-weight: bold;
+}
+
+.team-weapon-board-content {
+    display: flex;
+    gap: 15px;
+    min-height: 350px;
+}
+
+.team-main-weapon-slot {
+    width: 90px;
+    height: 100%;
+    min-height: 330px;
+}
+
+.team-sub-weapons-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: repeat(3, 1fr);
+    gap: 10px;
+    flex: 1;
+    min-height: 330px;
+    width: 100%;
+    max-width: 400px;
+}
+
+.team-weapon-slot {
+    background-color: #e0e0e0;
+    border: 1px dashed #aaa;
+    border-radius: 5px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    color: #777;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    height: 100%;
+    min-height: 80px;
+    padding: 5px;
+    box-sizing: border-box;
+}
+
+.team-main-weapon-slot .team-weapon-slot {
+    height: 100%;
+    min-height: 330px;
+}
+
+.team-weapon-slot:hover {
+    background-color: #d0d0d0;
+    transform: translateY(-2px);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.team-weapon-item {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background-color: #f0f0f0;
+    border-radius: 5px;
+    padding: 5px;
+    box-sizing: border-box;
+}
+
+.team-weapon-icon {
+    width: 40px;
+    height: 40px;
+    background-color: #ddd;
+    border-radius: 5px;
+    margin-bottom: 5px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 20px;
+    color: #555;
+}
+
+.team-weapon-name {
+    font-size: 12px;
+    font-weight: bold;
+    text-align: center;
+    margin-bottom: 3px;
+}
+
+.team-weapon-type {
+    font-size: 10px;
+    color: #777;
+    text-align: center;
+}
+
+/* 武器稀有度样式 */
+.team-weapon-slot.common {
+    border-color: #9e9e9e;
+}
+
+.team-weapon-slot.uncommon {
+    border-color: #4caf50;
+}
+
+.team-weapon-slot.rare {
+    border-color: #2196f3;
+}
+
+.team-weapon-slot.epic {
+    border-color: #9c27b0;
+}
+
+.team-weapon-slot.legendary {
+    border-color: #ff9800;
+}
+
+/* 武器属性样式 */
+.team-weapon-attribute {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    margin-right: 3px;
+}
+
+.team-weapon-attribute.fire {
+    background-color: #f44336;
+}
+
+.team-weapon-attribute.water {
+    background-color: #2196f3;
+}
+
+.team-weapon-attribute.earth {
+    background-color: #795548;
+}
+
+.team-weapon-attribute.wind {
+    background-color: #4caf50;
+}
+
+.team-weapon-attribute.light {
+    background-color: #ffeb3b;
+}
+
+.team-weapon-attribute.dark {
+    background-color: #673ab7;
+}

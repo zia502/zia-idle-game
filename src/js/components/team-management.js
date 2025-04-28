@@ -133,6 +133,35 @@
 
         renderTeams();
         renderAvailableCharacters();
+
+        // 更新队伍武器盘
+        if (typeof TeamWeaponBoard !== 'undefined') {
+            console.log('刷新队伍武器盘');
+
+            // 确保队伍有武器盘
+            const activeTeamId = Game.state.activeTeamId;
+            if (activeTeamId && Team.teams[activeTeamId]) {
+                const team = Team.teams[activeTeamId];
+
+                // 如果队伍没有武器盘，创建一个
+                if (!team.weaponBoardId && typeof Weapon !== 'undefined') {
+                    const weaponBoardName = `board_${team.id}`;
+                    const weaponBoard = Weapon.createWeaponBoard(weaponBoardName, 10);
+                    team.weaponBoardId = weaponBoard.id;
+                    console.log(`在team-management中为队伍 ${team.name} 创建武器盘: ${weaponBoard.id}`);
+
+                    // 保存游戏状态
+                    if (typeof Game !== 'undefined' && typeof Game.saveGame === 'function') {
+                        setTimeout(() => Game.saveGame(), 100);
+                    }
+                }
+            }
+
+            // 渲染武器盘
+            if (typeof TeamWeaponBoard.renderTeamWeaponBoard === 'function') {
+                setTimeout(() => TeamWeaponBoard.renderTeamWeaponBoard(), 200);
+            }
+        }
     }
 
     /**

@@ -76,12 +76,22 @@ const Team = {
                 }
             }
 
+            // 创建武器盘
+            let weaponBoardId = data.weaponBoardId;
+            if (!weaponBoardId && typeof Weapon !== 'undefined' && typeof Weapon.createWeaponBoard === 'function') {
+                // 为队伍创建一个新的武器盘
+                const weaponBoardName = `board_${teamId}`;
+                const weaponBoard = Weapon.createWeaponBoard(weaponBoardName, 10); // 10个槽位
+                weaponBoardId = weaponBoard.id;
+                console.log(`为队伍 ${data.name || '未命名队伍'} 创建武器盘: ${weaponBoardId}`);
+            }
+
             // 创建队伍对象
             const team = {
                 id: teamId,
                 name: data.name || '未命名队伍',
                 members: members,
-                weaponBoardId: data.weaponBoardId || null,
+                weaponBoardId: weaponBoardId,
                 isActive: data.isActive || false,
                 createdAt: Date.now()
             };
@@ -89,7 +99,7 @@ const Team = {
             // 添加到队伍列表
             this.teams[teamId] = team;
 
-            console.log(`创建队伍: ${team.name} (ID: ${teamId}), 成员数: ${members.length}`);
+            console.log(`创建队伍: ${team.name} (ID: ${teamId}), 成员数: ${members.length}, 武器盘ID: ${weaponBoardId}`);
             if (members.length > 0) {
                 console.log(`队伍 ${team.name} 成员ID: ${members.join(', ')}`);
             }

@@ -317,38 +317,272 @@ const MainUI = {
             const weaponBoardContainer = document.getElementById('main-weapon-board');
             if (!weaponBoardContainer) return;
 
-            // 检查Weapon模块是否存在
-            if (typeof Weapon === 'undefined') {
-                console.warn('Weapon模块未定义');
-                // 不显示错误消息，因为我们已经有了默认的空武器槽UI
+            // 检查Weapon和Team模块是否存在
+            if (typeof Weapon === 'undefined' || typeof Team === 'undefined') {
+                console.warn('Weapon或Team模块未定义');
                 return;
             }
 
-            // 获取武器数据
-            // 这里需要根据实际的武器系统实现
-            // 目前只显示空的武器槽，但添加了点击事件
+            // 获取当前队伍
+            const activeTeamId = Game.state.activeTeamId;
+            if (!activeTeamId || !Team.teams[activeTeamId]) {
+                // 如果没有当前队伍，显示默认的空武器盘
+                return;
+            }
 
-            // 为所有武器槽添加点击事件
-            const weaponSlots = weaponBoardContainer.querySelectorAll('.empty-weapon-slot');
-            weaponSlots.forEach(slot => {
-                // 移除可能存在的旧事件监听器
-                const newSlot = slot.cloneNode(true);
-                slot.parentNode.replaceChild(newSlot, slot);
+            const team = Team.teams[activeTeamId];
+            const weaponBoardId = team.weaponBoardId;
 
-                // 添加点击事件
-                newSlot.addEventListener('click', () => {
-                    const slotType = newSlot.getAttribute('data-slot');
-                    console.log(`点击了武器槽: ${slotType}`);
+            // 如果队伍没有武器盘，创建一个
+            if (!weaponBoardId) {
+                const weaponBoardName = `board_${team.id}`;
+                const weaponBoard = Weapon.createWeaponBoard(weaponBoardName, 10); // 10个槽位
+                team.weaponBoardId = weaponBoard.id;
+                console.log(`为队伍 ${team.name} 创建武器盘: ${weaponBoard.id}`);
 
-                    // 如果武器系统已加载，切换到武器界面
-                    if (typeof UI !== 'undefined' && typeof UI.switchScreen === 'function') {
-                        UI.switchScreen('weapon-screen');
-                    }
-                });
-            });
+                // 保存游戏状态
+                if (typeof Game !== 'undefined' && typeof Game.saveGame === 'function') {
+                    setTimeout(() => Game.saveGame(), 100);
+                }
+            }
+
+            // 获取武器盘
+            const weaponBoard = Weapon.getWeaponBoard(weaponBoardId);
+            if (!weaponBoard) {
+                return;
+            }
+
+            // 更新武器盘HTML
+            let html = `
+                <div class="weapon-board-container">
+                    <div class="main-weapon-slot">
+                        <!-- 主手武器槽 -->
+                        ${this.renderWeaponSlot(weaponBoard, 'main')}
+                    </div>
+                    <div class="sub-weapons-grid">
+                        <!-- 9个副武器槽 -->
+                        ${this.renderSubWeaponSlots(weaponBoard)}
+                    </div>
+                </div>
+            `;
+
+            weaponBoardContainer.innerHTML = html;
+
+            // 绑定武器槽点击事件
+            this.bindWeaponSlotEvents(weaponBoardId);
         } catch (error) {
             console.error('更新武器盘时出错:', error);
         }
+    },
+
+    /**
+     * 渲染主武器槽
+     * @param {object} weaponBoard - 武器盘对象
+     * @param {string} slotType - 槽位类型
+     * @returns {string} 武器槽HTML
+     */
+    renderWeaponSlot(weaponBoard, slotType) {
+        try {
+            // 获取槽位中的武器
+            const weaponId = weaponBoard.slots[slotType];
+
+            if (!weaponId) {
+                return `<div class="empty-weapon-slot" data-slot="${slotType}">主手武器</div>`;
+            }
+
+            // 获取武器信息
+            const weapon = Weapon.getWeapon(weaponId);
+            if (!weapon) {
+                return `<div class="empty-weapon-slot" data-slot="${slotType}">主手武器</div>`;
+            }
+
+            // 获取武器稀有度样式
+            const rarityClass = this.getRarityClass(weapon.rarity);
+
+            // 获取武器属性样式
+            const attributeHtml = this.getAttributeHtml(weapon.attribute);
+
+            return `
+                <div class="empty-weapon-slot ${rarityClass}" data-slot="${slotType}" data-weapon-id="${weaponId}">
+                    <div class="weapon-item">
+                        <div class="weapon-icon">${weapon.name.charAt(0)}</div>
+                        <div class="weapon-name">${weapon.name}</div>
+                        <div class="weapon-type">${weapon.type || '未知类型'}</div>
+                        <div class="weapon-attributes">${attributeHtml}</div>
+                    </div>
+                </div>
+            `;
+        } catch (error) {
+            console.error('渲染武器槽时出错:', error);
+            return `<div class="empty-weapon-slot" data-slot="${slotType}">主手武器</div>`;
+        }
+    },
+
+    /**
+     * 渲染副武器槽
+     * @param {object} weaponBoard - 武器盘对象
+     * @returns {string} 副武器槽HTML
+     */
+    renderSubWeaponSlots(weaponBoard) {
+        try {
+            let html = '';
+
+            // 渲染9个副武器槽
+            for (let i = 1; i <= 9; i++) {
+                const slotType = `sub${i}`;
+                const weaponId = weaponBoard.slots[slotType];
+
+                if (!weaponId) {
+                    html += `<div class="empty-weapon-slot" data-slot="${slotType}">副武器${i}</div>`;
+                    continue;
+                }
+
+                // 获取武器信息
+                const weapon = Weapon.getWeapon(weaponId);
+                if (!weapon) {
+                    html += `<div class="empty-weapon-slot" data-slot="${slotType}">副武器${i}</div>`;
+                    continue;
+                }
+
+                // 获取武器稀有度样式
+                const rarityClass = this.getRarityClass(weapon.rarity);
+
+                // 获取武器属性样式
+                const attributeHtml = this.getAttributeHtml(weapon.attribute);
+
+                html += `
+                    <div class="empty-weapon-slot ${rarityClass}" data-slot="${slotType}" data-weapon-id="${weaponId}">
+                        <div class="weapon-item">
+                            <div class="weapon-icon">${weapon.name.charAt(0)}</div>
+                            <div class="weapon-name">${weapon.name}</div>
+                            <div class="weapon-type">${weapon.type || '未知类型'}</div>
+                            <div class="weapon-attributes">${attributeHtml}</div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            return html;
+        } catch (error) {
+            console.error('渲染副武器槽时出错:', error);
+
+            // 出错时返回空槽位
+            let html = '';
+            for (let i = 1; i <= 9; i++) {
+                html += `<div class="empty-weapon-slot" data-slot="sub${i}">副武器${i}</div>`;
+            }
+            return html;
+        }
+    },
+
+    /**
+     * 获取武器稀有度样式
+     * @param {string} rarity - 武器稀有度
+     * @returns {string} 稀有度CSS类名
+     */
+    getRarityClass(rarity) {
+        if (!rarity) return '';
+
+        switch (rarity.toLowerCase()) {
+            case 'common':
+            case '普通':
+                return 'common';
+            case 'uncommon':
+            case '优秀':
+                return 'uncommon';
+            case 'rare':
+            case '稀有':
+                return 'rare';
+            case 'epic':
+            case '史诗':
+                return 'epic';
+            case 'legendary':
+            case '传说':
+                return 'legendary';
+            default:
+                return '';
+        }
+    },
+
+    /**
+     * 获取武器属性HTML
+     * @param {string} attribute - 武器属性
+     * @returns {string} 属性HTML
+     */
+    getAttributeHtml(attribute) {
+        if (!attribute) return '';
+
+        let attributeClass = '';
+
+        switch (attribute.toLowerCase()) {
+            case 'fire':
+            case '火':
+                attributeClass = 'fire';
+                break;
+            case 'water':
+            case '水':
+                attributeClass = 'water';
+                break;
+            case 'earth':
+            case '土':
+                attributeClass = 'earth';
+                break;
+            case 'wind':
+            case '风':
+                attributeClass = 'wind';
+                break;
+            case 'light':
+            case '光':
+                attributeClass = 'light';
+                break;
+            case 'dark':
+            case '暗':
+                attributeClass = 'dark';
+                break;
+            default:
+                return '';
+        }
+
+        return `<span class="weapon-attribute ${attributeClass}" title="${attribute}"></span>`;
+    },
+
+    /**
+     * 绑定武器槽点击事件
+     * @param {string} weaponBoardId - 武器盘ID
+     */
+    bindWeaponSlotEvents(weaponBoardId) {
+        const weaponSlots = document.querySelectorAll('#main-weapon-board .empty-weapon-slot');
+
+        weaponSlots.forEach(slot => {
+            // 移除可能存在的旧事件监听器
+            const newSlot = slot.cloneNode(true);
+            slot.parentNode.replaceChild(newSlot, slot);
+
+            // 添加点击事件
+            newSlot.addEventListener('click', () => {
+                const slotType = newSlot.getAttribute('data-slot');
+                const weaponId = newSlot.getAttribute('data-weapon-id');
+
+                console.log(`点击了武器槽: ${slotType}, 武器ID: ${weaponId || '无'}, 武器盘ID: ${weaponBoardId}`);
+
+                // 如果武器系统已加载，切换到武器界面
+                if (typeof UI !== 'undefined' && typeof UI.switchScreen === 'function') {
+                    // 保存当前选中的槽位，以便在武器界面中使用
+                    if (typeof Weapon !== 'undefined') {
+                        Weapon.selectedSlot = slotType;
+                        Weapon.selectedBoardId = weaponBoardId;
+
+                        // 如果是队伍武器盘，保存队伍ID
+                        const activeTeamId = Game.state.activeTeamId;
+                        if (activeTeamId) {
+                            Weapon.selectedTeamId = activeTeamId;
+                        }
+                    }
+
+                    UI.switchScreen('weapon-screen');
+                }
+            });
+        });
     },
 
     /**

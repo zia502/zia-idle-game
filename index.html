@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="src/css/tavern.css">
     <link rel="stylesheet" href="src/css/team-management.css">
     <link rel="stylesheet" href="src/css/main-ui.css">
+    <link rel="stylesheet" href="src/css/team-weapon-board.css">
 </head>
 <body>
     <div class="game-container">
@@ -90,9 +91,9 @@
                         </div>
 
                         <!-- 右下区域：武器盘 -->
-                        <div class="main-ui-section">
+                        <div class="main-ui-section" style="min-height: 450px; overflow: visible;">
                             <h3>武器盘</h3>
-                            <div id="main-weapon-board">
+                            <div id="main-weapon-board" style="min-height: 400px; overflow: visible;">
                                 <!-- 武器盘将通过JS动态生成 -->
                                 <div class="weapon-board-container">
                                     <div class="main-weapon-slot">
@@ -142,6 +143,13 @@
 
                         <div class="current-team" id="current-team">
                             <!-- 当前队伍信息将通过JS动态生成 -->
+                        </div>
+                    </div>
+
+                    <div class="section" style="min-height: 450px; overflow: visible;">
+                        <h3>队伍武器盘</h3>
+                        <div id="team-weapon-board" style="min-height: 400px; overflow: visible;">
+                            <!-- 队伍武器盘将通过JS动态生成 -->
                         </div>
                     </div>
 
@@ -343,6 +351,7 @@
     <script src="src/js/components/job-selection.js"></script>
     <script src="src/js/components/tavern.js"></script>
     <script src="src/js/components/team-management.js"></script>
+    <script src="src/js/components/team-weapon-board.js"></script>
     <script src="src/js/components/main-ui.js"></script>
 
     <!-- 工具函数 -->

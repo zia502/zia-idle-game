@@ -38,6 +38,22 @@ document.addEventListener('DOMContentLoaded', function() {
             console.warn('找不到Item模块，跳过初始化');
         }
 
+        // 初始化职业技能模板系统
+        if (typeof JobSkillsTemplate !== 'undefined') {
+            console.log('初始化职业技能模板系统...');
+            JobSkillsTemplate.init();
+        } else {
+            console.warn('找不到JobSkillsTemplate模块，跳过初始化');
+        }
+
+        // 初始化职业系统
+        if (typeof JobSystem !== 'undefined') {
+            console.log('初始化职业系统...');
+            JobSystem.init();
+        } else {
+            console.warn('找不到JobSystem模块，跳过初始化');
+        }
+
         // 初始化角色系统
         if (typeof Character !== 'undefined') {
             console.log('初始化角色系统...');

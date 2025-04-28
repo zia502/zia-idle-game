@@ -3,6 +3,31 @@
  */
 const JobSystem = {
     /**
+     * 初始化职业系统
+     */
+    init() {
+        console.log('初始化职业系统');
+
+        // 确保JobSkillsTemplate已初始化
+        if (typeof JobSkillsTemplate !== 'undefined' && typeof JobSkillsTemplate.init === 'function') {
+            JobSkillsTemplate.init();
+        } else {
+            console.warn('JobSkillsTemplate模块未就绪，职业技能可能无法正常工作');
+        }
+
+        // 监听JobSkillsTemplate加载完成事件
+        if (typeof Events !== 'undefined' && typeof Events.on === 'function') {
+            Events.on('jobSkillsTemplate:loaded', () => {
+                console.log('JobSkillsTemplate加载完成，职业系统就绪');
+
+                // 触发职业系统就绪事件
+                if (typeof Events.emit === 'function') {
+                    Events.emit('jobSystem:ready');
+                }
+            });
+        }
+    },
+    /**
      * 职业定义
      */
     jobs: {
@@ -215,197 +240,28 @@ const JobSystem = {
 
     /**
      * 技能定义
+     * 注意：固定技能已移至JobSkillsTemplate，这里只保留普通技能
      */
     skills: {
-        // 职业固定技能
-        warriorSlash: {
-            name: '狂怒',
-            description: '所有参战者获得攻击力+20%,持续3回合。CD5回合',
-            type: 'attack',
-            power: 1.0,
-            cost: 0,
-            fixed: true
-        },
-        fortressGuard: {
-            name: '佰长之护',
-            description: '无敌1次，持续3回合。攻击力降低20%。CD8回合',
-            type: 'defense',
-            power: 0.5,
-            cost: 0,
-            fixed: true
-        },
-        clericLight: {
-            name: '全体净化',
-            description: '所有参战者净化一个debuff,CD4回合',
-            type: 'heal',
-            power: 0.1,
-            cost: 0,
-            fixed: true
-        },
-        arcanistBolt: {
-            name: '致盲',
-            description: '对敌方单体施加黑暗debuff[降低50%攻击命中率],持续3回合,CD5回合',
-            type: 'magic',
-            power: 1.0,
-            cost: 0,
-            fixed: true
-        },
-        spellbladeStrike: {
-            name: '加速',
-            description: '我方全体获得DA[普通攻击变成连击]+10%,TA[普通攻击变成三连击]+5%buff，持续3回合,CD7回合',
-            type: 'attack',
-            power: 1.0,
-            cost: 0,
-            fixed: true
-        },
-        archerShot: {
-            name: '剑雨',
-            description: '对敌方全体造成150%-300%攻击力的伤害，CD5回合',
-            type: 'attack',
-            power: 1.0,
-            cost: 0,
-            fixed: true
-        },
-        berserkerRage: {
-            name: '暴走',
-            description: '全体获得以下状态:DA+100%,TA+50%。持续3回合，CD6回合。',
-            type: 'attack',
-            power: 1.1,
-            cost: 0,
-            fixed: true
-        },
-        beastLordCommand: {
-            name: '兽王指令',
-            description: '对敌方全体造成200%攻击力伤害，并施加防御力降低10%debuff和攻击力降低10%debuff,持续3回合。\
-            我方全体获得樵夫之歌[1.我方全体获得浑身buff,效果10%-20% 2.我方全体获得恢复buff，效果3000]buff，无法驱散，持续3回合CD6回合。',
-            type: 'attack',
-            power: 1.0,
-            cost: 0,
-            fixed: true
-        },
-        spartanStance: {
-            name: '盾墙',
-            description: '我方全体获得全属性伤害70%减免BUFF，持续一回合。CD5回合',
-            type: 'defense',
-            power: 0.6,
-            cost: 0,
-            fixed: true
-        },
-        oathShielderVow: {
-            name: '盾誓者誓言',
-            description: '自身获得英勇之盾BUFF，持续一回合,CD8回合\
-            英勇之盾: 1.全体援护（自身成为攻击目标，aoe除外）\
-                     2.防御力+1000\
-                     3.单次受到的伤害，最大值锁定为500\
-                     4.回合结束时,对敌方全体造成100%攻击力的伤害',
-            type: 'defense',
-            power: 0.4,
-            cost: 0,
-            fixed: true
-        },
-        bishopBlessing: {
-            name: '全体治疗',
-            description: '我方全体回复2000HP，CD5回合',
-            type: 'heal',
-            power: 0.15,
-            cost: 0,
-            fixed: true
-        },
-        saintPrayer: {
-            name: '主教座堂',
-            description: '我方全体获得以下强化：\
-                            1.伤害吸收盾5000，持续到消耗完\
-                            2.主教座堂BUFF,持续2次，受到攻击降低一次，无法驱散:\
-                                a.受到的伤害转为主角有利属性\
-                                b.主角有利属性伤害减轻20%\
-                            CD16回合',
-            type: 'heal',
-            power: 0.1,
-            cost: 0,
-            fixed: true
-        },
-        hermitSpell: {
-            name: '以太爆发',
-            description: '对敌方全体造成300-400%攻击力的伤害。CD5回合',
-            type: 'magic',
-            power: 1.1,
-            cost: 0,
-            fixed: true
-        },
-        warlockCurse: {
-            name: '霾晦',
-            description: '对敌方全体施加以下DEBUFF，持续3回合，CD5回合\
-                            1.攻击力降低15%\
-                            2.防御力降低15%\
-                            3.命中降低50%\
-                            4.中毒（每回合1000伤害）',
-            type: 'magic',
-            power: 1.0,
-            cost: 0,
-            fixed: true
-        },
-        darkKnightSlash: {
-            name: '惨雾',
-            description: '对敌方全体施加以下DEBUFF，持续4回合，CD5回合\
-                            1.攻击力降低25%\
-                            2.防御力降低25%',
-            type: 'attack',
-            power: 1.1,
-            cost: 0,
-            fixed: true
-        },
-        chaosLordDisruption: {
-            name: '荒凉无序',
-            description: '对敌方单体造成2次150%攻击力的伤害，并施加以下DEBUFF，持续3回合，CD6回合\
-                            2.防御力降低20%\
-                            3.DA降低30%\
-                            3.TA降低20%',
-            type: 'attack',
-            power: 1.0,
-            cost: 0,
-            fixed: true
-        },
-        rattlesnakeAim: {
-            name: '疾风步',
-            description: '自身获得以下BUFF，持续一回合,CD5回合\
-                            1.攻击力+100%\
-                            2.完全回避（回避所有伤害，不可回避除外）',
-            type: 'attack',
-            power: 1.2,
-            cost: 0,
-            fixed: true
-        },
-        robinHoodArrow: {
-            name: '一支穿云箭',
-            description: '对敌方造成5次100%攻击力的伤害 CD5回合，并施加以下 DEBUFF，持续3回合：\
-                            1.DA降低100%\
-                            2.TA降低100%\
-                            3.命中降低50%\
-                            4.麻痹（无法行动，包括技能和普通攻击）',
-            type: 'attack',
-            power: 1.0,
-            cost: 0,
-            fixed: true
-        },
 
         // 战士技能
         powerStrike: {
-            name: '强力打击',
-            description: '用力挥舞武器，造成150%攻击力的伤害。',
+            name: '护甲破坏',
+            description: '对敌方单体造成100%攻击力的伤害，并对敌方单位施加防御力-20%DEBUFF，持续3回合，CD5回合。',
             type: 'attack',
             power: 1.5,
             cost: 10
         },
         rage: {
-            name: '狂怒',
-            description: '进入狂怒状态，增加30%攻击力，但减少20%防御力。',
+            name: '猛袭',
+            description: '被动:自身DA+15%',
             type: 'buff',
             power: 1.3,
             cost: 15
         },
         whirlwind: {
             name: '旋风斩',
-            description: '旋转攻击周围所有敌人，造成120%攻击力的伤害。',
+            description: '被动:攻击时30%概率触发旋转攻击周围所有敌人，造成120%攻击力的伤害。',
             type: 'aoe',
             power: 1.2,
             cost: 20
@@ -413,212 +269,115 @@ const JobSystem = {
 
         // 堡垒技能
         shieldBash: {
-            name: '盾击',
-            description: '用盾牌击打敌人，造成80%攻击力的伤害并有30%几率眩晕敌人。',
+            name: '盾墙',
+            description: '我方全体获得50%伤害减免，持续一回合。CD5回合',
             type: 'attack',
             power: 0.8,
             cost: 10
         },
-        spearThrust: {
-            name: '长矛刺击',
-            description: '用长矛刺击敌人，造成130%攻击力的伤害。',
-            type: 'attack',
-            power: 1.3,
-            cost: 12
-        },
         phalanx: {
-            name: '方阵',
-            description: '组成防御阵型，增加全队20%防御力。',
+            name: '守护方阵',
+            description: '被动:组成防御阵型，增加全队20%防御力。',
             type: 'buff',
             power: 1.2,
             cost: 18
         },
         guardianOath: {
-            name: '守护誓言',
-            description: '立下守护誓言，承受队友50%的伤害。',
+            name: '援护',
+            description: '被动:我方单位被攻击时，有40%概率代替承受伤害。',
             type: 'buff',
             power: 0.5,
             cost: 15
         },
-        bulwark: {
-            name: '壁垒',
-            description: '成为不可动摇的壁垒，增加50%防御力。',
-            type: 'buff',
-            power: 1.5,
-            cost: 20
-        },
 
         // 牧师技能
         heal: {
-            name: '治疗',
-            description: '恢复目标30%最大生命值。',
+            name: '治愈',
+            description: '恢复HP最低的我方单位1000hp，CD5回合',
             type: 'heal',
             power: 0.3,
             cost: 15
         },
         bless: {
-            name: '祝福',
-            description: '祝福目标，增加10%所有属性。',
+            name: '闪光术',
+            description: '被动:攻击时有30%概率触发，对敌方全体造成100-150%攻击力的伤害。',
             type: 'buff',
             power: 1.1,
             cost: 20
         },
-        massHeal: {
-            name: '群体治疗',
-            description: '恢复全队20%最大生命值。',
-            type: 'heal',
-            power: 0.2,
-            cost: 25
-        },
         resurrection: {
             name: '复活',
-            description: '复活倒下的队友，恢复50%生命值。',
+            description: '复活倒下的队友，恢复30%生命值，CD10回合',
             type: 'heal',
             power: 0.5,
             cost: 40
         },
-        purify: {
-            name: '净化',
-            description: '净化目标，移除所有负面状态。',
-            type: 'heal',
-            power: 1.0,
-            cost: 15
-        },
-        divineBlessing: {
-            name: '神圣祝福',
-            description: '赐予神圣祝福，增加全队15%所有属性。',
-            type: 'buff',
-            power: 1.15,
-            cost: 30
-        },
+
 
         // 秘法师技能
         fireball: {
             name: '火球术',
-            description: '发射一个火球，造成140%攻击力的火属性伤害。',
+            description: '发射一个火球，对敌方单体造成200%-300%攻击力伤害。CD6回合',
             type: 'magic',
             power: 1.4,
             cost: 15
         },
         frostBolt: {
-            name: '冰霜箭',
-            description: '发射一支冰箭，造成120%攻击力的冰属性伤害并减少目标20%速度。',
+            name: '寒冰',
+            description: '被动:攻击时有15%概率发射一支冰箭，造成60%攻击力的冰属性伤害并施加攻击力-10%DEBUFF，持续2回合。',
             type: 'magic',
             power: 1.2,
             cost: 12
         },
         thunderstorm: {
             name: '雷暴',
-            description: '召唤雷暴攻击所有敌人，造成130%攻击力的雷属性伤害。',
+            description: '被动:回合结束时对敌方全体造成5次30%攻击力的伤害',
             type: 'magic',
             power: 1.3,
             cost: 25
         },
-        elementalMastery: {
-            name: '元素掌控',
-            description: '掌控元素力量，增加30%魔法伤害。',
-            type: 'buff',
-            power: 1.3,
-            cost: 20
-        },
-        curse: {
-            name: '诅咒',
-            description: '诅咒目标，减少20%所有属性。',
-            type: 'debuff',
-            power: 0.8,
-            cost: 18
-        },
-        lifeDrain: {
-            name: '生命吸取',
-            description: '吸取目标生命力，造成100%攻击力的伤害并恢复自身同等生命值。',
-            type: 'magic',
-            power: 1.0,
-            cost: 20
-        },
 
         // 魔剑士技能
         magicSlash: {
-            name: '魔法斩击',
-            description: '附魔武器进行斩击，造成120%攻击力的魔法伤害。',
+            name: '虚弱',
+            description: '对敌方单体施加攻击力-20%DEBUFF，防御力-20%DEBUFF，持续2回合，CD5回合。',
             type: 'attack',
             power: 1.2,
             cost: 12
         },
         elementalEnhance: {
-            name: '元素强化',
-            description: '用元素强化武器，增加20%攻击力。',
+            name: '强化',
+            description: '被动:提高我方全体10%攻击力',
             type: 'buff',
             power: 1.2,
             cost: 15
         },
         darkSlash: {
             name: '暗影斩',
-            description: '用黑暗能量斩击，造成140%攻击力的暗属性伤害。',
+            description: '被动:攻击时有15%概率触发，对敌方单体造成250%-350%攻击力的伤害。',
             type: 'attack',
             power: 1.4,
             cost: 18
-        },
-        soulEater: {
-            name: '噬魂',
-            description: '吞噬敌人灵魂，造成120%攻击力的伤害并恢复15%最大生命值。',
-            type: 'attack',
-            power: 1.2,
-            cost: 20
-        },
-        chaosStrike: {
-            name: '混沌打击',
-            description: '释放混沌能量，造成100-200%攻击力的随机伤害。',
-            type: 'attack',
-            power: 1.5,
-            cost: 18
-        },
-        realityWarp: {
-            name: '现实扭曲',
-            description: '扭曲现实，有30%几率使敌人攻击失败。',
-            type: 'buff',
-            power: 0.3,
-            cost: 25
         },
 
         // 射手技能
         preciseShot: {
             name: '精准射击',
-            description: '瞄准敌人弱点，造成160%攻击力的伤害。',
+            description: '被动:无视命中率降低DEBUFF，攻击必定命中',
             type: 'attack',
             power: 1.6,
             cost: 15
         },
         multiShot: {
             name: '多重射击',
-            description: '同时射出多支箭，对随机敌人造成3次80%攻击力的伤害。',
+            description: '被动: 攻击时50%概率触发，对敌方单体造成80%-120%伤害',
             type: 'attack',
             power: 0.8,
             cost: 18
         },
-        venom: {
-            name: '毒箭',
-            description: '射出淬毒的箭，造成100%攻击力的伤害并使目标中毒，每回合受到10%攻击力的伤害。',
-            type: 'attack',
-            power: 1.0,
-            cost: 15
-        },
-        assassinate: {
-            name: '暗杀',
-            description: '瞄准敌人要害，造成200%攻击力的伤害，如果敌人生命值低于30%则必定暴击。',
-            type: 'attack',
-            power: 2.0,
-            cost: 25
-        },
-        supportFire: {
-            name: '火力支援',
-            description: '为队友提供火力支援，增加全队15%攻击力。',
-            type: 'buff',
-            power: 1.15,
-            cost: 20
-        },
         rainOfArrows: {
             name: '箭雨',
-            description: '向空中射出大量箭矢，对所有敌人造成120%攻击力的伤害。',
+            description: '同时射出多支箭，对全部敌人造成3次80%-100%攻击力的伤害。CD6回合',
             type: 'aoe',
             power: 1.2,
             cost: 25
@@ -640,6 +399,15 @@ const JobSystem = {
      * @returns {object|null} 技能信息
      */
     getSkill(skillId) {
+        // 首先尝试从JobSkillsTemplate获取技能信息
+        if (typeof JobSkillsTemplate !== 'undefined' && JobSkillsTemplate.templates) {
+            const templateSkill = JobSkillsTemplate.templates[skillId];
+            if (templateSkill) {
+                return templateSkill;
+            }
+        }
+
+        // 如果在模板中找不到，则从本地skills对象获取
         return this.skills[skillId] || null;
     },
 

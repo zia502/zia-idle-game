@@ -37,7 +37,7 @@ const JobSystem = {
             tier: 1,
             description: '擅长近战和防御的职业，拥有高生命值和防御力。',
             baseStats: { hp: 120, attack: 12, defense: 8, speed: 5 },
-            skills: ['warriorSlash', 'armorBreak'],
+            skills: ['warriorSlash', 'armorBreak', 'fiercePounce', 'whirlwind'],
             fixedSkill: 'warriorSlash',
             nextTiers: ['berserker', 'beastLord'],
             unlocked: true // 默认解锁
@@ -47,7 +47,7 @@ const JobSystem = {
             tier: 1,
             description: '专注于防御和保护队友的职业，拥有极高的防御力。',
             baseStats: { hp: 150, attack: 8, defense: 12, speed: 4 },
-            skills: ['fortressGuard', 'shieldWall'],
+            skills: ['fortressGuard', 'shieldWall', 'guardianFormation', 'cover'],
             fixedSkill: 'fortressGuard',
             nextTiers: ['spartan', 'oathShielder'],
             unlocked: true // 默认解锁
@@ -57,7 +57,7 @@ const JobSystem = {
             tier: 1,
             description: '擅长治疗和辅助的职业，能够恢复队友生命值。',
             baseStats: { hp: 90, attack: 6, defense: 6, speed: 7 },
-            skills: ['clericLight', 'heal', 'flashSpell'],
+            skills: ['clericLight', 'heal', 'flashSpell', 'resurrection'],
             fixedSkill: 'clericLight',
             nextTiers: ['bishop', 'saint'],
             unlocked: true // 默认解锁
@@ -67,7 +67,7 @@ const JobSystem = {
             tier: 1,
             description: '掌握强大魔法的职业，能够造成大量魔法伤害。',
             baseStats: { hp: 80, attack: 14, defense: 4, speed: 6 },
-            skills: ['arcanistBolt', 'fireball', 'frostBolt'],
+            skills: ['arcanistBolt', 'fireball', 'frostBolt', 'thunderstorm'],
             fixedSkill: 'arcanistBolt',
             nextTiers: ['hermit', 'warlock'],
             unlocked: true // 默认解锁
@@ -77,7 +77,7 @@ const JobSystem = {
             tier: 1,
             description: '将魔法与剑术结合的职业，拥有多样化的攻击手段。',
             baseStats: { hp: 100, attack: 10, defense: 6, speed: 8 },
-            skills: ['spellbladeStrike', 'weaken', 'enhance'],
+            skills: ['spellbladeStrike', 'weaken', 'enhance', 'shadowSlash'],
             fixedSkill: 'spellbladeStrike',
             nextTiers: ['darkKnight', 'chaosLord'],
             unlocked: true // 默认解锁
@@ -87,7 +87,7 @@ const JobSystem = {
             tier: 1,
             description: '擅长远程攻击的职业，拥有高速度和精准度。',
             baseStats: { hp: 85, attack: 11, defense: 5, speed: 10 },
-            skills: ['archerShot', 'preciseShot', 'multiShot'],
+            skills: ['archerShot', 'preciseShot', 'multiShot', 'arrowRain'],
             fixedSkill: 'archerShot',
             nextTiers: ['rattlesnake', 'robinHood'],
             unlocked: true // 默认解锁

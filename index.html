@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="src/css/style.css">
     <link rel="stylesheet" href="src/css/tavern.css">
     <link rel="stylesheet" href="src/css/team-management.css">
+    <link rel="stylesheet" href="src/css/main-ui.css">
 </head>
 <body>
     <div class="game-container">
@@ -23,12 +24,97 @@
         <main class="game-main">
             <!-- 主界面 - 默认显示 -->
             <div class="game-screen" id="main-screen">
-                <div class="main-menu">
-                    <button class="btn btn-main" data-screen="character-screen">角色与队伍</button>
-                    <button class="btn btn-main" data-screen="tavern-screen">酒馆招募</button>
-                    <button class="btn btn-main" data-screen="weapon-screen">武器管理</button>
-                    <button class="btn btn-main" data-screen="dungeon-screen">地下城探索</button>
-                    <button class="btn btn-main" data-screen="shop-screen">商店交易</button>
+                <div class="main-ui-container">
+                    <!-- 左侧区域 -->
+                    <div class="main-ui-left">
+                        <!-- 左上角菜单图标 -->
+                        <div class="menu-icons">
+                            <a href="#" class="menu-icon" onclick="UI.switchScreen('character-screen'); return false;" title="角色与队伍">
+                                <div class="icon-image team-icon"></div>
+                                <div class="icon-tooltip">角色与队伍</div>
+                            </a>
+                            <a href="#" class="menu-icon" onclick="UI.switchScreen('tavern-screen'); return false;" title="酒馆招募">
+                                <div class="icon-image tavern-icon"></div>
+                                <div class="icon-tooltip">酒馆招募</div>
+                            </a>
+                            <a href="#" class="menu-icon" onclick="UI.switchScreen('weapon-screen'); return false;" title="武器管理">
+                                <div class="icon-image weapon-icon"></div>
+                                <div class="icon-tooltip">武器管理</div>
+                            </a>
+                            <a href="#" class="menu-icon" onclick="UI.switchScreen('dungeon-screen'); return false;" title="地下城探索">
+                                <div class="icon-image dungeon-icon"></div>
+                                <div class="icon-tooltip">地下城探索</div>
+                            </a>
+                            <a href="#" class="menu-icon" onclick="UI.switchScreen('shop-screen'); return false;" title="商店交易">
+                                <div class="icon-image shop-icon"></div>
+                                <div class="icon-tooltip">商店交易</div>
+                            </a>
+                        </div>
+
+                        <!-- 左中区域：当前地下城信息 -->
+                        <div class="main-ui-section">
+                            <h3>当前地下城</h3>
+                            <div id="main-current-dungeon">
+                                <!-- 当前地下城信息将通过JS动态生成 -->
+                                <div class="empty-message">未进入地下城</div>
+                            </div>
+                        </div>
+
+                        <!-- 左下区域：战斗日志 -->
+                        <div class="main-ui-section">
+                            <h3>战斗日志</h3>
+                            <div id="main-battle-log" class="scrollable-content">
+                                <!-- 战斗日志将通过JS动态生成 -->
+                                <div class="empty-message">暂无战斗记录</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 右侧区域 -->
+                    <div class="main-ui-right">
+                        <!-- 右上区域：主角信息 -->
+                        <div class="main-ui-section">
+                            <h3>主角信息</h3>
+                            <div id="main-hero-info">
+                                <!-- 主角信息将通过JS动态生成 -->
+                            </div>
+                        </div>
+
+                        <!-- 右中区域：当前队伍 -->
+                        <div class="main-ui-section">
+                            <h3>当前队伍</h3>
+                            <div id="main-current-team">
+                                <!-- 当前队伍信息将通过JS动态生成 -->
+                                <div class="empty-message">未组建队伍</div>
+                            </div>
+                        </div>
+
+                        <!-- 右下区域：武器盘 -->
+                        <div class="main-ui-section">
+                            <h3>武器盘</h3>
+                            <div id="main-weapon-board">
+                                <!-- 武器盘将通过JS动态生成 -->
+                                <div class="weapon-board-container">
+                                    <div class="main-weapon-slot">
+                                        <!-- 主手武器槽 -->
+                                        <div class="empty-weapon-slot" data-slot="main">主手武器</div>
+                                    </div>
+                                    <div class="sub-weapons-grid">
+                                        <!-- 9个副武器槽 -->
+                                        <div class="empty-weapon-slot" data-slot="sub1">副武器1</div>
+                                        <div class="empty-weapon-slot" data-slot="sub2">副武器2</div>
+                                        <div class="empty-weapon-slot" data-slot="sub3">副武器3</div>
+                                        <div class="empty-weapon-slot" data-slot="sub4">副武器4</div>
+                                        <div class="empty-weapon-slot" data-slot="sub5">副武器5</div>
+                                        <div class="empty-weapon-slot" data-slot="sub6">副武器6</div>
+                                        <div class="empty-weapon-slot" data-slot="sub7">副武器7</div>
+                                        <div class="empty-weapon-slot" data-slot="sub8">副武器8</div>
+                                        <div class="empty-weapon-slot" data-slot="sub9">副武器9</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -257,6 +343,7 @@
     <script src="src/js/components/job-selection.js"></script>
     <script src="src/js/components/tavern.js"></script>
     <script src="src/js/components/team-management.js"></script>
+    <script src="src/js/components/main-ui.js"></script>
 
     <!-- 工具函数 -->
     <script src="src/js/utils/helpers.js"></script>

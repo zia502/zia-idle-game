@@ -83,9 +83,6 @@ document.addEventListener('DOMContentLoaded', function() {
             console.log('初始化游戏核心...');
             Game.init();
 
-            // 确保初始金币为10000
-            Game.state.gold = 10000;
-
             // 更新金币显示
             const goldElement = document.getElementById('gold-display');
             if (goldElement) {

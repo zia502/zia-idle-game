@@ -226,6 +226,19 @@ const UI = {
                 }
             });
 
+            // 如果切换到主屏幕，更新主界面UI
+            if (screenId === 'main-screen' && typeof MainUI !== 'undefined') {
+                try {
+                    MainUI.updateMainHeroInfo();
+                    MainUI.updateCurrentTeam();
+                    MainUI.updateWeaponBoard();
+                    MainUI.updateCurrentDungeon();
+                    MainUI.updateBattleLog();
+                } catch (error) {
+                    console.error('更新主界面时出错:', error);
+                }
+            }
+
             console.log(`切换到屏幕: ${screenId}`);
         } else {
             console.warn(`屏幕 ${screenId} 不存在`);

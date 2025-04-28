@@ -74,9 +74,12 @@ const JobSkills = {
             case 'heal':
                 return this.applyHealEffects(character, template, teamMembers, monster);
             case 'dispel':
-                return this.applyDispelEffects(character, template, teamMembers, monster);
+                // dispel也被视为heal
+                return this.applyHealEffects(character, template, teamMembers, monster);
             case 'damage_and_debuff':
                 return this.applyDamageAndDebuffEffects(character, template, teamMembers, monster);
+            case 'damage_and_buff':
+                return this.applyDamageAndBuffEffects(character, template, teamMembers, monster);
             default:
                 return {
                     message: `${character.name} 使用了【${template.name}】，但没有效果。`,
@@ -570,6 +573,72 @@ const JobSkills = {
                 targets: template.targetType,
                 totalDispelCount,
                 effects
+            }
+        };
+    },
+
+    /**
+     * 应用伤害和BUFF效果
+     * @param {object} character - 角色对象
+     * @param {object} template - 技能模板
+     * @param {array} teamMembers - 队伍成员
+     * @param {object} monster - 怪物对象
+     * @returns {object} 技能效果结果
+     */
+    applyDamageAndBuffEffects(character, template, teamMembers, monster) {
+        // 先应用伤害效果
+        const damageResult = this.applyDamageEffects(character, template, teamMembers, monster);
+
+        // 再应用BUFF效果
+        const buffTargets = this.getTargets(character, template.targetType === 'enemy' ? 'self' : template.targetType, teamMembers, monster);
+        const buffEffects = [];
+
+        // 应用每个BUFF效果
+        for (const target of buffTargets) {
+            if (target.currentStats.hp <= 0) continue; // 跳过已倒下的目标
+
+            for (const effect of template.effects) {
+                if (effect.type !== 'damage' && effect.type !== 'dot') {
+                    // 创建BUFF
+                    const buff = BuffSystem.createBuff(effect.type, effect.value, effect.duration || template.duration, character);
+
+                    // 设置BUFF属性
+                    if (buff && effect.name) buff.name = effect.name;
+                    if (buff && effect.description) buff.description = effect.description;
+                    if (buff && effect.icon) buff.icon = effect.icon;
+                    if (buff && effect.maxHits) buff.maxHits = effect.maxHits;
+
+                    // 应用BUFF
+                    if (buff) {
+                        BuffSystem.applyBuff(target, buff);
+                    }
+
+                    buffEffects.push({
+                        target: target.name,
+                        type: effect.type,
+                        value: effect.value,
+                        duration: effect.duration || template.duration
+                    });
+                }
+            }
+        }
+
+        // 合并消息
+        let message = damageResult.message;
+        if (buffEffects.length > 0) {
+            message += ` 同时，${character.name} 获得了增益效果！`;
+        }
+
+        return {
+            message,
+            effects: {
+                type: 'damage_and_buff',
+                damageEffects: damageResult.effects,
+                buffEffects: {
+                    type: 'buff',
+                    targets: template.targetType === 'enemy' ? 'self' : template.targetType,
+                    effects: buffEffects
+                }
             }
         };
     },

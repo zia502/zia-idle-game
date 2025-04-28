@@ -224,16 +224,18 @@ const MainUI = {
                     // 检查技能是否为字符串ID
                     if (typeof skill === 'string') {
                         // 尝试从JobSystem获取技能信息
-                        if (typeof JobSystem !== 'undefined' && JobSystem.skills && JobSystem.skills[skill]) {
-                            const skillInfo = JobSystem.skills[skill];
-                            html += `<div class="skill-item" title="${skillInfo.description || ''}">${skillInfo.name}</div>`;
+                        const skillInfo = typeof JobSystem !== 'undefined' && typeof JobSystem.getSkill === 'function' ?
+                            JobSystem.getSkill(skill) : null;
+
+                        if (skillInfo) {
+                            html += `<div class="skill-item" data-skill-id="${skill}">${skillInfo.name}</div>`;
                         } else {
                             // 如果找不到技能信息，只显示技能ID
                             html += `<div class="skill-item">${skill}</div>`;
                         }
                     } else if (typeof skill === 'object' && skill !== null) {
                         // 如果技能是对象，直接使用其属性
-                        html += `<div class="skill-item" title="${skill.description || ''}">${skill.name || '未知技能'}</div>`;
+                        html += `<div class="skill-item" data-skill-id="${skill.id || ''}">${skill.name || '未知技能'}</div>`;
                     } else {
                         // 处理其他情况
                         html += `<div class="skill-item">未知技能</div>`;
@@ -350,42 +352,99 @@ const MainUI = {
 
                     // 只有当有职业时才显示职业信息
                     if (hasJob) {
-                        html += `
-                                <div class="member-class">${jobName}</div>
+                        html += `<div class="member-class">${jobName}</div>
                                 <div class="member-level">等级 ${jobLevel}</div>`;
                     }
-
-                    html += ``;
 
                     // 添加技能信息
                     if (character.skills && character.skills.length > 0) {
                         html += '<div class="member-skills">';
 
-                        // 最多显示3个技能
-                        const displaySkills = character.skills.slice(0, 3);
-                        displaySkills.forEach(skill => {
+                        // 显示所有技能
+                        character.skills.forEach(skill => {
                             // 检查技能是否为字符串ID
                             if (typeof skill === 'string') {
                                 // 尝试从JobSystem获取技能信息
-                                if (typeof JobSystem !== 'undefined' && JobSystem.skills && JobSystem.skills[skill]) {
-                                    const skillInfo = JobSystem.skills[skill];
-                                    html += `<div class="member-skill" title="${skillInfo.description || ''}">${skillInfo.name}</div>`;
+                                const skillInfo = typeof JobSystem !== 'undefined' && typeof JobSystem.getSkill === 'function' ?
+                                    JobSystem.getSkill(skill) : null;
+
+                                if (skillInfo) {
+                                    // 根据技能类型确定颜色
+                                    let skillClass = '';
+
+                                    // 检查技能效果类型
+                                    if (skillInfo.effects) {
+                                        // 检查是否有伤害效果
+                                        const hasDamage = skillInfo.effects.some(effect =>
+                                            effect.type === 'damage' || effect.type === 'dot' ||
+                                            (effect.type === 'proc' && effect.effect && effect.effect.type === 'damage') ||
+                                            (effect.type === 'endOfTurn' && effect.effect &&
+                                             (effect.effect.type === 'damage' || effect.effect.type === 'multi_attack')));
+
+                                        // 检查是否有治疗效果
+                                        const hasHeal = skillInfo.effects.some(effect =>
+                                            effect.type === 'heal' || effect.type === 'dispel');
+
+                                        // 检查是否有BUFF效果
+                                        const hasBuff = skillInfo.effects.some(effect =>
+                                            effect.type === 'attackUp' || effect.type === 'defenseUp' ||
+                                            effect.type === 'daBoost' || effect.type === 'taBoost' ||
+                                            effect.type === 'shield' || effect.type === 'invincible');
+
+                                        // 检查是否有DEBUFF效果
+                                        const hasDebuff = skillInfo.effects.some(effect =>
+                                            effect.type === 'attackDown' || effect.type === 'defenseDown' ||
+                                            effect.type === 'daDown' || effect.type === 'taDown' ||
+                                            effect.type === 'missRate');
+
+                                        // 确定技能类型
+                                        if (hasDamage) {
+                                            skillClass = 'skill-damage';
+                                        } else if (hasHeal) {
+                                            skillClass = 'skill-heal';
+                                        } else if (hasBuff && !hasDebuff) {
+                                            skillClass = 'skill-buff';
+                                        } else if (hasDebuff && !hasBuff) {
+                                            skillClass = 'skill-debuff';
+                                        } else if (hasBuff && hasDebuff) {
+                                            // 同时有BUFF和DEBUFF，优先显示为BUFF
+                                            skillClass = 'skill-buff';
+                                        } else {
+                                            // 默认为BUFF
+                                            skillClass = 'skill-buff';
+                                        }
+                                    } else {
+                                        // 直接根据effectType判断
+                                        if (skillInfo.effectType) {
+                                            if (skillInfo.effectType === 'damage' || skillInfo.effectType.includes('damage')) {
+                                                skillClass = 'skill-damage';
+                                            } else if (skillInfo.effectType === 'heal' || skillInfo.effectType.includes('heal')) {
+                                                skillClass = 'skill-heal';
+                                            } else if (skillInfo.effectType === 'buff' || skillInfo.effectType.includes('buff')) {
+                                                skillClass = 'skill-buff';
+                                            } else if (skillInfo.effectType === 'debuff' || skillInfo.effectType.includes('debuff')) {
+                                                skillClass = 'skill-debuff';
+                                            } else {
+                                                skillClass = 'skill-buff'; // 默认
+                                            }
+                                        } else {
+                                            skillClass = 'skill-buff'; // 默认
+                                        }
+                                    }
+
+                                    html += `<div class="member-skill ${skillClass}" data-skill-id="${skill}" title="${skillInfo.name}"></div>`;
                                 } else {
-                                    // 如果找不到技能信息，只显示技能ID
-                                    html += `<div class="member-skill">${skill}</div>`;
+                                    // 如果找不到技能信息，显示默认圆点
+                                    html += `<div class="member-skill skill-buff" title="${skill}"></div>`;
                                 }
                             } else if (typeof skill === 'object' && skill !== null) {
                                 // 如果技能是对象，直接使用其属性
-                                html += `<div class="member-skill" title="${skill.description || ''}">${skill.name || '未知技能'}</div>`;
+                                html += `<div class="member-skill skill-buff" data-skill-id="${skill.id || ''}" title="${skill.name || '未知技能'}"></div>`;
                             } else {
                                 // 处理其他情况
-                                html += `<div class="member-skill">未知技能</div>`;
+                                html += `<div class="member-skill skill-buff" title="未知技能"></div>`;
                             }
                         });
-
-                        if (character.skills.length > 3) {
-                            html += `<div class="member-skill">+${character.skills.length - 3}</div>`;
-                        }
 
                         html += '</div>';
                     }

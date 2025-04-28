@@ -1,0 +1,205 @@
+/* 技能提示框样式 */
+.skill-tooltip {
+    position: absolute;
+    z-index: 1000;
+    background-color: rgba(255, 255, 255, 0.95);
+    color: #333;
+    border-radius: 5px;
+    padding: 10px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+    width: 280px;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    font-family: 'Microsoft YaHei', '微软雅黑', Arial, sans-serif;
+    font-size: 14px;
+    border: 1px solid #ddd;
+}
+
+.skill-tooltip.visible {
+    opacity: 1;
+}
+
+.skill-tooltip-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+    padding-bottom: 5px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.skill-tooltip-name {
+    font-weight: bold;
+    font-size: 16px;
+    color: #0066cc;
+}
+
+.skill-tooltip-type {
+    font-size: 12px;
+    padding: 2px 6px;
+    border-radius: 3px;
+    background-color: rgba(0, 0, 0, 0.05);
+}
+
+.skill-tooltip-description {
+    margin-bottom: 10px;
+    line-height: 1.4;
+    color: #444;
+}
+
+.skill-tooltip-stats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 8px;
+}
+
+.skill-tooltip-stat {
+    font-size: 12px;
+    padding: 3px 6px;
+    border-radius: 3px;
+    background-color: rgba(0, 0, 0, 0.05);
+    display: flex;
+    align-items: center;
+}
+
+.skill-tooltip-stat-icon {
+    margin-right: 4px;
+    font-size: 14px;
+}
+
+/* 技能类型颜色 */
+.skill-type-attack {
+    color: #d32f2f;
+}
+
+.skill-type-magic {
+    color: #1976d2;
+}
+
+.skill-type-heal {
+    color: #388e3c;
+}
+
+.skill-type-buff {
+    color: #f57c00;
+}
+
+.skill-type-debuff {
+    color: #7b1fa2;
+}
+
+.skill-type-defense {
+    color: #0288d1;
+}
+
+.skill-type-aoe {
+    color: #e64a19;
+}
+
+/* 固定技能标记 */
+.skill-fixed-tag {
+    font-size: 11px;
+    padding: 1px 4px;
+    border-radius: 2px;
+    background-color: #e65100;
+    color: white;
+    margin-left: 5px;
+}
+
+/* 被动技能标记 */
+.skill-passive-tag {
+    font-size: 11px;
+    padding: 1px 4px;
+    border-radius: 2px;
+    background-color: #0277bd;
+    color: white;
+    margin-left: 5px;
+}
+
+/* 效果列表 */
+.skill-tooltip-effects {
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.skill-tooltip-effect {
+    margin-bottom: 5px;
+    font-size: 12px;
+    display: flex;
+    align-items: flex-start;
+}
+
+.skill-tooltip-effect-icon {
+    margin-right: 5px;
+    font-size: 14px;
+    min-width: 14px;
+}
+
+.skill-tooltip-effect-text {
+    flex: 1;
+    color: #555;
+}
+
+/* 效果类型颜色 */
+.effect-type-attackUp {
+    color: #d32f2f;
+}
+
+.effect-type-defenseUp {
+    color: #0288d1;
+}
+
+.effect-type-attackDown {
+    color: #d32f2f;
+    opacity: 0.7;
+}
+
+.effect-type-defenseDown {
+    color: #0288d1;
+    opacity: 0.7;
+}
+
+.effect-type-heal {
+    color: #388e3c;
+}
+
+.effect-type-damage {
+    color: #d32f2f;
+}
+
+.effect-type-dot {
+    color: #e64a19;
+}
+
+.effect-type-shield {
+    color: #0288d1;
+}
+
+.effect-type-dispel {
+    color: #7b1fa2;
+}
+
+.effect-type-invincible {
+    color: #f57c00;
+}
+
+.effect-type-daBoost, .effect-type-taBoost {
+    color: #e64a19;
+}
+
+.effect-type-daDown, .effect-type-taDown {
+    color: #e64a19;
+    opacity: 0.7;
+}
+
+.effect-type-missRate {
+    color: #7b1fa2;
+    opacity: 0.7;
+}
+
+.effect-type-damageReduction {
+    color: #0288d1;
+}

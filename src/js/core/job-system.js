@@ -303,16 +303,14 @@ const JobSystem = {
     /**
      * 获取职业可用的技能列表
      * @param {string} jobId - 职业ID
-     * @param {number} jobLevel - 职业等级
      * @returns {array} 可用技能列表
      */
-    getJobSkills(jobId, jobLevel = 1) {
+    getJobSkills(jobId) {
         const job = this.getJob(jobId);
         if (!job) return [];
 
-        // 简单规则：每5级解锁一个新技能
-        const availableSkillCount = Math.min(job.skills.length, Math.floor(jobLevel / 5) + 1);
-        return job.skills.slice(0, availableSkillCount);
+        // 返回所有技能
+        return job.skills;
     },
 
     /**

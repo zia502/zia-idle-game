@@ -94,6 +94,14 @@ document.addEventListener('DOMContentLoaded', function() {
             console.warn('找不到UI模块，跳过初始化');
         }
 
+        // 初始化技能提示框
+        if (typeof SkillTooltip !== 'undefined') {
+            console.log('初始化技能提示框...');
+            SkillTooltip.init();
+        } else {
+            console.warn('找不到SkillTooltip模块，跳过初始化');
+        }
+
         // 最后初始化游戏核心
         if (typeof Game !== 'undefined') {
             console.log('初始化游戏核心...');

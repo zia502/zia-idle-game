@@ -70,7 +70,7 @@ const JobSkillsTemplate = {
             "type": "heal",
             "fixed": true,
             "cooldown": 4,
-            "effectType": "dispel",
+            "effectType": "heal",
             "targetType": "all_allies",
             "effects": [
               {
@@ -595,6 +595,7 @@ const JobSkillsTemplate = {
               }
             ]
           },
+
           "fiercePounce": {
             "name": "猛袭",
             "description": "被动:自身DA+15%",

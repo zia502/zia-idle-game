@@ -1,0 +1,114 @@
+/* 队伍管理样式 */
+
+/* 队伍卡片 */
+.team-card {
+    margin-bottom: 20px;
+    padding: 15px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    background-color: #f9f9f9;
+}
+
+.team-card.active {
+    border-color: #4caf50;
+    background-color: #e8f5e8;
+}
+
+.team-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.team-header h4 {
+    margin: 0;
+    font-size: 18px;
+}
+
+/* 队伍成员 */
+.team-members {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.team-member {
+    padding: 10px;
+    border-radius: 5px;
+    background-color: #f5f5f5;
+    border-left: 4px solid #ccc;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.team-member.rare {
+    background-color: #e8e8f5;
+    border-left: 4px solid #33a;
+}
+
+.team-member.epic {
+    background-color: #f5e8f5;
+    border-left: 4px solid #a3a;
+}
+
+.team-member.legendary {
+    background-color: #fffbe8;
+    border-left: 4px solid #fc0;
+}
+
+.member-info {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.member-info h4 {
+    margin: 0 10px 0 0;
+    font-size: 16px;
+}
+
+.member-info p {
+    margin: 5px 0 0 0;
+    font-size: 14px;
+    width: 100%;
+    display: flex;
+    align-items: center;
+}
+
+.member-actions {
+    margin-left: 10px;
+}
+
+.main-character-tag {
+    display: inline-block;
+    padding: 2px 6px;
+    background-color: #4caf50;
+    color: white;
+    border-radius: 3px;
+    font-size: 12px;
+    margin-left: 10px;
+}
+
+/* 可用角色列表 */
+#available-characters-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+/* 创建队伍按钮 */
+#create-team-container {
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+/* 通用样式 */
+.section-title {
+    margin-top: 30px;
+    margin-bottom: 15px;
+    padding-bottom: 5px;
+    border-bottom: 1px solid #ddd;
+}

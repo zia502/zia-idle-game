@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zia</title>
+    <link rel="stylesheet" href="src/css/style.css">
+    <link rel="stylesheet" href="src/css/tavern.css">
+    <link rel="stylesheet" href="src/css/team-management.css">
+</head>
+<body>
+    <div class="game-container">
+        <header class="game-header">
+            <h1>Zia</h1>
+            <div class="player-info" id="player-info">
+                <!-- 角色信息显示区域 -->
+            </div>
+            <div class="resource-info">
+                <span id="gold-display">金币: 10000</span>
+            </div>
+        </header>
+
+        <main class="game-main">
+            <!-- 主界面 - 默认显示 -->
+            <div class="game-screen" id="main-screen">
+                <div class="main-menu">
+                    <button class="btn btn-main" data-screen="character-screen">角色与队伍</button>
+                    <button class="btn btn-main" data-screen="tavern-screen">酒馆招募</button>
+                    <button class="btn btn-main" data-screen="weapon-screen">武器管理</button>
+                    <button class="btn btn-main" data-screen="dungeon-screen">地下城探索</button>
+                    <button class="btn btn-main" data-screen="shop-screen">商店交易</button>
+                </div>
+            </div>
+
+            <!-- 角色界面 -->
+            <div class="game-screen hidden" id="character-screen">
+                <h2>角色与队伍管理</h2>
+                <div class="screen-content">
+                    <div class="section">
+                        <h3>主角信息</h3>
+                        <div id="main-character-info">
+                            <!-- 主角信息将通过JS动态生成 -->
+                        </div>
+                    </div>
+
+                    <div class="section">
+                        <h3>队伍管理</h3>
+                        <div class="team-header-actions">
+                            <button class="btn btn-primary" id="create-team-btn">创建新队伍</button>
+                        </div>
+                        <div class="team-selector">
+                            <div id="team-list">
+                                <!-- 队伍列表将通过JS动态生成 -->
+                            </div>
+                        </div>
+
+                        <div class="current-team" id="current-team">
+                            <!-- 当前队伍信息将通过JS动态生成 -->
+                        </div>
+                    </div>
+
+                    <div class="section">
+                        <h3>可用角色</h3>
+                        <div id="available-characters-list">
+                            <!-- 可用角色列表将通过JS动态生成 -->
+                        </div>
+                    </div>
+                </div>
+                <button class="btn btn-back" data-screen="main-screen">返回主界面</button>
+            </div>
+
+            <!-- 酒馆界面 -->
+            <div class="game-screen hidden" id="tavern-screen">
+                <h2>酒馆招募</h2>
+                <div class="screen-content">
+                    <div class="section">
+                        <div id="tavern-recruitment">
+                            <div class="tavern-header">
+                                <h3>招募冒险者</h3>
+                                <p>招募神秘冒险者加入你的队伍！</p>
+                            </div>
+                            <div class="recruit-buttons">
+                                <button id="recruit-one-btn" class="btn">抽一个 (2000 金币)</button>
+                                <button id="recruit-five-btn" class="btn">抽五个 (9000 金币)</button>
+                            </div>
+                        </div>
+
+                        <div id="recruit-result" class="hidden">
+                            <h3>招募结果</h3>
+                            <div id="recruited-result-list">
+                                <!-- 招募结果将通过JS动态生成 -->
+                            </div>
+                            <button id="close-result-btn" class="btn">关闭</button>
+                        </div>
+                    </div>
+
+                    <div class="section">
+                        <h3>已招募角色</h3>
+                        <div id="recruited-characters">
+                            <!-- 已招募角色将通过JS动态生成 -->
+                        </div>
+                    </div>
+                </div>
+                <button class="btn btn-back" data-screen="main-screen">返回主界面</button>
+            </div>
+
+            <!-- 武器界面 -->
+            <div class="game-screen hidden" id="weapon-screen">
+                <h2>武器管理</h2>
+                <div class="screen-content">
+                    <div class="section">
+                        <h3>武器盘</h3>
+                        <div id="weapon-board">
+                            <!-- 武器盘将通过JS动态生成 -->
+                        </div>
+                    </div>
+
+                    <div class="section">
+                        <h3>武器库</h3>
+                        <div id="weapon-inventory">
+                            <!-- 武器库将通过JS动态生成 -->
+                        </div>
+                    </div>
+
+                    <div class="section">
+                        <h3>武器详情</h3>
+                        <div id="weapon-details">
+                            <!-- 武器详情将通过JS动态生成 -->
+                        </div>
+                    </div>
+                </div>
+                <button class="btn btn-back" data-screen="main-screen">返回主界面</button>
+            </div>
+
+            <!-- 地下城界面 -->
+            <div class="game-screen hidden" id="dungeon-screen">
+                <h2>地下城探索</h2>
+                <div class="screen-content">
+                    <div class="section">
+                        <h3>可探索地下城</h3>
+                        <div id="dungeon-list">
+                            <!-- 地下城列表将通过JS动态生成 -->
+                        </div>
+                    </div>
+
+                    <div class="section">
+                        <h3>当前探索</h3>
+                        <div id="current-dungeon">
+                            <!-- 当前探索地下城信息将通过JS动态生成 -->
+                        </div>
+                    </div>
+
+                    <div class="section">
+                        <h3>战斗记录</h3>
+                        <div id="battle-log">
+                            <!-- 战斗记录将通过JS动态生成 -->
+                        </div>
+                    </div>
+                </div>
+                <button class="btn btn-back" data-screen="main-screen">返回主界面</button>
+            </div>
+
+            <!-- 商店界面 -->
+            <div class="game-screen hidden" id="shop-screen">
+                <h2>商店交易</h2>
+                <div class="screen-content">
+                    <div class="section">
+                        <h3>商品列表</h3>
+                        <div id="shop-items">
+                            <!-- 商品列表将通过JS动态生成 -->
+                        </div>
+                    </div>
+
+                    <div class="section">
+                        <h3>材料库存</h3>
+                        <div id="material-inventory">
+                            <!-- 材料库存将通过JS动态生成 -->
+                        </div>
+                    </div>
+                </div>
+                <button class="btn btn-back" data-screen="main-screen">返回主界面</button>
+            </div>
+
+            <!-- 战斗界面 -->
+            <div class="game-screen hidden" id="battle-screen">
+                <h2>战斗</h2>
+                <div class="screen-content">
+                    <div class="battle-area">
+                        <div class="team-side" id="player-team">
+                            <!-- 玩家队伍将通过JS动态生成 -->
+                        </div>
+
+                        <div class="battle-progress">
+                            <div id="battle-animation">
+                                <!-- 战斗动画区域 -->
+                            </div>
+                            <div id="battle-status">
+                                <!-- 战斗状态将通过JS动态生成 -->
+                            </div>
+                        </div>
+
+                        <div class="enemy-side" id="enemy-team">
+                            <!-- 敌人将通过JS动态生成 -->
+                        </div>
+                    </div>
+
+                    <div class="battle-controls">
+                        <button class="btn" id="auto-battle-btn">自动战斗</button>
+                        <button class="btn" id="skip-battle-btn">跳过战斗</button>
+                        <button class="btn btn-danger" id="retreat-btn">撤退</button>
+                    </div>
+
+                    <div id="battle-result" class="hidden">
+                        <!-- 战斗结果将通过JS动态生成 -->
+                    </div>
+                </div>
+                <button class="btn btn-back hidden" id="back-from-battle" data-screen="dungeon-screen">返回地下城</button>
+            </div>
+        </main>
+
+        <footer class="game-footer">
+            <div class="game-controls">
+                <button id="save-btn" class="btn">保存游戏</button>
+                <button id="reset-btn" class="btn btn-danger">重置游戏</button>
+            </div>
+            <div class="game-message" id="game-message"></div>
+        </footer>
+    </div>
+
+    <!-- 核心游戏系统 -->
+    <script src="src/js/core/game.js"></script>
+    <script src="src/js/core/character.js"></script>
+    <script src="src/js/core/job-system.js"></script>
+    <script src="src/js/core/character-main.js"></script>
+    <script src="src/js/core/team.js"></script>
+    <script src="src/js/core/weapon.js"></script>
+    <script src="src/js/core/dungeon.js"></script>
+    <script src="src/js/core/buff-system.js"></script>
+    <script src="src/js/core/battle.js"></script>
+    <script src="src/js/core/job-skills-template.js"></script>
+    <script src="src/js/core/job-skills.js"></script>
+    <script src="src/js/core/shop.js"></script>
+    <script src="src/js/core/item.js"></script>
+    <script src="src/js/core/inventory.js"></script>
+    <script src="src/js/core/resources.js"></script>
+    <script src="src/js/core/buildings.js"></script>
+
+    <!-- 游戏组件 -->
+    <script src="src/js/components/ui.js"></script>
+    <script src="src/js/components/ui_init.js"></script>
+    <script src="src/js/components/events.js"></script>
+    <script src="src/js/components/character-creator.js"></script>
+    <script src="src/js/components/ui-main-character.js"></script>
+    <script src="src/js/components/job-selection.js"></script>
+    <script src="src/js/components/tavern.js"></script>
+    <script src="src/js/components/team-management.js"></script>
+
+    <!-- 工具函数 -->
+    <script src="src/js/utils/helpers.js"></script>
+    <script src="src/js/utils/storage.js"></script>
+    <script src="src/js/debug.js"></script>
+
+    <!-- 主入口 -->
+    <script src="src/js/main.js"></script>
+</body>
+</html>

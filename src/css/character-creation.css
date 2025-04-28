@@ -1,0 +1,63 @@
+/* 对话框 */
+.dialog {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: #fff;
+    border: 1px solid var(--border-color);
+    padding: 20px;
+    z-index: 1000;
+    max-width: 80%;
+    max-height: 80%;
+    overflow-y: auto;
+    font-family: var(--monospace-font);
+}
+
+.dialog-header {
+    margin-bottom: 15px;
+    padding-bottom: 5px;
+    border-bottom: 1px solid var(--border-color);
+    text-align: center;
+}
+
+.dialog-content {
+    margin-bottom: 20px;
+    line-height: 1.5;
+}
+
+.dialog-buttons {
+    margin-top: 15px;
+    text-align: right;
+}
+
+/* 角色创建对话框 */
+.character-creation-dialog {
+    width: 400px;
+    max-width: 90%;
+}
+
+.input-group {
+    margin: 15px 0;
+}
+
+.input-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+}
+
+.input-group input {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid var(--border-color);
+    font-family: var(--monospace-font);
+    font-size: 16px;
+}
+
+.error-message {
+    color: #900;
+    font-size: 14px;
+    margin-top: 5px;
+    min-height: 20px;
+}

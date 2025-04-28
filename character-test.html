@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>角色创建测试</title>
+    <style>
+        body {
+            font-family: 'Courier New', Courier, monospace;
+            line-height: 1.5;
+            padding: 20px;
+            background-color: #f8f8f8;
+        }
+        .dialog {
+            border: 1px solid #ccc;
+            padding: 20px;
+            max-width: 500px;
+            margin: 0 auto;
+            background-color: #fff;
+        }
+        .dialog-header {
+            margin-bottom: 15px;
+            padding-bottom: 5px;
+            border-bottom: 1px solid #ccc;
+            text-align: center;
+        }
+        .dialog-content {
+            margin-bottom: 20px;
+        }
+        .input-group {
+            margin: 15px 0;
+        }
+        .input-group label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        .input-group input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ccc;
+            font-family: 'Courier New', Courier, monospace;
+        }
+        .error-message {
+            color: #900;
+            min-height: 20px;
+            margin-top: 5px;
+        }
+        .btn {
+            padding: 8px 16px;
+            border: 1px solid #ccc;
+            background: transparent;
+            cursor: pointer;
+            font-family: 'Courier New', Courier, monospace;
+        }
+        .dialog-buttons {
+            text-align: right;
+        }
+        #result {
+            margin-top: 20px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            background-color: #fff;
+        }
+    </style>
+</head>
+<body>
+    <div class="dialog">
+        <div class="dialog-header">
+            <h2>欢迎来到Zia的世界</h2>
+        </div>
+        <div class="dialog-content">
+            <p>在开始你的冒险之前，请告诉我你的名字：</p>
+            <div class="input-group">
+                <label for="character-name">角色名称：</label>
+                <input type="text" id="character-name" placeholder="输入你的名字" maxlength="12">
+            </div>
+            <div class="error-message" id="name-error"></div>
+        </div>
+        <div class="dialog-buttons">
+            <button id="start-adventure" class="btn">开始冒险</button>
+        </div>
+    </div>
+
+    <div id="result"></div>
+
+    <script>
+        // 当页面加载完成后执行
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('页面加载完成');
+            
+            // 获取元素
+            const nameInput = document.getElementById('character-name');
+            const errorElement = document.getElementById('name-error');
+            const startButton = document.getElementById('start-adventure');
+            const resultElement = document.getElementById('result');
+            
+            // 聚焦到输入框
+            nameInput.focus();
+            
+            // 添加按钮点击事件
+            startButton.addEventListener('click', function() {
+                console.log('按钮被点击');
+                createCharacter();
+            });
+            
+            // 添加回车键提交
+            nameInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    console.log('回车键被按下');
+                    createCharacter();
+                }
+            });
+            
+            // 创建角色函数
+            function createCharacter() {
+                console.log('执行createCharacter函数');
+                
+                const name = nameInput.value.trim();
+                console.log('输入的名称:', name);
+                
+                // 验证名称
+                if (!name) {
+                    errorElement.textContent = '请输入角色名称';
+                    nameInput.focus();
+                    return;
+                }
+                
+                if (name.length < 2) {
+                    errorElement.textContent = '角色名称至少需要2个字符';
+                    nameInput.focus();
+                    return;
+                }
+                
+                // 清除错误信息
+                errorElement.textContent = '';
+                
+                // 显示结果
+                resultElement.innerHTML = `
+                    <h3>角色创建成功！</h3>
+                    <p>欢迎，${name}！你的冒险即将开始！</p>
+                `;
+                
+                console.log('角色创建成功:', name);
+            }
+        });
+    </script>
+</body>
+</html>

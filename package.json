@@ -1,0 +1,24 @@
+{
+  "name": "zia",
+  "version": "1.0.0",
+  "description": "Zia 是一个纯文字的地下城冒险游戏，玩家可以组队探索地下城，收集装备，培养角色，挑战各种怪物和boss。游戏专注于团队构建、武器收集和战略战斗，通过纯文本界面为玩家提供沉浸式的冒险体验。",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://zia502@github.com/zia502/zia-idle-game.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/zia502/zia-idle-game/issues"
+  },
+  "homepage": "https://github.com/zia502/zia-idle-game#readme",
+  "dependencies": {
+    "express": "^5.1.0"
+  }
+}

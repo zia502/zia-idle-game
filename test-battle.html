@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>测试战斗系统</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .battle-log {
+            border: 1px solid #ccc;
+            padding: 10px;
+            height: 300px;
+            overflow-y: auto;
+            margin-bottom: 20px;
+            background-color: #f9f9f9;
+        }
+        .controls {
+            margin-bottom: 20px;
+        }
+        button {
+            padding: 8px 16px;
+            margin-right: 10px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>测试战斗系统</h1>
+
+        <div class="controls">
+            <button id="init-dungeon">初始化地下城</button>
+            <button id="start-battle">开始战斗</button>
+            <button id="reset">重置</button>
+        </div>
+
+        <div class="battle-log" id="battle-log"></div>
+    </div>
+
+    <!-- 核心游戏系统 -->
+    <script src="src/js/core/game.js"></script>
+    <script src="src/js/core/character.js"></script>
+    <script src="src/js/core/weapon.js"></script>
+    <script src="src/js/core/dungeon.js"></script>
+    <script src="src/js/core/battle.js"></script>
+    <script src="src/js/core/shop.js"></script>
+
+    <!-- 游戏组件 -->
+    <script src="src/js/components/ui.js"></script>
+    <script src="src/js/components/events.js"></script>
+
+    <script>
+        // 简单的测试环境
+        const battleLog = document.getElementById('battle-log');
+
+        // 模拟必要的游戏对象
+        if (typeof Game === 'undefined') {
+            window.Game = {
+                state: {
+                    playerLevel: 10,
+                    progress: {
+                        completedDungeons: [],
+                        unlockedDungeons: ['dungeon1', 'dungeon2', 'dungeon3']
+                    },
+                    energy: 100,
+                    maxEnergy: 100
+                },
+                stats: {
+                    battlesWon: 0,
+                    battlesLost: 0,
+                    monstersDefeated: 0,
+                    bossesDefeated: 0,
+                    dungeonCompletions: {}
+                },
+                getActiveTeam() {
+                    return {
+                        id: 'test_team',
+                        name: '测试队伍',
+                        members: ['player_1', 'player_2', 'player_3']
+                    };
+                },
+                activeTeam: {
+                    id: 'test_team',
+                    name: '测试队伍',
+                    members: ['player_1', 'player_2', 'player_3']
+                },
+                addGold(amount) {
+                    log(`获得 ${amount} 金币`);
+                },
+                addPlayerExp(amount) {
+                    log(`获得 ${amount} 经验值`);
+                }
+            };
+        }
+
+        if (typeof Character === 'undefined') {
+            window.Character = {
+                characters: {
+                    player_1: {
+                        id: 'player_1',
+                        name: '主角',
+                        type: 'attack',
+                        attribute: 'fire',
+                        level: 10,
+                        traits: [],
+                        baseStats: { hp: 100, attack: 20, defense: 10, speed: 8 },
+                        currentStats: { hp: 100, attack: 20, defense: 10, speed: 8, maxHp: 100 },
+                        stats: { totalDamage: 0, totalHealing: 0 }
+                    },
+                    player_2: {
+                        id: 'player_2',
+                        name: '队友1',
+                        type: 'defense',
+                        attribute: 'water',
+                        level: 8,
+                        traits: [],
+                        baseStats: { hp: 150, attack: 15, defense: 15, speed: 5 },
+                        currentStats: { hp: 150, attack: 15, defense: 15, speed: 5, maxHp: 150 },
+                        stats: { totalDamage: 0, totalHealing: 0 }
+                    },
+                    player_3: {
+                        id: 'player_3',
+                        name: '队友2',
+                        type: 'special',
+                        attribute: 'wind',
+                        level: 9,
+                        traits: [],
+                        baseStats: { hp: 80, attack: 25, defense: 8, speed: 10 },
+                        currentStats: { hp: 80, attack: 25, defense: 8, speed: 10, maxHp: 80 },
+                        stats: { totalDamage: 0, totalHealing: 0 }
+                    }
+                },
+                getCharacter(id) {
+                    return this.characters[id];
+                },
+                calculateDamage(attackerId, targetId) {
+                    const attacker = this.getCharacter(attackerId);
+                    const target = targetId.startsWith('player') ? this.getCharacter(targetId) : targetId;
+
+                    // 简化的伤害计算
+                    const damage = Math.floor(attacker.currentStats.attack * (1 - target.currentStats.defense / 100) * (0.9 + Math.random() * 0.2));
+                    const isCritical = Math.random() < 0.2;
+
+                    if (isCritical) {
+                        return { damage: Math.floor(damage * 1.5), isCritical: true, attributeBonus: 0 };
+                    }
+
+                    return { damage, isCritical: false, attributeBonus: 0 };
+                },
+                processTraitTriggers() {
+                    return [];
+                },
+                addExperience(characterId, amount) {
+                    log(`${this.getCharacter(characterId).name} 获得 ${amount} 经验值`);
+                },
+                assessBattleMVP(teamMemberIds) {
+                    // 简单的MVP评估
+                    let highestDamage = 0;
+                    let mvpId = null;
+
+                    for (const memberId of teamMemberIds) {
+                        const character = this.getCharacter(memberId);
+                        if (character && character.stats.totalDamage > highestDamage) {
+                            highestDamage = character.stats.totalDamage;
+                            mvpId = memberId;
+                        }
+                    }
+
+                    return {
+                        id: mvpId,
+                        name: this.getCharacter(mvpId).name,
+                        damage: highestDamage
+                    };
+                }
+            };
+        }
+
+        if (typeof Inventory === 'undefined') {
+            window.Inventory = {
+                addItem(id, count) {
+                    log(`获得物品: ${id} x${count}`);
+                }
+            };
+        }
+
+        if (typeof Weapon === 'undefined') {
+            window.Weapon = {
+                generateRandomWeapon(rarity) {
+                    const weaponId = `weapon_${rarity}_${Date.now()}`;
+                    log(`获得武器: ${rarity} 级武器 (${weaponId})`);
+                    return weaponId;
+                }
+            };
+        }
+
+        if (typeof UI === 'undefined') {
+            window.UI = {
+                showNotification(message) {
+                    log(`通知: ${message}`);
+                }
+            };
+        }
+
+        if (typeof Events === 'undefined') {
+            window.Events = {
+                emit(eventName, data) {
+                    log(`事件: ${eventName}`);
+                }
+            };
+        }
+
+        // 辅助函数
+        function log(message) {
+            const entry = document.createElement('div');
+            entry.textContent = message;
+            battleLog.appendChild(entry);
+            battleLog.scrollTop = battleLog.scrollHeight;
+        }
+
+        // 初始化系统
+        function initSystems() {
+            if (typeof Dungeon !== 'undefined') {
+                Dungeon.init();
+                log('地下城系统已初始化');
+            }
+
+            if (typeof Battle !== 'undefined') {
+                Battle.init();
+                log('战斗系统已初始化');
+            }
+        }
+
+        // 初始化地下城
+        function initDungeon() {
+            if (typeof Dungeon !== 'undefined') {
+                const dungeonId = 'dungeon2'; // 使用废弃矿井作为测试
+                const result = Dungeon.initDungeonRun(dungeonId);
+
+                if (result) {
+                    const dungeon = Dungeon.getDungeon(dungeonId);
+                    log(`初始化地下城: ${dungeon.name}`);
+                    log(`普通怪物: ${Dungeon.currentRun.monsters.length}`);
+                    log(`小boss: ${Dungeon.currentRun.miniBosses.length}`);
+                    log(`大boss: ${Dungeon.currentRun.finalBoss ? '有' : '无'}`);
+                } else {
+                    log('初始化地下城失败');
+                }
+            } else {
+                log('地下城系统未加载');
+            }
+        }
+
+        // 开始战斗
+        function startBattle() {
+            if (typeof Dungeon !== 'undefined' && typeof Battle !== 'undefined') {
+                // 确保 Game 对象有正确的 activeTeam 属性
+                if (!Game.activeTeam) {
+                    Game.activeTeam = {
+                        id: 'test_team',
+                        name: '测试队伍',
+                        members: ['player_1', 'player_2', 'player_3']
+                    };
+                }
+
+                // 获取当前怪物
+                const monster = Dungeon.getCurrentMonster();
+                if (!monster) {
+                    log('没有可战斗的怪物，请先初始化地下城');
+                    return;
+                }
+
+                // 直接调用 Battle.startBattle
+                const result = Battle.startBattle(Game.activeTeam, monster);
+
+                // 处理战斗结果
+                if (result.success) {
+                    log('战斗结果:');
+                    log(result.message);
+
+                    // 如果战斗胜利，更新地下城状态
+                    if (result.victory) {
+                        // 增加统计
+                        Game.stats.battlesWon++;
+
+                        if (monster.isBoss) {
+                            Game.stats.bossesDefeated++;
+
+                            // 如果是小boss，增加已击败小boss计数
+                            if (monster.isMiniBoss) {
+                                Dungeon.currentRun.defeatedMiniBosses++;
+                            }
+
+                            // 如果是大boss，完成地下城
+                            if (monster.isFinalBoss) {
+                                const completionResult = Dungeon.completeDungeon();
+                                log(completionResult.message);
+                                return;
+                            }
+                        } else {
+                            Game.stats.monstersDefeated++;
+                            // 如果是普通怪物，增加怪物索引
+                            Dungeon.currentRun.currentMonsterIndex++;
+                        }
+
+                        // 处理奖励
+                        Dungeon.processRewards(monster);
+
+                        // 检查是否所有普通怪物和小boss都已击败，但大boss还未出现
+                        if (Dungeon.currentRun.currentMonsterIndex >= Dungeon.currentRun.monsters.length &&
+                            Dungeon.currentRun.defeatedMiniBosses >= Dungeon.currentRun.miniBosses.length &&
+                            !Dungeon.currentRun.finalBossAppeared &&
+                            Dungeon.currentRun.finalBoss) {
+                            Dungeon.currentRun.finalBossAppeared = true;
+                            log('所有小boss已击败！大boss出现了！');
+                        }
+                    } else {
+                        // 增加统计
+                        Game.stats.battlesLost++;
+                    }
+                } else {
+                    log(`战斗失败: ${result.message}`);
+                }
+            } else {
+                log('战斗系统未加载');
+            }
+        }
+
+        // 重置
+        function reset() {
+            if (typeof Dungeon !== 'undefined') {
+                Dungeon.reset();
+                log('系统已重置');
+            }
+
+            // 重置角色状态
+            if (typeof Character !== 'undefined') {
+                for (const charId in Character.characters) {
+                    const char = Character.characters[charId];
+                    char.currentStats.hp = char.baseStats.hp;
+                    char.stats.totalDamage = 0;
+                    char.stats.totalHealing = 0;
+                }
+            }
+
+            // 清空战斗日志
+            battleLog.innerHTML = '';
+            log('测试环境已重置');
+        }
+
+        // 绑定事件
+        document.getElementById('init-dungeon').addEventListener('click', initDungeon);
+        document.getElementById('start-battle').addEventListener('click', startBattle);
+        document.getElementById('reset').addEventListener('click', reset);
+
+        // 初始化
+        initSystems();
+    </script>
+</body>
+</html>

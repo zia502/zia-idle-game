@@ -1452,39 +1452,52 @@ const Character = {
         // 检查暴击
         let isCritical = false;
 
-        // 获取暴击率加成BUFF
-        const critRateBuffs = attackerBuffs.filter(buff => buff.type === 'critRate');
-        let critRateBonus = 0;
+        // 如果options.skipCritical为true，则跳过暴击计算
+        if (!options.skipCritical) {
+            // 获取暴击率加成BUFF
+            const critRateBuffs = attackerBuffs.filter(buff => buff.type === 'critRate');
+            let critRateBonus = 0;
 
-        for (const buff of critRateBuffs) {
-            critRateBonus += buff.value;
-        }
-
-        // 计算最终暴击率
-        const finalCritRate = (attacker.currentStats.critRate || 0.05) + critRateBonus;
-
-        // 如果有必定暴击效果或随机触发
-        if (attacker.nextAttackCritical || Math.random() < finalCritRate) {
-            isCritical = true;
-
-            // 基础暴击伤害倍率1.5
-            let critMultiplier = 1.5;
-
-            // 获取暴击伤害加成BUFF
-            const critDamageBuffs = attackerBuffs.filter(buff => buff.type === 'critDamage');
-            let critDamageBonus = 0;
-
-            for (const buff of critDamageBuffs) {
-                critDamageBonus += buff.value;
+            for (const buff of critRateBuffs) {
+                critRateBonus += buff.value;
             }
 
-            // 应用暴击伤害加成
-            critMultiplier += critDamageBonus;
-            damage *= critMultiplier;
+            // 计算最终暴击率
+            const finalCritRate = (attacker.currentStats.critRate || 0.05) + critRateBonus;
 
-            // 重置必定暴击状态
-            if (!options.isMultiAttack) { // 只有在非多重攻击时才重置
-                attacker.nextAttackCritical = false;
+            // 如果有必定暴击效果或随机触发
+            if (attacker.nextAttackCritical || Math.random() < finalCritRate) {
+                isCritical = true;
+
+                // 基础暴击伤害倍率1.5
+                let critMultiplier = 1.5;
+
+                // 获取暴击伤害加成BUFF
+                const critDamageBuffs = attackerBuffs.filter(buff => buff.type === 'critDamage');
+                let critDamageBonus = 0;
+
+                for (const buff of critDamageBuffs) {
+                    critDamageBonus += buff.value;
+                }
+
+                // 应用暴击伤害加成
+                critMultiplier += critDamageBonus;
+                damage *= critMultiplier;
+
+                // 重置必定暴击状态
+                if (!options.isMultiAttack) { // 只有在非多重攻击时才重置
+                    attacker.nextAttackCritical = false;
+                }
+
+                console.log(`触发暴击！伤害 x${critMultiplier.toFixed(2)}`);
+                if (typeof window !== 'undefined' && window.log) {
+                    window.log(`触发暴击！伤害 x${critMultiplier.toFixed(2)}`);
+                }
+            }
+        } else {
+            console.log(`跳过暴击计算（技能伤害）`);
+            if (typeof window !== 'undefined' && window.log) {
+                window.log(`跳过暴击计算（技能伤害）`);
             }
         }
 
@@ -1514,9 +1527,18 @@ const Character = {
         // 计算目标的防御力 (确保防御力是百分比)
         let targetDefense = target.currentStats.defense;
 
+        console.log(`目标 ${target.name} 的原始防御力: ${targetDefense}`);
+        if (typeof window !== 'undefined' && window.log) {
+            window.log(`目标 ${target.name} 的原始防御力: ${targetDefense}`);
+        }
+
         // 如果防御力大于1，则认为是整数值，需要转换为百分比
         if (targetDefense > 1) {
             targetDefense = targetDefense / 100;
+            console.log(`目标防御力转换为百分比: ${targetDefense}`);
+            if (typeof window !== 'undefined' && window.log) {
+                window.log(`目标防御力转换为百分比: ${targetDefense}`);
+            }
         }
 
         // 应用防御力下降BUFF
@@ -1529,10 +1551,29 @@ const Character = {
 
         // 防御下降上限为50%
         defenseDownPercentage = Math.min(defenseDownPercentage, 0.5);
+
+        if (defenseDownPercentage > 0) {
+            console.log(`应用防御力下降BUFF: -${(defenseDownPercentage * 100).toFixed(1)}%`);
+            if (typeof window !== 'undefined' && window.log) {
+                window.log(`应用防御力下降BUFF: -${(defenseDownPercentage * 100).toFixed(1)}%`);
+            }
+        }
+
         targetDefense *= (1 - defenseDownPercentage);
 
+        console.log(`最终防御力: ${targetDefense} (${(targetDefense * 100).toFixed(1)}%)`);
+        if (typeof window !== 'undefined' && window.log) {
+            window.log(`最终防御力: ${targetDefense} (${(targetDefense * 100).toFixed(1)}%)`);
+        }
+
         // 应用防御力减伤
+        const damageBeforeDefense = damage;
         damage = damage / (1 + targetDefense);
+
+        console.log(`防御减伤: ${damageBeforeDefense} -> ${damage} (减少了 ${(damageBeforeDefense - damage).toFixed(1)} 点伤害)`);
+        if (typeof window !== 'undefined' && window.log) {
+            window.log(`防御减伤: ${damageBeforeDefense} -> ${damage} (减少了 ${(damageBeforeDefense - damage).toFixed(1)} 点伤害)`);
+        }
 
         // 应用属性伤害减轻
         const attributeDamageReduction = target.currentStats.attributeResistance?.[attackerAttribute] || 0;

@@ -330,6 +330,14 @@ const JobSkills = {
         // 原始伤害是"造成伤害"
         let finalDamage = rawDamage;
 
+        // 记录是否跳过暴击计算
+        if (options.skipCritical) {
+            console.log(`跳过暴击计算（技能伤害）`);
+            if (typeof window !== 'undefined' && window.log) {
+                window.log(`跳过暴击计算（技能伤害）`);
+            }
+        }
+
         // 应用随机波动 (0.95~1.05)，如果options中没有指定已应用随机波动
         if (!options.randomApplied) {
             const randomFactor = 0.95 + (Math.random() * 0.1);
@@ -398,7 +406,13 @@ const JobSkills = {
         // 应用防御力减伤
         if (target.currentStats && typeof target.currentStats.defense === 'number') {
             const oldDamage = finalDamage;
-            const defenseValue = target.currentStats.defense;
+            let defenseValue = target.currentStats.defense;
+
+            // 如果防御力大于1，则认为是整数值，需要转换为百分比
+            if (defenseValue > 1) {
+                defenseValue = defenseValue / 100;
+            }
+
             console.log(`目标防御力: ${defenseValue} (${(defenseValue * 100).toFixed(1)}%)`);
             if (typeof window !== 'undefined' && window.log) {
                 window.log(`目标防御力: ${defenseValue} (${(defenseValue * 100).toFixed(1)}%)`);

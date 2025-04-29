@@ -713,7 +713,7 @@ function integrateAdditionalBattleSystemUpdates() {
 
         // 打印被动技能触发信息
         if (triggeringSkill) {
-            this.logBattle(`${source.name} 的被动技能【${skillName}】触发！`);
+            this.logBattle(`${source.name} 的被动技能【${skillName}】触发！！`);
             if (skillDescription) {
                 this.logBattle(`技能描述: ${skillDescription}`);
             }
@@ -731,9 +731,11 @@ function integrateAdditionalBattleSystemUpdates() {
 
                 // 计算原始伤害
                 const rawDamage = Math.floor(source.currentStats.attack * damageMultiplier);
+                this.logBattle(`原始伤害: ${rawDamage}`);
 
                 // 应用伤害
                 const actualDamage = this.applyDamageToTarget(source, target, rawDamage);
+                this.logBattle(`应用伤害: ${actualDamage}`);
 
                 // 更新伤害统计
                 source.stats.totalDamage += actualDamage;
@@ -836,8 +838,10 @@ function integrateAdditionalBattleSystemUpdates() {
         // 调用原始方法处理普通攻击
         originalProcessCharacterAction.call(this, character, monster, battleStats);
 
-        // 处理攻击概率触发效果
-        this.processAttackProcEffects(character, monster, battleStats);
+        // 如果Battle对象已经有processAttackProcEffects方法，直接调用
+        if (typeof this.processAttackProcEffects === 'function') {
+            this.processAttackProcEffects(character, monster, battleStats);
+        }
     };
 
     // 8. 扩展Battle.processMonsterAction方法，添加对攻击概率触发效果的处理
@@ -852,8 +856,10 @@ function integrateAdditionalBattleSystemUpdates() {
 
         const target = aliveMembers[Math.floor(Math.random() * aliveMembers.length)];
 
-        // 处理攻击概率触发效果
-        this.processAttackProcEffects(monster, target, battleStats);
+        // 如果Battle对象已经有processAttackProcEffects方法，直接调用
+        if (typeof this.processAttackProcEffects === 'function') {
+            this.processAttackProcEffects(monster, target, battleStats);
+        }
     };
 
     console.log('额外的战斗系统更新已应用');

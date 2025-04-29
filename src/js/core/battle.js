@@ -1290,6 +1290,104 @@ const Battle = {
     },
 
     /**
+     * 处理攻击概率触发效果
+     * @param {object} source - 攻击来源
+     * @param {object} target - 攻击目标
+     * @param {object} battleStats - 战斗统计
+     */
+    processAttackProcEffects(source, target, battleStats) {
+        if (!source || !source.skills) return;
+
+        // 遍历角色的所有技能
+        for (const skillId of source.skills) {
+            // 获取技能定义
+            let skill = null;
+
+            // 从JobSystem获取技能
+            if (typeof JobSystem !== 'undefined' && typeof JobSystem.getSkill === 'function') {
+                skill = JobSystem.getSkill(skillId);
+            }
+
+            // 如果JobSystem中没有找到，尝试从JobSkillsTemplate获取
+            if (!skill && typeof JobSkillsTemplate !== 'undefined' && JobSkillsTemplate.templates && JobSkillsTemplate.templates[skillId]) {
+                skill = JobSkillsTemplate.templates[skillId];
+            }
+
+            // 如果找到了技能，并且是被动技能
+            if (skill && skill.passive && skill.effects) {
+                for (const effect of skill.effects) {
+                    if (effect.type === 'proc' && effect.onAttack) {
+                        // 检查触发概率
+                        const roll = Math.random();
+                        if (roll < (effect.chance || 0.3)) {
+                            this.logBattle(`${source.name} 的被动技能【${skill.name}】触发！`);
+                            this.logBattle(`技能描述: ${skill.description}`);
+
+                            // 处理伤害效果
+                            if (effect.effect && effect.effect.type === 'damage') {
+                                const procMultiplier = effect.effect.multiplier || 1.0;
+
+                                // 计算原始伤害
+                                const rawDamage = source.currentStats.attack * procMultiplier;
+                                this.logBattle(`原始伤害: ${Math.floor(rawDamage)}`);
+
+                                // 使用JobSkills.applyDamageToTarget方法计算实际伤害
+                                let actualDamage = 0;
+
+                                if (typeof JobSkills !== 'undefined' && typeof JobSkills.applyDamageToTarget === 'function') {
+                                    this.logBattle(`使用JobSkills.applyDamageToTarget计算伤害`);
+                                    // 使用JobSkills.applyDamageToTarget方法，添加skipCritical选项
+                                    actualDamage = JobSkills.applyDamageToTarget(source, target, rawDamage, {
+                                        skipCritical: true, // 跳过暴击计算
+                                        isSpecialAttack: true // 标记为特殊攻击
+                                    });
+                                } else {
+                                    this.logBattle(`JobSkills.applyDamageToTarget不可用，尝试使用Character.calculateDamage`);
+                                    // 如果JobSkills.applyDamageToTarget不可用，使用Character.calculateDamage方法
+                                    if (typeof Character !== 'undefined' && typeof Character.calculateDamage === 'function') {
+                                        // 确保Character.characters中有source和target
+                                        if (typeof Character.characters !== 'undefined') {
+                                            Character.characters[source.id] = source;
+                                            Character.characters[target.id] = target;
+                                        }
+                                        this.logBattle(`使用Character.calculateDamage计算伤害`);
+                                        // 计算伤害，设置isSpecialAttack=true，skipCritical=true，确保不触发暴击
+                                        const damageResult = Character.calculateDamage(source.id, target.id, true, {
+                                            skipCritical: true, // 跳过暴击计算
+                                            isSpecialAttack: true // 标记为特殊攻击
+                                        });
+                                        actualDamage = damageResult.damage;
+                                        this.logBattle(`计算得到伤害: ${actualDamage}`);
+                                    } else {
+                                        // 如果都不可用，使用简单的伤害计算
+                                        this.logBattle(`Character.calculateDamage不可用，使用简单公式计算伤害`);
+                                        actualDamage = Math.floor(rawDamage / (1 + target.currentStats.defense));
+                                        this.logBattle(`简单公式计算得到伤害: ${actualDamage}`);
+                                    }
+                                }
+
+                                // 应用伤害
+                                target.currentStats.hp = Math.max(0, target.currentStats.hp - actualDamage);
+                                this.logBattle(`应用伤害: ${actualDamage}`);
+
+                                // 更新伤害统计
+                                source.stats.totalDamage += actualDamage;
+
+                                // 如果是旋风斩，特别标记
+                                if (skillId === 'whirlwind') {
+                                    this.logBattle(`${source.name} 对 ${target.name} 造成了 ${actualDamage} 点伤害！`);
+                                } else {
+                                    this.logBattle(`${source.name} 的 ${skill.name} 对 ${target.name} 造成了 ${actualDamage} 点伤害！`);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+
+    /**
      * 记录战斗日志
      * @param {string} message - 日志消息
      */

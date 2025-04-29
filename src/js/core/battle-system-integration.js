@@ -370,10 +370,8 @@ function integrateBattleSystemUpdates() {
             target = cover;
         }
 
-        // 计算最终伤害
-        let finalDamage = this.calculateFinalDamage ?
-                          this.calculateFinalDamage(attacker, target, rawDamage) :
-                          rawDamage;
+        // 使用 JobSkills.applyDamageToTarget 计算基础伤害
+        let finalDamage = JobSkills.applyDamageToTarget(attacker, target, rawDamage, options);
 
         // 考虑伤害上限
         if (target.buffs) {

@@ -516,9 +516,8 @@ const JobSkills = {
             window.log(`===== 伤害计算结束 =====`);
         }
 
-        // 应用伤害
-        target.currentStats.hp = Math.max(0, target.currentStats.hp - finalDamage);
-
+        // 注意：这里不再直接应用伤害，而是返回计算后的伤害值
+        // 让调用者决定如何应用伤害
         return finalDamage;
     },
 

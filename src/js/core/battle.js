@@ -803,17 +803,17 @@ const Battle = {
             if (monster.currentStats.hp <= 0) break;
 
             // 计算伤害
-            const damageResult = Character.calculateDamage(character.id, monster.id, false, {
+            const rawDamage = Math.floor(character.currentStats.attack * (100 - monster.currentStats.defense) / 100);
+            const damageResult = JobSkills.applyDamageToTarget(character, monster, rawDamage, {
                 isMultiAttack: i > 0, // 第一次攻击不是多重攻击
                 skipStats: true // 不计入角色总伤害统计（我们会在最后统一计算）
             });
 
-
             // 应用伤害
-            monster.currentStats.hp = Math.max(0, monster.currentStats.hp - damageResult.damage);
+            monster.currentStats.hp = Math.max(0, monster.currentStats.hp - damageResult);
 
             // 累计伤害
-            totalDamage += damageResult.damage;
+            totalDamage += damageResult;
 
             // 记录暴击次数
             if (damageResult.isCritical) {
@@ -829,17 +829,7 @@ const Battle = {
                 damageMessage += `第${i+1}次攻击 `;
             }
 
-            damageMessage += `对 ${monster.name} 造成 ${damageResult.damage} 点伤害`;
-
-            if (damageResult.isCritical) {
-                damageMessage += '（暴击！）';
-            }
-
-            if (damageResult.attributeBonus > 0) {
-                damageMessage += '（属性克制！）';
-            } else if (damageResult.attributeBonus < 0) {
-                damageMessage += '（属性被克制！）';
-            }
+            damageMessage += `对 ${monster.name} 造成 ${damageResult} 点伤害`;
 
             this.logBattle(damageMessage);
         }
@@ -1214,14 +1204,18 @@ const Battle = {
                 // 检查目标是否已被击败
                 if (target.currentStats.hp <= 0) break;
 
-                // 计算伤害（简化版，可以根据需要扩展）
-                const damage = Math.floor(monster.currentStats.attack * (100 - target.currentStats.defense) / 100);
+                // 计算伤害
+                const rawDamage = Math.floor(monster.currentStats.attack * (100 - target.currentStats.defense) / 100);
+                const damageResult = JobSkills.applyDamageToTarget(monster, target, rawDamage, {
+                    isMultiAttack: i > 0, // 第一次攻击不是多重攻击
+                    skipStats: true // 不计入怪物总伤害统计（我们会在最后统一计算）
+                });
 
                 // 应用伤害
-                target.currentStats.hp = Math.max(0, target.currentStats.hp - damage);
+                target.currentStats.hp = Math.max(0, target.currentStats.hp - damageResult);
 
                 // 累计伤害
-                totalDamage += damage;
+                totalDamage += damageResult;
 
                 // 记录战斗日志
                 let damageMessage = `${monster.name} `;
@@ -1232,7 +1226,7 @@ const Battle = {
                     damageMessage += `第${i+1}次攻击 `;
                 }
 
-                damageMessage += `对 ${target.name} 造成 ${damage} 点伤害`;
+                damageMessage += `对 ${target.name} 造成 ${damageResult} 点伤害`;
 
                 this.logBattle(damageMessage);
             }

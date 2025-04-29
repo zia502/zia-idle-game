@@ -282,10 +282,9 @@ const Battle = {
             // 处理回合开始时的BUFF效果
             this.processTurnStartBuffs(teamMembers, monster);
 
-            // 处理队伍成员和怪物的行动顺序（按速度排序）
-            const allEntities = [...teamMembers, monster].sort((a, b) =>
-                (b.currentStats.speed || 0) - (a.currentStats.speed || 0)
-            );
+            // 处理队伍成员和怪物的行动顺序（玩家永远先手，按照队伍1,2,3,4的顺序行动）
+            // 不再使用速度排序，而是保持队伍成员的原始顺序，然后将怪物放在最后
+            const allEntities = [...teamMembers, monster];
 
             // 处理每个实体的行动
             for (const entity of allEntities) {

@@ -556,7 +556,6 @@ const Battle = {
             triggeredEffects = Character.processTraitTriggers(character.id, 'attack', { target: monster });
         }
 
-
         this.logBattle(`应用特性效果`);
         // 应用特性效果
         for (const effect of triggeredEffects) {
@@ -799,15 +798,17 @@ const Battle = {
         // 执行攻击
         let totalDamage = 0;
         for (let i = 0; i < attackCount; i++) {
-            // 检查目标是否已被击败
+            // 检查怪物是否已被击败
             if (monster.currentStats.hp <= 0) break;
 
             // 计算伤害
             const rawDamage = Math.floor(character.currentStats.attack * (100 - monster.currentStats.defense) / 100);
             const damageResult = JobSkills.applyDamageToTarget(character, monster, rawDamage, {
-                isMultiAttack: i > 0, // 第一次攻击不是多重攻击
-                skipStats: true, // 不计入角色总伤害统计（我们会在最后统一计算）
-                skipCritical: false // 允许暴击
+                skipCritical: false,
+                randomApplied: false,
+                isMultiAttack: attackCount > 1,
+                attackIndex: i + 1,
+                totalAttacks: attackCount
             });
 
             // 应用伤害
@@ -842,6 +843,14 @@ const Battle = {
                 damageMessage += '（属性被克制！）';
             }
 
+            if (damageResult.skillBonus > 0) {
+                damageMessage += `（技能加成：+${Math.floor(damageResult.skillBonus)}）`;
+            }
+
+            if (damageResult.buffBonus > 0) {
+                damageMessage += `（BUFF加成：+${Math.floor(damageResult.buffBonus)}）`;
+            }
+
             this.logBattle(damageMessage);
         }
 
@@ -869,6 +878,11 @@ const Battle = {
         // 检查怪物是否被击败
         if (monster.currentStats.hp <= 0) {
             this.logBattle(`${monster.name} 被击败了！`);
+        }
+
+        // 在普通攻击完成后检查一次被动技能触发
+        if (!isDA && !isTA) {
+            this.processAttackProcEffects(character, monster, battleStats);
         }
     },
 
@@ -1218,9 +1232,11 @@ const Battle = {
                 // 计算伤害
                 const rawDamage = Math.floor(monster.currentStats.attack * (100 - target.currentStats.defense) / 100);
                 const damageResult = JobSkills.applyDamageToTarget(monster, target, rawDamage, {
-                    isMultiAttack: i > 0, // 第一次攻击不是多重攻击
-                    skipStats: true, // 不计入怪物总伤害统计（我们会在最后统一计算）
-                    skipCritical: false // 允许暴击
+                    skipCritical: false,
+                    randomApplied: false,
+                    isMultiAttack: attackCount > 1,
+                    attackIndex: i + 1,
+                    totalAttacks: attackCount
                 });
 
                 // 应用伤害
@@ -1253,6 +1269,14 @@ const Battle = {
                     damageMessage += '（属性克制！）';
                 } else if (damageResult.attributeBonus < 0) {
                     damageMessage += '（属性被克制！）';
+                }
+
+                if (damageResult.skillBonus > 0) {
+                    damageMessage += `（技能加成：+${Math.floor(damageResult.skillBonus)}）`;
+                }
+
+                if (damageResult.buffBonus > 0) {
+                    damageMessage += `（BUFF加成：+${Math.floor(damageResult.buffBonus)}）`;
                 }
 
                 this.logBattle(damageMessage);
@@ -1388,17 +1412,17 @@ const Battle = {
                                 }
 
                                 // 应用伤害
-                                target.currentStats.hp = Math.max(0, target.currentStats.hp - actualDamage);
-                                this.logBattle(`应用伤害: ${actualDamage}`);
+                                target.currentStats.hp = Math.max(0, target.currentStats.hp - actualDamage.damage);
+                                this.logBattle(`应用伤害: ${actualDamage.damage}`);
 
                                 // 更新伤害统计
-                                source.stats.totalDamage += actualDamage;
+                                source.stats.totalDamage += actualDamage.damage;
 
                                 // 如果是旋风斩，特别标记
                                 if (skillId === 'whirlwind') {
-                                    this.logBattle(`${source.name} 对 ${target.name} 造成了 ${actualDamage} 点伤害！`);
+                                    this.logBattle(`${source.name} 的旋风斩对 ${target.name} 造成了 ${actualDamage.damage} 点伤害！`);
                                 } else {
-                                    this.logBattle(`${source.name} 的 ${skill.name} 对 ${target.name} 造成了 ${actualDamage} 点伤害！`);
+                                    this.logBattle(`${source.name} 的 ${skill.name} 对 ${target.name} 造成了 ${actualDamage.damage} 点伤害！`);
                                 }
                             }
                         }

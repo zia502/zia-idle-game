@@ -36,15 +36,35 @@ const JobSkills = {
             };
         }
 
-        // 执行技能效果
-        const result = this.applySkillEffects(character, template, teamMembers, monster);
+        // 根据技能类型处理
+        let result;
+        switch (template.effectType) {
+            case 'damage':
+                result = this.applyDamageEffects(character, template, teamMembers, monster);
+                break;
+            case 'buff':
+                result = this.applyBuffEffects(character, template, teamMembers, monster);
+                break;
+            case 'debuff':
+                result = this.applyDebuffEffects(character, template, teamMembers, monster);
+                break;
+            case 'heal':
+                result = this.applyHealEffects(character, template, teamMembers, monster);
+                break;
+            case 'damage_and_debuff':
+                result = this.applyDamageAndDebuffEffects(character, template, teamMembers, monster);
+                break;
+            case 'damage_and_buff':
+                result = this.applyDamageAndBuffEffects(character, template, teamMembers, monster);
+                break;
+            default:
+                return { success: false, message: `未知的技能类型: ${template.effectType}` };
+        }
 
         // 设置技能冷却
         if (!character.skillCooldowns) {
             character.skillCooldowns = {};
         }
-
-        // 使用模板中的冷却时间
         character.skillCooldowns[skillId] = template.cooldown || 5; // 默认5回合冷却
 
         return {
@@ -309,10 +329,10 @@ const JobSkills = {
      * @param {object} target - 目标对象
      * @param {number} rawDamage - 原始伤害值
      * @param {object} options - 额外选项
-     * @returns {number} 实际造成的伤害
+     * @returns {object} 包含伤害值和相关信息的对象
      */
     applyDamageToTarget(source, target, rawDamage, options = {}) {
-        if (!target) return 0;
+        if (!target) return { damage: 0, isCritical: false, attributeBonus: 0 };
 
         // 添加详细日志
         console.log(`===== 伤害计算详情 =====`);
@@ -329,12 +349,26 @@ const JobSkills = {
 
         // 原始伤害是"造成伤害"
         let finalDamage = rawDamage;
+        let isCritical = false;
+        let attributeBonus = 0;
 
         // 记录是否跳过暴击计算
         if (options.skipCritical) {
             console.log(`跳过暴击计算（技能伤害）`);
             if (typeof window !== 'undefined' && window.log) {
                 window.log(`跳过暴击计算（技能伤害）`);
+            }
+        } else {
+            // 计算暴击
+            const critRate = source.currentStats?.critRate || 0.05; // 默认5%暴击率
+            const critDamage = source.currentStats?.critDamage || 1.5; // 默认1.5倍暴击伤害
+            if (Math.random() < critRate) {
+                isCritical = true;
+                finalDamage *= critDamage;
+                console.log(`触发暴击！伤害提升至${critDamage}倍`);
+                if (typeof window !== 'undefined' && window.log) {
+                    window.log(`触发暴击！伤害提升至${critDamage}倍`);
+                }
             }
         }
 
@@ -366,7 +400,6 @@ const JobSkills = {
                 dark: { strengths: ['light'] }
             };
 
-            let attributeBonus = 0;
             if (attributes[source.attribute] && attributes[source.attribute].strengths &&
                 attributes[source.attribute].strengths.includes(target.attribute)) {
                 attributeBonus = 0.5; // 有利属性攻击: 造成约1.5倍的伤害
@@ -516,9 +549,12 @@ const JobSkills = {
             window.log(`===== 伤害计算结束 =====`);
         }
 
-        // 注意：这里不再直接应用伤害，而是返回计算后的伤害值
-        // 让调用者决定如何应用伤害
-        return finalDamage;
+        // 返回包含伤害值和相关信息的对象
+        return {
+            damage: finalDamage,
+            isCritical,
+            attributeBonus
+        };
     },
 
     /**
@@ -553,14 +589,14 @@ const JobSkills = {
                     const actualDamage = this.applyDamageToTarget(character, target, rawDamage, { randomApplied: false });
 
                     // 更新伤害统计
-                    character.stats.totalDamage += actualDamage;
-                    totalDamage += actualDamage;
+                    character.stats.totalDamage += actualDamage.damage;
+                    totalDamage += actualDamage.damage;
 
                     effects.push({
                         target: target.name,
                         type: 'damage',
                         rawDamage,
-                        actualDamage,
+                        actualDamage: actualDamage.damage,
                         multiplier: damageMultiplier.toFixed(2)
                     });
                 }
@@ -827,9 +863,9 @@ const JobSkills = {
                         const actualDamage = this.applyDamageToTarget(character, target, rawDamage, { randomApplied: false });
 
                         // 更新伤害统计
-                        character.stats.totalDamage += actualDamage;
-                        totalDamage += actualDamage;
-                        attackDamage += actualDamage;
+                        character.stats.totalDamage += actualDamage.damage;
+                        totalDamage += actualDamage.damage;
+                        attackDamage += actualDamage.damage;
                     }
 
                     effects.push({

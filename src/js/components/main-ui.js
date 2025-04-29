@@ -443,10 +443,14 @@ const MainUI = {
                                                     skillClass = 'skill-damage';
                                                 } else if (skillInfo.effectType === 'heal' || skillInfo.effectType.includes('heal')) {
                                                     skillClass = 'skill-heal';
+                                                } else if (skillInfo.effectType === 'revive') {
+                                                    skillClass = 'skill-heal'; // 复活技能使用绿色（与治疗相同）
                                                 } else if (skillInfo.effectType === 'buff' || skillInfo.effectType.includes('buff')) {
                                                     skillClass = 'skill-buff';
                                                 } else if (skillInfo.effectType === 'debuff' || skillInfo.effectType.includes('debuff')) {
                                                     skillClass = 'skill-debuff';
+                                                } else if (skillInfo.effectType === 'dispel') {
+                                                    skillClass = 'skill-debuff'; // 驱散技能使用与debuff相同的颜色
                                                 } else {
                                                     skillClass = 'skill-buff'; // 默认
                                                 }

@@ -51,6 +51,12 @@ const JobSkills = {
             case 'heal':
                 result = this.applyHealEffects(character, template, teamMembers, monster);
                 break;
+            case 'dispel':
+                result = this.applyDispelEffects(character, template, teamMembers, monster);
+                break;
+            case 'revive':
+                result = this.applyReviveEffects(character, template, teamMembers, monster);
+                break;
             case 'damage_and_debuff':
                 result = this.applyDamageAndDebuffEffects(character, template, teamMembers, monster);
                 break;
@@ -94,8 +100,9 @@ const JobSkills = {
             case 'heal':
                 return this.applyHealEffects(character, template, teamMembers, monster);
             case 'dispel':
-                // dispel也被视为heal
-                return this.applyHealEffects(character, template, teamMembers, monster);
+                return this.applyDispelEffects(character, template, teamMembers, monster);
+            case 'revive':
+                return this.applyReviveEffects(character, template, teamMembers, monster);
             case 'damage_and_debuff':
                 return this.applyDamageAndDebuffEffects(character, template, teamMembers, monster);
             case 'damage_and_buff':
@@ -634,9 +641,28 @@ const JobSkills = {
         const effects = [];
         let totalHealing = 0;
 
+        // 检查是否有需要治疗的目标
+        const needsHealing = targets.some(target => 
+            target.currentStats.hp > 0 && target.currentStats.hp < target.currentStats.maxHp
+        );
+
+        // 如果没有需要治疗的目标，返回相应消息
+        if (!needsHealing) {
+            return {
+                message: `${character.name} 使用了【${template.name}】，但所有目标都是满血状态！`,
+                effects: {
+                    type: 'heal',
+                    targets: template.targetType,
+                    totalHealing: 0,
+                    effects: []
+                }
+            };
+        }
+
         // 应用每个治疗效果
         for (const target of targets) {
             if (target.currentStats.hp <= 0) continue; // 跳过已倒下的目标
+            if (target.currentStats.hp >= target.currentStats.maxHp) continue; // 跳过满血的目标
 
             for (const effect of template.effects) {
                 if (effect.type === 'heal') {
@@ -703,9 +729,29 @@ const JobSkills = {
         const effects = [];
         let totalDispelCount = 0;
 
+        // 检查目标是否有需要驱散的BUFF
+        const hasBuffsToDispel = targets.some(target => {
+            if (target.currentStats.hp <= 0) return false; // 跳过已倒下的目标
+            return target.buffs && target.buffs.length > 0;
+        });
+
+        // 如果没有需要驱散的BUFF，返回相应消息
+        if (!hasBuffsToDispel) {
+            return {
+                message: `${character.name} 使用了【${template.name}】，但目标没有可驱散的效果！`,
+                effects: {
+                    type: 'dispel',
+                    targets: template.targetType,
+                    totalDispelCount: 0,
+                    effects: []
+                }
+            };
+        }
+
         // 应用每个驱散效果
         for (const target of targets) {
             if (target.currentStats.hp <= 0) continue; // 跳过已倒下的目标
+            if (!target.buffs || target.buffs.length === 0) continue; // 跳过没有BUFF的目标
 
             for (const effect of template.effects) {
                 if (effect.type === 'dispel') {
@@ -730,6 +776,19 @@ const JobSkills = {
 
         // 生成消息
         let message = `${character.name} 使用了【${template.name}】，`;
+
+        if (totalDispelCount === 0) {
+            message += `但没有驱散任何效果！`;
+            return {
+                message,
+                effects: {
+                    type: 'dispel',
+                    targets: template.targetType,
+                    totalDispelCount: 0,
+                    effects: []
+                }
+            };
+        }
 
         if (template.targetType === 'self') {
             message += `驱散了自身 ${totalDispelCount} 个`;
@@ -1019,5 +1078,83 @@ const JobSkills = {
                 }
             }
         }
+    },
+
+    /**
+     * 应用复活效果
+     * @param {object} character - 角色对象
+     * @param {object} template - 技能模板
+     * @param {array} teamMembers - 队伍成员
+     * @param {object} monster - 怪物对象
+     * @returns {object} 技能效果结果
+     */
+    applyReviveEffects(character, template, teamMembers, monster) {
+        const targets = this.getTargets(character, template.targetType, teamMembers, monster);
+        const effects = [];
+        let revivedCount = 0;
+
+        // 检查是否有已阵亡的目标
+        const hasDeadTargets = targets.some(target => target.currentStats.hp <= 0);
+
+        // 如果没有已阵亡的目标，返回相应消息
+        if (!hasDeadTargets) {
+            return {
+                message: `${character.name} 使用了【${template.name}】，但没有需要复活的目标！`,
+                effects: {
+                    type: 'revive',
+                    targets: template.targetType,
+                    revivedCount: 0,
+                    effects: []
+                }
+            };
+        }
+
+        // 应用每个复活效果
+        for (const target of targets) {
+            if (target.currentStats.hp > 0) continue; // 跳过存活的目标
+
+            for (const effect of template.effects) {
+                if (effect.type === 'revive') {
+                    // 计算复活后的HP百分比
+                    const revivePercent = effect.value || 0.3; // 默认复活后HP为30%
+
+                    // 应用复活
+                    const reviveAmount = Math.floor(target.currentStats.maxHp * revivePercent);
+                    target.currentStats.hp = reviveAmount;
+
+                    revivedCount++;
+
+                    effects.push({
+                        target: target.name,
+                        type: 'revive',
+                        reviveAmount: reviveAmount,
+                        revivePercent: revivePercent
+                    });
+                }
+            }
+        }
+
+        // 生成消息
+        let message = `${character.name} 使用了【${template.name}】，`;
+
+        if (revivedCount === 0) {
+            message += `但没有复活任何目标！`;
+        } else if (template.targetType === 'ally') {
+            const revivedTarget = effects[0]?.target || '队友';
+            const reviveAmount = effects[0]?.reviveAmount || 0;
+            message += `复活了 ${revivedTarget}，恢复 ${reviveAmount} 点生命值！`;
+        } else if (template.targetType === 'all_allies') {
+            message += `复活了 ${revivedCount} 名队友！`;
+        }
+
+        return {
+            message,
+            effects: {
+                type: 'revive',
+                targets: template.targetType,
+                revivedCount,
+                effects
+            }
+        };
     }
 };

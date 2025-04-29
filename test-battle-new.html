@@ -539,16 +539,77 @@
 
             // 初始化函数
             function init() {
+                // 初始化Events系统
+                if (typeof Events !== 'undefined' && typeof Events.init === 'function') {
+                    Events.init();
+                    log('Events系统已初始化');
+                } else {
+                    log('警告：Events系统未定义');
+                }
+
+                // 初始化JobSkillsTemplate系统
+                if (typeof JobSkillsTemplate !== 'undefined' && typeof JobSkillsTemplate.init === 'function') {
+                    JobSkillsTemplate.init();
+                    log('JobSkillsTemplate系统已初始化');
+                } else {
+                    log('错误：JobSkillsTemplate系统未定义');
+                }
+
+                // 初始化JobSystem系统
+                if (typeof JobSystem !== 'undefined' && typeof JobSystem.init === 'function') {
+                    JobSystem.init();
+                    log('JobSystem系统已初始化');
+                } else {
+                    log('错误：JobSystem系统未定义');
+                }
+
+                // 初始化BuffSystem系统
+                if (typeof BuffSystem !== 'undefined' && typeof BuffSystem.init === 'function') {
+                    BuffSystem.init();
+                    log('BuffSystem系统已初始化');
+                } else {
+                    log('错误：BuffSystem系统未定义');
+                }
+
+                // 初始化JobSkills系统
+                if (typeof JobSkills !== 'undefined' && typeof JobSkills.init === 'function') {
+                    JobSkills.init();
+                    log('JobSkills系统已初始化');
+                } else {
+                    log('错误：JobSkills系统未定义');
+                }
+
                 // 初始化战斗系统更新
                 if (typeof initBattleSystemUpdates === 'function') {
                     initBattleSystemUpdates();
+                    log('战斗系统更新已应用');
+                } else {
+                    log('警告：战斗系统更新未定义');
                 }
 
-                // 加载职业数据
-                loadJobs();
+                // 设置事件监听器，等待JobSkillsTemplate加载完成
+                if (typeof Events !== 'undefined' && typeof Events.on === 'function') {
+                    Events.on('jobSkillsTemplate:loaded', () => {
+                        log('JobSkillsTemplate数据加载完成');
 
-                // 加载BOSS数据
-                loadBosses();
+                        // 加载职业数据
+                        loadJobs();
+
+                        // 加载BOSS数据
+                        loadBosses();
+
+                        log('职业和BOSS数据加载完成');
+                    });
+                } else {
+                    // 如果Events模块不可用，直接加载数据
+                    log('警告：Events模块未定义，直接加载数据');
+
+                    // 加载职业数据
+                    loadJobs();
+
+                    // 加载BOSS数据
+                    loadBosses();
+                }
 
                 // 添加事件监听器
                 startBattleBtn.addEventListener('click', startBattle);
@@ -622,6 +683,12 @@
                     return;
                 }
 
+                // 检查JobSkillsTemplate是否已加载
+                if (typeof JobSkillsTemplate === 'undefined' || !JobSkillsTemplate.templates) {
+                    log('错误：技能模板系统未加载');
+                    return;
+                }
+
                 // 清空职业选择区域
                 jobSelection.innerHTML = '';
 
@@ -654,12 +721,28 @@
 
                     // 添加技能
                     for (const skillId of skills) {
-                        const skill = JobSystem.getSkill(skillId);
+                        // 首先尝试从JobSystem获取技能
+                        let skill = JobSystem.getSkill(skillId);
+
+                        // 如果JobSystem中没有找到，尝试从JobSkillsTemplate获取
+                        if (!skill && JobSkillsTemplate.templates[skillId]) {
+                            skill = JobSkillsTemplate.templates[skillId];
+                        }
+
                         if (skill) {
                             const skillItem = document.createElement('div');
                             skillItem.className = 'skill-item';
                             skillItem.textContent = `${skill.name}: ${skill.description}`;
                             skillsList.appendChild(skillItem);
+                        } else {
+                            // 如果技能未找到，显示警告
+                            const skillItem = document.createElement('div');
+                            skillItem.className = 'skill-item error';
+                            skillItem.textContent = `未找到技能: ${skillId}`;
+                            skillItem.style.color = 'red';
+                            skillsList.appendChild(skillItem);
+
+                            console.warn(`未找到技能: ${skillId}`);
                         }
                     }
 
@@ -782,6 +865,12 @@
                 const job = JobSystem.jobs[selectedJob];
                 if (!job) return null;
 
+                // 检查JobSkillsTemplate是否已加载
+                if (typeof JobSkillsTemplate === 'undefined' || !JobSkillsTemplate.templates) {
+                    log('错误：技能模板系统未加载，无法创建角色');
+                    return null;
+                }
+
                 // 创建角色对象
                 const char = {
                     id: 'player_character',
@@ -818,6 +907,24 @@
                 char.currentStats.maxHp = char.baseStats.hp;
                 char.currentStats.hp = char.baseStats.hp;
 
+                // 确保所有技能都可用
+                for (const skillId of char.skills) {
+                    // 检查技能是否存在于JobSkillsTemplate中
+                    if (!JobSkillsTemplate.templates[skillId]) {
+                        console.warn(`角色技能未找到: ${skillId}，尝试从JobSystem获取`);
+
+                        // 尝试从JobSystem获取技能
+                        const jobSkill = JobSystem.getSkill(skillId);
+                        if (jobSkill) {
+                            // 将技能添加到JobSkillsTemplate中
+                            JobSkillsTemplate.templates[skillId] = jobSkill;
+                            console.log(`已将技能 ${skillId} 添加到JobSkillsTemplate`);
+                        } else {
+                            console.error(`无法找到技能: ${skillId}`);
+                        }
+                    }
+                }
+
                 return char;
             }
 
@@ -827,6 +934,12 @@
 
                 const bossData = bosses.find(b => b.id === selectedBoss);
                 if (!bossData) return null;
+
+                // 检查JobSkillsTemplate是否已加载
+                if (typeof JobSkillsTemplate === 'undefined' || !JobSkillsTemplate.templates) {
+                    log('错误：技能模板系统未加载，无法创建BOSS');
+                    return null;
+                }
 
                 // 创建BOSS对象
                 const bossObj = {
@@ -863,8 +976,18 @@
                     if (bossSkills[skillId]) {
                         // 将BOSS技能添加到JobSkillsTemplate.templates中
                         if (typeof JobSkillsTemplate !== 'undefined' && JobSkillsTemplate.templates) {
-                            JobSkillsTemplate.templates[skillId] = bossSkills[skillId];
+                            // 添加必要的属性
+                            const bossSkill = bossSkills[skillId];
+                            if (!bossSkill.cooldown && bossSkill.effectType === 'damage') {
+                                bossSkill.cooldown = 2; // 默认冷却时间
+                            }
+
+                            // 将技能添加到模板中
+                            JobSkillsTemplate.templates[skillId] = bossSkill;
+                            console.log(`已将BOSS技能 ${skillId} 添加到JobSkillsTemplate`);
                         }
+                    } else {
+                        console.error(`未找到BOSS技能: ${skillId}`);
                     }
                 }
 
@@ -1067,9 +1190,24 @@
                                 log('\n技能使用统计:');
                                 for (const skillId in result.battleStats.skillsUsed) {
                                     const count = result.battleStats.skillsUsed[skillId];
-                                    const skill = JobSystem.getSkill(skillId);
+
+                                    // 首先尝试从JobSystem获取技能
+                                    let skill = JobSystem.getSkill(skillId);
+
+                                    // 如果JobSystem中没有找到，尝试从JobSkillsTemplate获取
+                                    if (!skill && typeof JobSkillsTemplate !== 'undefined' && JobSkillsTemplate.templates && JobSkillsTemplate.templates[skillId]) {
+                                        skill = JobSkillsTemplate.templates[skillId];
+                                    }
+
+                                    // 如果bossSkills中有这个技能
+                                    if (!skill && bossSkills[skillId]) {
+                                        skill = bossSkills[skillId];
+                                    }
+
                                     if (skill) {
                                         log(`- ${skill.name}: 使用了 ${count} 次`);
+                                    } else {
+                                        log(`- ${skillId}: 使用了 ${count} 次`);
                                     }
                                 }
                             }
@@ -1130,7 +1268,14 @@
                         if (availableSkills.length > 0) {
                             // 随机选择一个技能
                             const skillId = availableSkills[Math.floor(Math.random() * availableSkills.length)];
-                            const skill = JobSystem.getSkill(skillId);
+
+                            // 首先尝试从JobSystem获取技能
+                            let skill = JobSystem.getSkill(skillId);
+
+                            // 如果JobSystem中没有找到，尝试从JobSkillsTemplate获取
+                            if (!skill && typeof JobSkillsTemplate !== 'undefined' && JobSkillsTemplate.templates && JobSkillsTemplate.templates[skillId]) {
+                                skill = JobSkillsTemplate.templates[skillId];
+                            }
 
                             log(`${character.name} 选择使用技能: ${skill ? skill.name : skillId}`);
 
@@ -1191,7 +1336,14 @@
                         if (availableSkills.length > 0) {
                             // 随机选择一个技能
                             const skillId = availableSkills[Math.floor(Math.random() * availableSkills.length)];
-                            const skill = bossSkills[skillId];
+
+                            // 首先尝试从bossSkills获取技能
+                            let skill = bossSkills[skillId];
+
+                            // 如果bossSkills中没有找到，尝试从JobSkillsTemplate获取
+                            if (!skill && typeof JobSkillsTemplate !== 'undefined' && JobSkillsTemplate.templates && JobSkillsTemplate.templates[skillId]) {
+                                skill = JobSkillsTemplate.templates[skillId];
+                            }
 
                             if (skill) {
                                 log(`${boss.name} 选择使用技能: ${skill.name}`);
@@ -1275,9 +1427,18 @@
                         if (character.skillCooldowns[skillId] > 0) {
                             character.skillCooldowns[skillId]--;
                             if (character.skillCooldowns[skillId] === 0) {
-                                const skill = JobSystem.getSkill(skillId);
+                                // 首先尝试从JobSystem获取技能
+                                let skill = JobSystem.getSkill(skillId);
+
+                                // 如果JobSystem中没有找到，尝试从JobSkillsTemplate获取
+                                if (!skill && typeof JobSkillsTemplate !== 'undefined' && JobSkillsTemplate.templates && JobSkillsTemplate.templates[skillId]) {
+                                    skill = JobSkillsTemplate.templates[skillId];
+                                }
+
                                 if (skill) {
                                     log(`${character.name} 的技能 ${skill.name} 冷却完成，可以再次使用`);
+                                } else {
+                                    log(`${character.name} 的技能 ${skillId} 冷却完成，可以再次使用`);
                                 }
                             }
                         }
@@ -1287,9 +1448,18 @@
                         if (boss.skillCooldowns[skillId] > 0) {
                             boss.skillCooldowns[skillId]--;
                             if (boss.skillCooldowns[skillId] === 0) {
-                                const skill = bossSkills[skillId];
+                                // 首先尝试从bossSkills获取技能
+                                let skill = bossSkills[skillId];
+
+                                // 如果bossSkills中没有找到，尝试从JobSkillsTemplate获取
+                                if (!skill && typeof JobSkillsTemplate !== 'undefined' && JobSkillsTemplate.templates && JobSkillsTemplate.templates[skillId]) {
+                                    skill = JobSkillsTemplate.templates[skillId];
+                                }
+
                                 if (skill) {
                                     log(`${boss.name} 的技能 ${skill.name} 冷却完成，可以再次使用`);
+                                } else {
+                                    log(`${boss.name} 的技能 ${skillId} 冷却完成，可以再次使用`);
                                 }
                             }
                         }

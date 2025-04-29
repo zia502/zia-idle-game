@@ -206,7 +206,7 @@ const Battle = {
      */
     processBattle(teamMembers, monster) {
         // 最大回合数限制，防止无限循环
-        const MAX_TURNS = 200;
+        const MAX_TURNS = 99;
 
         // 初始化怪物HP
         monster.currentStats.hp = monster.currentStats.maxHp || monster.currentStats.hp;
@@ -807,6 +807,7 @@ const Battle = {
                 isMultiAttack: i > 0, // 第一次攻击不是多重攻击
                 skipStats: true // 不计入角色总伤害统计（我们会在最后统一计算）
             });
+
 
             // 应用伤害
             monster.currentStats.hp = Math.max(0, monster.currentStats.hp - damageResult.damage);

@@ -314,13 +314,136 @@ const JobSkills = {
     applyDamageToTarget(source, target, rawDamage, options = {}) {
         if (!target) return 0;
 
+        // 添加详细日志
+        console.log(`===== 伤害计算详情 =====`);
+        console.log(`攻击者: ${source.name}, 目标: ${target.name}`);
+        console.log(`原始伤害(rawDamage): ${rawDamage}`);
+
+        if (typeof window !== 'undefined' && window.log) {
+            window.log(`===== 伤害计算详情 =====`);
+            window.log(`攻击者: ${source.name || '未知'}, 目标: ${target.name || '未知'}`);
+            window.log(`攻击者攻击力: ${source.currentStats?.attack || '未知'}`);
+            window.log(`目标防御力: ${target.currentStats?.defense || '未知'} (${(target.currentStats?.defense * 100).toFixed(1)}%)`);
+            window.log(`原始伤害(rawDamage): ${rawDamage}`);
+        }
+
+        // 原始伤害是"造成伤害"
         let finalDamage = rawDamage;
+
+        // 应用随机波动 (0.95~1.05)，如果options中没有指定已应用随机波动
+        if (!options.randomApplied) {
+            const randomFactor = 0.95 + (Math.random() * 0.1);
+            console.log(`随机波动因子: ${randomFactor.toFixed(4)}`);
+            if (typeof window !== 'undefined' && window.log) {
+                window.log(`随机波动因子: ${randomFactor.toFixed(4)}`);
+            }
+
+            const oldDamage = finalDamage;
+            finalDamage *= randomFactor;
+            console.log(`应用随机波动后的伤害: ${oldDamage} * ${randomFactor.toFixed(4)} = ${finalDamage.toFixed(2)}`);
+            if (typeof window !== 'undefined' && window.log) {
+                window.log(`应用随机波动后的伤害: ${oldDamage} * ${randomFactor.toFixed(4)} = ${finalDamage.toFixed(2)}`);
+            }
+        }
+
+        // 应用属性克制
+        if (source.attribute && target.attribute) {
+            // 获取属性关系
+            const attributes = Character.attributes || {
+                fire: { strengths: ['wind'] },
+                water: { strengths: ['fire'] },
+                earth: { strengths: ['water'] },
+                wind: { strengths: ['earth'] },
+                light: { strengths: ['dark'] },
+                dark: { strengths: ['light'] }
+            };
+
+            let attributeBonus = 0;
+            if (attributes[source.attribute] && attributes[source.attribute].strengths &&
+                attributes[source.attribute].strengths.includes(target.attribute)) {
+                attributeBonus = 0.5; // 有利属性攻击: 造成约1.5倍的伤害
+                console.log(`属性克制: ${source.attribute} 对 ${target.attribute} 有优势 (+50%)`);
+                if (typeof window !== 'undefined' && window.log) {
+                    window.log(`属性克制: ${source.attribute} 对 ${target.attribute} 有优势 (+50%)`);
+                }
+            } else if (attributes[target.attribute] && attributes[target.attribute].strengths &&
+                      attributes[target.attribute].strengths.includes(source.attribute)) {
+                attributeBonus = -0.25; // 不利属性攻击: 造成约0.75倍（即减少25%）的伤害
+                console.log(`属性克制: ${source.attribute} 对 ${target.attribute} 有劣势 (-25%)`);
+                if (typeof window !== 'undefined' && window.log) {
+                    window.log(`属性克制: ${source.attribute} 对 ${target.attribute} 有劣势 (-25%)`);
+                }
+            } else {
+                console.log(`属性克制: 无属性克制关系`);
+                if (typeof window !== 'undefined' && window.log) {
+                    window.log(`属性克制: 无属性克制关系`);
+                }
+            }
+
+            const oldDamage = finalDamage;
+            finalDamage *= (1 + attributeBonus);
+            console.log(`应用属性克制后的伤害: ${oldDamage.toFixed(2)} * (1 + ${attributeBonus}) = ${finalDamage.toFixed(2)}`);
+            if (typeof window !== 'undefined' && window.log) {
+                window.log(`应用属性克制后的伤害: ${oldDamage.toFixed(2)} * (1 + ${attributeBonus}) = ${finalDamage.toFixed(2)}`);
+            }
+        }
+
+        // 计算"受到伤害"
+        // 受到伤害= 造成伤害 / （1+防御力%）*（1-伤害降低%）*（1-属性伤害减轻%）
+        console.log(`开始计算"受到伤害"公式`);
+        if (typeof window !== 'undefined' && window.log) {
+            window.log(`开始计算"受到伤害"公式`);
+        }
+
+        // 应用防御力减伤
+        if (target.currentStats && typeof target.currentStats.defense === 'number') {
+            const oldDamage = finalDamage;
+            const defenseValue = target.currentStats.defense;
+            console.log(`目标防御力: ${defenseValue} (${(defenseValue * 100).toFixed(1)}%)`);
+            if (typeof window !== 'undefined' && window.log) {
+                window.log(`目标防御力: ${defenseValue} (${(defenseValue * 100).toFixed(1)}%)`);
+            }
+
+            finalDamage = finalDamage / (1 + defenseValue);
+            console.log(`应用防御力减伤后的伤害: ${oldDamage.toFixed(2)} / (1 + ${defenseValue}) = ${finalDamage.toFixed(2)}`);
+            if (typeof window !== 'undefined' && window.log) {
+                window.log(`应用防御力减伤后的伤害: ${oldDamage.toFixed(2)} / (1 + ${defenseValue}) = ${finalDamage.toFixed(2)}`);
+            }
+        }
 
         // 考虑目标的伤害减免BUFF
         if (target.buffs) {
             const damageReductionBuffs = target.buffs.filter(buff => buff.type === 'damageReduction');
             for (const buff of damageReductionBuffs) {
+                const oldDamage = finalDamage;
+                console.log(`伤害减免BUFF: ${buff.name || 'Unknown'} (${(buff.value * 100).toFixed(1)}%)`);
+                if (typeof window !== 'undefined' && window.log) {
+                    window.log(`伤害减免BUFF: ${buff.name || 'Unknown'} (${(buff.value * 100).toFixed(1)}%)`);
+                }
+
                 finalDamage *= (1 - buff.value);
+                console.log(`应用伤害减免BUFF后的伤害: ${oldDamage.toFixed(2)} * (1 - ${buff.value}) = ${finalDamage.toFixed(2)}`);
+                if (typeof window !== 'undefined' && window.log) {
+                    window.log(`应用伤害减免BUFF后的伤害: ${oldDamage.toFixed(2)} * (1 - ${buff.value}) = ${finalDamage.toFixed(2)}`);
+                }
+            }
+        }
+
+        // 应用属性伤害减轻
+        if (source.attribute && target.currentStats && target.currentStats.attributeResistance) {
+            const attributeDamageReduction = target.currentStats.attributeResistance[source.attribute] || 0;
+            if (attributeDamageReduction > 0) {
+                const oldDamage = finalDamage;
+                console.log(`属性伤害减轻: ${source.attribute} (${(attributeDamageReduction * 100).toFixed(1)}%)`);
+                if (typeof window !== 'undefined' && window.log) {
+                    window.log(`属性伤害减轻: ${source.attribute} (${(attributeDamageReduction * 100).toFixed(1)}%)`);
+                }
+
+                finalDamage *= (1 - attributeDamageReduction);
+                console.log(`应用属性伤害减轻后的伤害: ${oldDamage.toFixed(2)} * (1 - ${attributeDamageReduction}) = ${finalDamage.toFixed(2)}`);
+                if (typeof window !== 'undefined' && window.log) {
+                    window.log(`应用属性伤害减轻后的伤害: ${oldDamage.toFixed(2)} * (1 - ${attributeDamageReduction}) = ${finalDamage.toFixed(2)}`);
+                }
             }
         }
 
@@ -361,10 +484,23 @@ const JobSkills = {
         }
 
         // 应用伤害上限
+        const beforeCap = finalDamage;
         finalDamage = Math.min(finalDamage, 99999);
+        if (beforeCap > 99999) {
+            console.log(`伤害超过上限: ${beforeCap.toFixed(2)} → 99999`);
+            if (typeof window !== 'undefined' && window.log) {
+                window.log(`伤害超过上限: ${beforeCap.toFixed(2)} → 99999`);
+            }
+        }
 
         // 取整
+        const beforeFloor = finalDamage;
         finalDamage = Math.floor(finalDamage);
+        console.log(`最终伤害(取整): ${beforeFloor.toFixed(2)} → ${finalDamage}`);
+        if (typeof window !== 'undefined' && window.log) {
+            window.log(`最终伤害(取整): ${beforeFloor.toFixed(2)} → ${finalDamage}`);
+            window.log(`===== 伤害计算结束 =====`);
+        }
 
         // 应用伤害
         target.currentStats.hp = Math.max(0, target.currentStats.hp - finalDamage);
@@ -401,7 +537,7 @@ const JobSkills = {
                     const rawDamage = Math.floor(character.currentStats.attack * damageMultiplier);
 
                     // 应用伤害到目标，考虑BUFF和DEBUFF
-                    const actualDamage = this.applyDamageToTarget(character, target, rawDamage);
+                    const actualDamage = this.applyDamageToTarget(character, target, rawDamage, { randomApplied: false });
 
                     // 更新伤害统计
                     character.stats.totalDamage += actualDamage;
@@ -675,7 +811,7 @@ const JobSkills = {
                         const rawDamage = Math.floor(character.currentStats.attack * damageMultiplier);
 
                         // 应用伤害到目标，考虑BUFF和DEBUFF
-                        const actualDamage = this.applyDamageToTarget(character, target, rawDamage);
+                        const actualDamage = this.applyDamageToTarget(character, target, rawDamage, { randomApplied: false });
 
                         // 更新伤害统计
                         character.stats.totalDamage += actualDamage;

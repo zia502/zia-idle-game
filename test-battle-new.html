@@ -187,22 +187,24 @@
             <div class="battle-status">
                 <div class="character-status">
                     <h3 id="character-name">角色</h3>
+                    <p>属性: <span id="character-attribute">-</span></p>
                     <p>生命值: <span id="character-hp">0</span>/<span id="character-max-hp">0</span></p>
                     <div class="hp-bar">
                         <div class="hp-fill" id="character-hp-fill"></div>
                     </div>
                     <p>攻击力: <span id="character-attack">0</span></p>
-                    <p>防御力: <span id="character-defense">0</span></p>
+                    <p>防御力: <span id="character-defense">0</span>%</p>
                     <p>速度: <span id="character-speed">0</span></p>
                 </div>
                 <div class="boss-status">
                     <h3 id="boss-name">BOSS</h3>
+                    <p>属性: <span id="boss-attribute">-</span></p>
                     <p>生命值: <span id="boss-hp">0</span>/<span id="boss-max-hp">0</span></p>
                     <div class="hp-bar">
                         <div class="hp-fill boss-hp-fill" id="boss-hp-fill"></div>
                     </div>
                     <p>攻击力: <span id="boss-attack">0</span></p>
-                    <p>防御力: <span id="boss-defense">0</span></p>
+                    <p>防御力: <span id="boss-defense">0</span>%</p>
                     <p>速度: <span id="boss-speed">0</span></p>
                 </div>
             </div>
@@ -277,7 +279,7 @@
                     id: 'dragon',
                     name: '远古巨龙',
                     description: '喷吐烈焰的远古巨龙，拥有强大的物理攻击和火焰魔法。',
-                    baseStats: { hp: 5000, attack: 150, defense: 80, speed: 30 },
+                    baseStats: { hp: 5000, attack: 150, defense: 50, speed: 30 },
                     skills: ['dragonBreath', 'tailSwipe', 'fireStorm'],
                     element: 'fire'
                 },
@@ -701,6 +703,20 @@
                 battleLog.scrollTop = battleLog.scrollHeight;
             }
 
+            // 获取属性名称
+            function getAttributeName(attribute) {
+                const attributeNames = {
+                    'fire': '火',
+                    'water': '水',
+                    'earth': '土',
+                    'wind': '风',
+                    'light': '光',
+                    'dark': '暗',
+                    'chaos': '混沌'
+                };
+                return attributeNames[attribute] || attribute;
+            }
+
             // 加载职业数据
             function loadJobs() {
                 if (typeof JobSystem === 'undefined' || !JobSystem.jobs) {
@@ -896,20 +912,36 @@
                     return null;
                 }
 
+                // 随机选择一个属性
+                const attributes = ['fire', 'water', 'earth', 'wind', 'light', 'dark'];
+                const randomAttribute = attributes[Math.floor(Math.random() * attributes.length)];
+
                 // 创建角色对象
                 const char = {
                     id: 'player_character',
                     name: `${job.name}`,
                     type: 'player',
+                    attribute: randomAttribute, // 随机属性
                     baseStats: {
                         ...job.baseStats,
                         // 将血量乘以100倍，防止太快阵亡
-                        hp: job.baseStats.hp * 100
+                        hp: job.baseStats.hp * 100,
+                        // 将防御力转换为百分比
+                        defense: job.baseStats.defense / 100,
+                        // 设置攻击力为1000
+                        attack: 1000
                     },
                     currentStats: {
                         ...job.baseStats,
                         // 将血量乘以100倍，防止太快阵亡
-                        hp: job.baseStats.hp * 100
+                        hp: job.baseStats.hp * 100,
+                        // 将防御力转换为百分比
+                        defense: job.baseStats.defense / 100,
+                        // 设置攻击力为1000
+                        attack: 1000,
+                        // 添加DA和TA率
+                        daRate: 0.15, // 15%双重攻击率
+                        taRate: 0.05  // 5%三重攻击率
                     },
                     skills: job.skills || [],
                     job: {
@@ -931,6 +963,13 @@
                 // 确保有最大生命值
                 char.currentStats.maxHp = char.baseStats.hp;
                 char.currentStats.hp = char.baseStats.hp;
+
+                // 记录角色属性
+                log(`角色 ${char.name} 的属性: ${getAttributeName(randomAttribute)}`);
+
+                // 记录防御力和攻击力
+                log(`角色 ${char.name} 的防御力: ${(char.currentStats.defense * 100).toFixed(1)}%`);
+                log(`角色 ${char.name} 的攻击力: ${char.currentStats.attack}`);
 
                 // 确保所有技能都可用
                 for (const skillId of char.skills) {
@@ -971,15 +1010,27 @@
                     id: bossData.id,
                     name: bossData.name,
                     type: 'boss',
+                    attribute: bossData.element || 'fire', // 使用BOSS的元素属性
                     baseStats: {
                         ...bossData.baseStats,
                         // 将BOSS血量也乘以100倍，保持战斗平衡
-                        hp: bossData.baseStats.hp * 100
+                        hp: bossData.baseStats.hp * 100,
+                        // 将防御力转换为百分比
+                        defense: bossData.baseStats.defense / 100,
+                        // 设置攻击力为1000
+                        attack: 1000
                     },
                     currentStats: {
                         ...bossData.baseStats,
                         // 将BOSS血量也乘以100倍，保持战斗平衡
-                        hp: bossData.baseStats.hp * 100
+                        hp: bossData.baseStats.hp * 100,
+                        // 将防御力转换为百分比
+                        defense: bossData.baseStats.defense / 100,
+                        // 设置攻击力为1000
+                        attack: 1000,
+                        // 添加DA和TA率
+                        daRate: 0.1, // 10%双重攻击率
+                        taRate: 0.03 // 3%三重攻击率
                     },
                     skills: bossData.skills || [],
                     element: bossData.element,
@@ -995,6 +1046,13 @@
                 // 确保有最大生命值
                 bossObj.currentStats.maxHp = bossObj.baseStats.hp;
                 bossObj.currentStats.hp = bossObj.baseStats.hp;
+
+                // 记录BOSS属性
+                log(`BOSS ${bossObj.name} 的属性: ${getAttributeName(bossObj.attribute)}`);
+
+                // 记录防御力和攻击力
+                log(`BOSS ${bossObj.name} 的防御力: ${(bossObj.currentStats.defense * 100).toFixed(1)}%`);
+                log(`BOSS ${bossObj.name} 的攻击力: ${bossObj.currentStats.attack}`);
 
                 // 添加BOSS技能
                 for (const skillId of bossObj.skills) {
@@ -1025,10 +1083,11 @@
 
                 // 更新角色状态
                 characterName.textContent = character.name;
+                document.getElementById('character-attribute').textContent = getAttributeName(character.attribute);
                 characterHp.textContent = Math.max(0, Math.floor(character.currentStats.hp));
                 characterMaxHp.textContent = character.currentStats.maxHp;
                 characterAttack.textContent = Math.floor(character.currentStats.attack);
-                characterDefense.textContent = Math.floor(character.currentStats.defense);
+                characterDefense.textContent = (character.currentStats.defense * 100).toFixed(1);
                 characterSpeed.textContent = Math.floor(character.currentStats.speed);
 
                 // 更新角色生命条
@@ -1037,10 +1096,11 @@
 
                 // 更新BOSS状态
                 bossName.textContent = boss.name;
+                document.getElementById('boss-attribute').textContent = getAttributeName(boss.attribute);
                 bossHp.textContent = Math.max(0, Math.floor(boss.currentStats.hp));
                 bossMaxHp.textContent = boss.currentStats.maxHp;
                 bossAttack.textContent = Math.floor(boss.currentStats.attack);
-                bossDefense.textContent = Math.floor(boss.currentStats.defense);
+                bossDefense.textContent = (boss.currentStats.defense * 100).toFixed(1);
                 bossSpeed.textContent = Math.floor(boss.currentStats.speed);
 
                 // 更新BOSS生命条
@@ -1070,10 +1130,31 @@
                     return;
                 }
 
-                // 将角色添加到Character对象中，以便JobSkills.useSkill能够找到它
+                // 将角色和BOSS添加到Character对象中，以便JobSkills.useSkill能够找到它们
                 if (typeof Character !== 'undefined') {
                     Character.characters = Character.characters || {};
+
+                    // 确保角色ID正确
+                    if (!character.id) {
+                        character.id = 'player_character';
+                    }
+
+                    // 确保BOSS ID正确
+                    if (!boss.id) {
+                        boss.id = 'dragon';
+                    }
+
                     Character.characters[character.id] = character;
+                    Character.characters[boss.id] = boss; // 添加BOSS到Character.characters中
+
+                    log(`将角色 ${character.name} (ID: ${character.id}) 添加到Character.characters中`);
+                    log(`将BOSS ${boss.name} (ID: ${boss.id}) 添加到Character.characters中`);
+
+                    // 打印Character.characters中的所有角色
+                    log(`Character.characters中的角色数量: ${Object.keys(Character.characters).length}`);
+                    for (const id in Character.characters) {
+                        log(`- ${id}: ${Character.characters[id].name}`);
+                    }
 
                     // 添加getCharacter方法（如果不存在）
                     if (typeof Character.getCharacter !== 'function') {
@@ -1266,9 +1347,9 @@
 
                     // 战斗开始日志
                     log('===== 简单战斗模拟开始 =====');
-                    log(`${character.name} (HP: ${Math.floor(character.currentStats.hp)}/${character.currentStats.maxHp}, ATK: ${Math.floor(character.currentStats.attack)}, DEF: ${Math.floor(character.currentStats.defense)}, SPD: ${Math.floor(character.currentStats.speed)})`);
+                    log(`${character.name} (HP: ${Math.floor(character.currentStats.hp)}/${character.currentStats.maxHp}, ATK: ${Math.floor(character.currentStats.attack)}, DEF: ${(character.currentStats.defense * 100).toFixed(1)}%, SPD: ${Math.floor(character.currentStats.speed)})`);
                     log(`VS`);
-                    log(`${boss.name} (HP: ${Math.floor(boss.currentStats.hp)}/${boss.currentStats.maxHp}, ATK: ${Math.floor(boss.currentStats.attack)}, DEF: ${Math.floor(boss.currentStats.defense)}, SPD: ${Math.floor(boss.currentStats.speed)})`);
+                    log(`${boss.name} (HP: ${Math.floor(boss.currentStats.hp)}/${boss.currentStats.maxHp}, ATK: ${Math.floor(boss.currentStats.attack)}, DEF: ${(boss.currentStats.defense * 100).toFixed(1)}%, SPD: ${Math.floor(boss.currentStats.speed)})`);
                     log('=============================');
 
                 // 战斗循环
@@ -1497,15 +1578,97 @@
                         // 执行攻击
                         let totalDamage = 0;
                         for (let i = 0; i < attackCount; i++) {
-                            // 增加基础伤害，以适应更高的生命值
-                            const damage = Math.floor(character.currentStats.attack * 10 * (1 - boss.currentStats.defense / 500));
+                            // 使用Character.calculateDamage方法计算伤害
+                            log(`使用Character.calculateDamage计算伤害: 攻击者=${character.id}, 目标=${boss.id}`);
+
+                            const damageResult = Character.calculateDamage(character.id, boss.id, false, {
+                                isMultiAttack: i > 0, // 第一次攻击不是多重攻击
+                                skipStats: false // 计入角色总伤害统计
+                            });
+
+                            // 应用伤害
+                            const damage = damageResult.damage;
                             boss.currentStats.hp -= damage;
                             totalDamage += damage;
+
+                            // 记录属性克制信息
+                            if (damageResult.attributeBonus > 0) {
+                                log(`${character.name} 的 ${getAttributeName(character.attribute)} 属性对 ${boss.name} 的 ${getAttributeName(boss.attribute)} 属性有优势！`);
+                            } else if (damageResult.attributeBonus < 0) {
+                                log(`${character.name} 的 ${getAttributeName(character.attribute)} 属性对 ${boss.name} 的 ${getAttributeName(boss.attribute)} 属性有劣势！`);
+                            }
 
                             if (i === 0) {
                                 log(`${character.name} ${attackType}，对 ${boss.name} 造成 ${damage} 点伤害！`);
                             } else {
                                 log(`${character.name} 第${i+1}次攻击 对 ${boss.name} 造成 ${damage} 点伤害！`);
+                            }
+
+                            // 处理被动技能触发
+                            if (character.skills) {
+                                for (const skillId of character.skills) {
+                                    // 获取技能定义
+                                    let skill = null;
+
+                                    // 从JobSystem获取技能
+                                    if (typeof JobSystem !== 'undefined' && typeof JobSystem.getSkill === 'function') {
+                                        skill = JobSystem.getSkill(skillId);
+                                    }
+
+                                    // 如果JobSystem中没有找到，尝试从JobSkillsTemplate获取
+                                    if (!skill && typeof JobSkillsTemplate !== 'undefined' && JobSkillsTemplate.templates && JobSkillsTemplate.templates[skillId]) {
+                                        skill = JobSkillsTemplate.templates[skillId];
+                                    }
+
+                                    // 如果找到了技能，并且是被动技能
+                                    if (skill && skill.passive && skill.effects) {
+                                        for (const effect of skill.effects) {
+                                            if (effect.type === 'proc' && effect.onAttack) {
+                                                // 检查触发概率
+                                                const roll = Math.random();
+                                                if (roll < (effect.chance || 0.3)) {
+                                                    log(`${character.name} 触发了被动技能 ${skill.name}！`);
+
+                                                    // 处理伤害效果
+                                                    if (effect.effect && effect.effect.type === 'damage') {
+                                                        const procMultiplier = effect.effect.multiplier || 1.0;
+
+                                                        log(`被动技能触发伤害效果，使用Character.calculateDamage计算伤害`);
+
+                                                        // 先保存原始攻击力
+                                                        const originalAttack = character.currentStats.attack;
+
+                                                        // 临时修改攻击力，乘以技能倍率
+                                                        character.currentStats.attack = originalAttack * procMultiplier;
+
+                                                        // 使用Character.calculateDamage方法计算伤害
+                                                        const damageResult = Character.calculateDamage(character.id, boss.id, true, {
+                                                            isMultiAttack: false,
+                                                            skipStats: true // 不计入角色总伤害统计，我们会在最后手动累加
+                                                        });
+
+                                                        // 恢复原始攻击力
+                                                        character.currentStats.attack = originalAttack;
+
+                                                        // 获取伤害值
+                                                        const procDamage = damageResult.damage;
+
+                                                        // 应用伤害
+                                                        boss.currentStats.hp -= procDamage;
+                                                        totalDamage += procDamage;
+
+                                                        // 如果是旋风斩，特别标记
+                                                        if (skillId === 'whirlwind') {
+                                                            log(`${character.name} 的旋风斩对 ${boss.name} 造成了 ${procDamage} 点伤害！`);
+                                                        } else {
+                                                            log(`${character.name} 的 ${skill.name} 对 ${boss.name} 造成了 ${procDamage} 点伤害！`);
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
                             }
                         }
 
@@ -1667,8 +1830,33 @@
                                     for (const effect of skill.effects) {
                                         if (effect.type === 'damage') {
                                             const multiplier = effect.multiplier || 1.0;
-                                            // 增加基础伤害，以适应更高的生命值
-                                            damage += Math.floor(boss.currentStats.attack * multiplier * 10 * (1 - character.currentStats.defense / 500));
+                                            // 使用Character.calculateDamage方法计算伤害，但乘以技能倍率
+                                            log(`使用Character.calculateDamage计算技能伤害: 攻击者=${boss.id}, 目标=${character.id}, 倍率=${multiplier}`);
+
+                                            // 先保存原始攻击力
+                                            const originalAttack = boss.currentStats.attack;
+
+                                            // 临时修改攻击力，乘以技能倍率
+                                            boss.currentStats.attack = originalAttack * multiplier;
+
+                                            // 计算伤害
+                                            const damageResult = Character.calculateDamage(boss.id, character.id, true, {
+                                                isMultiAttack: false,
+                                                skipStats: true // 不计入角色总伤害统计，我们会在最后手动累加
+                                            });
+
+                                            // 恢复原始攻击力
+                                            boss.currentStats.attack = originalAttack;
+
+                                            // 累加伤害
+                                            damage += damageResult.damage;
+
+                                            // 记录属性克制信息
+                                            if (damageResult.attributeBonus > 0) {
+                                                log(`${boss.name} 的 ${getAttributeName(boss.attribute)} 属性对 ${character.name} 的 ${getAttributeName(character.attribute)} 属性有优势！`);
+                                            } else if (damageResult.attributeBonus < 0) {
+                                                log(`${boss.name} 的 ${getAttributeName(boss.attribute)} 属性对 ${character.name} 的 ${getAttributeName(character.attribute)} 属性有劣势！`);
+                                            }
                                         }
                                     }
 
@@ -1748,10 +1936,25 @@
                                 // 执行攻击
                                 let totalDamage = 0;
                                 for (let i = 0; i < attackCount; i++) {
-                                    // 增加基础伤害，以适应更高的生命值
-                                    const damage = Math.floor(boss.currentStats.attack * 10 * (1 - character.currentStats.defense / 500));
+                                    // 使用Character.calculateDamage方法计算伤害
+                                    log(`使用Character.calculateDamage计算伤害: 攻击者=${boss.id}, 目标=${character.id}`);
+
+                                    const damageResult = Character.calculateDamage(boss.id, character.id, false, {
+                                        isMultiAttack: i > 0, // 第一次攻击不是多重攻击
+                                        skipStats: false // 计入角色总伤害统计
+                                    });
+
+                                    // 应用伤害
+                                    const damage = damageResult.damage;
                                     character.currentStats.hp -= damage;
                                     totalDamage += damage;
+
+                                    // 记录属性克制信息
+                                    if (damageResult.attributeBonus > 0) {
+                                        log(`${boss.name} 的 ${getAttributeName(boss.attribute)} 属性对 ${character.name} 的 ${getAttributeName(character.attribute)} 属性有优势！`);
+                                    } else if (damageResult.attributeBonus < 0) {
+                                        log(`${boss.name} 的 ${getAttributeName(boss.attribute)} 属性对 ${character.name} 的 ${getAttributeName(character.attribute)} 属性有劣势！`);
+                                    }
 
                                     if (i === 0) {
                                         log(`${boss.name} ${attackType}，对 ${character.name} 造成 ${damage} 点伤害！`);
@@ -1819,8 +2022,42 @@
                             // 执行攻击
                             let totalDamage = 0;
                             for (let i = 0; i < attackCount; i++) {
-                                // 增加基础伤害，以适应更高的生命值
-                                const damage = Math.floor(boss.currentStats.attack * 10 * (1 - character.currentStats.defense / 500));
+                                // 使用新的伤害公式
+                                // 造成伤害=目标攻击力*(0.95~1.05随机值)
+                                const randomFactor = 0.95 + (Math.random() * 0.1);
+
+                                // 计算造成伤害
+                                let damage = boss.currentStats.attack * randomFactor;
+
+                                // 应用属性克制
+                                let attributeBonus = 0;
+                                if (boss.attribute && character.attribute) {
+                                    // 获取属性关系
+                                    const attributes = {
+                                        fire: { strengths: ['wind'] },
+                                        water: { strengths: ['fire'] },
+                                        earth: { strengths: ['water'] },
+                                        wind: { strengths: ['earth'] },
+                                        light: { strengths: ['dark'] },
+                                        dark: { strengths: ['light'] }
+                                    };
+
+                                    if (attributes[boss.attribute] && attributes[boss.attribute].strengths &&
+                                        attributes[boss.attribute].strengths.includes(character.attribute)) {
+                                        attributeBonus = 0.5; // 有利属性攻击: 造成约1.5倍的伤害
+                                        log(`${boss.name} 的 ${getAttributeName(boss.attribute)} 属性对 ${character.name} 的 ${getAttributeName(character.attribute)} 属性有优势！`);
+                                    } else if (attributes[character.attribute] && attributes[character.attribute].strengths &&
+                                              attributes[character.attribute].strengths.includes(boss.attribute)) {
+                                        attributeBonus = -0.25; // 不利属性攻击: 造成约0.75倍（即减少25%）的伤害
+                                        log(`${boss.name} 的 ${getAttributeName(boss.attribute)} 属性对 ${character.name} 的 ${getAttributeName(character.attribute)} 属性有劣势！`);
+                                    }
+
+                                    damage *= (1 + attributeBonus);
+                                }
+
+                                // 计算受到伤害
+                                // 受到伤害= 造成伤害 / （1+防御力%）
+                                damage = Math.floor(damage / (1 + character.currentStats.defense));
                                 character.currentStats.hp -= damage;
                                 totalDamage += damage;
 

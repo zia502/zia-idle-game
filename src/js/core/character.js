@@ -600,7 +600,27 @@ const Character = {
      * @returns {object|null} 角色对象
      */
     getCharacter(characterId) {
-        return this.characters[characterId] || null;
+        console.log(`尝试获取角色: ${characterId}`);
+
+        if (typeof window !== 'undefined' && window.log) {
+            window.log(`尝试获取角色: ${characterId}`);
+        }
+
+        const character = this.characters[characterId] || null;
+
+        if (!character) {
+            console.log(`未找到角色: ${characterId}`);
+            if (typeof window !== 'undefined' && window.log) {
+                window.log(`未找到角色: ${characterId}`);
+            }
+        } else {
+            console.log(`成功获取角色: ${character.name} (ID: ${characterId})`);
+            if (typeof window !== 'undefined' && window.log) {
+                window.log(`成功获取角色: ${character.name} (ID: ${characterId})`);
+            }
+        }
+
+        return character;
     },
 
     /**
@@ -1368,10 +1388,32 @@ const Character = {
      * @returns {object} 伤害信息
      */
     calculateDamage(attackerId, targetId, isSpecialAttack = false, options = {}) {
+        console.log(`===== calculateDamage 开始 =====`);
+        console.log(`攻击者ID: ${attackerId}, 目标ID: ${targetId}`);
+
+        if (typeof window !== 'undefined' && window.log) {
+            window.log(`===== calculateDamage 开始 =====`);
+            window.log(`攻击者ID: ${attackerId}, 目标ID: ${targetId}`);
+        }
+
         const attacker = this.getCharacter(attackerId);
         const target = this.getCharacter(targetId);
 
-        if (!attacker || !target) return { damage: 0, isCritical: false };
+        console.log(`攻击者对象: ${attacker ? '存在' : '不存在'}`);
+        console.log(`目标对象: ${target ? '存在' : '不存在'}`);
+
+        if (typeof window !== 'undefined' && window.log) {
+            window.log(`攻击者对象: ${attacker ? '存在' : '不存在'}`);
+            window.log(`目标对象: ${target ? '存在' : '不存在'}`);
+        }
+
+        if (!attacker || !target) {
+            console.log(`提前返回0伤害: 攻击者或目标不存在`);
+            if (typeof window !== 'undefined' && window.log) {
+                window.log(`提前返回0伤害: 攻击者或目标不存在`);
+            }
+            return { damage: 0, isCritical: false };
+        }
 
         // 获取攻击者和防御者的属性
         const attackerAttribute = attacker.attribute;
@@ -1389,36 +1431,21 @@ const Character = {
         // 基础攻击力计算
         let attackPower = this.calculateAttackPower(attacker);
 
-        // 计算目标的防御力
-        let targetDefense = target.currentStats.defense;
-
-        // 应用防御力下降BUFF
-        const defenseDownBuffs = attackerBuffs.filter(buff => buff.type === 'defenseDown');
-        let defenseDownPercentage = 0;
-
-        for (const buff of defenseDownBuffs) {
-            defenseDownPercentage += buff.value;
-        }
-
-        // 防御下降上限为50%
-        defenseDownPercentage = Math.min(defenseDownPercentage, 0.5);
-        targetDefense *= (1 - defenseDownPercentage);
-
-        // 计算基础伤害
-        let damage = attackPower * (100 - targetDefense) / 100;
-
         // 应用随机波动 (0.95~1.05)
         const randomFactor = 0.95 + (Math.random() * 0.1);
-        damage *= randomFactor;
+
+        // 计算造成伤害 (根据README中的公式)
+        // 造成伤害=目标攻击力*(0.95~1.05随机值)*（1+属性克制百分比）*（如果暴击*1.5）*（1+暴击伤害增加%，如果触发暴击）*（1+对被攻击目标属性伤害提升%）
+        let damage = attackPower * randomFactor;
 
         // 应用属性克制
         let attributeBonus = 0;
         if (this.attributes[attackerAttribute] && this.attributes[attackerAttribute].strengths &&
             this.attributes[attackerAttribute].strengths.includes(targetAttribute)) {
-            attributeBonus = 0.3; // 30%属性克制加成
+            attributeBonus = 0.5; // 有利属性攻击: 造成约1.5倍的伤害
         } else if (this.attributes[targetAttribute] && this.attributes[targetAttribute].strengths &&
                   this.attributes[targetAttribute].strengths.includes(attackerAttribute)) {
-            attributeBonus = -0.3; // 被克制减少30%伤害
+            attributeBonus = -0.25; // 不利属性攻击: 造成约0.75倍（即减少25%）的伤害
         }
         damage *= (1 + attributeBonus);
 
@@ -1452,7 +1479,7 @@ const Character = {
             }
 
             // 应用暴击伤害加成
-            critMultiplier += (attacker.currentStats.critDamage || 0) + critDamageBonus;
+            critMultiplier += critDamageBonus;
             damage *= critMultiplier;
 
             // 重置必定暴击状态
@@ -1461,23 +1488,9 @@ const Character = {
             }
         }
 
-        // 应用属性伤害减轻
-        const attributeDamageReduction = target.currentStats.attributeResistance?.[attackerAttribute] || 0;
-        damage *= (1 - attributeDamageReduction);
-
         // 应用对特定属性伤害提升
         const attributeDamageBonus = attacker.currentStats.attributeDamageBonus?.[targetAttribute] || 0;
         damage *= (1 + attributeDamageBonus);
-
-        // 应用伤害增加BUFF
-        const damageIncreaseBuffs = attackerBuffs.filter(buff => buff.type === 'damageIncrease');
-        let damageIncreasePercentage = 0;
-
-        for (const buff of damageIncreaseBuffs) {
-            damageIncreasePercentage += buff.value;
-        }
-
-        damage *= (1 + damageIncreasePercentage);
 
         // 应用特性效果
         for (const traitId of attacker.traits) {
@@ -1494,6 +1507,36 @@ const Character = {
                 }
             }
         }
+
+        // 计算受到伤害 (根据README中的公式)
+        // 受到伤害= 造成伤害 / （1+防御力%）*（1-伤害降低%）*（1-属性伤害减轻%）
+
+        // 计算目标的防御力 (确保防御力是百分比)
+        let targetDefense = target.currentStats.defense;
+
+        // 如果防御力大于1，则认为是整数值，需要转换为百分比
+        if (targetDefense > 1) {
+            targetDefense = targetDefense / 100;
+        }
+
+        // 应用防御力下降BUFF
+        const defenseDownBuffs = attackerBuffs.filter(buff => buff.type === 'defenseDown');
+        let defenseDownPercentage = 0;
+
+        for (const buff of defenseDownBuffs) {
+            defenseDownPercentage += buff.value;
+        }
+
+        // 防御下降上限为50%
+        defenseDownPercentage = Math.min(defenseDownPercentage, 0.5);
+        targetDefense *= (1 - defenseDownPercentage);
+
+        // 应用防御力减伤
+        damage = damage / (1 + targetDefense);
+
+        // 应用属性伤害减轻
+        const attributeDamageReduction = target.currentStats.attributeResistance?.[attackerAttribute] || 0;
+        damage *= (1 - attributeDamageReduction);
 
         // 应用目标的防御特性
         for (const traitId of target.traits) {
@@ -1532,10 +1575,20 @@ const Character = {
         // 取整
         damage = Math.floor(damage);
 
+        console.log(`最终伤害(取整): ${damage}`);
+        if (typeof window !== 'undefined' && window.log) {
+            window.log(`最终伤害(取整): ${damage}`);
+        }
+
         // 计入角色伤害统计
         if (!options.skipStats) {
             attacker.stats = attacker.stats || { totalDamage: 0, totalHealing: 0 };
             attacker.stats.totalDamage += damage;
+        }
+
+        console.log(`===== calculateDamage 结束 =====`);
+        if (typeof window !== 'undefined' && window.log) {
+            window.log(`===== calculateDamage 结束 =====`);
         }
 
         return {
@@ -1553,10 +1606,36 @@ const Character = {
      * @returns {number} 计算后的攻击力
      */
     calculateAttackPower(character) {
-        if (!character) return 0;
+        console.log(`===== calculateAttackPower 开始 =====`);
+        console.log(`角色: ${character ? character.name : '未知'}`);
+
+        if (typeof window !== 'undefined' && window.log) {
+            window.log(`===== calculateAttackPower 开始 =====`);
+            window.log(`角色: ${character ? character.name : '未知'}`);
+        }
+
+        if (!character) {
+            console.log(`提前返回0攻击力: 角色不存在`);
+            if (typeof window !== 'undefined' && window.log) {
+                window.log(`提前返回0攻击力: 角色不存在`);
+            }
+            return 0;
+        }
+
+        if (!character.currentStats) {
+            console.log(`提前返回0攻击力: 角色当前状态不存在`);
+            if (typeof window !== 'undefined' && window.log) {
+                window.log(`提前返回0攻击力: 角色当前状态不存在`);
+            }
+            return 0;
+        }
 
         // 基础攻击力
         let attackPower = character.currentStats.attack;
+        console.log(`初始攻击力: ${attackPower}`);
+        if (typeof window !== 'undefined' && window.log) {
+            window.log(`初始攻击力: ${attackPower}`);
+        }
 
         // 获取角色的BUFF效果
         const buffs = character.buffs || [];
@@ -1569,18 +1648,40 @@ const Character = {
             attackBuffPercentage += buff.value;
         }
 
+        // 根据README中的公式计算攻击力
+        // 攻击力=角色自身攻击力*（1+攻击力%提升值）*（1+浑身BUFF）*（1+背水BUFF）*（1+攻击力EX%提升值）+ 伤害上升总合
+
+        // 应用攻击力%提升值
         attackPower *= (1 + attackBuffPercentage);
 
-        // 应用浑身BUFF (血量越高攻击力越高)
-        // 浑身效果：100%血攻击力上升50%，1%血上升5%
+        // 获取角色的血量百分比
         const hpPercentage = character.currentStats.hp / character.currentStats.maxHp;
-        const hunshenBuff = 0.05 + (hpPercentage * 0.45); // 血量越高加成越大
-        attackPower *= (1 + hunshenBuff);
 
-        // 应用背水BUFF (血量越低攻击力越高)
-        // 背水效果：1%血攻击力上升50%，100%血上升5%
-        const beishuiBuff = 0.5 - (hpPercentage * 0.45); // 血量越低加成越大
-        attackPower *= (1 + beishuiBuff);
+        // 检查是否有浑身BUFF
+        const hunshenBuffs = buffs.filter(buff => buff.type === 'hunshen');
+        if (hunshenBuffs.length > 0) {
+            // 浑身效果：100%血攻击力上升50%，1%血上升5%
+            const hunshenBuff = 0.05 + (hpPercentage * 0.45); // 血量越高加成越大
+            attackPower *= (1 + hunshenBuff);
+
+            console.log(`应用浑身BUFF: +${(hunshenBuff * 100).toFixed(1)}% (血量: ${(hpPercentage * 100).toFixed(1)}%)`);
+            if (typeof window !== 'undefined' && window.log) {
+                window.log(`应用浑身BUFF: +${(hunshenBuff * 100).toFixed(1)}% (血量: ${(hpPercentage * 100).toFixed(1)}%)`);
+            }
+        }
+
+        // 检查是否有背水BUFF
+        const beishuiBuffs = buffs.filter(buff => buff.type === 'beishui');
+        if (beishuiBuffs.length > 0) {
+            // 背水效果：1%血攻击力上升50%，100%血上升5%
+            const beishuiBuff = 0.5 - (hpPercentage * 0.45); // 血量越低加成越大
+            attackPower *= (1 + beishuiBuff);
+
+            console.log(`应用背水BUFF: +${(beishuiBuff * 100).toFixed(1)}% (血量: ${(hpPercentage * 100).toFixed(1)}%)`);
+            if (typeof window !== 'undefined' && window.log) {
+                window.log(`应用背水BUFF: +${(beishuiBuff * 100).toFixed(1)}% (血量: ${(hpPercentage * 100).toFixed(1)}%)`);
+            }
+        }
 
         // 应用攻击力EX加成 (来自特性、武器等)
         let attackExBonus = 0;
@@ -1625,6 +1726,12 @@ const Character = {
         }
 
         attackPower += damageIncrease;
+
+        console.log(`计算后攻击力: ${attackPower}`);
+        if (typeof window !== 'undefined' && window.log) {
+            window.log(`计算后攻击力: ${attackPower}`);
+            window.log(`===== calculateAttackPower 结束 =====`);
+        }
 
         return attackPower;
     },

@@ -988,8 +988,10 @@ const Battle = {
                 damageMessage += `第${i+1}次攻击 `;
             }
 
-            damageMessage += `对 ${monster.name} 造成 ${damageResult.damage} 点伤害`;
-
+            if (damageResult.missed) {
+                damageMessage += `对 ${monster.name} 的攻击未命中！`;
+            } else {
+                damageMessage += `对 ${monster.name} 造成 ${damageResult.damage} 点伤害`;
             if (damageResult.isCritical) {
                 damageMessage += '（暴击！）';
             }
@@ -1470,16 +1472,19 @@ const Battle = {
                     damageMessage += `第${i+1}次攻击 `;
                 }
 
-                damageMessage += `对 ${target.name} 造成 ${damageResult.damage} 点伤害`;
+                if (damageResult.missed) {
+                    damageMessage += `对 ${target.name} 的攻击未命中！`;
+                } else {
+                    damageMessage += `对 ${target.name} 造成 ${damageResult.damage} 点伤害`;
+                    if (damageResult.isCritical) {
+                        damageMessage += '（暴击！）';
+                    }
 
-                if (damageResult.isCritical) {
-                    damageMessage += '（暴击！）';
-                }
-
-                if (damageResult.attributeBonus > 0) {
-                    damageMessage += '（属性克制！）';
-                } else if (damageResult.attributeBonus < 0) {
-                    damageMessage += '（属性被克制！）';
+                    if (damageResult.attributeBonus > 0) {
+                        damageMessage += '（属性克制！）';
+                    } else if (damageResult.attributeBonus < 0) {
+                        damageMessage += '（属性被克制！）';
+                    }
                 }
 
                 if (damageResult.skillBonus > 0) {

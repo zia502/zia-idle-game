@@ -352,6 +352,44 @@ const JobSkills = {
             window.log(`目标防御力: ${target.currentStats?.defense || '未知'} (${(target.currentStats?.defense * 100).toFixed(1)}%)`);
             window.log(`原始伤害(rawDamage): ${rawDamage}`);
         }
+        
+        // 检查攻击者是否有命中率降低debuff
+        if (source.buffs && !options.ignoreHitRate) {
+            const missRateBuffs = source.buffs.filter(buff => buff.type === 'missRate');
+            let totalMissRate = 0;
+            
+            for (const buff of missRateBuffs) {
+                totalMissRate += buff.value;
+                console.log(`攻击者有命中率降低debuff: ${buff.name}, 降低值: ${(buff.value * 100).toFixed(1)}%`);
+                if (typeof window !== 'undefined' && window.log) {
+                    window.log(`攻击者有命中率降低debuff: ${buff.name}, 降低值: ${(buff.value * 100).toFixed(1)}%`);
+                }
+            }
+            
+            // 如果有命中率降低效果，进行命中判定
+            if (totalMissRate > 0) {
+                const hitRoll = Math.random();
+                console.log(`命中判定: 随机值 ${hitRoll.toFixed(4)} vs 未命中率 ${totalMissRate.toFixed(4)}`);
+                if (typeof window !== 'undefined' && window.log) {
+                    window.log(`命中判定: 随机值 ${hitRoll.toFixed(4)} vs 未命中率 ${totalMissRate.toFixed(4)}`);
+                }
+                
+                if (hitRoll < totalMissRate) {
+                    // 攻击未命中
+                    console.log(`攻击未命中！`);
+                    if (typeof window !== 'undefined' && window.log) {
+                        window.log(`攻击未命中！`);
+                        window.log(`===== 伤害计算结束 =====`);
+                    }
+                    return { damage: 0, isCritical: false, attributeBonus: 0, missed: true };
+                } else {
+                    console.log(`攻击命中！`);
+                    if (typeof window !== 'undefined' && window.log) {
+                        window.log(`攻击命中！`);
+                    }
+                }
+            }
+        }
 
         // 原始伤害是"造成伤害"
         let finalDamage = rawDamage;

@@ -72,7 +72,6 @@ const JobSkills = {
             character.skillCooldowns = {};
         }
         character.skillCooldowns[skillId] = template.cooldown || 5; // 默认5回合冷却
-
         return {
             success: true,
             message: result.message,
@@ -637,37 +636,69 @@ const JobSkills = {
      * @returns {object} 技能效果结果
      */
     applyHealEffects(character, template, teamMembers, monster) {
+        // 获取目标
         const targets = this.getTargets(character, template.targetType, teamMembers, monster);
         const effects = [];
         let totalHealing = 0;
-
-        // 检查是否有需要治疗的目标
-        const needsHealing = targets.some(target => 
-            target.currentStats.hp > 0 && target.currentStats.hp < target.currentStats.maxHp
-        );
-
-        // 如果没有需要治疗的目标，返回相应消息
-        if (!needsHealing) {
-            return {
-                message: `${character.name} 使用了【${template.name}】，但所有目标都是满血状态！`,
-                effects: {
-                    type: 'heal',
-                    targets: template.targetType,
-                    totalHealing: 0,
-                    effects: []
-                }
-            };
+        
+        // 输出调试信息
+        console.log(`治疗技能目标类型: ${template.targetType}`);
+        console.log(`施法者: ${character.name}, HP: ${character.currentStats.hp}/${character.currentStats.maxHp}`);
+        
+        // 如果是自身治疗，直接检查施法者是否需要治疗
+        if (template.targetType === 'self') {
+            if (character.currentStats.hp >= character.currentStats.maxHp) {
+                return {
+                    message: `${character.name} 使用了【${template.name}】，但自身已经是满血状态！`,
+                    effects: {
+                        type: 'heal',
+                        targets: template.targetType,
+                        totalHealing: 0,
+                        effects: []
+                    }
+                };
+            }
+        } else {
+            // 对于其他目标类型，检查是否有需要治疗的目标
+            const needsHealing = targets.some(target => 
+                target.currentStats.hp > 0 && target.currentStats.hp < target.currentStats.maxHp
+            );
+            
+            // 输出目标状态
+            targets.forEach(target => {
+                console.log(`目标: ${target.name}, HP: ${target.currentStats.hp}/${target.currentStats.maxHp}`);
+            });
+            
+            // 如果没有需要治疗的目标，返回相应消息
+            if (!needsHealing) {
+                return {
+                    message: `${character.name} 使用了【${template.name}】，但所有目标都是满血状态！`,
+                    effects: {
+                        type: 'heal',
+                        targets: template.targetType,
+                        totalHealing: 0,
+                        effects: []
+                    }
+                };
+            }
         }
 
         // 应用每个治疗效果
         for (const target of targets) {
-            if (target.currentStats.hp <= 0) continue; // 跳过已倒下的目标
-            if (target.currentStats.hp >= target.currentStats.maxHp) continue; // 跳过满血的目标
+            if (target.currentStats.hp <= 0) {
+                console.log(`跳过目标 ${target.name} (已倒下)`);
+                continue; // 跳过已倒下的目标
+            }
+            if (target.currentStats.hp >= target.currentStats.maxHp) {
+                console.log(`跳过目标 ${target.name} (满血)`);
+                continue; // 跳过满血的目标
+            }
 
             for (const effect of template.effects) {
                 if (effect.type === 'heal') {
                     // 计算治疗量
                     const healAmount = effect.value || 0;
+                    console.log(`对 ${target.name} 应用治疗效果，治疗量: ${healAmount}`);
 
                     // 记录旧血量
                     const oldHp = target.currentStats.hp;
@@ -677,6 +708,7 @@ const JobSkills = {
 
                     // 计算实际治疗量
                     const actualHeal = target.currentStats.hp - oldHp;
+                    console.log(`${target.name} 实际恢复: ${actualHeal}, 新HP: ${target.currentStats.hp}/${target.currentStats.maxHp}`);
 
                     // 更新治疗统计
                     if (character.stats) {
@@ -1044,6 +1076,7 @@ const JobSkills = {
      * @returns {array} 目标数组
      */
     getTargets(character, targetType, teamMembers, monster) {
+        console.log(`获取目标，目标类型: ${targetType}`);
         switch (targetType) {
             case 'self':
                 return [character];
@@ -1053,6 +1086,21 @@ const JobSkills = {
                 if (aliveMembers.length === 0) return [];
                 aliveMembers.sort((a, b) => a.currentStats.hp / a.currentStats.maxHp - b.currentStats.hp / b.currentStats.maxHp);
                 return [aliveMembers[0]];
+            case 'ally_lowest_hp':
+                // 选择生命值最低的队友（包括施法者自身）
+                const allMembers = teamMembers.filter(member => member.currentStats.hp > 0);
+                if (allMembers.length === 0) return [];
+                
+                // 排序所有成员（包括施法者）按生命值百分比
+                allMembers.sort((a, b) => (a.currentStats.hp / a.currentStats.maxHp) - (b.currentStats.hp / b.currentStats.maxHp));
+                
+                // 输出所有成员的生命值状态
+                allMembers.forEach(member => {
+                    console.log(`成员: ${member.name}, HP: ${member.currentStats.hp}/${member.currentStats.maxHp}, 百分比: ${(member.currentStats.hp / member.currentStats.maxHp * 100).toFixed(1)}%`);
+                });
+                
+                // 返回生命值最低的成员
+                return [allMembers[0]];
             case 'all_allies':
                 return teamMembers;
             case 'enemy':
@@ -1060,6 +1108,7 @@ const JobSkills = {
             case 'all_enemies':
                 return [monster]; // 当前只有一个怪物
             default:
+                console.log(`未知的目标类型: ${targetType}，返回空数组`);
                 return [];
         }
     },

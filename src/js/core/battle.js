@@ -649,6 +649,72 @@ const Battle = {
             if (!skill && typeof JobSkillsTemplate !== 'undefined' && JobSkillsTemplate.templates && JobSkillsTemplate.templates[skillId]) {
                 skill = JobSkillsTemplate.templates[skillId];
             }
+            
+            // 如果是治疗技能，检查是否有需要治疗的目标
+            if (skill && skill.effectType === 'heal') {
+                // 根据目标类型获取可能的目标
+                let targets = [];
+                if (skill.targetType === 'self') {
+                    targets = [character];
+                } else if (skill.targetType === 'ally' || skill.targetType === 'ally_lowest_hp') {
+                    // 选择生命值最低的队友
+                    // 我们在这里使用外部作用域的teamMembers变量
+                    // 如果在其他地方调用，则只查看当前角色
+                    const allTeamMembers = typeof teamMembers !== 'undefined' ? teamMembers : [character];
+                    const aliveMembers = allTeamMembers.filter(member => member.currentStats.hp > 0);
+                    if (aliveMembers.length > 0) {
+                        aliveMembers.sort((a, b) => a.currentStats.hp / a.currentStats.maxHp - b.currentStats.hp / b.currentStats.maxHp);
+                        targets = [aliveMembers[0]];
+                    }
+                } else if (skill.targetType === 'all_allies') {
+                    const allTeamMembers = typeof teamMembers !== 'undefined' ? teamMembers : [character];
+                    targets = allTeamMembers.filter(member => member.currentStats.hp > 0);
+                }
+                
+                // 检查是否有需要治疗的目标
+                const needsHealing = targets.some(target => 
+                    target.currentStats.hp > 0 && target.currentStats.hp < target.currentStats.maxHp
+                );
+                
+                // 如果没有需要治疗的目标，跳过这个技能
+                if (!needsHealing) {
+                    this.logBattle(`${character.name} 的技能 ${skill.name} 不需要使用（所有目标都是满血状态）`);
+                    return false;
+                }
+            }
+            
+            // 如果是复活技能，检查是否有需要复活的目标
+            if (skill && skill.effectType === 'revive') {
+                // 获取所有队伍成员
+                const allTeamMembers = typeof teamMembers !== 'undefined' ? teamMembers : [character];
+                
+                // 检查是否有阵亡的目标
+                const hasDeadTargets = allTeamMembers.some(target => target.currentStats.hp <= 0);
+                
+                // 如果没有阵亡的目标，跳过这个技能
+                if (!hasDeadTargets) {
+                    this.logBattle(`${character.name} 的技能 ${skill.name} 不需要使用（没有阵亡的目标）`);
+                    return false;
+                }
+            }
+            
+            // 如果是驱散技能，检查是否有需要驱散的BUFF
+            if (skill && skill.effectType === 'dispel') {
+                // 获取所有队伍成员
+                const allTeamMembers = typeof teamMembers !== 'undefined' ? teamMembers : [character];
+                
+                // 检查是否有需要驱散的BUFF
+                const hasBuffsToDispel = allTeamMembers.some(target => 
+                    target.currentStats.hp > 0 && target.buffs && target.buffs.length > 0 && 
+                    target.buffs.some(buff => buff.type === 'debuff')
+                );
+                
+                // 如果没有需要驱散的BUFF，跳过这个技能
+                if (!hasBuffsToDispel) {
+                    this.logBattle(`${character.name} 的技能 ${skill.name} 不需要使用（没有可驱散的BUFF）`);
+                    return false;
+                }
+            }
 
             // 如果找到了技能，检查是否是被动技能
             if (skill) {

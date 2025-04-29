@@ -439,16 +439,12 @@ const JobSkills = {
         // 应用防御力减伤
         if (target.currentStats && typeof target.currentStats.defense === 'number') {
             const oldDamage = finalDamage;
-            let defenseValue = target.currentStats.defense;
+            // 始终将防御力视为整数，计算时转换为百分比
+            const defenseValue = target.currentStats.defense / 100;
 
-            // 如果防御力大于1，则认为是整数值，需要转换为百分比
-            if (defenseValue > 1) {
-                defenseValue = defenseValue / 100;
-            }
-
-            console.log(`目标防御力: ${defenseValue} (${(defenseValue * 100).toFixed(1)}%)`);
+            console.log(`目标防御力: ${target.currentStats.defense} (${(defenseValue * 100).toFixed(1)}%)`);
             if (typeof window !== 'undefined' && window.log) {
-                window.log(`目标防御力: ${defenseValue} (${(defenseValue * 100).toFixed(1)}%)`);
+                window.log(`目标防御力: ${target.currentStats.defense} (${(defenseValue * 100).toFixed(1)}%)`);
             }
 
             finalDamage = finalDamage / (1 + defenseValue);

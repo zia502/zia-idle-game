@@ -1524,7 +1524,7 @@ const Character = {
         // 计算受到伤害 (根据README中的公式)
         // 受到伤害= 造成伤害 / （1+防御力%）*（1-伤害降低%）*（1-属性伤害减轻%）
 
-        // 计算目标的防御力 (确保防御力是百分比)
+        // 计算目标的防御力 
         let targetDefense = target.currentStats.defense;
 
         console.log(`目标 ${target.name} 的原始防御力: ${targetDefense}`);
@@ -1532,14 +1532,6 @@ const Character = {
             window.log(`目标 ${target.name} 的原始防御力: ${targetDefense}`);
         }
 
-        // 如果防御力大于1，则认为是整数值，需要转换为百分比
-        if (targetDefense > 1) {
-            targetDefense = targetDefense / 100;
-            console.log(`目标防御力转换为百分比: ${targetDefense}`);
-            if (typeof window !== 'undefined' && window.log) {
-                window.log(`目标防御力转换为百分比: ${targetDefense}`);
-            }
-        }
 
         // 应用防御力下降BUFF
         const defenseDownBuffs = attackerBuffs.filter(buff => buff.type === 'defenseDown');

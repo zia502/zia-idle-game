@@ -799,9 +799,20 @@ const Battle = {
 
                                 // 防御力提升
                                 if (effect.type === 'defenseUp') {
-                                    const defenseBoost = character.currentStats.defense * effect.value;
-                                    character.currentStats.defense += defenseBoost;
-                                    this.logBattle(`防御力提升: +${Math.floor(defenseBoost)} (来自被动技能: ${skill.name})`);
+                                    // 检查是否已经应用过这个被动技能的防御力提升
+                                    if (!character.appliedPassiveDefense) {
+                                        character.appliedPassiveDefense = {};
+                                    }
+
+                                    // 如果这个技能的防御力提升还没有应用过，才应用它
+                                    if (!character.appliedPassiveDefense[skill.name]) {
+                                        // 直接加上防御力值（整数）
+                                        character.currentStats.defense += effect.value;
+                                        this.logBattle(`防御力提升: +${effect.value} (来自被动技能: ${skill.name})`);
+
+                                        // 标记这个技能的防御力提升已经应用过
+                                        character.appliedPassiveDefense[skill.name] = true;
+                                    }
                                 }
 
                                 // 生命值提升
@@ -1276,9 +1287,20 @@ const Battle = {
 
                                     // 防御力提升
                                     if (effect.type === 'defenseUp') {
-                                        const defenseBoost = monster.currentStats.defense * effect.value;
-                                        monster.currentStats.defense += defenseBoost;
-                                        this.logBattle(`BOSS防御力提升: +${Math.floor(defenseBoost)} (来自被动技能: ${skill.name})`);
+                                        // 检查是否已经应用过这个被动技能的防御力提升
+                                        if (!monster.appliedPassiveDefense) {
+                                            monster.appliedPassiveDefense = {};
+                                        }
+
+                                        // 如果这个技能的防御力提升还没有应用过，才应用它
+                                        if (!monster.appliedPassiveDefense[skill.name]) {
+                                            // 直接加上防御力值（整数）
+                                            monster.currentStats.defense += effect.value;
+                                            this.logBattle(`BOSS防御力提升: +${effect.value} (来自被动技能: ${skill.name})`);
+
+                                            // 标记这个技能的防御力提升已经应用过
+                                            monster.appliedPassiveDefense[skill.name] = true;
+                                        }
                                     }
 
                                     // 生命值提升

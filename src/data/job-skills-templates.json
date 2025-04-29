@@ -257,7 +257,7 @@
       },
       {
         "type": "defenseDown",
-        "value": 0.15,
+        "value": 15,
         "duration": 3,
         "stackable": true,
         "dispellable": true
@@ -305,7 +305,7 @@
       },
       {
         "type": "defenseDown",
-        "value": 0.25,
+        "value": 25,
         "duration": 4,
         "stackable": true,
         "dispellable": true
@@ -421,7 +421,7 @@
       },
       {
         "type": "defenseDown",
-        "value": 0.1,
+        "value": 10,
         "duration": 3,
         "stackable": true,
         "dispellable": true,
@@ -687,7 +687,7 @@
     "effects": [
       {
         "type": "defenseUp",
-        "value": 0.2,
+        "value": 20,
         "passive": true
       }
     ]

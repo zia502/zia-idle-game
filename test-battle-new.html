@@ -926,8 +926,7 @@
                         ...job.baseStats,
                         // 将血量乘以100倍，防止太快阵亡
                         hp: job.baseStats.hp * 100,
-                        // 将防御力转换为百分比
-                        defense: job.baseStats.defense / 100,
+                        defense: job.baseStats.defense,
                         // 设置攻击力为1000
                         attack: 1000
                     },
@@ -935,8 +934,7 @@
                         ...job.baseStats,
                         // 将血量乘以100倍，防止太快阵亡
                         hp: job.baseStats.hp * 100,
-                        // 将防御力转换为百分比
-                        defense: job.baseStats.defense / 100,
+                        defense: job.baseStats.defense,
                         // 设置攻击力为1000
                         attack: 1000,
                         // 添加DA和TA率
@@ -1015,8 +1013,7 @@
                         ...bossData.baseStats,
                         // 将BOSS血量也乘以100倍，保持战斗平衡
                         hp: bossData.baseStats.hp * 100,
-                        // 将防御力转换为百分比
-                        defense: bossData.baseStats.defense / 100,
+                        defense: bossData.baseStats.defense,
                         // 设置攻击力为1000
                         attack: 1000
                     },
@@ -1024,8 +1021,7 @@
                         ...bossData.baseStats,
                         // 将BOSS血量也乘以100倍，保持战斗平衡
                         hp: bossData.baseStats.hp * 100,
-                        // 将防御力转换为百分比
-                        defense: bossData.baseStats.defense / 100,
+                        defense: bossData.baseStats.defense,
                         // 设置攻击力为1000
                         attack: 1000,
                         // 添加DA和TA率
@@ -1284,17 +1280,15 @@
                     }
 
                     // 重写logBattle方法，将战斗日志显示在界面上
+                    // 保存原始方法的引用
                     const originalLogBattle = Battle.logBattle;
+
+                    // 完全替换logBattle方法，而不是在原方法基础上添加
                     Battle.logBattle = function(message) {
-                        // 调用原始方法
-                        if (originalLogBattle) {
-                            originalLogBattle.call(this, message);
-                        } else {
-                            // 如果原始方法不存在，至少保存到battleLog数组
-                            this.battleLog = this.battleLog || [];
-                            this.battleLog.push(message);
-                            console.log(`[战斗] ${message}`);
-                        }
+                        // 直接保存到battleLog数组，不调用原始方法
+                        this.battleLog = this.battleLog || [];
+                        this.battleLog.push(message);
+                        console.log(`[战斗] ${message}`);
 
                         // 在界面上显示日志
                         log(message);
@@ -1404,9 +1398,9 @@
 
                     // 战斗开始日志
                     log('===== 简单战斗模拟开始 =====');
-                    log(`${character.name} (HP: ${Math.floor(character.currentStats.hp)}/${character.currentStats.maxHp}, ATK: ${Math.floor(character.currentStats.attack)}, DEF: ${(character.currentStats.defense * 100).toFixed(1)}%, SPD: ${Math.floor(character.currentStats.speed)})`);
+                    log(`${character.name} (HP: ${Math.floor(character.currentStats.hp)}/${character.currentStats.maxHp}, ATK: ${Math.floor(character.currentStats.attack)}, DEF: ${character.currentStats.defense}%, SPD: ${Math.floor(character.currentStats.speed)})`);
                     log(`VS`);
-                    log(`${boss.name} (HP: ${Math.floor(boss.currentStats.hp)}/${boss.currentStats.maxHp}, ATK: ${Math.floor(boss.currentStats.attack)}, DEF: ${(boss.currentStats.defense * 100).toFixed(1)}%, SPD: ${Math.floor(boss.currentStats.speed)})`);
+                    log(`${boss.name} (HP: ${Math.floor(boss.currentStats.hp)}/${boss.currentStats.maxHp}, ATK: ${Math.floor(boss.currentStats.attack)}, DEF: ${boss.currentStats.defense}%, SPD: ${Math.floor(boss.currentStats.speed)})`);
                     log('=============================');
 
                 // 战斗循环
@@ -2152,8 +2146,8 @@
                                 }
 
                                 // 计算受到伤害
-                                // 受到伤害= 造成伤害 / （1+防御力%）
-                                damage = Math.floor(damage / (1 + character.currentStats.defense));
+                                // 受到伤害= 造成伤害 / （1+防御力/100）
+                                damage = Math.floor(damage / (1 + character.currentStats.defense/100));
                                 character.currentStats.hp = Math.max(0, character.currentStats.hp - damage);
                                 totalDamage += damage;
 

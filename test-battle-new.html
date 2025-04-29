@@ -1077,35 +1077,92 @@
                 return bossObj;
             }
 
+            // 专门更新BOSS血条
+            function updateBossHpBar() {
+                if (!boss || !bossHpFill) {
+                    console.log("updateBossHpBar: boss或bossHpFill不存在");
+                    return;
+                }
+
+                try {
+                    console.log("updateBossHpBar: 开始更新BOSS血条");
+                    console.log(`BOSS当前HP: ${boss.currentStats.hp}/${boss.currentStats.maxHp}`);
+
+                    // 更新BOSS血量文本
+                    if (bossHp) {
+                        bossHp.textContent = Math.max(0, Math.floor(boss.currentStats.hp));
+                    }
+
+                    // 更新BOSS生命条
+                    const bossHpPercent = Math.max(0, Math.min(100, (boss.currentStats.hp / boss.currentStats.maxHp) * 100));
+                    bossHpFill.style.width = `${bossHpPercent}%`;
+                    console.log(`BOSS血条宽度更新为: ${bossHpPercent}%`);
+
+                    // 强制重绘
+                    void bossHpFill.offsetHeight;
+
+                    console.log("updateBossHpBar: BOSS血条更新完成");
+                } catch (error) {
+                    console.error("updateBossHpBar出错:", error);
+                }
+            }
+
             // 更新战斗状态显示
             function updateBattleStatus() {
-                if (!character || !boss) return;
+                if (!character || !boss) {
+                    console.log("updateBattleStatus: character或boss不存在");
+                    return;
+                }
 
-                // 更新角色状态
-                characterName.textContent = character.name;
-                document.getElementById('character-attribute').textContent = getAttributeName(character.attribute);
-                characterHp.textContent = Math.max(0, Math.floor(character.currentStats.hp));
-                characterMaxHp.textContent = character.currentStats.maxHp;
-                characterAttack.textContent = Math.floor(character.currentStats.attack);
-                characterDefense.textContent = (character.currentStats.defense * 100).toFixed(1);
-                characterSpeed.textContent = Math.floor(character.currentStats.speed);
+                try {
+                    console.log("updateBattleStatus: 开始更新UI");
+                    console.log(`BOSS当前HP: ${boss.currentStats.hp}/${boss.currentStats.maxHp}`);
 
-                // 更新角色生命条
-                const charHpPercent = Math.max(0, Math.min(100, (character.currentStats.hp / character.currentStats.maxHp) * 100));
-                characterHpFill.style.width = `${charHpPercent}%`;
+                    // 更新角色状态
+                    characterName.textContent = character.name;
+                    document.getElementById('character-attribute').textContent = getAttributeName(character.attribute);
+                    characterHp.textContent = Math.max(0, Math.floor(character.currentStats.hp));
+                    console.log('mc current hp');
+                    console.log(character.currentStats.hp);
+                    characterMaxHp.textContent = character.currentStats.maxHp;
+                    characterAttack.textContent = Math.floor(character.currentStats.attack);
+                    characterDefense.textContent = (character.currentStats.defense * 100).toFixed(1);
+                    characterSpeed.textContent = Math.floor(character.currentStats.speed);
 
-                // 更新BOSS状态
-                bossName.textContent = boss.name;
-                document.getElementById('boss-attribute').textContent = getAttributeName(boss.attribute);
-                bossHp.textContent = Math.max(0, Math.floor(boss.currentStats.hp));
-                bossMaxHp.textContent = boss.currentStats.maxHp;
-                bossAttack.textContent = Math.floor(boss.currentStats.attack);
-                bossDefense.textContent = (boss.currentStats.defense * 100).toFixed(1);
-                bossSpeed.textContent = Math.floor(boss.currentStats.speed);
+                    // 更新角色生命条
+                    const charHpPercent = Math.max(0, Math.min(100, (character.currentStats.hp / character.currentStats.maxHp) * 100));
+                    characterHpFill.style.width = `${charHpPercent}%`;
+                    console.log(`角色血条宽度更新为: ${charHpPercent}%`);
 
-                // 更新BOSS生命条
-                const bossHpPercent = Math.max(0, Math.min(100, (boss.currentStats.hp / boss.currentStats.maxHp) * 100));
-                bossHpFill.style.width = `${bossHpPercent}%`;
+                    // 更新BOSS状态
+                    bossName.textContent = boss.name;
+                    document.getElementById('boss-attribute').textContent = getAttributeName(boss.attribute);
+                    bossHp.textContent = Math.max(0, Math.floor(boss.currentStats.hp));
+                    console.log('boss current hp');
+                    console.log(boss.currentStats.hp);
+                    bossMaxHp.textContent = boss.currentStats.maxHp;
+                    bossAttack.textContent = Math.floor(boss.currentStats.attack);
+                    bossDefense.textContent = (boss.currentStats.defense * 100).toFixed(1);
+                    bossSpeed.textContent = Math.floor(boss.currentStats.speed);
+
+                    // 更新BOSS生命条
+                    const bossHpPercent = Math.max(0, Math.min(100, (boss.currentStats.hp / boss.currentStats.maxHp) * 100));
+                    bossHpFill.style.width = `${bossHpPercent}%`;
+                    console.log(`BOSS血条宽度更新为: ${bossHpPercent}%`);
+
+                    // 强制重绘
+                    void bossHpFill.offsetHeight;
+
+                    // 添加一个小延迟，确保UI更新
+                    setTimeout(() => {
+                        console.log("延迟后再次检查BOSS血条宽度");
+                        console.log(`BOSS血条当前宽度: ${bossHpFill.style.width}`);
+                    }, 100);
+
+                    console.log("updateBattleStatus: UI更新完成");
+                } catch (error) {
+                    console.error("updateBattleStatus出错:", error);
+                }
             }
 
             // 开始战斗
@@ -1478,6 +1535,9 @@
                                                 character.skillCooldowns[skillId] = skill.cooldown;
                                                 log(`技能 ${skill.name} 进入冷却状态 (${skill.cooldown} 回合)`);
                                             }
+
+                                            // 立即更新UI显示
+                                            updateBattleStatus();
                                         } else {
                                             log(`技能使用失败: ${result.message || '未知原因'}`);
                                             console.error(`技能使用失败详情:`, result);
@@ -1588,8 +1648,17 @@
 
                             // 应用伤害
                             const damage = damageResult.damage;
-                            boss.currentStats.hp -= damage;
+                            boss.currentStats.hp = Math.max(0, boss.currentStats.hp - damage);
                             totalDamage += damage;
+
+                            // 记录伤害应用
+                            console.log(`应用伤害后BOSS HP: ${boss.currentStats.hp}/${boss.currentStats.maxHp}`);
+
+                            // 立即更新BOSS血条
+                            updateBossHpBar();
+
+                            // 立即更新UI显示
+                            updateBattleStatus();
 
                             // 记录属性克制信息
                             if (damageResult.attributeBonus > 0) {
@@ -1654,8 +1723,17 @@
                                                         const procDamage = damageResult.damage;
 
                                                         // 应用伤害
-                                                        boss.currentStats.hp -= procDamage;
+                                                        boss.currentStats.hp = Math.max(0, boss.currentStats.hp - procDamage);
                                                         totalDamage += procDamage;
+
+                                                        // 记录伤害应用
+                                                        console.log(`被动技能应用伤害后BOSS HP: ${boss.currentStats.hp}/${boss.currentStats.maxHp}`);
+
+                                                        // 立即更新BOSS血条
+                                                        updateBossHpBar();
+
+                                                        // 立即更新UI显示
+                                                        updateBattleStatus();
 
                                                         // 如果是旋风斩，特别标记
                                                         if (skillId === 'whirlwind') {
@@ -1677,11 +1755,20 @@
                         }
                     }
 
+                    // 更新BOSS血条
+                    updateBossHpBar();
+
                     // 更新战斗状态
                     updateBattleStatus();
 
                     // 显示角色状态
                     log(`${character.name} 状态: HP ${Math.floor(character.currentStats.hp)}/${character.currentStats.maxHp}`);
+
+                    // 显示BOSS状态
+                    log(`${boss.name} 状态: HP ${Math.floor(boss.currentStats.hp)}/${boss.currentStats.maxHp}`);
+
+                    // 记录回合结束时的BOSS血量
+                    console.log(`回合${turnCount}结束时BOSS HP: ${boss.currentStats.hp}/${boss.currentStats.maxHp}`);
 
                     // 检查BOSS是否被击败
                     if (boss.currentStats.hp <= 0) {
@@ -1804,6 +1891,9 @@
                                                 boss.skillCooldowns[skillId] = skill.cooldown || 3;
                                                 log(`技能 ${skill.name} 进入冷却状态 (${skill.cooldown || 3} 回合)`);
 
+                                                // 立即更新UI显示
+                                                updateBattleStatus();
+
                                                 // 跳过后续的手动处理
                                                 return;
                                             } else {
@@ -1861,8 +1951,11 @@
                                     }
 
                                     // 应用伤害
-                                    character.currentStats.hp -= damage;
+                                    character.currentStats.hp = Math.max(0, character.currentStats.hp - damage);
                                     log(`${boss.name} 使用了 ${skill.name}，对 ${character.name} 造成 ${damage} 点伤害！`);
+
+                                    // 立即更新UI显示
+                                    updateBattleStatus();
 
                                     // 应用debuff
                                     if (skill.effectType === 'damage_and_debuff') {
@@ -1946,8 +2039,11 @@
 
                                     // 应用伤害
                                     const damage = damageResult.damage;
-                                    character.currentStats.hp -= damage;
+                                    character.currentStats.hp = Math.max(0, character.currentStats.hp - damage);
                                     totalDamage += damage;
+
+                                    // 立即更新UI显示
+                                    updateBattleStatus();
 
                                     // 记录属性克制信息
                                     if (damageResult.attributeBonus > 0) {
@@ -2058,8 +2154,11 @@
                                 // 计算受到伤害
                                 // 受到伤害= 造成伤害 / （1+防御力%）
                                 damage = Math.floor(damage / (1 + character.currentStats.defense));
-                                character.currentStats.hp -= damage;
+                                character.currentStats.hp = Math.max(0, character.currentStats.hp - damage);
                                 totalDamage += damage;
+
+                                // 立即更新UI显示
+                                updateBattleStatus();
 
                                 if (i === 0) {
                                     log(`${boss.name} ${attackType}，对 ${character.name} 造成 ${damage} 点伤害！`);

@@ -117,6 +117,19 @@ const Battle = {
             stats: { totalDamage: 0, totalHealing: 0 }
         };
 
+        // 确保怪物的HP和maxHp是有效数字
+        if (!monsterCharacter.currentStats.maxHp || isNaN(monsterCharacter.currentStats.maxHp)) {
+            console.error("怪物maxHp无效，设置为默认值10000");
+            monsterCharacter.currentStats.maxHp = 10000;
+        }
+
+        if (!monsterCharacter.currentStats.hp || isNaN(monsterCharacter.currentStats.hp)) {
+            console.error("怪物hp无效，设置为maxHp");
+            monsterCharacter.currentStats.hp = monsterCharacter.currentStats.maxHp;
+        }
+
+        console.log("创建怪物角色对象:", monsterCharacter);
+
         // 触发战斗开始事件
         if (typeof Events !== 'undefined') {
             Events.emit('battle:start', {
@@ -209,7 +222,20 @@ const Battle = {
         const MAX_TURNS = 99;
 
         // 初始化怪物HP
+        console.log("初始化怪物HP前:", monster.currentStats);
         monster.currentStats.hp = monster.currentStats.maxHp || monster.currentStats.hp;
+        console.log("初始化怪物HP后:", monster.currentStats);
+
+        // 确保HP是有效数字
+        if (isNaN(monster.currentStats.hp) || monster.currentStats.hp === undefined) {
+            console.error("怪物HP初始化为NaN或undefined，强制设置为maxHp");
+            monster.currentStats.hp = monster.currentStats.maxHp;
+            if (isNaN(monster.currentStats.hp) || monster.currentStats.hp === undefined) {
+                console.error("怪物maxHp也是NaN或undefined，强制设置为10000");
+                monster.currentStats.hp = 10000;
+                monster.currentStats.maxHp = 10000;
+            }
+        }
 
         // 初始化战斗统计
         const battleStats = {
@@ -292,6 +318,39 @@ const Battle = {
 
             // 更新BUFF持续时间
             this.updateBuffDurations(teamMembers, monster);
+
+            // 在每个回合结束时打印双方的HP
+            this.logBattle(`\n===== 回合 ${this.currentTurn} 结束时的HP状态 =====`);
+
+            // 检查怪物HP是否为NaN
+            if (isNaN(monster.currentStats.hp) || monster.currentStats.hp === undefined) {
+                console.error("怪物HP为NaN或undefined，尝试修复");
+                monster.currentStats.hp = monster.currentStats.maxHp || 10000;
+                if (isNaN(monster.currentStats.hp)) {
+                    monster.currentStats.hp = 10000;
+                    monster.currentStats.maxHp = 10000;
+                }
+            }
+
+            // 计算百分比，确保不会产生NaN
+            const monsterHpPercent = monster.currentStats.maxHp > 0 ?
+                Math.floor((monster.currentStats.hp / monster.currentStats.maxHp) * 100) : 0;
+
+            this.logBattle(`${monster.name} HP: ${Math.floor(monster.currentStats.hp)}/${monster.currentStats.maxHp} (${monsterHpPercent}%)`);
+            console.log(`怪物当前状态: `, monster.currentStats);
+
+            for (const member of teamMembers) {
+                if (member.currentStats.hp > 0) {
+                    // 计算百分比，确保不会产生NaN
+                    const memberHpPercent = member.currentStats.maxHp > 0 ?
+                        Math.floor((member.currentStats.hp / member.currentStats.maxHp) * 100) : 0;
+
+                    this.logBattle(`${member.name} HP: ${Math.floor(member.currentStats.hp)}/${member.currentStats.maxHp} (${memberHpPercent}%)`);
+                } else {
+                    this.logBattle(`${member.name} 已阵亡`);
+                }
+            }
+            this.logBattle(`=======================================`);
 
             // 检查战斗是否已结束
             if (this.isBattleOver(teamMembers, monster)) {
@@ -802,7 +861,7 @@ const Battle = {
             if (monster.currentStats.hp <= 0) break;
 
             // 计算伤害
-            const rawDamage = Math.floor(character.currentStats.attack * (100 - monster.currentStats.defense) / 100);
+            const rawDamage = character.currentStats.attack;
             const damageResult = JobSkills.applyDamageToTarget(character, monster, rawDamage, {
                 skipCritical: false,
                 randomApplied: false,
@@ -812,7 +871,29 @@ const Battle = {
             });
 
             // 应用伤害
-            monster.currentStats.hp = Math.max(0, monster.currentStats.hp - damageResult.damage);
+            const oldHp = monster.currentStats.hp;
+
+            // 检查HP是否为NaN
+            if (isNaN(oldHp) || oldHp === undefined) {
+                console.error("怪物HP为NaN或undefined，尝试修复");
+                monster.currentStats.hp = monster.currentStats.maxHp || 10000;
+                if (isNaN(monster.currentStats.hp)) {
+                    monster.currentStats.hp = 10000;
+                    monster.currentStats.maxHp = 10000;
+                }
+            }
+
+            // 确保伤害是有效数字
+            let damage = damageResult.damage;
+            if (isNaN(damage) || damage === undefined) {
+                console.error("伤害值为NaN或undefined，设置为0");
+                damage = 0;
+            }
+
+            monster.currentStats.hp = Math.max(0, monster.currentStats.hp - damage);
+
+            // 记录HP变化
+            this.logBattle(`${monster.name} HP: ${Math.floor(oldHp)} -> ${Math.floor(monster.currentStats.hp)} (-${damage})`);
 
             // 累计伤害
             totalDamage += damageResult.damage;
@@ -1025,7 +1106,28 @@ const Battle = {
                             }
 
                             // 应用伤害
+                            const oldHp = target.currentStats.hp;
+
+                            // 检查HP是否为NaN
+                            if (isNaN(oldHp) || oldHp === undefined) {
+                                console.error("角色HP为NaN或undefined，尝试修复");
+                                target.currentStats.hp = target.currentStats.maxHp || 1000;
+                                if (isNaN(target.currentStats.hp)) {
+                                    target.currentStats.hp = 1000;
+                                    target.currentStats.maxHp = 1000;
+                                }
+                            }
+
+                            // 确保伤害是有效数字
+                            if (isNaN(damage) || damage === undefined) {
+                                console.error("伤害值为NaN或undefined，设置为0");
+                                damage = 0;
+                            }
+
                             target.currentStats.hp = Math.max(0, target.currentStats.hp - damage);
+
+                            // 记录HP变化
+                            this.logBattle(`${target.name} HP: ${Math.floor(oldHp)} -> ${Math.floor(target.currentStats.hp)} (-${damage})`);
 
                             // 更新怪物伤害统计
                             monster.stats.totalDamage += damage;
@@ -1230,7 +1332,7 @@ const Battle = {
                 if (target.currentStats.hp <= 0) break;
 
                 // 计算伤害
-                const rawDamage = Math.floor(monster.currentStats.attack * (100 - target.currentStats.defense) / 100);
+                const rawDamage = monster.currentStats.attack;
                 const damageResult = JobSkills.applyDamageToTarget(monster, target, rawDamage, {
                     skipCritical: false,
                     randomApplied: false,
@@ -1240,7 +1342,29 @@ const Battle = {
                 });
 
                 // 应用伤害
-                target.currentStats.hp = Math.max(0, target.currentStats.hp - damageResult.damage);
+                const oldHp = target.currentStats.hp;
+
+                // 检查HP是否为NaN
+                if (isNaN(oldHp) || oldHp === undefined) {
+                    console.error("角色HP为NaN或undefined，尝试修复");
+                    target.currentStats.hp = target.currentStats.maxHp || 1000;
+                    if (isNaN(target.currentStats.hp)) {
+                        target.currentStats.hp = 1000;
+                        target.currentStats.maxHp = 1000;
+                    }
+                }
+
+                // 确保伤害是有效数字
+                let damage = damageResult.damage;
+                if (isNaN(damage) || damage === undefined) {
+                    console.error("伤害值为NaN或undefined，设置为0");
+                    damage = 0;
+                }
+
+                target.currentStats.hp = Math.max(0, target.currentStats.hp - damage);
+
+                // 记录HP变化
+                this.logBattle(`${target.name} HP: ${Math.floor(oldHp)} -> ${Math.floor(target.currentStats.hp)} (-${damage})`);
 
                 // 累计伤害
                 totalDamage += damageResult.damage;
@@ -1382,10 +1506,21 @@ const Battle = {
                                 if (typeof JobSkills !== 'undefined' && typeof JobSkills.applyDamageToTarget === 'function') {
                                     this.logBattle(`使用JobSkills.applyDamageToTarget计算伤害`);
                                     // 使用JobSkills.applyDamageToTarget方法，添加skipCritical选项
-                                    actualDamage = JobSkills.applyDamageToTarget(source, target, rawDamage, {
+                                    const damageResult = JobSkills.applyDamageToTarget(source, target, rawDamage, {
                                         skipCritical: true, // 跳过暴击计算
                                         isSpecialAttack: true // 标记为特殊攻击
                                     });
+
+                                    // 确保damageResult是一个对象，并且有damage属性
+                                    if (typeof damageResult === 'object' && 'damage' in damageResult) {
+                                        actualDamage = damageResult.damage;
+                                        this.logBattle(`JobSkills.applyDamageToTarget计算得到伤害: ${actualDamage}`);
+                                    } else {
+                                        // 如果返回值不是预期的对象，使用简单的伤害计算
+                                        this.logBattle(`JobSkills.applyDamageToTarget返回值异常，使用简单公式计算伤害`);
+                                        actualDamage = Math.floor(rawDamage / (1 + target.currentStats.defense));
+                                        this.logBattle(`简单公式计算得到伤害: ${actualDamage}`);
+                                    }
                                 } else {
                                     this.logBattle(`JobSkills.applyDamageToTarget不可用，尝试使用Character.calculateDamage`);
                                     // 如果JobSkills.applyDamageToTarget不可用，使用Character.calculateDamage方法
@@ -1401,8 +1536,17 @@ const Battle = {
                                             skipCritical: true, // 跳过暴击计算
                                             isSpecialAttack: true // 标记为特殊攻击
                                         });
-                                        actualDamage = damageResult.damage;
-                                        this.logBattle(`计算得到伤害: ${actualDamage}`);
+
+                                        // 确保damageResult是一个对象，并且有damage属性
+                                        if (typeof damageResult === 'object' && 'damage' in damageResult) {
+                                            actualDamage = damageResult.damage;
+                                            this.logBattle(`Character.calculateDamage计算得到伤害: ${actualDamage}`);
+                                        } else {
+                                            // 如果返回值不是预期的对象，使用简单的伤害计算
+                                            this.logBattle(`Character.calculateDamage返回值异常，使用简单公式计算伤害`);
+                                            actualDamage = Math.floor(rawDamage / (1 + target.currentStats.defense));
+                                            this.logBattle(`简单公式计算得到伤害: ${actualDamage}`);
+                                        }
                                     } else {
                                         // 如果都不可用，使用简单的伤害计算
                                         this.logBattle(`Character.calculateDamage不可用，使用简单公式计算伤害`);
@@ -1412,17 +1556,54 @@ const Battle = {
                                 }
 
                                 // 应用伤害
-                                target.currentStats.hp = Math.max(0, target.currentStats.hp - actualDamage.damage);
-                                this.logBattle(`应用伤害: ${actualDamage.damage}`);
+                                const oldHp = target.currentStats.hp;
+
+                                // 检查HP是否为NaN
+                                if (isNaN(oldHp) || oldHp === undefined) {
+                                    console.error("目标HP为NaN或undefined，尝试修复");
+                                    target.currentStats.hp = target.currentStats.maxHp || 1000;
+                                    if (isNaN(target.currentStats.hp)) {
+                                        target.currentStats.hp = 1000;
+                                        target.currentStats.maxHp = 1000;
+                                    }
+                                }
+
+                                // 确保伤害是有效数字
+                                let damage = 0;
+
+                                // 打印actualDamage的类型和值，用于调试
+                                console.log("actualDamage类型:", typeof actualDamage);
+                                console.log("actualDamage值:", actualDamage);
+
+                                if (typeof actualDamage === 'object' && actualDamage !== null && 'damage' in actualDamage) {
+                                    damage = actualDamage.damage;
+                                    console.log("从对象中提取damage属性:", damage);
+                                } else if (typeof actualDamage === 'number') {
+                                    damage = actualDamage;
+                                    console.log("actualDamage是数字:", damage);
+                                } else {
+                                    console.error("actualDamage既不是对象也不是数字:", actualDamage);
+                                }
+
+                                if (isNaN(damage) || damage === undefined) {
+                                    console.error("被动技能伤害值为NaN或undefined，设置为0");
+                                    damage = 0;
+                                }
+
+                                target.currentStats.hp = Math.max(0, target.currentStats.hp - damage);
+
+                                // 记录HP变化
+                                this.logBattle(`应用伤害2: ${damage}`);
+                                this.logBattle(`${target.name} HP: ${Math.floor(oldHp)} -> ${Math.floor(target.currentStats.hp)} (-${damage})`);
 
                                 // 更新伤害统计
-                                source.stats.totalDamage += actualDamage.damage;
+                                source.stats.totalDamage += damage;
 
                                 // 如果是旋风斩，特别标记
                                 if (skillId === 'whirlwind') {
-                                    this.logBattle(`${source.name} 的旋风斩对 ${target.name} 造成了 ${actualDamage.damage} 点伤害！`);
+                                    this.logBattle(`${source.name} 的旋风斩对 ${target.name} 造成了 ${damage} 点伤害！`);
                                 } else {
-                                    this.logBattle(`${source.name} 的 ${skill.name} 对 ${target.name} 造成了 ${actualDamage.damage} 点伤害！`);
+                                    this.logBattle(`${source.name} 的 ${skill.name} 对 ${target.name} 造成了 ${damage} 点伤害！`);
                                 }
                             }
                         }

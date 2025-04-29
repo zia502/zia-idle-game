@@ -361,7 +361,7 @@ function integrateBattleSystemUpdates() {
     // 11. 扩展Battle.applyDamageToTarget方法
     const originalApplyDamageToTarget = Battle.applyDamageToTarget;
     Battle.applyDamageToTarget = function(attacker, target, rawDamage, options = {}) {
-        if (!target || target.currentStats.hp <= 0) return 0;
+        if (!target || target.currentStats.hp <= 0) return { damage: 0, isCritical: false, attributeBonus: 0 };
 
         // 检查援护效果
         const cover = BuffSystem.processCoverEffect(this.currentTeamMembers, target, attacker);
@@ -371,13 +371,30 @@ function integrateBattleSystemUpdates() {
         }
 
         // 使用 JobSkills.applyDamageToTarget 计算基础伤害
-        let finalDamage = JobSkills.applyDamageToTarget(attacker, target, rawDamage, options);
+        let damageResult = JobSkills.applyDamageToTarget(attacker, target, rawDamage, options);
+
+        // 确保damageResult是一个对象
+        if (typeof damageResult !== 'object' || damageResult === null) {
+            console.error("JobSkills.applyDamageToTarget返回值不是对象:", damageResult);
+            damageResult = { damage: damageResult, isCritical: false, attributeBonus: 0 };
+        }
+
+        // 提取伤害值
+        let finalDamage = damageResult.damage;
+
+        // 确保finalDamage是一个数字
+        if (isNaN(finalDamage) || finalDamage === undefined) {
+            console.error("伤害值为NaN或undefined，设置为0");
+            finalDamage = 0;
+            damageResult.damage = 0;
+        }
 
         // 考虑伤害上限
         if (target.buffs) {
             const damageCap = target.buffs.find(buff => buff.type === 'damageCap');
             if (damageCap && damageCap.value) {
                 finalDamage = Math.min(finalDamage, damageCap.value);
+                damageResult.damage = finalDamage;
             }
         }
 
@@ -393,12 +410,14 @@ function integrateBattleSystemUpdates() {
                     }
                 }
                 finalDamage = 0;
+                damageResult.damage = 0;
             }
         }
 
         // 考虑目标的完全回避状态
         if (target.buffs && target.buffs.some(buff => buff.type === 'evade')) {
             finalDamage = 0;
+            damageResult.damage = 0;
             // 可以选择是否消耗回避BUFF
             const evadeBuff = target.buffs.find(buff => buff.type === 'evade');
             if (evadeBuff && options.consumeEvade) {
@@ -411,8 +430,10 @@ function integrateBattleSystemUpdates() {
             if (target.shield >= finalDamage) {
                 target.shield -= finalDamage;
                 finalDamage = 0;
+                damageResult.damage = 0;
             } else {
                 finalDamage -= target.shield;
+                damageResult.damage = finalDamage;
                 target.shield = 0;
             }
         }
@@ -435,7 +456,10 @@ function integrateBattleSystemUpdates() {
         // 应用伤害
         target.currentStats.hp = Math.max(0, target.currentStats.hp - finalDamage);
 
-        return finalDamage;
+        // 更新damageResult中的damage值
+        damageResult.damage = finalDamage;
+
+        return damageResult;
     };
 
     // 12. 添加Battle.processReviveEffect方法
@@ -732,14 +756,24 @@ function integrateAdditionalBattleSystemUpdates() {
                 this.logBattle(`原始伤害: ${rawDamage}`);
 
                 // 应用伤害
-                const actualDamage = this.applyDamageToTarget(source, target, rawDamage);
-                this.logBattle(`应用伤害: ${actualDamage}`);
+                const actualDamageObject = this.applyDamageToTarget(source, target, rawDamage);
+
+                // 确保actualDamageObject是一个对象
+                let damage = 0;
+                if (typeof actualDamageObject === 'object' && actualDamageObject !== null && 'damage' in actualDamageObject) {
+                    damage = actualDamageObject.damage;
+                } else if (typeof actualDamageObject === 'number') {
+                    damage = actualDamageObject;
+                    console.warn("applyDamageToTarget返回了数字而不是对象");
+                }
+
+                this.logBattle(`应用伤害1: ${damage}`);
 
                 // 更新伤害统计
-                source.stats.totalDamage += actualDamage;
-                battleStats.totalDamage += actualDamage;
+                source.stats.totalDamage += damage;
+                battleStats.totalDamage += damage;
 
-                this.logBattle(`${source.name} 对 ${target.name} 造成了 ${actualDamage} 点伤害！`);
+                this.logBattle(`${source.name} 对 ${target.name} 造成了 ${damage} 点伤害！`);
                 break;
 
             case 'multi_attack':

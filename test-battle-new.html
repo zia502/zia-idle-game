@@ -539,6 +539,23 @@
 
             // 初始化函数
             function init() {
+                // 确保Character对象在页面加载时就初始化
+                if (typeof Character === 'undefined') {
+                    window.Character = {
+                        characters: {},
+                        getCharacter: function(id) {
+                            return this.characters[id];
+                        },
+                        traits: {}
+                    };
+                    log('Character对象已初始化');
+                } else if (typeof Character.getCharacter !== 'function') {
+                    Character.getCharacter = function(id) {
+                        return this.characters[id];
+                    };
+                    log('Character.getCharacter方法已添加');
+                }
+
                 // 初始化Events系统
                 if (typeof Events !== 'undefined' && typeof Events.init === 'function') {
                     Events.init();
@@ -553,6 +570,14 @@
                     log('JobSkillsTemplate系统已初始化');
                 } else {
                     log('错误：JobSkillsTemplate系统未定义');
+                }
+
+                // 确保JobSkillsTemplate.getTemplate方法存在
+                if (typeof JobSkillsTemplate !== 'undefined' && typeof JobSkillsTemplate.getTemplate !== 'function') {
+                    JobSkillsTemplate.getTemplate = function(templateId) {
+                        return this.templates[templateId] || null;
+                    };
+                    log('JobSkillsTemplate.getTemplate方法已添加');
                 }
 
                 // 初始化JobSystem系统
@@ -1266,36 +1291,132 @@
                         );
 
                         if (availableSkills.length > 0) {
-                            // 随机选择一个技能
-                            const skillId = availableSkills[Math.floor(Math.random() * availableSkills.length)];
+                            log(`${character.name} 有 ${availableSkills.length} 个可用技能`);
 
-                            // 首先尝试从JobSystem获取技能
-                            let skill = JobSystem.getSkill(skillId);
+                            // 使用所有可用技能
+                            for (const skillId of availableSkills) {
+                                // 首先尝试从JobSystem获取技能
+                                let skill = JobSystem.getSkill(skillId);
 
-                            // 如果JobSystem中没有找到，尝试从JobSkillsTemplate获取
-                            if (!skill && typeof JobSkillsTemplate !== 'undefined' && JobSkillsTemplate.templates && JobSkillsTemplate.templates[skillId]) {
-                                skill = JobSkillsTemplate.templates[skillId];
-                            }
+                                // 如果JobSystem中没有找到，尝试从JobSkillsTemplate获取
+                                if (!skill && typeof JobSkillsTemplate !== 'undefined' && JobSkillsTemplate.templates && JobSkillsTemplate.templates[skillId]) {
+                                    skill = JobSkillsTemplate.templates[skillId];
+                                }
 
-                            log(`${character.name} 选择使用技能: ${skill ? skill.name : skillId}`);
+                                if (!skill) {
+                                    log(`找不到技能 ${skillId} 的定义，跳过使用`);
+                                    continue;
+                                }
 
-                            // 使用技能
-                            if (typeof JobSkills !== 'undefined' && typeof JobSkills.useSkill === 'function') {
-                                const result = JobSkills.useSkill(character.id, skillId, [character], boss);
+                                log(`${character.name} 使用技能: ${skill.name}`);
 
-                                if (result.success) {
-                                    log(result.message);
+                                // 使用技能
+                                if (typeof JobSkills !== 'undefined' && typeof JobSkills.useSkill === 'function') {
+                                    try {
+                                        // 确保Character对象中有角色
+                                        if (typeof Character !== 'undefined' && !Character.characters[character.id]) {
+                                            Character.characters[character.id] = character;
+                                            log(`将角色 ${character.name} 添加到Character.characters中`);
+                                        }
 
-                                    // 设置技能冷却
-                                    if (skill && skill.cooldown) {
-                                        character.skillCooldowns[skillId] = skill.cooldown;
-                                        log(`技能 ${skill.name} 进入冷却状态 (${skill.cooldown} 回合)`);
+                                        // 确保JobSkillsTemplate中有技能模板
+                                        if (typeof JobSkillsTemplate !== 'undefined' && !JobSkillsTemplate.templates[skillId]) {
+                                            JobSkillsTemplate.templates[skillId] = skill;
+                                            log(`将技能 ${skill.name} 添加到JobSkillsTemplate.templates中`);
+                                        }
+
+                                        // 打印调试信息
+                                        console.log("准备使用技能:", {
+                                            characterId: character.id,
+                                            skillId: skillId,
+                                            character: character,
+                                            boss: boss,
+                                            Character: Character,
+                                            JobSkillsTemplate: JobSkillsTemplate
+                                        });
+
+                                        // 直接在页面上显示调试信息
+                                        log(`调试: 准备使用技能 ${skillId} (${skill.name})`);
+                                        log(`调试: 角色ID = ${character.id}, 角色名称 = ${character.name}`);
+                                        log(`调试: Character.characters 中是否有角色 = ${Character.characters[character.id] ? '是' : '否'}`);
+                                        log(`调试: JobSkillsTemplate.templates 中是否有技能 = ${JobSkillsTemplate.templates[skillId] ? '是' : '否'}`);
+
+                                        // 检查 JobSystem.getSkill 是否能获取到技能
+                                        const jobSystemSkill = JobSystem.getSkill(skillId);
+                                        log(`调试: JobSystem.getSkill 是否能获取到技能 = ${jobSystemSkill ? '是' : '否'}`);
+
+                                        // 检查 JobSkillsTemplate.getTemplate 是否能获取到技能模板
+                                        const template = JobSkillsTemplate.getTemplate(skillId);
+                                        log(`调试: JobSkillsTemplate.getTemplate 是否能获取到技能模板 = ${template ? '是' : '否'}`);
+
+                                        // 手动执行 JobSkills.useSkill 的逻辑
+                                        log(`调试: 手动执行 JobSkills.useSkill 的逻辑`);
+
+                                        // 1. 获取角色
+                                        const char = Character.getCharacter(character.id);
+                                        if (!char) {
+                                            log(`调试: Character.getCharacter 返回 null，角色不存在`);
+                                            throw new Error('角色不存在');
+                                        }
+                                        log(`调试: Character.getCharacter 成功获取到角色 ${char.name}`);
+
+                                        // 2. 获取技能
+                                        const sk = JobSystem.getSkill(skillId);
+                                        if (!sk) {
+                                            log(`调试: JobSystem.getSkill 返回 null，技能不存在`);
+                                            throw new Error('技能不存在');
+                                        }
+                                        log(`调试: JobSystem.getSkill 成功获取到技能 ${sk.name}`);
+
+                                        // 3. 获取技能模板
+                                        const tmpl = JobSkillsTemplate.getTemplate(skillId);
+                                        if (!tmpl) {
+                                            log(`调试: JobSkillsTemplate.getTemplate 返回 null，技能模板不存在`);
+                                            throw new Error(`技能 ${sk.name} 没有模板定义`);
+                                        }
+                                        log(`调试: JobSkillsTemplate.getTemplate 成功获取到技能模板 ${tmpl.name}`);
+
+                                        // 4. 检查技能是否在冷却中
+                                        if (char.skillCooldowns && char.skillCooldowns[skillId] > 0) {
+                                            log(`调试: 技能 ${sk.name} 在冷却中，剩余 ${char.skillCooldowns[skillId]} 回合`);
+                                            throw new Error(`技能 ${sk.name} 还在冷却中，剩余 ${char.skillCooldowns[skillId]} 回合`);
+                                        }
+                                        log(`调试: 技能 ${sk.name} 不在冷却中，可以使用`);
+
+                                        // 5. 执行技能效果
+                                        log(`调试: 开始执行技能效果，effectType = ${tmpl.effectType}`);
+
+                                        // 现在尝试使用 JobSkills.useSkill
+                                        const result = JobSkills.useSkill(character.id, skillId, [character], boss);
+
+                                        if (result.success) {
+                                            log(result.message);
+
+                                            // 设置技能冷却
+                                            if (skill.cooldown) {
+                                                character.skillCooldowns[skillId] = skill.cooldown;
+                                                log(`技能 ${skill.name} 进入冷却状态 (${skill.cooldown} 回合)`);
+                                            }
+                                        } else {
+                                            log(`技能使用失败: ${result.message || '未知原因'}`);
+                                            console.error(`技能使用失败详情:`, result);
+                                        }
+                                    } catch (error) {
+                                        log(`技能使用出错: ${error.message}`);
+                                        console.error("技能使用错误:", error);
+
+                                        // 添加更详细的错误信息
+                                        console.error("Character 对象:", Character);
+                                        console.error("character.id:", character.id);
+                                        console.error("Character.characters:", Character.characters);
+                                        console.error("JobSkillsTemplate:", JobSkillsTemplate);
+                                        console.error("JobSkillsTemplate.templates:", JobSkillsTemplate.templates);
+                                        console.error("JobSkillsTemplate.getTemplate:", JobSkillsTemplate.getTemplate);
                                     }
                                 } else {
-                                    log(`技能使用失败: ${result.message || '未知原因'}`);
+                                    log(`技能系统不可用，跳过技能使用`);
+                                    console.warn("JobSkills 未定义或 useSkill 方法不存在");
                                 }
-                            } else {
-                                log(`技能系统不可用，跳过技能使用`);
                             }
                         } else {
                             log(`${character.name} 没有可用的技能 (所有技能都在冷却中)`);
@@ -1306,10 +1427,91 @@
                     if (character.currentStats.hp > 0 && boss.currentStats.hp > 0) {
                         log(`\n----- ${character.name} 普通攻击阶段 -----`);
 
-                        // 增加基础伤害，以适应更高的生命值
-                        const damage = Math.floor(character.currentStats.attack * 10 * (1 - boss.currentStats.defense / 500));
-                        boss.currentStats.hp -= damage;
-                        log(`${character.name} 进行普通攻击，对 ${boss.name} 造成 ${damage} 点伤害！`);
+                        // 显示当前BUFF信息
+                        if (character.buffs && character.buffs.length > 0) {
+                            log(`${character.name} 当前BUFF:`);
+                            for (const buff of character.buffs) {
+                                const source = buff.source ? `(来自: ${buff.source.name})` : '';
+                                const duration = buff.duration > 0 ? `(剩余: ${buff.duration}回合)` : '';
+                                log(`- ${buff.name}: ${buff.description} ${source} ${duration}`);
+                            }
+                        }
+
+                        // 计算DA和TA率
+                        let daRate = 0.15; // 基础DA率15%
+                        let taRate = 0.05; // 基础TA率5%
+
+                        // 应用BUFF效果
+                        if (character.buffs) {
+                            for (const buff of character.buffs) {
+                                if (buff.type === 'daBoost') {
+                                    daRate += buff.value;
+                                    log(`DA率提升: +${buff.value * 100}% (来自: ${buff.name})`);
+                                }
+                                if (buff.type === 'taBoost') {
+                                    taRate += buff.value;
+                                    log(`TA率提升: +${buff.value * 100}% (来自: ${buff.name})`);
+                                }
+                            }
+                        }
+
+                        // 应用被动技能效果
+                        if (character.skills) {
+                            for (const skillId of character.skills) {
+                                const skill = JobSystem.getSkill(skillId);
+                                if (skill && skill.effects) {
+                                    for (const effect of skill.effects) {
+                                        if (effect.passive) {
+                                            if (effect.type === 'daBoost') {
+                                                daRate += effect.value;
+                                                log(`DA率提升: +${effect.value * 100}% (来自被动技能: ${skill.name})`);
+                                            }
+                                            if (effect.type === 'taBoost') {
+                                                taRate += effect.value;
+                                                log(`TA率提升: +${effect.value * 100}% (来自被动技能: ${skill.name})`);
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        // 显示最终DA和TA率
+                        log(`${character.name} 当前DA率: ${(daRate * 100).toFixed(1)}%, TA率: ${(taRate * 100).toFixed(1)}%`);
+
+                        // 决定攻击类型
+                        const roll = Math.random();
+                        let attackCount = 1;
+                        let attackType = "普通攻击";
+
+                        if (roll < taRate) {
+                            attackCount = 3;
+                            attackType = "三重攻击";
+                            log(`${character.name} 触发三重攻击！(概率: ${(taRate * 100).toFixed(1)}%)`);
+                        } else if (roll < taRate + daRate) {
+                            attackCount = 2;
+                            attackType = "双重攻击";
+                            log(`${character.name} 触发双重攻击！(概率: ${(daRate * 100).toFixed(1)}%)`);
+                        }
+
+                        // 执行攻击
+                        let totalDamage = 0;
+                        for (let i = 0; i < attackCount; i++) {
+                            // 增加基础伤害，以适应更高的生命值
+                            const damage = Math.floor(character.currentStats.attack * 10 * (1 - boss.currentStats.defense / 500));
+                            boss.currentStats.hp -= damage;
+                            totalDamage += damage;
+
+                            if (i === 0) {
+                                log(`${character.name} ${attackType}，对 ${boss.name} 造成 ${damage} 点伤害！`);
+                            } else {
+                                log(`${character.name} 第${i+1}次攻击 对 ${boss.name} 造成 ${damage} 点伤害！`);
+                            }
+                        }
+
+                        if (attackCount > 1) {
+                            log(`${character.name} 总共造成 ${totalDamage} 点伤害！`);
+                        }
                     }
 
                     // 更新战斗状态
@@ -1349,6 +1551,116 @@
                                 log(`${boss.name} 选择使用技能: ${skill.name}`);
 
                                 // 使用技能
+                                try {
+                                    // 确保JobSkillsTemplate中有技能模板
+                                    if (typeof JobSkillsTemplate !== 'undefined' && !JobSkillsTemplate.templates[skillId]) {
+                                        JobSkillsTemplate.templates[skillId] = skill;
+                                        log(`将BOSS技能 ${skill.name} 添加到JobSkillsTemplate.templates中`);
+                                    }
+
+                                    // 尝试使用JobSkills.useSkill方法
+                                    if (typeof JobSkills !== 'undefined' && typeof JobSkills.useSkill === 'function') {
+                                        // 确保BOSS有ID
+                                        if (!boss.id) {
+                                            boss.id = `boss_${Date.now()}`;
+                                        }
+
+                                        // 确保Character对象中有BOSS
+                                        if (typeof Character !== 'undefined') {
+                                            Character.characters = Character.characters || {};
+                                            Character.characters[boss.id] = boss;
+                                        }
+
+                                        // 打印调试信息
+                                        console.log("准备使用BOSS技能:", {
+                                            bossId: boss.id,
+                                            skillId: skillId,
+                                            boss: boss,
+                                            character: character,
+                                            Character: Character,
+                                            JobSkillsTemplate: JobSkillsTemplate
+                                        });
+
+                                        // 直接在页面上显示调试信息
+                                        log(`调试: 准备使用BOSS技能 ${skillId} (${skill.name})`);
+                                        log(`调试: BOSS ID = ${boss.id}, BOSS名称 = ${boss.name}`);
+                                        log(`调试: Character.characters 中是否有BOSS = ${Character.characters[boss.id] ? '是' : '否'}`);
+                                        log(`调试: JobSkillsTemplate.templates 中是否有技能 = ${JobSkillsTemplate.templates[skillId] ? '是' : '否'}`);
+
+                                        // 检查 JobSystem.getSkill 是否能获取到技能
+                                        const jobSystemSkill = JobSystem.getSkill(skillId);
+                                        log(`调试: JobSystem.getSkill 是否能获取到技能 = ${jobSystemSkill ? '是' : '否'}`);
+
+                                        // 检查 JobSkillsTemplate.getTemplate 是否能获取到技能模板
+                                        const template = JobSkillsTemplate.getTemplate(skillId);
+                                        log(`调试: JobSkillsTemplate.getTemplate 是否能获取到技能模板 = ${template ? '是' : '否'}`);
+
+                                        // 手动执行 JobSkills.useSkill 的逻辑
+                                        log(`调试: 手动执行 JobSkills.useSkill 的逻辑`);
+
+                                        // 1. 获取BOSS
+                                        const bossChar = Character.getCharacter(boss.id);
+                                        if (!bossChar) {
+                                            log(`调试: Character.getCharacter 返回 null，BOSS不存在`);
+                                            throw new Error('BOSS不存在');
+                                        }
+                                        log(`调试: Character.getCharacter 成功获取到BOSS ${bossChar.name}`);
+
+                                        // 2. 获取技能
+                                        const sk = JobSystem.getSkill(skillId);
+                                        if (!sk) {
+                                            log(`调试: JobSystem.getSkill 返回 null，技能不存在`);
+                                            throw new Error('技能不存在');
+                                        }
+                                        log(`调试: JobSystem.getSkill 成功获取到技能 ${sk.name}`);
+
+                                        // 3. 获取技能模板
+                                        const tmpl = JobSkillsTemplate.getTemplate(skillId);
+                                        if (!tmpl) {
+                                            log(`调试: JobSkillsTemplate.getTemplate 返回 null，技能模板不存在`);
+                                            throw new Error(`技能 ${sk.name} 没有模板定义`);
+                                        }
+                                        log(`调试: JobSkillsTemplate.getTemplate 成功获取到技能模板 ${tmpl.name}`);
+
+                                        // 4. 检查技能是否在冷却中
+                                        if (bossChar.skillCooldowns && bossChar.skillCooldowns[skillId] > 0) {
+                                            log(`调试: 技能 ${sk.name} 在冷却中，剩余 ${bossChar.skillCooldowns[skillId]} 回合`);
+                                            throw new Error(`技能 ${sk.name} 还在冷却中，剩余 ${bossChar.skillCooldowns[skillId]} 回合`);
+                                        }
+                                        log(`调试: 技能 ${sk.name} 不在冷却中，可以使用`);
+
+                                        // 5. 执行技能效果
+                                        log(`调试: 开始执行技能效果，effectType = ${tmpl.effectType}`);
+
+                                        try {
+                                            const result = JobSkills.useSkill(boss.id, skillId, [boss], character);
+                                            if (result.success) {
+                                                log(result.message);
+
+                                                // 设置技能冷却
+                                                boss.skillCooldowns[skillId] = skill.cooldown || 3;
+                                                log(`技能 ${skill.name} 进入冷却状态 (${skill.cooldown || 3} 回合)`);
+
+                                                // 跳过后续的手动处理
+                                                return;
+                                            } else {
+                                                log(`BOSS技能使用失败: ${result.message || '未知原因'}`);
+                                                console.error(`BOSS技能使用失败详情:`, result);
+                                                // 继续使用手动处理
+                                            }
+                                        } catch (error) {
+                                            log(`BOSS技能使用出错: ${error.message}`);
+                                            console.error("BOSS技能使用错误:", error);
+                                            // 继续使用手动处理
+                                        }
+                                    }
+                                } catch (error) {
+                                    log(`BOSS技能使用出错: ${error.message}`);
+                                    console.error("BOSS技能使用错误:", error);
+                                    // 继续使用手动处理
+                                }
+
+                                // 手动处理技能效果
                                 if (skill.effectType === 'damage' || skill.effectType === 'damage_and_debuff') {
                                     // 计算伤害
                                     let damage = 0;
@@ -1387,10 +1699,70 @@
                                 log(`找不到技能 ${skillId} 的定义，${boss.name} 将进行普通攻击`);
 
                                 // 如果找不到技能，进行普通攻击
-                                // 增加基础伤害，以适应更高的生命值
-                                const damage = Math.floor(boss.currentStats.attack * 10 * (1 - character.currentStats.defense / 500));
-                                character.currentStats.hp -= damage;
-                                log(`${boss.name} 进行普通攻击，对 ${character.name} 造成 ${damage} 点伤害！`);
+                                // 显示BOSS当前BUFF信息
+                                if (boss.buffs && boss.buffs.length > 0) {
+                                    log(`${boss.name} 当前BUFF:`);
+                                    for (const buff of boss.buffs) {
+                                        const source = buff.source ? `(来自: ${buff.source.name})` : '';
+                                        const duration = buff.duration > 0 ? `(剩余: ${buff.duration}回合)` : '';
+                                        log(`- ${buff.name}: ${buff.description} ${source} ${duration}`);
+                                    }
+                                }
+
+                                // 计算DA和TA率
+                                let daRate = 0.10; // BOSS基础DA率10%
+                                let taRate = 0.03; // BOSS基础TA率3%
+
+                                // 应用BUFF效果
+                                if (boss.buffs) {
+                                    for (const buff of boss.buffs) {
+                                        if (buff.type === 'daBoost') {
+                                            daRate += buff.value;
+                                            log(`BOSS DA率提升: +${buff.value * 100}% (来自: ${buff.name})`);
+                                        }
+                                        if (buff.type === 'taBoost') {
+                                            taRate += buff.value;
+                                            log(`BOSS TA率提升: +${buff.value * 100}% (来自: ${buff.name})`);
+                                        }
+                                    }
+                                }
+
+                                // 显示最终DA和TA率
+                                log(`${boss.name} 当前DA率: ${(daRate * 100).toFixed(1)}%, TA率: ${(taRate * 100).toFixed(1)}%`);
+
+                                // 决定攻击类型
+                                const roll = Math.random();
+                                let attackCount = 1;
+                                let attackType = "普通攻击";
+
+                                if (roll < taRate) {
+                                    attackCount = 3;
+                                    attackType = "三重攻击";
+                                    log(`${boss.name} 触发三重攻击！(概率: ${(taRate * 100).toFixed(1)}%)`);
+                                } else if (roll < taRate + daRate) {
+                                    attackCount = 2;
+                                    attackType = "双重攻击";
+                                    log(`${boss.name} 触发双重攻击！(概率: ${(daRate * 100).toFixed(1)}%)`);
+                                }
+
+                                // 执行攻击
+                                let totalDamage = 0;
+                                for (let i = 0; i < attackCount; i++) {
+                                    // 增加基础伤害，以适应更高的生命值
+                                    const damage = Math.floor(boss.currentStats.attack * 10 * (1 - character.currentStats.defense / 500));
+                                    character.currentStats.hp -= damage;
+                                    totalDamage += damage;
+
+                                    if (i === 0) {
+                                        log(`${boss.name} ${attackType}，对 ${character.name} 造成 ${damage} 点伤害！`);
+                                    } else {
+                                        log(`${boss.name} 第${i+1}次攻击 对 ${character.name} 造成 ${damage} 点伤害！`);
+                                    }
+                                }
+
+                                if (attackCount > 1) {
+                                    log(`${boss.name} 总共造成 ${totalDamage} 点伤害！`);
+                                }
                             }
                         } else {
                             log(`${boss.name} 没有可用的技能 (所有技能都在冷却中)`);
@@ -1398,10 +1770,70 @@
                             // 如果没有可用技能，进行普通攻击
                             log(`\n----- ${boss.name} 普通攻击阶段 -----`);
 
-                            // 增加基础伤害，以适应更高的生命值
-                            const damage = Math.floor(boss.currentStats.attack * 10 * (1 - character.currentStats.defense / 500));
-                            character.currentStats.hp -= damage;
-                            log(`${boss.name} 进行普通攻击，对 ${character.name} 造成 ${damage} 点伤害！`);
+                            // 显示BOSS当前BUFF信息
+                            if (boss.buffs && boss.buffs.length > 0) {
+                                log(`${boss.name} 当前BUFF:`);
+                                for (const buff of boss.buffs) {
+                                    const source = buff.source ? `(来自: ${buff.source.name})` : '';
+                                    const duration = buff.duration > 0 ? `(剩余: ${buff.duration}回合)` : '';
+                                    log(`- ${buff.name}: ${buff.description} ${source} ${duration}`);
+                                }
+                            }
+
+                            // 计算DA和TA率
+                            let daRate = 0.10; // BOSS基础DA率10%
+                            let taRate = 0.03; // BOSS基础TA率3%
+
+                            // 应用BUFF效果
+                            if (boss.buffs) {
+                                for (const buff of boss.buffs) {
+                                    if (buff.type === 'daBoost') {
+                                        daRate += buff.value;
+                                        log(`BOSS DA率提升: +${buff.value * 100}% (来自: ${buff.name})`);
+                                    }
+                                    if (buff.type === 'taBoost') {
+                                        taRate += buff.value;
+                                        log(`BOSS TA率提升: +${buff.value * 100}% (来自: ${buff.name})`);
+                                    }
+                                }
+                            }
+
+                            // 显示最终DA和TA率
+                            log(`${boss.name} 当前DA率: ${(daRate * 100).toFixed(1)}%, TA率: ${(taRate * 100).toFixed(1)}%`);
+
+                            // 决定攻击类型
+                            const roll = Math.random();
+                            let attackCount = 1;
+                            let attackType = "普通攻击";
+
+                            if (roll < taRate) {
+                                attackCount = 3;
+                                attackType = "三重攻击";
+                                log(`${boss.name} 触发三重攻击！(概率: ${(taRate * 100).toFixed(1)}%)`);
+                            } else if (roll < taRate + daRate) {
+                                attackCount = 2;
+                                attackType = "双重攻击";
+                                log(`${boss.name} 触发双重攻击！(概率: ${(daRate * 100).toFixed(1)}%)`);
+                            }
+
+                            // 执行攻击
+                            let totalDamage = 0;
+                            for (let i = 0; i < attackCount; i++) {
+                                // 增加基础伤害，以适应更高的生命值
+                                const damage = Math.floor(boss.currentStats.attack * 10 * (1 - character.currentStats.defense / 500));
+                                character.currentStats.hp -= damage;
+                                totalDamage += damage;
+
+                                if (i === 0) {
+                                    log(`${boss.name} ${attackType}，对 ${character.name} 造成 ${damage} 点伤害！`);
+                                } else {
+                                    log(`${boss.name} 第${i+1}次攻击 对 ${character.name} 造成 ${damage} 点伤害！`);
+                                }
+                            }
+
+                            if (attackCount > 1) {
+                                log(`${boss.name} 总共造成 ${totalDamage} 点伤害！`);
+                            }
                         }
                     }
 

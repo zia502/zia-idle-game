@@ -632,7 +632,15 @@ function integrateAdditionalBattleSystemUpdates() {
             for (const effect of skill.effects) {
                 if (effect.type === 'proc' && effect.onAttack) {
                     // 检查触发概率
-                    if (Math.random() < (effect.chance || 0.5)) {
+                    const chance = effect.chance || 0.5;
+                    const roll = Math.random();
+
+                    if (roll < chance) {
+                        // 记录触发的技能ID，以便在processProcEffect中使用
+                        if (!effect.effect.sourceSkillId) {
+                            effect.effect.sourceSkillId = skillId;
+                        }
+
                         this.processProcEffect(attacker, target, effect.effect, battleStats);
                     }
                 }
@@ -643,6 +651,73 @@ function integrateAdditionalBattleSystemUpdates() {
     // 4. 添加触发效果处理方法
     Battle.processProcEffect = function(source, target, effect, battleStats) {
         if (!effect || !effect.type) return;
+
+        // 查找触发的被动技能
+        let triggeringSkill = null;
+        let skillName = "未知技能";
+        let skillDescription = "";
+
+        // 如果effect中有sourceSkillId，直接使用它获取技能信息
+        if (effect.sourceSkillId) {
+            // 首先尝试从JobSystem获取技能
+            triggeringSkill = JobSystem.getSkill(effect.sourceSkillId);
+
+            // 如果找不到，尝试从JobSkillsTemplate获取
+            if (!triggeringSkill && typeof JobSkillsTemplate !== 'undefined' && JobSkillsTemplate.templates) {
+                triggeringSkill = JobSkillsTemplate.templates[effect.sourceSkillId];
+            }
+
+            if (triggeringSkill) {
+                skillName = triggeringSkill.name;
+                skillDescription = triggeringSkill.description;
+            }
+        }
+
+        // 如果没有sourceSkillId或找不到技能，尝试通过效果匹配查找
+        if (!triggeringSkill && source && source.skills) {
+            for (const skillId of source.skills) {
+                const skill = JobSystem.getSkill(skillId);
+                if (skill && skill.passive && skill.effects) {
+                    for (const skillEffect of skill.effects) {
+                        if (skillEffect.type === 'proc' && skillEffect.effect &&
+                            JSON.stringify(skillEffect.effect) === JSON.stringify(effect)) {
+                            triggeringSkill = skill;
+                            skillName = skill.name;
+                            skillDescription = skill.description;
+                            break;
+                        }
+                    }
+                    if (triggeringSkill) break;
+                }
+            }
+        }
+
+        // 如果仍然找不到技能，尝试从JobSkillsTemplate获取
+        if (!triggeringSkill && typeof JobSkillsTemplate !== 'undefined' && JobSkillsTemplate.templates) {
+            for (const templateId in JobSkillsTemplate.templates) {
+                const template = JobSkillsTemplate.templates[templateId];
+                if (template && template.passive && template.effects) {
+                    for (const templateEffect of template.effects) {
+                        if (templateEffect.type === 'proc' && templateEffect.effect &&
+                            JSON.stringify(templateEffect.effect) === JSON.stringify(effect)) {
+                            triggeringSkill = template;
+                            skillName = template.name;
+                            skillDescription = template.description;
+                            break;
+                        }
+                    }
+                    if (triggeringSkill) break;
+                }
+            }
+        }
+
+        // 打印被动技能触发信息
+        if (triggeringSkill) {
+            this.logBattle(`${source.name} 的被动技能【${skillName}】触发！`);
+            if (skillDescription) {
+                this.logBattle(`技能描述: ${skillDescription}`);
+            }
+        }
 
         switch (effect.type) {
             case 'damage':
@@ -664,7 +739,7 @@ function integrateAdditionalBattleSystemUpdates() {
                 source.stats.totalDamage += actualDamage;
                 battleStats.totalDamage += actualDamage;
 
-                this.logBattle(`${source.name} 的 ${effect.name || '技能'} 触发，对 ${target.name} 造成了 ${actualDamage} 点伤害！`);
+                this.logBattle(`${source.name} 对 ${target.name} 造成了 ${actualDamage} 点伤害！`);
                 break;
 
             case 'multi_attack':
@@ -688,7 +763,7 @@ function integrateAdditionalBattleSystemUpdates() {
                     totalDamage += multiActualDamage;
                 }
 
-                this.logBattle(`${source.name} 的 ${effect.name || '多重攻击'} 触发，对 ${target.name} 造成了 ${count} 次共 ${totalDamage} 点伤害！`);
+                this.logBattle(`${source.name} 对 ${target.name} 造成了 ${count} 次共 ${totalDamage} 点伤害！`);
                 break;
 
             case 'debuff':
@@ -696,7 +771,7 @@ function integrateAdditionalBattleSystemUpdates() {
                 const debuff = BuffSystem.createBuff(effect.debuffType, effect.value, effect.duration, source);
                 if (debuff) {
                     BuffSystem.applyBuff(target, debuff);
-                    this.logBattle(`${source.name} 的 ${effect.name || '技能'} 触发，对 ${target.name} 施加了 ${debuff.name} 效果！`);
+                    this.logBattle(`${source.name} 对 ${target.name} 施加了 ${debuff.name} 效果！`);
                 }
                 break;
         }

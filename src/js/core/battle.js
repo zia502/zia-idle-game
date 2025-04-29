@@ -26,6 +26,23 @@ const Battle = {
         this.currentTurn = 0;
         this.battleLog = [];
 
+        // 确保Character对象存在
+        if (typeof Character === 'undefined') {
+            window.Character = {
+                characters: {},
+                getCharacter: function(id) {
+                    return this.characters[id];
+                },
+                traits: {}
+            };
+            this.logBattle('Character对象已初始化');
+        } else if (typeof Character.getCharacter !== 'function') {
+            Character.getCharacter = function(id) {
+                return this.characters[id];
+            };
+            this.logBattle('Character.getCharacter方法已添加');
+        }
+
         // 获取队伍成员（前4名为前排，后2名为后排备用）
         const frontLineMembers = [];
         const backLineMembers = [];
@@ -116,7 +133,23 @@ const Battle = {
         let battleResult = this.processBattle(teamMembers, monsterCharacter);
 
         // 计算MVP
-        const mvp = Character.assessBattleMVP(team.members);
+        let mvp = { mvpId: null, score: 0 };
+
+        // 如果Character对象有assessBattleMVP方法，使用它
+        if (typeof Character !== 'undefined' && typeof Character.assessBattleMVP === 'function') {
+            mvp = Character.assessBattleMVP(team.members);
+        } else {
+            // 否则，自己计算MVP（基于伤害）
+            let highestDamage = 0;
+            for (const memberId of team.members) {
+                const character = Character.getCharacter(memberId);
+                if (character && character.stats && character.stats.totalDamage > highestDamage) {
+                    highestDamage = character.stats.totalDamage;
+                    mvp.mvpId = memberId;
+                    mvp.score = highestDamage;
+                }
+            }
+        }
 
         // 记录战斗结果
         if (battleResult.victory) {
@@ -173,7 +206,7 @@ const Battle = {
      */
     processBattle(teamMembers, monster) {
         // 最大回合数限制，防止无限循环
-        const MAX_TURNS = 50;
+        const MAX_TURNS = 200;
 
         // 初始化怪物HP
         monster.currentStats.hp = monster.currentStats.maxHp || monster.currentStats.hp;
@@ -218,7 +251,7 @@ const Battle = {
         // 战斗循环
         while (this.currentTurn < MAX_TURNS) {
             this.currentTurn++;
-            this.logBattle(`===== 回合 ${this.currentTurn} =====`);
+            this.logBattle(`##### 回合 ${this.currentTurn} #####`);
 
             // 处理回合开始时的BUFF效果
             this.processTurnStartBuffs(teamMembers, monster);
@@ -252,6 +285,7 @@ const Battle = {
                     this.processMonsterAction(monster, teamMembers, battleStats);
                 } else {
                     // 角色行动
+                    this.logBattle(`开始角色行动`);
                     this.processCharacterAction(entity, monster, battleStats);
                 }
             }
@@ -419,6 +453,33 @@ const Battle = {
                     this.logBattle(`${member.name} 的 ${buff.name} 效果已结束！`);
                 }
             }
+
+            // 更新技能冷却
+            if (member.skillCooldowns) {
+                for (const skillId in member.skillCooldowns) {
+                    if (member.skillCooldowns[skillId] > 0) {
+                        member.skillCooldowns[skillId]--;
+                        if (member.skillCooldowns[skillId] === 0) {
+                            // 首先尝试从JobSystem获取技能
+                            let skill = null;
+                            if (typeof JobSystem !== 'undefined' && typeof JobSystem.getSkill === 'function') {
+                                skill = JobSystem.getSkill(skillId);
+                            }
+
+                            // 如果JobSystem中没有找到，尝试从JobSkillsTemplate获取
+                            if (!skill && typeof JobSkillsTemplate !== 'undefined' && JobSkillsTemplate.templates && JobSkillsTemplate.templates[skillId]) {
+                                skill = JobSkillsTemplate.templates[skillId];
+                            }
+
+                            if (skill) {
+                                this.logBattle(`${member.name} 的技能 ${skill.name} 冷却结束，可以再次使用！`);
+                            } else {
+                                this.logBattle(`${member.name} 的技能 ${skillId} 冷却结束，可以再次使用！`);
+                            }
+                        }
+                    }
+                }
+            }
         }
 
         // 更新怪物的BUFF
@@ -427,6 +488,40 @@ const Battle = {
 
             for (const buff of expiredBuffs) {
                 this.logBattle(`${monster.name} 的 ${buff.name} 效果已结束！`);
+            }
+        }
+
+        // 更新怪物技能冷却
+        if (monster.skillCooldowns) {
+            for (const skillId in monster.skillCooldowns) {
+                if (monster.skillCooldowns[skillId] > 0) {
+                    monster.skillCooldowns[skillId]--;
+                    if (monster.skillCooldowns[skillId] === 0) {
+                        // 首先尝试从bossSkills获取技能
+                        let skill = null;
+
+                        // 如果有全局的bossSkills对象
+                        if (typeof window !== 'undefined' && window.bossSkills && window.bossSkills[skillId]) {
+                            skill = window.bossSkills[skillId];
+                        }
+
+                        // 如果JobSystem中有这个技能
+                        if (!skill && typeof JobSystem !== 'undefined' && typeof JobSystem.getSkill === 'function') {
+                            skill = JobSystem.getSkill(skillId);
+                        }
+
+                        // 如果JobSkillsTemplate中有这个技能
+                        if (!skill && typeof JobSkillsTemplate !== 'undefined' && JobSkillsTemplate.templates && JobSkillsTemplate.templates[skillId]) {
+                            skill = JobSkillsTemplate.templates[skillId];
+                        }
+
+                        if (skill) {
+                            this.logBattle(`${monster.name} 的技能 ${skill.name} 冷却结束，可以再次使用！`);
+                        } else {
+                            this.logBattle(`${monster.name} 的技能 ${skillId} 冷却结束，可以再次使用！`);
+                        }
+                    }
+                }
             }
         }
     },
@@ -449,12 +544,20 @@ const Battle = {
      * @param {object} battleStats - 战斗统计
      */
     processCharacterAction(character, monster, battleStats) {
+        this.logBattle(`检查角色是否存活`);
         // 检查角色是否存活
         if (character.currentStats.hp <= 0) return;
 
         // 处理角色特性触发
-        const triggeredEffects = Character.processTraitTriggers(character.id, 'attack', { target: monster });
+        let triggeredEffects = [];
 
+        // 如果Character对象有processTraitTriggers方法，使用它
+        if (typeof Character !== 'undefined' && typeof Character.processTraitTriggers === 'function') {
+            triggeredEffects = Character.processTraitTriggers(character.id, 'attack', { target: monster });
+        }
+
+
+        this.logBattle(`应用特性效果`);
         // 应用特性效果
         for (const effect of triggeredEffects) {
             if (effect.message) {
@@ -462,26 +565,235 @@ const Battle = {
             }
         }
 
-        // 检查DA和TA触发
+        // 1. 使用技能阶段
+        this.logBattle(`\n----- ${character.name} 技能阶段 -----`);
+
+        // 初始化技能冷却
+        if (!character.skillCooldowns) {
+            character.skillCooldowns = {};
+        }
+
+        // 获取可用技能（没有冷却的主动技能）
+        const availableSkills = character.skills ? character.skills.filter(skillId => {
+            // 首先检查冷却
+            if (character.skillCooldowns[skillId] && character.skillCooldowns[skillId] > 0) {
+                return false;
+            }
+
+            // 然后检查是否是被动技能
+            let skill = null;
+
+            // 从JobSystem获取技能
+            if (typeof JobSystem !== 'undefined' && typeof JobSystem.getSkill === 'function') {
+                skill = JobSystem.getSkill(skillId);
+            }
+
+            // 如果JobSystem中没有找到，尝试从JobSkillsTemplate获取
+            if (!skill && typeof JobSkillsTemplate !== 'undefined' && JobSkillsTemplate.templates && JobSkillsTemplate.templates[skillId]) {
+                skill = JobSkillsTemplate.templates[skillId];
+            }
+
+            // 如果找到了技能，检查是否是被动技能
+            if (skill) {
+                // 如果技能有passive属性且为true，则是被动技能，不应该主动使用
+                return !skill.passive;
+            }
+
+            // 如果找不到技能定义，默认认为是主动技能
+            return true;
+        }) : [];
+
+        if (availableSkills && availableSkills.length > 0) {
+            this.logBattle(`${character.name} 有 ${availableSkills.length} 个可用技能`);
+
+            // 使用所有可用技能
+            for (const skillId of availableSkills) {
+                // 首先尝试从JobSystem获取技能
+                let skill = null;
+                if (typeof JobSystem !== 'undefined' && typeof JobSystem.getSkill === 'function') {
+                    skill = JobSystem.getSkill(skillId);
+                }
+
+                // 如果JobSystem中没有找到，尝试从JobSkillsTemplate获取
+                if (!skill && typeof JobSkillsTemplate !== 'undefined' && JobSkillsTemplate.templates && JobSkillsTemplate.templates[skillId]) {
+                    skill = JobSkillsTemplate.templates[skillId];
+                }
+
+                if (!skill) {
+                    this.logBattle(`找不到技能 ${skillId} 的定义，跳过使用`);
+                    continue;
+                }
+
+                this.logBattle(`${character.name} 使用技能: ${skill.name}`);
+
+                // 使用技能
+                if (typeof JobSkills !== 'undefined' && typeof JobSkills.useSkill === 'function') {
+                    try {
+                        // 确保Character对象中有角色
+                        if (typeof Character !== 'undefined' && !Character.characters[character.id]) {
+                            Character.characters[character.id] = character;
+                            this.logBattle(`将角色 ${character.name} 添加到Character.characters中`);
+                        }
+
+                        // 确保JobSkillsTemplate中有技能模板
+                        if (typeof JobSkillsTemplate !== 'undefined' && !JobSkillsTemplate.templates[skillId]) {
+                            JobSkillsTemplate.templates[skillId] = skill;
+                            this.logBattle(`将技能 ${skill.name} 添加到JobSkillsTemplate.templates中`);
+                        }
+
+                        // 使用技能
+                        const result = JobSkills.useSkill(character.id, skillId, [character], monster);
+
+                        if (result.success) {
+                            this.logBattle(result.message);
+
+                            // 设置技能冷却
+                            if (skill.cooldown) {
+                                character.skillCooldowns[skillId] = skill.cooldown;
+                                this.logBattle(`技能 ${skill.name} 进入冷却状态 (${skill.cooldown} 回合)`);
+                            }
+                        } else {
+                            this.logBattle(`技能使用失败: ${result.message || '未知原因'}`);
+                        }
+                    } catch (error) {
+                        this.logBattle(`技能使用出错: ${error.message}`);
+                        console.error("技能使用错误:", error);
+                    }
+                } else {
+                    this.logBattle(`技能系统不可用，跳过技能使用`);
+                }
+            }
+        } else {
+            this.logBattle(`${character.name} 没有可用的技能 (所有技能都在冷却中)`);
+        }
+
+        // 2. 普通攻击阶段
+        this.logBattle(`\n----- ${character.name} 普通攻击阶段 -----`);
+
+        // 显示当前BUFF信息
+        if (character.buffs && character.buffs.length > 0) {
+            this.logBattle(`${character.name} 当前BUFF:`);
+            for (const buff of character.buffs) {
+                const source = buff.source ? `(来自: ${buff.source.name})` : '';
+                const duration = buff.duration > 0 ? `(剩余: ${buff.duration}回合)` : '';
+                this.logBattle(`- ${buff.name}: ${buff.description} ${source} ${duration}`);
+            }
+        }
+
+        // 计算DA和TA率
+        let daRate = character.currentStats.daRate || 0.15; // 基础DA率15%
+        let taRate = character.currentStats.taRate || 0.05; // 基础TA率5%
+
+        // 应用BUFF效果
+        if (character.buffs) {
+            for (const buff of character.buffs) {
+                if (buff.type === 'daBoost') {
+                    daRate += buff.value;
+                    this.logBattle(`DA率提升: +${buff.value * 100}% (来自: ${buff.name})`);
+                }
+                if (buff.type === 'taBoost') {
+                    taRate += buff.value;
+                    this.logBattle(`TA率提升: +${buff.value * 100}% (来自: ${buff.name})`);
+                }
+            }
+        }
+
+        // 应用被动技能效果
+        if (character.skills) {
+            for (const skillId of character.skills) {
+                // 获取技能定义
+                let skill = null;
+
+                // 从JobSystem获取技能
+                if (typeof JobSystem !== 'undefined' && typeof JobSystem.getSkill === 'function') {
+                    skill = JobSystem.getSkill(skillId);
+                }
+
+                // 如果JobSystem中没有找到，尝试从JobSkillsTemplate获取
+                if (!skill && typeof JobSkillsTemplate !== 'undefined' && JobSkillsTemplate.templates && JobSkillsTemplate.templates[skillId]) {
+                    skill = JobSkillsTemplate.templates[skillId];
+                }
+
+                // 如果找到了技能，并且是被动技能
+                if (skill && (skill.passive || (skill.effects && skill.effects.some(e => e.passive)))) {
+                    this.logBattle(`应用被动技能: ${skill.name}`);
+
+                    // 应用被动技能效果
+                    if (skill.effects) {
+                        for (const effect of skill.effects) {
+                            if (effect.passive) {
+                                // DA和TA提升
+                                if (effect.type === 'daBoost') {
+                                    daRate += effect.value;
+                                    this.logBattle(`DA率提升: +${effect.value * 100}% (来自被动技能: ${skill.name})`);
+                                }
+                                if (effect.type === 'taBoost') {
+                                    taRate += effect.value;
+                                    this.logBattle(`TA率提升: +${effect.value * 100}% (来自被动技能: ${skill.name})`);
+                                }
+
+                                // 攻击力提升
+                                if (effect.type === 'attackUp') {
+                                    const attackBoost = character.currentStats.attack * effect.value;
+                                    character.currentStats.attack += attackBoost;
+                                    this.logBattle(`攻击力提升: +${Math.floor(attackBoost)} (来自被动技能: ${skill.name})`);
+                                }
+
+                                // 防御力提升
+                                if (effect.type === 'defenseUp') {
+                                    const defenseBoost = character.currentStats.defense * effect.value;
+                                    character.currentStats.defense += defenseBoost;
+                                    this.logBattle(`防御力提升: +${Math.floor(defenseBoost)} (来自被动技能: ${skill.name})`);
+                                }
+
+                                // 生命值提升
+                                if (effect.type === 'hpUp') {
+                                    const hpBoost = character.currentStats.maxHp * effect.value;
+                                    character.currentStats.maxHp += hpBoost;
+                                    character.currentStats.hp += hpBoost;
+                                    this.logBattle(`生命值提升: +${Math.floor(hpBoost)} (来自被动技能: ${skill.name})`);
+                                }
+
+                                // 暴击率提升
+                                if (effect.type === 'critRateUp') {
+                                    character.currentStats.critRate = (character.currentStats.critRate || 0.05) + effect.value;
+                                    this.logBattle(`暴击率提升: +${effect.value * 100}% (来自被动技能: ${skill.name})`);
+                                }
+
+                                // 暴击伤害提升
+                                if (effect.type === 'critDamageUp') {
+                                    character.currentStats.critDamage = (character.currentStats.critDamage || 1.5) + effect.value;
+                                    this.logBattle(`暴击伤害提升: +${effect.value * 100}% (来自被动技能: ${skill.name})`);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // 显示最终DA和TA率
+        this.logBattle(`${character.name} 当前DA率: ${(daRate * 100).toFixed(1)}%, TA率: ${(taRate * 100).toFixed(1)}%`);
+
+        // 决定攻击类型
+        const roll = Math.random();
         let attackCount = 1;
+        let attackType = "普通攻击";
         let isDA = false;
         let isTA = false;
 
-        // 获取DA和TA概率
-        const daRate = character.currentStats.daRate || 0.15;
-        const taRate = character.currentStats.taRate || 0.05;
-
-        // 先检查TA，再检查DA
-        if (Math.random() < taRate) {
+        if (roll < taRate) {
             attackCount = 3;
+            attackType = "三重攻击";
             isTA = true;
             character.stats.taCount++;
-            this.logBattle(`${character.name} 触发三重攻击！`);
-        } else if (Math.random() < daRate) {
+            this.logBattle(`${character.name} 触发三重攻击！(概率: ${(taRate * 100).toFixed(1)}%)`);
+        } else if (roll < taRate + daRate) {
             attackCount = 2;
+            attackType = "双重攻击";
             isDA = true;
             character.stats.daCount++;
-            this.logBattle(`${character.name} 触发双重攻击！`);
+            this.logBattle(`${character.name} 触发双重攻击！(概率: ${(daRate * 100).toFixed(1)}%)`);
         }
 
         // 执行攻击
@@ -510,11 +822,13 @@ const Battle = {
             // 记录战斗日志
             let damageMessage = `${character.name} `;
 
-            if (i > 0) {
+            if (i === 0) {
+                damageMessage += `${attackType}，`;
+            } else {
                 damageMessage += `第${i+1}次攻击 `;
             }
 
-            damageMessage += `攻击 ${monster.name}，造成 ${damageResult.damage} 点伤害`;
+            damageMessage += `对 ${monster.name} 造成 ${damageResult.damage} 点伤害`;
 
             if (damageResult.isCritical) {
                 damageMessage += '（暴击！）';
@@ -527,6 +841,10 @@ const Battle = {
             }
 
             this.logBattle(damageMessage);
+        }
+
+        if (attackCount > 1) {
+            this.logBattle(`${character.name} 总共造成 ${totalDamage} 点伤害！`);
         }
 
         // 更新角色伤害统计
@@ -568,59 +886,367 @@ const Battle = {
 
         const target = aliveMembers[Math.floor(Math.random() * aliveMembers.length)];
 
-        // 检查DA和TA触发（怪物也可以有多重攻击）
-        let attackCount = 1;
-        let isDA = false;
-        let isTA = false;
+        // 1. 使用技能阶段
+        this.logBattle(`\n----- ${monster.name} 技能阶段 -----`);
 
-        // 获取DA和TA概率
-        const daRate = monster.currentStats.daRate || 0.1; // 怪物默认10%双重攻击率
-        const taRate = monster.currentStats.taRate || 0.03; // 怪物默认3%三重攻击率
-
-        // 先检查TA，再检查DA
-        if (Math.random() < taRate) {
-            attackCount = 3;
-            isTA = true;
-            this.logBattle(`${monster.name} 触发三重攻击！`);
-        } else if (Math.random() < daRate) {
-            attackCount = 2;
-            isDA = true;
-            this.logBattle(`${monster.name} 触发双重攻击！`);
+        // 初始化技能冷却
+        if (!monster.skillCooldowns) {
+            monster.skillCooldowns = {};
         }
 
-        // 执行攻击
-        let totalDamage = 0;
-        for (let i = 0; i < attackCount; i++) {
-            // 检查目标是否已被击败
-            if (target.currentStats.hp <= 0) break;
-
-            // 计算伤害（简化版，可以根据需要扩展）
-            const damage = Math.floor(monster.currentStats.attack * (100 - target.currentStats.defense) / 100);
-
-            // 应用伤害
-            target.currentStats.hp = Math.max(0, target.currentStats.hp - damage);
-
-            // 累计伤害
-            totalDamage += damage;
-
-            // 记录战斗日志
-            let damageMessage = `${monster.name} `;
-
-            if (i > 0) {
-                damageMessage += `第${i+1}次攻击 `;
+        // 获取可用技能（没有冷却的主动技能）
+        const availableSkills = monster.skills ? monster.skills.filter(skillId => {
+            // 首先检查冷却
+            if (monster.skillCooldowns[skillId] && monster.skillCooldowns[skillId] > 0) {
+                return false;
             }
 
-            damageMessage += `攻击 ${target.name}，造成 ${damage} 点伤害`;
+            // 然后检查是否是被动技能
+            let skill = null;
 
-            this.logBattle(damageMessage);
+            // 如果有全局的bossSkills对象
+            if (typeof window !== 'undefined' && window.bossSkills && window.bossSkills[skillId]) {
+                skill = window.bossSkills[skillId];
+            }
+
+            // 如果JobSystem中有这个技能
+            if (!skill && typeof JobSystem !== 'undefined' && typeof JobSystem.getSkill === 'function') {
+                skill = JobSystem.getSkill(skillId);
+            }
+
+            // 如果JobSkillsTemplate中有这个技能
+            if (!skill && typeof JobSkillsTemplate !== 'undefined' && JobSkillsTemplate.templates && JobSkillsTemplate.templates[skillId]) {
+                skill = JobSkillsTemplate.templates[skillId];
+            }
+
+            // 如果找到了技能，检查是否是被动技能
+            if (skill) {
+                // 如果技能有passive属性且为true，则是被动技能，不应该主动使用
+                return !skill.passive;
+            }
+
+            // 如果找不到技能定义，默认认为是主动技能
+            return true;
+        }) : [];
+
+        let usedSkill = false;
+
+        if (availableSkills && availableSkills.length > 0) {
+            // 随机选择一个技能
+            const skillId = availableSkills[Math.floor(Math.random() * availableSkills.length)];
+
+            // 首先尝试从bossSkills获取技能
+            let skill = null;
+
+            // 如果有全局的bossSkills对象
+            if (typeof window !== 'undefined' && window.bossSkills && window.bossSkills[skillId]) {
+                skill = window.bossSkills[skillId];
+            }
+
+            // 如果JobSystem中有这个技能
+            if (!skill && typeof JobSystem !== 'undefined' && typeof JobSystem.getSkill === 'function') {
+                skill = JobSystem.getSkill(skillId);
+            }
+
+            // 如果JobSkillsTemplate中有这个技能
+            if (!skill && typeof JobSkillsTemplate !== 'undefined' && JobSkillsTemplate.templates && JobSkillsTemplate.templates[skillId]) {
+                skill = JobSkillsTemplate.templates[skillId];
+            }
+
+            if (skill) {
+                this.logBattle(`${monster.name} 选择使用技能: ${skill.name}`);
+
+                // 使用技能
+                try {
+                    // 确保BOSS有ID
+                    if (!monster.id) {
+                        monster.id = `boss_${Date.now()}`;
+                    }
+
+                    // 确保Character对象中有BOSS
+                    if (typeof Character !== 'undefined') {
+                        Character.characters = Character.characters || {};
+                        Character.characters[monster.id] = monster;
+                    }
+
+                    // 确保JobSkillsTemplate中有技能模板
+                    if (typeof JobSkillsTemplate !== 'undefined' && !JobSkillsTemplate.templates[skillId]) {
+                        JobSkillsTemplate.templates[skillId] = skill;
+                    }
+
+                    // 尝试使用JobSkills.useSkill方法
+                    if (typeof JobSkills !== 'undefined' && typeof JobSkills.useSkill === 'function') {
+                        try {
+                            const result = JobSkills.useSkill(monster.id, skillId, [monster], target);
+                            if (result.success) {
+                                this.logBattle(result.message);
+
+                                // 设置技能冷却
+                                monster.skillCooldowns[skillId] = skill.cooldown || 3;
+                                this.logBattle(`技能 ${skill.name} 进入冷却状态 (${skill.cooldown || 3} 回合)`);
+
+                                usedSkill = true;
+                            } else {
+                                this.logBattle(`BOSS技能使用失败: ${result.message || '未知原因'}`);
+                            }
+                        } catch (error) {
+                            this.logBattle(`BOSS技能使用出错: ${error.message}`);
+                            console.error("BOSS技能使用错误:", error);
+                        }
+                    }
+
+                    // 如果JobSkills.useSkill不可用或失败，手动处理技能效果
+                    if (!usedSkill) {
+                        if (skill.effectType === 'damage' || skill.effectType === 'damage_and_debuff') {
+                            // 计算伤害
+                            let damage = 0;
+                            for (const effect of skill.effects) {
+                                if (effect.type === 'damage') {
+                                    const multiplier = effect.multiplier || 1.0;
+                                    // 增加基础伤害，以适应更高的生命值
+                                    damage += Math.floor(monster.currentStats.attack * multiplier * (100 - target.currentStats.defense) / 100);
+                                }
+                            }
+
+                            // 应用伤害
+                            target.currentStats.hp = Math.max(0, target.currentStats.hp - damage);
+
+                            // 更新怪物伤害统计
+                            monster.stats.totalDamage += damage;
+
+                            // 更新战斗统计
+                            if (battleStats && battleStats.monsterStats) {
+                                battleStats.monsterStats.totalDamage += damage;
+                            }
+
+                            this.logBattle(`${monster.name} 使用了 ${skill.name}，对 ${target.name} 造成 ${damage} 点伤害！`);
+
+                            // 应用debuff
+                            if (skill.effectType === 'damage_and_debuff') {
+                                for (const effect of skill.effects) {
+                                    if (effect.type !== 'damage') {
+                                        this.logBattle(`${target.name} 受到了 ${effect.type} 效果！`);
+
+                                        // 如果有BuffSystem，应用debuff
+                                        if (typeof BuffSystem !== 'undefined') {
+                                            const buff = BuffSystem.createBuff(effect.type, effect.value, effect.duration || 3, monster);
+                                            if (buff) {
+                                                BuffSystem.applyBuff(target, buff);
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        } else if (skill.effectType === 'buff') {
+                            // 应用buff
+                            this.logBattle(`${monster.name} 使用了 ${skill.name}，获得了增益效果！`);
+
+                            // 如果有BuffSystem，应用buff
+                            if (typeof BuffSystem !== 'undefined') {
+                                for (const effect of skill.effects) {
+                                    const buff = BuffSystem.createBuff(effect.type, effect.value, effect.duration || 3, monster);
+                                    if (buff) {
+                                        BuffSystem.applyBuff(monster, buff);
+                                    }
+                                }
+                            }
+                        } else if (skill.effectType === 'debuff') {
+                            // 应用debuff
+                            this.logBattle(`${monster.name} 使用了 ${skill.name}，对 ${target.name} 施加了减益效果！`);
+
+                            // 如果有BuffSystem，应用debuff
+                            if (typeof BuffSystem !== 'undefined') {
+                                for (const effect of skill.effects) {
+                                    const buff = BuffSystem.createBuff(effect.type, effect.value, effect.duration || 3, monster);
+                                    if (buff) {
+                                        BuffSystem.applyBuff(target, buff);
+                                    }
+                                }
+                            }
+                        }
+
+                        // 设置技能冷却
+                        monster.skillCooldowns[skillId] = skill.cooldown || 3;
+                        this.logBattle(`技能 ${skill.name} 进入冷却状态 (${skill.cooldown || 3} 回合)`);
+
+                        usedSkill = true;
+                    }
+                } catch (error) {
+                    this.logBattle(`BOSS技能使用出错: ${error.message}`);
+                    console.error("BOSS技能使用错误:", error);
+                }
+            }
         }
 
-        // 更新怪物伤害统计
-        monster.stats.totalDamage += totalDamage;
+        // 2. 普通攻击阶段（如果没有使用技能）
+        if (!usedSkill) {
+            this.logBattle(`\n----- ${monster.name} 普通攻击阶段 -----`);
 
-        // 更新战斗统计
-        if (battleStats && battleStats.monsterStats) {
-            battleStats.monsterStats.totalDamage += totalDamage;
+            // 显示当前BUFF信息
+            if (monster.buffs && monster.buffs.length > 0) {
+                this.logBattle(`${monster.name} 当前BUFF:`);
+                for (const buff of monster.buffs) {
+                    const source = buff.source ? `(来自: ${buff.source.name})` : '';
+                    const duration = buff.duration > 0 ? `(剩余: ${buff.duration}回合)` : '';
+                    this.logBattle(`- ${buff.name}: ${buff.description} ${source} ${duration}`);
+                }
+            }
+
+            // 计算DA和TA率
+            let daRate = monster.currentStats.daRate || 0.1; // 怪物默认10%双重攻击率
+            let taRate = monster.currentStats.taRate || 0.03; // 怪物默认3%三重攻击率
+
+            // 应用BUFF效果
+            if (monster.buffs) {
+                for (const buff of monster.buffs) {
+                    if (buff.type === 'daBoost') {
+                        daRate += buff.value;
+                        this.logBattle(`BOSS DA率提升: +${buff.value * 100}% (来自: ${buff.name})`);
+                    }
+                    if (buff.type === 'taBoost') {
+                        taRate += buff.value;
+                        this.logBattle(`BOSS TA率提升: +${buff.value * 100}% (来自: ${buff.name})`);
+                    }
+                }
+            }
+
+            // 应用被动技能效果
+            if (monster.skills) {
+                for (const skillId of monster.skills) {
+                    // 获取技能定义
+                    let skill = null;
+
+                    // 如果有全局的bossSkills对象
+                    if (typeof window !== 'undefined' && window.bossSkills && window.bossSkills[skillId]) {
+                        skill = window.bossSkills[skillId];
+                    }
+
+                    // 如果JobSystem中有这个技能
+                    if (!skill && typeof JobSystem !== 'undefined' && typeof JobSystem.getSkill === 'function') {
+                        skill = JobSystem.getSkill(skillId);
+                    }
+
+                    // 如果JobSkillsTemplate中有这个技能
+                    if (!skill && typeof JobSkillsTemplate !== 'undefined' && JobSkillsTemplate.templates && JobSkillsTemplate.templates[skillId]) {
+                        skill = JobSkillsTemplate.templates[skillId];
+                    }
+
+                    // 如果找到了技能，并且是被动技能
+                    if (skill && (skill.passive || (skill.effects && skill.effects.some(e => e.passive)))) {
+                        this.logBattle(`应用BOSS被动技能: ${skill.name}`);
+
+                        // 应用被动技能效果
+                        if (skill.effects) {
+                            for (const effect of skill.effects) {
+                                if (effect.passive) {
+                                    // DA和TA提升
+                                    if (effect.type === 'daBoost') {
+                                        daRate += effect.value;
+                                        this.logBattle(`BOSS DA率提升: +${effect.value * 100}% (来自被动技能: ${skill.name})`);
+                                    }
+                                    if (effect.type === 'taBoost') {
+                                        taRate += effect.value;
+                                        this.logBattle(`BOSS TA率提升: +${effect.value * 100}% (来自被动技能: ${skill.name})`);
+                                    }
+
+                                    // 攻击力提升
+                                    if (effect.type === 'attackUp') {
+                                        const attackBoost = monster.currentStats.attack * effect.value;
+                                        monster.currentStats.attack += attackBoost;
+                                        this.logBattle(`BOSS攻击力提升: +${Math.floor(attackBoost)} (来自被动技能: ${skill.name})`);
+                                    }
+
+                                    // 防御力提升
+                                    if (effect.type === 'defenseUp') {
+                                        const defenseBoost = monster.currentStats.defense * effect.value;
+                                        monster.currentStats.defense += defenseBoost;
+                                        this.logBattle(`BOSS防御力提升: +${Math.floor(defenseBoost)} (来自被动技能: ${skill.name})`);
+                                    }
+
+                                    // 生命值提升
+                                    if (effect.type === 'hpUp') {
+                                        const hpBoost = monster.currentStats.maxHp * effect.value;
+                                        monster.currentStats.maxHp += hpBoost;
+                                        monster.currentStats.hp += hpBoost;
+                                        this.logBattle(`BOSS生命值提升: +${Math.floor(hpBoost)} (来自被动技能: ${skill.name})`);
+                                    }
+
+                                    // 暴击率提升
+                                    if (effect.type === 'critRateUp') {
+                                        monster.currentStats.critRate = (monster.currentStats.critRate || 0.05) + effect.value;
+                                        this.logBattle(`BOSS暴击率提升: +${effect.value * 100}% (来自被动技能: ${skill.name})`);
+                                    }
+
+                                    // 暴击伤害提升
+                                    if (effect.type === 'critDamageUp') {
+                                        monster.currentStats.critDamage = (monster.currentStats.critDamage || 1.5) + effect.value;
+                                        this.logBattle(`BOSS暴击伤害提升: +${effect.value * 100}% (来自被动技能: ${skill.name})`);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            // 显示最终DA和TA率
+            this.logBattle(`${monster.name} 当前DA率: ${(daRate * 100).toFixed(1)}%, TA率: ${(taRate * 100).toFixed(1)}%`);
+
+            // 决定攻击类型
+            const roll = Math.random();
+            let attackCount = 1;
+            let attackType = "普通攻击";
+
+            if (roll < taRate) {
+                attackCount = 3;
+                attackType = "三重攻击";
+                this.logBattle(`${monster.name} 触发三重攻击！(概率: ${(taRate * 100).toFixed(1)}%)`);
+            } else if (roll < taRate + daRate) {
+                attackCount = 2;
+                attackType = "双重攻击";
+                this.logBattle(`${monster.name} 触发双重攻击！(概率: ${(daRate * 100).toFixed(1)}%)`);
+            }
+
+            // 执行攻击
+            let totalDamage = 0;
+            for (let i = 0; i < attackCount; i++) {
+                // 检查目标是否已被击败
+                if (target.currentStats.hp <= 0) break;
+
+                // 计算伤害（简化版，可以根据需要扩展）
+                const damage = Math.floor(monster.currentStats.attack * (100 - target.currentStats.defense) / 100);
+
+                // 应用伤害
+                target.currentStats.hp = Math.max(0, target.currentStats.hp - damage);
+
+                // 累计伤害
+                totalDamage += damage;
+
+                // 记录战斗日志
+                let damageMessage = `${monster.name} `;
+
+                if (i === 0) {
+                    damageMessage += `${attackType}，`;
+                } else {
+                    damageMessage += `第${i+1}次攻击 `;
+                }
+
+                damageMessage += `对 ${target.name} 造成 ${damage} 点伤害`;
+
+                this.logBattle(damageMessage);
+            }
+
+            if (attackCount > 1) {
+                this.logBattle(`${monster.name} 总共造成 ${totalDamage} 点伤害！`);
+            }
+
+            // 更新怪物伤害统计
+            monster.stats.totalDamage += totalDamage;
+
+            // 更新战斗统计
+            if (battleStats && battleStats.monsterStats) {
+                battleStats.monsterStats.totalDamage += totalDamage;
+            }
         }
 
         // 检查角色是否被击败

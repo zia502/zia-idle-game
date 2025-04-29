@@ -352,12 +352,12 @@ const JobSkills = {
             window.log(`目标防御力: ${target.currentStats?.defense || '未知'} (${(target.currentStats?.defense * 100).toFixed(1)}%)`);
             window.log(`原始伤害(rawDamage): ${rawDamage}`);
         }
-        
+
         // 检查攻击者是否有命中率降低debuff
         if (source.buffs && !options.ignoreHitRate) {
             const missRateBuffs = source.buffs.filter(buff => buff.type === 'missRate');
             let totalMissRate = 0;
-            
+
             for (const buff of missRateBuffs) {
                 totalMissRate += buff.value;
                 console.log(`攻击者有命中率降低debuff: ${buff.name}, 降低值: ${(buff.value * 100).toFixed(1)}%`);
@@ -365,7 +365,7 @@ const JobSkills = {
                     window.log(`攻击者有命中率降低debuff: ${buff.name}, 降低值: ${(buff.value * 100).toFixed(1)}%`);
                 }
             }
-            
+
             // 如果有命中率降低效果，进行命中判定
             if (totalMissRate > 0) {
                 const hitRoll = Math.random();
@@ -373,7 +373,7 @@ const JobSkills = {
                 if (typeof window !== 'undefined' && window.log) {
                     window.log(`命中判定: 随机值 ${hitRoll.toFixed(4)} vs 未命中率 ${totalMissRate.toFixed(4)}`);
                 }
-                
+
                 if (hitRoll < totalMissRate) {
                     // 攻击未命中
                     console.log(`攻击未命中！`);
@@ -628,6 +628,25 @@ const JobSkills = {
                     // 应用伤害到目标，考虑BUFF和DEBUFF
                     const actualDamage = this.applyDamageToTarget(character, target, rawDamage, { randomApplied: false });
 
+                    // 记录旧HP值
+                    const oldHp = target.currentStats.hp;
+
+                    // 确保伤害是有效数字
+                    let damage = actualDamage.damage;
+                    if (isNaN(damage) || damage === undefined) {
+                        console.error("伤害值为NaN或undefined，设置为0");
+                        damage = 0;
+                    }
+
+                    // 实际应用伤害到目标HP
+                    target.currentStats.hp = Math.max(0, target.currentStats.hp - damage);
+
+                    // 记录HP变化
+                    console.log(`${target.name} HP: ${Math.floor(oldHp)} -> ${Math.floor(target.currentStats.hp)} (-${damage})`);
+                    if (typeof window !== 'undefined' && window.log) {
+                        window.log(`${target.name} HP: ${Math.floor(oldHp)} -> ${Math.floor(target.currentStats.hp)} (-${damage})`);
+                    }
+
                     // 更新伤害统计
                     character.stats.totalDamage += actualDamage.damage;
                     totalDamage += actualDamage.damage;
@@ -678,11 +697,11 @@ const JobSkills = {
         const targets = this.getTargets(character, template.targetType, teamMembers, monster);
         const effects = [];
         let totalHealing = 0;
-        
+
         // 输出调试信息
         console.log(`治疗技能目标类型: ${template.targetType}`);
         console.log(`施法者: ${character.name}, HP: ${character.currentStats.hp}/${character.currentStats.maxHp}`);
-        
+
         // 如果是自身治疗，直接检查施法者是否需要治疗
         if (template.targetType === 'self') {
             if (character.currentStats.hp >= character.currentStats.maxHp) {
@@ -698,15 +717,15 @@ const JobSkills = {
             }
         } else {
             // 对于其他目标类型，检查是否有需要治疗的目标
-            const needsHealing = targets.some(target => 
+            const needsHealing = targets.some(target =>
                 target.currentStats.hp > 0 && target.currentStats.hp < target.currentStats.maxHp
             );
-            
+
             // 输出目标状态
             targets.forEach(target => {
                 console.log(`目标: ${target.name}, HP: ${target.currentStats.hp}/${target.currentStats.maxHp}`);
             });
-            
+
             // 如果没有需要治疗的目标，返回相应消息
             if (!needsHealing) {
                 return {
@@ -987,6 +1006,35 @@ const JobSkills = {
                         // 应用伤害到目标，考虑BUFF和DEBUFF
                         const actualDamage = this.applyDamageToTarget(character, target, rawDamage, { randomApplied: false });
 
+                        // 记录旧HP值
+                        const oldHp = target.currentStats.hp;
+
+                        // 检查HP是否为NaN
+                        if (isNaN(oldHp) || oldHp === undefined) {
+                            console.error("目标HP为NaN或undefined，尝试修复");
+                            target.currentStats.hp = target.currentStats.maxHp || 10000;
+                            if (isNaN(target.currentStats.hp)) {
+                                target.currentStats.hp = 10000;
+                                target.currentStats.maxHp = 10000;
+                            }
+                        }
+
+                        // 确保伤害是有效数字
+                        let damage = actualDamage.damage;
+                        if (isNaN(damage) || damage === undefined) {
+                            console.error("伤害值为NaN或undefined，设置为0");
+                            damage = 0;
+                        }
+
+                        // 实际应用伤害到目标HP
+                        target.currentStats.hp = Math.max(0, target.currentStats.hp - damage);
+
+                        // 记录HP变化
+                        console.log(`${target.name} HP: ${Math.floor(oldHp)} -> ${Math.floor(target.currentStats.hp)} (-${damage})`);
+                        if (typeof window !== 'undefined' && window.log) {
+                            window.log(`${target.name} HP: ${Math.floor(oldHp)} -> ${Math.floor(target.currentStats.hp)} (-${damage})`);
+                        }
+
                         // 更新伤害统计
                         character.stats.totalDamage += actualDamage.damage;
                         totalDamage += actualDamage.damage;
@@ -1128,15 +1176,15 @@ const JobSkills = {
                 // 选择生命值最低的队友（包括施法者自身）
                 const allMembers = teamMembers.filter(member => member.currentStats.hp > 0);
                 if (allMembers.length === 0) return [];
-                
+
                 // 排序所有成员（包括施法者）按生命值百分比
                 allMembers.sort((a, b) => (a.currentStats.hp / a.currentStats.maxHp) - (b.currentStats.hp / b.currentStats.maxHp));
-                
+
                 // 输出所有成员的生命值状态
                 allMembers.forEach(member => {
                     console.log(`成员: ${member.name}, HP: ${member.currentStats.hp}/${member.currentStats.maxHp}, 百分比: ${(member.currentStats.hp / member.currentStats.maxHp * 100).toFixed(1)}%`);
                 });
-                
+
                 // 返回生命值最低的成员
                 return [allMembers[0]];
             case 'all_allies':

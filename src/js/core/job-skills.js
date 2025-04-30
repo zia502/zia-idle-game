@@ -1022,7 +1022,10 @@ const JobSkills = {
                         const rawDamage = Math.floor(character.currentStats.attack * damageMultiplier);
 
                         // 应用伤害到目标，考虑BUFF和DEBUFF
-                        const actualDamage = this.applyDamageToTarget(character, target, rawDamage, { randomApplied: false });
+                        const actualDamage = this.applyDamageToTarget(character, target, rawDamage, { 
+                            randomApplied: false,
+                            skipStats: false
+                        });
 
                         // 记录旧HP值
                         const oldHp = target.currentStats.hp;
@@ -1065,6 +1068,42 @@ const JobSkills = {
                         attackCount,
                         damageMultiplier,
                         attackDamage
+                    });
+                } else if (effect.type === 'damage') {
+                    // 普通伤害
+                    const rawDamage = Math.floor(character.currentStats.attack * (effect.multiplier || 1.0));
+                    const actualDamage = this.applyDamageToTarget(character, target, rawDamage, {
+                        randomApplied: false,
+                        skipStats: false
+                    });
+
+                    // 记录旧HP值
+                    const oldHp = target.currentStats.hp;
+
+                    // 确保伤害是有效数字
+                    let damage = actualDamage.damage;
+                    if (isNaN(damage) || damage === undefined) {
+                        console.error("伤害值为NaN或undefined，设置为0");
+                        damage = 0;
+                    }
+
+                    // 实际应用伤害到目标HP
+                    target.currentStats.hp = Math.max(0, target.currentStats.hp - damage);
+
+                    // 记录HP变化
+                    console.log(`${target.name} HP: ${Math.floor(oldHp)} -> ${Math.floor(target.currentStats.hp)} (-${damage})`);
+                    if (typeof window !== 'undefined' && window.log) {
+                        window.log(`${target.name} HP: ${Math.floor(oldHp)} -> ${Math.floor(target.currentStats.hp)} (-${damage})`);
+                    }
+
+                    // 更新伤害统计
+                    character.stats.totalDamage += actualDamage.damage;
+                    totalDamage += actualDamage.damage;
+
+                    effects.push({
+                        target: target.name,
+                        type: 'damage',
+                        damage: actualDamage.damage
                     });
                 }
             }

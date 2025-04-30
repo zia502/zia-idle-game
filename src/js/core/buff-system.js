@@ -139,6 +139,14 @@ const BuffSystem = {
             canDispel: true,
             stackable: true
         },
+        chase: {
+            name: '追击',
+            description: '普通攻击额外造成一定百分比的伤害',
+            icon: '⚔️↗️',
+            isPositive: true,
+            canDispel: true,
+            stackable: false
+        },
 
         // 持续伤害/治疗
         dot: {
@@ -332,7 +340,12 @@ const BuffSystem = {
             if (existingBuff) {
                 // 已存在同类型BUFF，更新持续时间和效果值
                 existingBuff.duration = Math.max(existingBuff.duration, buff.duration);
-                existingBuff.value = Math.max(existingBuff.value, buff.value);
+                // 对于追击buff，只保留效果量最大的
+                if (buff.type === 'chase') {
+                    existingBuff.value = Math.max(existingBuff.value, buff.value);
+                } else {
+                    existingBuff.value = buff.value;
+                }
             } else {
                 // 不存在同类型BUFF，添加新BUFF
                 target.buffs.push(buff);

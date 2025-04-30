@@ -1075,17 +1075,24 @@ const Battle = {
                 } else if (damageResult.attributeBonus < 0) {
                     damageMessage += '（属性被克制！）';
                 }
-
-                if (damageResult.skillBonus > 0) {
-                    damageMessage += `（技能加成：+${Math.floor(damageResult.skillBonus)}）`;
-                }
-
-                if (damageResult.buffBonus > 0) {
-                    damageMessage += `（BUFF加成：+${Math.floor(damageResult.buffBonus)}）`;
-                }
             }
 
             this.logBattle(damageMessage);
+
+            // 检查是否有追击BUFF
+            if (character.buffs && character.buffs.some(buff => buff.type === 'chase')) {
+                const chaseBuff = character.buffs.find(buff => buff.type === 'chase');
+                if (chaseBuff && chaseBuff.value > 0) {
+                    // 计算追击伤害
+                    const chaseDamage = Math.floor(damageResult.damage * chaseBuff.value);
+                    if (chaseDamage > 0) {
+                        monster.currentStats.hp = Math.max(0, monster.currentStats.hp - chaseDamage);
+                        totalDamage += chaseDamage;
+                        this.logBattle(`${character.name} 触发追击效果，额外造成 ${chaseDamage} 点伤害！`);
+                        this.logBattle(`${monster.name} HP: ${Math.floor(monster.currentStats.hp + chaseDamage)} -> ${Math.floor(monster.currentStats.hp)} (-${chaseDamage})`);
+                    }
+                }
+            }
         }
 
         if (attackCount > 1) {
@@ -1537,8 +1544,8 @@ const Battle = {
                 if (damageResult.isCritical) {
                     monster.stats.critCount++;
                 }
-
-                // 记录战斗日志
+                    
+                    // 记录战斗日志
                 let damageMessage = `${monster.name} `;
 
                 if (i === 0) {

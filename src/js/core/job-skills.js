@@ -590,11 +590,16 @@ const JobSkills = {
 
         // 应用伤害上限
         const beforeCap = finalDamage;
-        finalDamage = Math.min(finalDamage, 99999);
-        if (beforeCap > 99999) {
-            console.log(`伤害超过上限: ${beforeCap.toFixed(2)} → 99999`);
+        // 如果是技能伤害（通过options.skipCritical判断），使用更高的上限
+        if (options.skipCritical) {
+            finalDamage = Math.min(finalDamage, 799999); // 技能伤害上限
+        } else {
+            finalDamage = Math.min(finalDamage, 199999); // 普通攻击伤害上限
+        }
+        if (beforeCap > finalDamage) {
+            console.log(`伤害超过上限: ${beforeCap.toFixed(2)} → ${finalDamage}`);
             if (typeof window !== 'undefined' && window.log) {
-                window.log(`伤害超过上限: ${beforeCap.toFixed(2)} → 99999`);
+                window.log(`伤害超过上限: ${beforeCap.toFixed(2)} → ${finalDamage}`);
             }
         }
 

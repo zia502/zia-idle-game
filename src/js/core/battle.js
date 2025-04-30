@@ -517,6 +517,22 @@ const Battle = {
      * @param {array} teamMembers - 队伍成员
      */
     processBattleStartTraits(character, teamMembers) {
+        // 处理一次性被动技能
+        if (character.skills) {
+            for (const skillId of character.skills) {
+                const skill = JobSystem.getSkill(skillId);
+                if (skill && skill.passive && skill.oneTime) {
+                    // 处理一次性被动技能
+                    for (const effect of skill.effects) {
+                        if (effect.passive) {
+                            // 应用被动效果
+                            this.applyPassiveEffect(character, effect, teamMembers);
+                        }
+                    }
+                }
+            }
+        }
+        
         if (!character || !character.traits) return;
 
         for (const traitId of character.traits) {
@@ -534,6 +550,43 @@ const Battle = {
     },
 
     /**
+     * 应用被动效果
+     * @param {object} character - 角色对象
+     * @param {object} effect - 效果对象
+     * @param {array} teamMembers - 队伍成员
+     */
+    applyPassiveEffect(character, effect, teamMembers) {
+        switch (effect.type) {
+            case 'daBoost':
+                // 提升DA（连击）概率
+                character.currentStats.daBoost = (character.currentStats.daBoost || 0) + effect.value;
+                this.logBattle(`${character.name} 的被动技能提升了 ${effect.value * 100}% 的连击概率！`);
+                break;
+            case 'taBoost':
+                // 提升TA（三连击）概率
+                character.currentStats.taBoost = (character.currentStats.taBoost || 0) + effect.value;
+                this.logBattle(`${character.name} 的被动技能提升了 ${effect.value * 100}% 的三连击概率！`);
+                break;
+            case 'attackUp':
+                // 提升攻击力
+                character.currentStats.attack = Math.floor(character.currentStats.attack * (1 + effect.value));
+                this.logBattle(`${character.name} 的被动技能提升了 ${effect.value * 100}% 的攻击力！`);
+                break;
+            case 'defenseUp':
+                // 提升防御力
+                character.currentStats.defense = Math.floor(character.currentStats.defense * (1 + effect.value));
+                this.logBattle(`${character.name} 的被动技能提升了 ${effect.value * 100}% 的防御力！`);
+                break;
+            case 'speedUp':
+                // 提升速度
+                character.currentStats.speed = Math.floor(character.currentStats.speed * (1 + effect.value));
+                this.logBattle(`${character.name} 的被动技能提升了 ${effect.value * 100}% 的速度！`);
+                break;
+            // 可以添加其他类型的被动效果
+        }
+    },
+
+    /**
      * 处理回合开始时的BUFF效果
      * @param {array} teamMembers - 队伍成员
      * @param {object} monster - 怪物对象
@@ -542,7 +595,7 @@ const Battle = {
         // 处理队伍成员的BUFF
         for (const member of teamMembers) {
             if (member.currentStats.hp <= 0) continue;
-
+            
             if (typeof BuffSystem !== 'undefined') {
                 const result = BuffSystem.processBuffsAtTurnStart(member);
 
@@ -554,8 +607,29 @@ const Battle = {
                     this.logBattle(`${member.name} 恢复了 ${result.healing} 点生命值！`);
                 }
             }
+            
+            // 处理被动技能
+            if (member.skills) {
+                for (const skillId of member.skills) {
+                    const skill = JobSystem.getSkill(skillId);
+                    // 只处理非一次性被动技能
+                    if (skill && skill.passive && skill.effects) {
+                        // 检查是否是一次性被动技能
+                        if (skill.oneTime) {
+                            // 一次性被动技能已经在战斗开始时处理过，跳过
+                            continue;
+                        }
+                        // 处理非一次性被动技能
+                        for (const effect of skill.effects) {
+                            if (effect.type === 'startOfTurn') {
+                                this.processStartOfTurnEffect(member, effect.effect, teamMembers, monster);
+                            }
+                        }
+                    }
+                }
+            }
         }
-
+        
         // 处理怪物的BUFF
         if (monster.currentStats.hp > 0 && typeof BuffSystem !== 'undefined') {
             const result = BuffSystem.processBuffsAtTurnStart(monster);
@@ -911,8 +985,8 @@ const Battle = {
                     skill = JobSkillsTemplate.templates[skillId];
                 }
 
-                // 如果找到了技能，并且是被动技能
-                if (skill && (skill.passive || (skill.effects && skill.effects.some(e => e.passive)))) {
+                // 如果找到了技能，并且是被动技能，且不是一次性被动技能
+                if (skill && (skill.passive || (skill.effects && skill.effects.some(e => e.passive))) && !skill.oneTime) {
                     this.logBattle(`应用被动技能: ${skill.name}`);
 
                     // 应用被动技能效果

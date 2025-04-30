@@ -136,6 +136,7 @@ const JobSkillsTemplate = {
                 "cost": 0,
                 "fixed": false,
                 "passive": true,
+                "oneTime": true,
                 "effectType": "buff",
                 "targetType": "self",
                 "effects": [{"type": "daBoost", "value": 0.15, "passive": true}]

@@ -620,6 +620,7 @@
     "cost": 0,
     "fixed": false,
     "passive": true,
+    "oneTime": true,
     "effectType": "buff",
     "targetType": "self",
     "effects": [
@@ -873,6 +874,7 @@
     "cost": 0,
     "fixed": false,
     "passive": true,
+    "oneTime": true,
     "effectType": "buff",
     "targetType": "all_allies",
     "effects": [

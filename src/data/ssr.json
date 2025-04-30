@@ -60,14 +60,14 @@
     "type": "attack",
     "baseStats": {
       "hp": 264,
-      "maxHp": 1520,
+      "maxHp": 1464,
       "attack": 1650,
-      "maxAttack": 9600,
-      "defense": 0,
+      "maxAttack": 13680,
+      "defense": 10,
       "critRate": 0.05,
       "critDamage": 1.5,
-      "daRate": 0.1,
-      "taRate": 0.05
+      "daRate": 0.07,
+      "taRate": 0.03
     },
     "skills": ["windArrow", "stormShot", "hurricaneArrow"]
   },

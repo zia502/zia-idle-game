@@ -392,7 +392,7 @@ const JobSkills = {
         }
 
         // 原始伤害是"造成伤害"
-        let finalDamage = rawDamage;
+        let finalDamage = rawDamage / 10;  // 将原始伤害除以10
         let isCritical = false;
         let attributeBonus = 0;
 

@@ -274,6 +274,17 @@ const BuffSystem = {
             isPositive: true,
             canDispel: true,
             stackable: true
+        },
+
+        // 复合BUFF类型
+        compositeBuff: {
+            name: '复合BUFF',
+            description: '包含多个效果的BUFF',
+            icon: '✨',
+            isPositive: true,
+            canDispel: true,
+            stackable: true,
+            maxStacks: 3
         }
     },
 
@@ -285,10 +296,10 @@ const BuffSystem = {
     },
 
     /**
-     * 创建一个新的BUFF
+     * 创建一个BUFF
      * @param {string} type - BUFF类型
      * @param {number} value - BUFF效果值
-     * @param {number} duration - 持续回合数
+     * @param {number} duration - 持续回合数，-1表示永续
      * @param {object} source - BUFF来源
      * @returns {object} BUFF对象
      */
@@ -311,6 +322,35 @@ const BuffSystem = {
             isPositive: buffType.isPositive,
             canDispel: buffType.canDispel,
             stackable: buffType.stackable,
+            source: source ? { id: source.id, name: source.name } : null,
+            createdAt: Date.now()
+        };
+    },
+
+    /**
+     * 创建一个复合BUFF
+     * @param {string} name - BUFF名称
+     * @param {array} effects - 子效果数组
+     * @param {number} duration - 持续回合数
+     * @param {object} source - BUFF来源
+     * @param {number} maxStacks - 最大叠加层数
+     * @returns {object} 复合BUFF对象
+     */
+    createCompositeBuff(name, effects, duration, source = null, maxStacks = 3) {
+        return {
+            id: `composite_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
+            type: 'compositeBuff',
+            name,
+            description: '包含多个效果的BUFF',
+            icon: '✨',
+            effects,
+            duration,
+            initialDuration: duration,
+            isPositive: true,
+            canDispel: true,
+            stackable: true,
+            maxStacks,
+            currentStacks: 1,
             source: source ? { id: source.id, name: source.name } : null,
             createdAt: Date.now()
         };
@@ -359,6 +399,58 @@ const BuffSystem = {
     },
 
     /**
+     * 应用复合BUFF到目标
+     * @param {object} target - 目标对象
+     * @param {object} compositeBuff - 复合BUFF对象
+     * @returns {boolean} 是否成功应用
+     */
+    applyCompositeBuff(target, compositeBuff) {
+        if (!target || !compositeBuff) return false;
+
+        // 初始化目标的BUFF数组
+        if (!target.buffs) {
+            target.buffs = [];
+        }
+
+        // 检查是否已存在同名复合BUFF
+        const existingBuff = target.buffs.find(b => b.type === 'compositeBuff' && b.name === compositeBuff.name);
+        if (existingBuff) {
+            // 如果BUFF可叠加且未达到最大层数
+            if (existingBuff.stackable && existingBuff.currentStacks < existingBuff.maxStacks) {
+                // 增加层数
+                existingBuff.currentStacks++;
+                // 更新持续时间为最新值
+                existingBuff.duration = Math.max(existingBuff.duration, compositeBuff.duration);
+                
+                // 应用新的子效果
+                for (const effect of compositeBuff.effects) {
+                    const subBuff = this.createBuff(effect.type, effect.value, compositeBuff.duration, compositeBuff.source);
+                    if (subBuff) {
+                        this.applyBuff(target, subBuff);
+                    }
+                }
+            } else {
+                // 如果不可叠加或已达到最大层数，更新持续时间和效果
+                existingBuff.duration = Math.max(existingBuff.duration, compositeBuff.duration);
+                existingBuff.effects = compositeBuff.effects;
+            }
+        } else {
+            // 添加新复合BUFF
+            target.buffs.push(compositeBuff);
+            
+            // 应用所有子效果
+            for (const effect of compositeBuff.effects) {
+                const subBuff = this.createBuff(effect.type, effect.value, compositeBuff.duration, compositeBuff.source);
+                if (subBuff) {
+                    this.applyBuff(target, subBuff);
+                }
+            }
+        }
+
+        return true;
+    },
+
+    /**
      * 应用BUFF效果
      * @param {object} target - 目标对象
      * @param {object} buff - BUFF对象
@@ -396,6 +488,51 @@ const BuffSystem = {
 
         // 从数组中移除BUFF
         target.buffs.splice(buffIndex, 1);
+
+        return true;
+    },
+
+    /**
+     * 移除复合BUFF
+     * @param {object} target - 目标对象
+     * @param {string} buffId - BUFF ID
+     * @returns {boolean} 是否成功移除
+     */
+    removeCompositeBuff(target, buffId) {
+        if (!target || !target.buffs || !buffId) return false;
+
+        const buffIndex = target.buffs.findIndex(buff => buff.id === buffId);
+        if (buffIndex === -1) return false;
+
+        const buff = target.buffs[buffIndex];
+
+        // 如果是可叠加BUFF且当前层数大于1
+        if (buff.stackable && buff.currentStacks > 1) {
+            // 减少层数
+            buff.currentStacks--;
+            
+            // 移除一层子效果
+            for (const effect of buff.effects) {
+                const subBuffs = this.getBuffsByType(target, effect.type);
+                if (subBuffs.length > 0) {
+                    // 移除最新的一个子效果
+                    this.removeBuff(target, subBuffs[subBuffs.length - 1].id);
+                }
+            }
+        } else {
+            // 移除所有子效果
+            for (const effect of buff.effects) {
+                const subBuffs = this.getBuffsByType(target, effect.type);
+                for (const subBuff of subBuffs) {
+                    if (subBuff.source && subBuff.source.id === buff.source.id) {
+                        this.removeBuff(target, subBuff.id);
+                    }
+                }
+            }
+
+            // 从数组中移除复合BUFF
+            target.buffs.splice(buffIndex, 1);
+        }
 
         return true;
     },
@@ -452,7 +589,7 @@ const BuffSystem = {
     },
 
     /**
-     * 更新目标的BUFF持续时间
+     * 更新BUFF持续时间
      * @param {object} target - 目标对象
      * @returns {array} 已过期的BUFF数组
      */
@@ -464,10 +601,14 @@ const BuffSystem = {
         // 更新每个BUFF的持续时间
         for (let i = target.buffs.length - 1; i >= 0; i--) {
             const buff = target.buffs[i];
-            buff.duration--;
+            
+            // 永续BUFF（duration为-1）不减少持续时间
+            if (buff.duration > 0) {
+                buff.duration--;
+            }
 
             // 检查BUFF是否已过期
-            if (buff.duration <= 0) {
+            if (buff.duration === 0) {
                 // 移除BUFF效果
                 this.removeBuffEffect(target, buff);
 

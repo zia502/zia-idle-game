@@ -36,6 +36,18 @@ const JobSkills = {
             };
         }
 
+        // 检查技能是否有初始冷却
+        if (template.initialCooldown && template.initialCooldown > 0) {
+            if (!character.skillCooldowns) {
+                character.skillCooldowns = {};
+            }
+            character.skillCooldowns[skillId] = template.initialCooldown;
+            return {
+                success: false,
+                message: `技能 ${skill.name} 需要 ${template.initialCooldown} 回合后才能使用`
+            };
+        }
+
         // 根据技能类型处理
         let result;
         switch (template.effectType) {

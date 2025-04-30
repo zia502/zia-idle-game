@@ -1650,43 +1650,21 @@ const Battle = {
 
                                 // 应用伤害
                                 const oldHp = target.currentStats.hp;
-
-                                // 检查HP是否为NaN
-                                if (isNaN(oldHp) || oldHp === undefined) {
-                                    console.error("目标HP为NaN或undefined，尝试修复");
-                                    target.currentStats.hp = target.currentStats.maxHp || 1000;
-                                    if (isNaN(target.currentStats.hp)) {
-                                        target.currentStats.hp = 1000;
-                                        target.currentStats.maxHp = 1000;
-                                    }
-                                }
+                                const damage = actualDamage.damage || actualDamage;
 
                                 // 确保伤害是有效数字
-                                let damage = 0;
-
-                                // 打印actualDamage的类型和值，用于调试
-                                console.log("actualDamage类型:", typeof actualDamage);
-                                console.log("actualDamage值:", actualDamage);
-
-                                if (typeof actualDamage === 'object' && actualDamage !== null && 'damage' in actualDamage) {
-                                    damage = actualDamage.damage;
-                                    console.log("从对象中提取damage属性:", damage);
-                                } else if (typeof actualDamage === 'number') {
-                                    damage = actualDamage;
-                                    console.log("actualDamage是数字:", damage);
-                                } else {
-                                    console.error("actualDamage既不是对象也不是数字:", actualDamage);
-                                }
-
                                 if (isNaN(damage) || damage === undefined) {
-                                    console.error("被动技能伤害值为NaN或undefined，设置为0");
+                                    console.error("伤害值为NaN或undefined，设置为0");
                                     damage = 0;
                                 }
 
+                                // 记录伤害应用
+                                this.logBattle(`应用伤害: ${damage}`);
+
+                                // 应用伤害到目标HP
                                 target.currentStats.hp = Math.max(0, target.currentStats.hp - damage);
 
                                 // 记录HP变化
-                                this.logBattle(`应用伤害2: ${damage}`);
                                 this.logBattle(`${target.name} HP: ${Math.floor(oldHp)} -> ${Math.floor(target.currentStats.hp)} (-${damage})`);
 
                                 // 更新伤害统计

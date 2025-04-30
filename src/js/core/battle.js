@@ -1011,7 +1011,7 @@ const Battle = {
             if (monster.currentStats.hp <= 0) break;
 
             // 计算伤害
-            const rawDamage = character.currentStats.attack;
+            const rawDamage = Character.calculateAttackPower(character);
             const damageResult = JobSkills.applyDamageToTarget(character, monster, rawDamage, {
                 skipCritical: false,
                 randomApplied: false,
@@ -1496,7 +1496,7 @@ const Battle = {
                 if (target.currentStats.hp <= 0) break;
 
                 // 计算伤害
-                const rawDamage = monster.currentStats.attack;
+                const rawDamage = Character.calculateAttackPower(monster);
                 const damageResult = JobSkills.applyDamageToTarget(monster, target, rawDamage, {
                     skipCritical: false,
                     randomApplied: false,

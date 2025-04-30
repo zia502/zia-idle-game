@@ -1681,11 +1681,22 @@ const Character = {
             attackBuffPercentage += buff.value;
         }
 
-        // 根据README中的公式计算攻击力
-        // 攻击力=角色自身攻击力*（1+攻击力%提升值）*（1+浑身BUFF）*（1+背水BUFF）*（1+攻击力EX%提升值）+ 伤害上升总合
+        // 应用攻击力降低BUFF
+        const attackDownBuffs = buffs.filter(buff => buff.type === 'attackDown');
+        let attackDownPercentage = 0;
 
-        // 应用攻击力%提升值
-        attackPower *= (1 + attackBuffPercentage);
+        for (const buff of attackDownBuffs) {
+            attackDownPercentage += buff.value;
+        }
+
+        // 限制总攻击力降低不超过50%
+        attackDownPercentage = Math.min(attackDownPercentage, 0.5);
+
+        // 根据README中的公式计算攻击力
+        // 攻击力=角色自身攻击力*（1+攻击力%提升值）*（1-攻击力%降低值）*（1+浑身BUFF）*（1+背水BUFF）*（1+攻击力EX%提升值）+ 伤害上升总合
+
+        // 应用攻击力%提升值和降低值
+        attackPower *= (1 + attackBuffPercentage - attackDownPercentage);
 
         // 获取角色的血量百分比
         const hpPercentage = character.currentStats.hp / character.currentStats.maxHp;

@@ -641,7 +641,7 @@ const JobSkills = {
                     }
 
                     // 计算原始伤害
-                    const rawDamage = Math.floor(character.currentStats.attack * damageMultiplier);
+                    const rawDamage = Math.floor(Character.calculateAttackPower(character) * damageMultiplier);
 
                     // 应用伤害到目标，考虑BUFF和DEBUFF
                     const actualDamage = this.applyDamageToTarget(character, target, rawDamage, { randomApplied: false });
@@ -1019,7 +1019,7 @@ const JobSkills = {
                         if (target.currentStats.hp <= 0) break;
 
                         // 计算原始伤害
-                        const rawDamage = Math.floor(character.currentStats.attack * damageMultiplier);
+                        const rawDamage = Math.floor(Character.calculateAttackPower(character) * damageMultiplier);
 
                         // 应用伤害到目标，考虑BUFF和DEBUFF
                         const actualDamage = this.applyDamageToTarget(character, target, rawDamage, { 
@@ -1071,7 +1071,7 @@ const JobSkills = {
                     });
                 } else if (effect.type === 'damage') {
                     // 普通伤害
-                    const rawDamage = Math.floor(character.currentStats.attack * (effect.multiplier || 1.0));
+                    const rawDamage = Math.floor(Character.calculateAttackPower(character) * (effect.multiplier || 1.0));
                     const actualDamage = this.applyDamageToTarget(character, target, rawDamage, {
                         randomApplied: false,
                         skipStats: false

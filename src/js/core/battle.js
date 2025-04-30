@@ -1823,6 +1823,9 @@ const Battle = {
                             if (typeof this.applyDamageToTarget === 'function') {
                                 // 技能伤害不触发暴击
                                 actualDamage = this.applyDamageToTarget(source, target, rawDamage, { skipCritical: true });
+                            } else if (typeof JobSkills !== 'undefined' && typeof JobSkills.applyDamageToTarget === 'function') {
+                                // 使用JobSkills的方法，并跳过暴击计算
+                                actualDamage = JobSkills.applyDamageToTarget(source, target, rawDamage, { skipCritical: true });
                             } else {
                                 // 简化的伤害计算
                                 const defense = target.currentStats.defense || 0;

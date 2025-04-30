@@ -446,8 +446,8 @@ const JobSkills = {
             // 限制总防御力降低不超过50
             totalDefenseDown = Math.min(totalDefenseDown, 50);
             console.log(`应用防御力降低${totalDefenseDown}%`);
-            // 临时降低防御力
-            tempDefense -= totalDefenseDown;
+            // 临时降低防御力，确保不会小于0
+            tempDefense = Math.max(0, tempDefense - totalDefenseDown);
         }
 
         // 应用属性克制

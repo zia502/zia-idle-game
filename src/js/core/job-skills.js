@@ -287,7 +287,7 @@ const JobSkills = {
                     desc = `攻击力降低${effect.value * 100}%`;
                     break;
                 case 'defenseDown':
-                    desc = `防御力降低${effect.value * 100}%`;
+                    desc = `防御力降低${effect.value}%`;
                     break;
                 case 'missRate':
                     desc = `命中率降低${effect.value * 100}%`;
@@ -432,6 +432,24 @@ const JobSkills = {
             }
         }
 
+        // 检查目标的debuff效果
+        let tempDefense = target.currentStats.defense;
+        if (target.buffs) {
+            console.log(`检查到目标debuff`);
+            
+            // 检查防御力降低debuff
+            const defenseDownBuffs = target.buffs.filter(buff => buff.type === 'defenseDown');
+            let totalDefenseDown = 0;
+            for (const buff of defenseDownBuffs) {
+                totalDefenseDown += buff.value;
+            }
+            // 限制总防御力降低不超过50
+            totalDefenseDown = Math.min(totalDefenseDown, 50);
+            console.log(`应用防御力降低${totalDefenseDown}%`);
+            // 临时降低防御力
+            tempDefense -= totalDefenseDown;
+        }
+
         // 应用属性克制
         if (source.attribute && target.attribute) {
             // 获取属性关系
@@ -481,14 +499,14 @@ const JobSkills = {
         }
 
         // 应用防御力减伤
-        if (target.currentStats && typeof target.currentStats.defense === 'number') {
+        if (target.currentStats && typeof tempDefense === 'number') {
             const oldDamage = finalDamage;
             // 始终将防御力视为整数，计算时转换为百分比
-            const defenseValue = target.currentStats.defense / 100;
+            const defenseValue = tempDefense / 100;
 
-            console.log(`目标防御力: ${target.currentStats.defense} (${(defenseValue * 100).toFixed(1)}%)`);
+            console.log(`目标防御力: ${tempDefense} (${(defenseValue * 100).toFixed(1)}%)`);
             if (typeof window !== 'undefined' && window.log) {
-                window.log(`目标防御力: ${target.currentStats.defense} (${(defenseValue * 100).toFixed(1)}%)`);
+                window.log(`目标防御力: ${tempDefense} (${(defenseValue * 100).toFixed(1)}%)`);
             }
 
             finalDamage = finalDamage / (1 + defenseValue);
@@ -1110,7 +1128,7 @@ const JobSkills = {
                         desc = `攻击力降低${effect.value * 100}%`;
                         break;
                     case 'defenseDown':
-                        desc = `防御力降低${effect.value * 100}%`;
+                        desc = `防御力降低${effect.value}%`;
                         break;
                     case 'missRate':
                         desc = `命中率降低${effect.value * 100}%`;

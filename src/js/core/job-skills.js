@@ -644,7 +644,11 @@ const JobSkills = {
                     const rawDamage = Math.floor(Character.calculateAttackPower(character) * damageMultiplier);
 
                     // 应用伤害到目标，考虑BUFF和DEBUFF
-                    const actualDamage = this.applyDamageToTarget(character, target, rawDamage, { randomApplied: false });
+                    const actualDamage = this.applyDamageToTarget(character, target, rawDamage, { 
+                        randomApplied: false,
+                        skipStats: false,
+                        skipCritical: true
+                    });
 
                     // 记录旧HP值
                     const oldHp = target.currentStats.hp;
@@ -1024,7 +1028,8 @@ const JobSkills = {
                         // 应用伤害到目标，考虑BUFF和DEBUFF
                         const actualDamage = this.applyDamageToTarget(character, target, rawDamage, { 
                             randomApplied: false,
-                            skipStats: false
+                            skipStats: false,
+                            skipCritical: true
                         });
 
                         // 记录旧HP值
@@ -1074,7 +1079,8 @@ const JobSkills = {
                     const rawDamage = Math.floor(Character.calculateAttackPower(character) * (effect.multiplier || 1.0));
                     const actualDamage = this.applyDamageToTarget(character, target, rawDamage, {
                         randomApplied: false,
-                        skipStats: false
+                        skipStats: false,
+                        skipCritical: true
                     });
 
                     // 记录旧HP值

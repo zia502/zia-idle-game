@@ -566,7 +566,7 @@
       },
       {
         "type": "defenseDown",
-        "value": 0.2,
+        "value": 20,
         "duration": 3,
         "stackable": true,
         "dispellable": true
@@ -858,7 +858,7 @@
       },
       {
         "type": "defenseDown",
-        "value": 0.2,
+        "value": 20,
         "duration": 2,
         "stackable": true,
         "dispellable": true

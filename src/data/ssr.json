@@ -1,0 +1,362 @@
+{
+  "ssr_21": {
+    "id": "character_021",
+    "name": "[真红的穿光]泽塔",
+    "attribute": "fire",
+    "type": "attack",
+    "baseStats": {
+      "hp": 264,
+      "maxHp": 1520,
+      "attack": 1650,
+      "maxAttack": 9600,
+      "defense": 10,
+      "critRate": 0.05,
+      "critDamage": 1.5,
+      "daRate": 0.1,
+      "taRate": 0.05
+    },
+    "skills": ["shadowStrike", "darknessVeil", "assassinate"]
+  },
+  "ssr_22": {
+    "id": "character_022",
+    "name": "[晓之大刀]艾奇尔巴",
+    "attribute": "fire",
+    "type": "defense",
+    "baseStats": {
+      "hp": 264,
+      "maxHp": 2110,
+      "attack": 1650,
+      "maxAttack": 7900,
+      "defense": 10,
+      "critRate": 0.05,
+      "critDamage": 1.5,
+      "daRate": 0.04,
+      "taRate": 0.01
+    },
+    "skills": ["holyStrike", "divineProtection", "heavenlyLight"]
+  },
+  "ssr_23": {
+    "id": "character_023",
+    "name": "元素法师",
+    "attribute": "fire",
+    "type": "magic",
+    "baseStats": {
+      "hp": 264,
+      "maxHp": 1520,
+      "attack": 1650,
+      "maxAttack": 9600,
+      "defense": 0,
+      "critRate": 0.05,
+      "critDamage": 1.5,
+      "daRate": 0.1,
+      "taRate": 0.05
+    },
+    "skills": ["elementalBurst", "magicShield", "elementalStorm"]
+  },
+  "ssr_24": {
+    "id": "character_024",
+    "name": "风暴射手",
+    "attribute": "wind",
+    "type": "attack",
+    "baseStats": {
+      "hp": 264,
+      "maxHp": 1520,
+      "attack": 1650,
+      "maxAttack": 9600,
+      "defense": 0,
+      "critRate": 0.05,
+      "critDamage": 1.5,
+      "daRate": 0.1,
+      "taRate": 0.05
+    },
+    "skills": ["windArrow", "stormShot", "hurricaneArrow"]
+  },
+  "ssr_25": {
+    "id": "character_025",
+    "name": "大地守护者",
+    "attribute": "earth",
+    "type": "defense",
+    "baseStats": {
+      "hp": 264,
+      "maxHp": 1520,
+      "attack": 1650,
+      "maxAttack": 9600,
+      "defense": 0,
+      "critRate": 0.05,
+      "critDamage": 1.5,
+      "daRate": 0.1,
+      "taRate": 0.05
+    },
+    "skills": ["earthShield", "mountainGuard", "earthquake"]
+  },
+  "ssr_26": {
+    "id": "character_026",
+    "name": "冰霜法师",
+    "attribute": "water",
+    "type": "magic",
+    "baseStats": {
+      "hp": 264,
+      "maxHp": 1520,
+      "attack": 1650,
+      "maxAttack": 9600,
+      "defense": 0,
+      "critRate": 0.05,
+      "critDamage": 1.5,
+      "daRate": 0.1,
+      "taRate": 0.05
+    },
+    "skills": ["frostBolt", "iceShield", "blizzard"]
+  },
+  "ssr_27": {
+    "id": "character_027",
+    "name": "雷霆战士",
+    "attribute": "light",
+    "type": "attack",
+    "baseStats": {
+      "hp": 264,
+      "maxHp": 1520,
+      "attack": 1650,
+      "maxAttack": 9600,
+      "defense": 0,
+      "critRate": 0.05,
+      "critDamage": 1.5,
+      "daRate": 0.1,
+      "taRate": 0.05
+    },
+    "skills": ["thunderStrike", "lightningSpeed", "thunderStorm"]
+  },
+  "ssr_28": {
+    "id": "character_028",
+    "name": "暗影法师",
+    "attribute": "dark",
+    "type": "magic",
+    "baseStats": {
+      "hp": 264,
+      "maxHp": 1520,
+      "attack": 1650,
+      "maxAttack": 9600,
+      "defense": 0,
+      "critRate": 0.05,
+      "critDamage": 1.5,
+      "daRate": 0.1,
+      "taRate": 0.05
+    },
+    "skills": ["shadowBolt", "darknessVeil", "shadowStorm"]
+  },
+  "ssr_29": {
+    "id": "character_029",
+    "name": "圣光牧师",
+    "attribute": "light",
+    "type": "support",
+    "baseStats": {
+      "hp": 264,
+      "maxHp": 1520,
+      "attack": 1650,
+      "maxAttack": 9600,
+      "defense": 0,
+      "critRate": 0.05,
+      "critDamage": 1.5,
+      "daRate": 0.1,
+      "taRate": 0.05
+    },
+    "skills": ["holyLight", "divineHeal", "heavenlyBlessing"]
+  },
+  "ssr_30": {
+    "id": "character_030",
+    "name": "火焰战士",
+    "attribute": "fire",
+    "type": "attack",
+    "baseStats": {
+      "hp": 264,
+      "maxHp": 1520,
+      "attack": 1650,
+      "maxAttack": 9600,
+      "defense": 0,
+      "critRate": 0.05,
+      "critDamage": 1.5,
+      "daRate": 0.1,
+      "taRate": 0.05
+    },
+    "skills": ["fireStrike", "flameGuard", "inferno"]
+  },
+  "ssr_31": {
+    "id": "character_031",
+    "name": "风之游侠",
+    "attribute": "wind",
+    "type": "attack",
+    "baseStats": {
+      "hp": 264,
+      "maxHp": 1520,
+      "attack": 1650,
+      "maxAttack": 9600,
+      "defense": 0,
+      "critRate": 0.05,
+      "critDamage": 1.5,
+      "daRate": 0.1,
+      "taRate": 0.05
+    },
+    "skills": ["windArrow", "stormShot", "hurricaneArrow"]
+  },
+  "ssr_32": {
+    "id": "character_032",
+    "name": "大地法师",
+    "attribute": "earth",
+    "type": "magic",
+    "baseStats": {
+      "hp": 264,
+      "maxHp": 1520,
+      "attack": 1650,
+      "maxAttack": 9600,
+      "defense": 0,
+      "critRate": 0.05,
+      "critDamage": 1.5,
+      "daRate": 0.1,
+      "taRate": 0.05
+    },
+    "skills": ["earthBolt", "stoneShield", "earthquake"]
+  },
+  "ssr_33": {
+    "id": "character_033",
+    "name": "冰霜战士",
+    "attribute": "water",
+    "type": "attack",
+    "baseStats": {
+      "hp": 264,
+      "maxHp": 1520,
+      "attack": 1650,
+      "maxAttack": 9600,
+      "defense": 0,
+      "critRate": 0.05,
+      "critDamage": 1.5,
+      "daRate": 0.1,
+      "taRate": 0.05
+    },
+    "skills": ["frostStrike", "iceGuard", "blizzard"]
+  },
+  "ssr_34": {
+    "id": "character_034",
+    "name": "雷霆法师",
+    "attribute": "light",
+    "type": "magic",
+    "baseStats": {
+      "hp": 264,
+      "maxHp": 1520,
+      "attack": 1650,
+      "maxAttack": 9600,
+      "defense": 0,
+      "critRate": 0.05,
+      "critDamage": 1.5,
+      "daRate": 0.1,
+      "taRate": 0.05
+    },
+    "skills": ["thunderBolt", "lightningShield", "thunderStorm"]
+  },
+  "ssr_35": {
+    "id": "character_035",
+    "name": "暗影游侠",
+    "attribute": "dark",
+    "type": "attack",
+    "baseStats": {
+      "hp": 264,
+      "maxHp": 1520,
+      "attack": 1650,
+      "maxAttack": 9600,
+      "defense": 0,
+      "critRate": 0.05,
+      "critDamage": 1.5,
+      "daRate": 0.1,
+      "taRate": 0.05
+    },
+    "skills": ["shadowArrow", "darknessVeil", "shadowStorm"]
+  },
+  "ssr_36": {
+    "id": "character_036",
+    "name": "圣光法师",
+    "attribute": "light",
+    "type": "magic",
+    "baseStats": {
+      "hp": 264,
+      "maxHp": 1520,
+      "attack": 1650,
+      "maxAttack": 9600,
+      "defense": 0,
+      "critRate": 0.05,
+      "critDamage": 1.5,
+      "daRate": 0.1,
+      "taRate": 0.05
+    },
+    "skills": ["holyBolt", "divineShield", "heavenlyLight"]
+  },
+  "ssr_37": {
+    "id": "character_037",
+    "name": "火焰法师",
+    "attribute": "fire",
+    "type": "magic",
+    "baseStats": {
+      "hp": 264,
+      "maxHp": 1520,
+      "attack": 1650,
+      "maxAttack": 9600,
+      "defense": 0,
+      "critRate": 0.05,
+      "critDamage": 1.5,
+      "daRate": 0.1,
+      "taRate": 0.05
+    },
+    "skills": ["fireBolt", "flameShield", "inferno"]
+  },
+  "ssr_38": {
+    "id": "character_038",
+    "name": "风之战士",
+    "attribute": "wind",
+    "type": "attack",
+    "baseStats": {
+      "hp": 264,
+      "maxHp": 1520,
+      "attack": 1650,
+      "maxAttack": 9600,
+      "defense": 0,
+      "critRate": 0.05,
+      "critDamage": 1.5,
+      "daRate": 0.1,
+      "taRate": 0.05
+    },
+    "skills": ["windStrike", "stormGuard", "hurricane"]
+  },
+  "ssr_39": {
+    "id": "character_039",
+    "name": "大地战士",
+    "attribute": "earth",
+    "type": "attack",
+    "baseStats": {
+      "hp": 264,
+      "maxHp": 1520,
+      "attack": 1650,
+      "maxAttack": 9600,
+      "defense": 0,
+      "critRate": 0.05,
+      "critDamage": 1.5,
+      "daRate": 0.1,
+      "taRate": 0.05
+    },
+    "skills": ["earthStrike", "stoneGuard", "earthquake"]
+  },
+  "ssr_40": {
+    "id": "character_040",
+    "name": "冰霜游侠",
+    "attribute": "water",
+    "type": "attack",
+    "baseStats": {
+      "hp": 264,
+      "maxHp": 1520,
+      "attack": 1650,
+      "maxAttack": 9600,
+      "defense": 0,
+      "critRate": 0.05,
+      "critDamage": 1.5,
+      "daRate": 0.1,
+      "taRate": 0.05
+    },
+    "skills": ["frostArrow", "iceVeil", "blizzard"]
+  }
+} 

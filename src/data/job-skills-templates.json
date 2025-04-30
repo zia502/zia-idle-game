@@ -966,5 +966,112 @@
         "targetType": "all_enemies"
       }
     ]
+  },
+  "provoke": {
+    "name": "挑衅",
+    "description": "提高自身敌对心100%，持续3回合。CD5回合",
+    "type": "defense",
+    "power": 1.0,
+    "cost": 0,
+    "fixed": true,
+    "cooldown": 5,
+    "effectType": "buff",
+    "targetType": "self",
+    "duration": 3,
+    "effects": [
+      {
+        "type": "threatUp",
+        "value": 100,
+        "duration": 3,
+        "stackable": true,
+        "dispellable": true
+      }
+    ]
+  },
+  "challengingShout": {
+    "name": "战吼",
+    "description": "提高自身敌对心200%，持续2回合，同时提高防御20%。CD8回合",
+    "type": "defense",
+    "power": 1.0,
+    "cost": 0,
+    "fixed": true,
+    "cooldown": 8,
+    "effectType": "buff",
+    "targetType": "self",
+    "duration": 2,
+    "effects": [
+      {
+        "type": "threatUp",
+        "value": 200,
+        "duration": 2,
+        "stackable": true,
+        "dispellable": true
+      },
+      {
+        "type": "defenseUp",
+        "value": 0.2,
+        "duration": 2,
+        "stackable": true,
+        "dispellable": true
+      }
+    ]
+  },
+  "vanish": {
+    "name": "潜行",
+    "description": "降低自身敌对心80%，持续2回合，同时提高攻击力15%。CD6回合",
+    "type": "attack",
+    "power": 1.0,
+    "cost": 0,
+    "fixed": true,
+    "cooldown": 6,
+    "effectType": "buff",
+    "targetType": "self",
+    "duration": 2,
+    "effects": [
+      {
+        "type": "threatDown",
+        "value": 80,
+        "duration": 2,
+        "stackable": true,
+        "dispellable": true
+      },
+      {
+        "type": "attackUp",
+        "value": 0.15,
+        "duration": 2,
+        "stackable": true,
+        "dispellable": true
+      }
+    ]
+  },
+  "misdirection": {
+    "name": "误导",
+    "description": "降低自身敌对心50%，提高目标队友敌对心100%，持续3回合。CD7回合",
+    "type": "support",
+    "power": 1.0,
+    "cost": 0,
+    "fixed": true,
+    "cooldown": 7,
+    "effectType": "buff",
+    "targetType": "single_ally",
+    "duration": 3,
+    "effects": [
+      {
+        "type": "threatUp",
+        "value": 100,
+        "duration": 3,
+        "stackable": true,
+        "dispellable": true,
+        "targetType": "target"
+      },
+      {
+        "type": "threatDown",
+        "value": 50,
+        "duration": 3,
+        "stackable": true,
+        "dispellable": true,
+        "targetType": "self"
+      }
+    ]
   }
 }

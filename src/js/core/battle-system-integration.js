@@ -94,6 +94,26 @@ function integrateBattleSystemUpdates() {
             isPositive: true,
             canDispel: false,
             stackable: false
+        },
+        
+        // 敌对心提升
+        threatUp: {
+            name: '敌对心提升',
+            description: '提高成为敌人攻击目标的概率',
+            icon: '🎯⬆️',
+            isPositive: true, // 对坦克职业来说是正面效果
+            canDispel: true,
+            stackable: true
+        },
+        
+        // 敌对心降低
+        threatDown: {
+            name: '敌对心降低',
+            description: '降低成为敌人攻击目标的概率',
+            icon: '🎯⬇️',
+            isPositive: true, // 对输出职业来说是正面效果
+            canDispel: true,
+            stackable: true
         }
     });
 

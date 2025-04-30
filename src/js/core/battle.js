@@ -1137,11 +1137,57 @@ const Battle = {
         // 检查怪物是否存活
         if (monster.currentStats.hp <= 0) return;
 
-        // 选择目标（简单AI：随机选择一个存活的队伍成员）
+        // 选择目标（基于敌对心/威胁值的AI）
         const aliveMembers = teamMembers.filter(member => member.currentStats.hp > 0);
         if (aliveMembers.length === 0) return;
 
-        const target = aliveMembers[Math.floor(Math.random() * aliveMembers.length)];
+        // 计算总威胁值和每个角色的威胁值
+        let totalThreat = 0;
+        const memberThreats = aliveMembers.map(member => {
+            // 默认敌对心为100%
+            let threatValue = 100;
+            
+            // 检查角色是否有敌对心BUFF
+            if (member.buffs) {
+                for (const buff of member.buffs) {
+                    if (buff.type === 'threatUp') {
+                        // 增加敌对心值
+                        threatValue += buff.value;
+                    } else if (buff.type === 'threatDown') {
+                        // 减少敌对心值
+                        threatValue -= buff.value;
+                    }
+                }
+            }
+            
+            // 确保威胁值不小于0
+            threatValue = Math.max(0, threatValue);
+            totalThreat += threatValue;
+            
+            return {
+                member,
+                threatValue
+            };
+        });
+        
+        // 如果总威胁值为0（极少数情况），使用随机选择
+        if (totalThreat <= 0) {
+            const target = aliveMembers[Math.floor(Math.random() * aliveMembers.length)];
+            return target;
+        }
+        
+        // 基于威胁值随机选择目标
+        const roll = Math.random() * totalThreat;
+        let cumulativeThreat = 0;
+        let target = aliveMembers[0]; // 默认值，以防出错
+        
+        for (const memberThreat of memberThreats) {
+            cumulativeThreat += memberThreat.threatValue;
+            if (roll < cumulativeThreat) {
+                target = memberThreat.member;
+                break;
+            }
+        }
 
         // 1. 使用技能阶段
         this.logBattle(`\n----- ${monster.name} 技能阶段 -----`);

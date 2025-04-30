@@ -37,26 +37,26 @@
   },
   "ssr_23": {
     "id": "character_023",
-    "name": "元素法师",
+    "name": "[守护女神]雅典娜",
     "attribute": "fire",
-    "type": "magic",
+    "type": "defense",
     "baseStats": {
       "hp": 264,
-      "maxHp": 1520,
+      "maxHp": 1960,
       "attack": 1650,
-      "maxAttack": 9600,
-      "defense": 0,
+      "maxAttack": 8300,
+      "defense": 10,
       "critRate": 0.05,
       "critDamage": 1.5,
-      "daRate": 0.1,
-      "taRate": 0.05
+      "daRate": 0.07,
+      "taRate": 0.03
     },
     "skills": ["elementalBurst", "magicShield", "elementalStorm"]
   },
   "ssr_24": {
     "id": "character_024",
-    "name": "风暴射手",
-    "attribute": "wind",
+    "name": "湿婆",
+    "attribute": "fire",
     "type": "attack",
     "baseStats": {
       "hp": 264,

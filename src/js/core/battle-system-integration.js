@@ -215,11 +215,35 @@ function integrateBattleSystemUpdates() {
 
     // 7. 扩展Battle对象，添加processTurnEndEffects方法
     Battle.processTurnEndEffects = function(teamMembers, monster) {
+        console.log('处理回合结束效果');
+        
+        // 调试雷暴技能
+        this.debugSkill('thunderstorm');
+        
         // 处理队伍成员的回合结束效果
         for (const member of teamMembers) {
             if (member.currentStats.hp <= 0) continue;
+            
+            console.log(`处理 ${member.name} 的回合结束效果`);
+            
+            // 特别处理雷暴技能
+            if (member.skills && member.skills.includes('thunderstorm')) {
+                console.log(`${member.name} 有雷暴技能，直接触发效果`);
+                
+                // 手动创建雷暴效果
+                const thunderstormEffect = {
+                    type: 'multi_attack',
+                    count: 5,
+                    multiplier: 0.3,
+                    targetType: 'all_enemies'
+                };
+                
+                // 直接处理雷暴效果
+                this.processEndOfTurnEffect(member, thunderstormEffect, teamMembers, monster);
+                this.logBattle(`${member.name} 的雷暴技能被触发！`);
+            }
 
-            // 处理BUFF中的回合结束效果
+            // 处理BUFF的回合结束效果
             if (member.buffs) {
                 for (const buff of member.buffs) {
                     if (buff.type === 'endOfTurn' && buff.effect) {
@@ -232,11 +256,15 @@ function integrateBattleSystemUpdates() {
 
             // 处理被动技能中的回合结束效果
             if (member.skills) {
+                console.log(`检查 ${member.name} 的被动技能回合结束效果`);
                 for (const skillId of member.skills) {
                     const skill = JobSystem.getSkill(skillId);
+                    console.log(`检查技能: ${skillId}, 是否存在: ${!!skill}, 是否被动: ${skill?.passive}, 是否有效果: ${!!skill?.effects}`);
                     if (skill && skill.passive && skill.effects) {
                         for (const effect of skill.effects) {
+                            console.log(`技能效果类型: ${effect.type}`);
                             if (effect.type === 'endOfTurn') {
+                                console.log(`触发回合结束效果: ${skillId}`);
                                 this.processEndOfTurnEffect(member, effect.effect, teamMembers, monster);
                             }
                         }
@@ -257,7 +285,81 @@ function integrateBattleSystemUpdates() {
         }
     };
 
-    // 8. 添加Battle.processEndOfTurnEffect方法
+    // 8. 添加Battle.getEffectTarget方法
+    Battle.getEffectTarget = function(targetType, source, teamMembers, monster) {
+        switch (targetType) {
+            case 'self':
+                return source;
+                
+            case 'enemy':
+                return source === monster ? teamMembers.find(m => m.currentStats.hp > 0) : monster;
+                
+            case 'ally':
+                if (source === monster) return monster;
+                const allies = teamMembers.filter(m => m !== source && m.currentStats.hp > 0);
+                return allies.length > 0 ? allies[Math.floor(Math.random() * allies.length)] : null;
+                
+            case 'ally_lowest_hp':
+                if (source === monster) return monster;
+                const aliveAllies = teamMembers.filter(m => m.currentStats.hp > 0);
+                if (aliveAllies.length === 0) return null;
+                return aliveAllies.reduce((lowest, current) => 
+                    (current.currentStats.hp / current.currentStats.maxHp) < (lowest.currentStats.hp / lowest.currentStats.maxHp) ? current : lowest, aliveAllies[0]);
+                
+            case 'ally_dead':
+                if (source === monster) return null;
+                const deadAllies = teamMembers.filter(m => m.currentStats.hp <= 0);
+                return deadAllies.length > 0 ? deadAllies[Math.floor(Math.random() * deadAllies.length)] : null;
+                
+            default:
+                return null;
+        }
+    };
+    
+    // 9. 添加Battle.getEffectTargets方法
+    Battle.getEffectTargets = function(targetType, source, teamMembers, monster) {
+        switch (targetType) {
+            case 'all_allies':
+                return source === monster ? [monster] : teamMembers.filter(m => m.currentStats.hp > 0);
+                
+            case 'all_enemies':
+                return source === monster ? teamMembers.filter(m => m.currentStats.hp > 0) : [monster];
+                
+            case 'all':
+                return [...teamMembers.filter(m => m.currentStats.hp > 0), monster];
+                
+            default:
+                const target = this.getEffectTarget(targetType, source, teamMembers, monster);
+                return target ? [target] : [];
+        }
+    };
+    
+    // 10. 添加Battle.debugSkill方法
+    Battle.debugSkill = function(skillId) {
+        console.log(`调试技能: ${skillId}`);
+        
+        // 检查JobSystem中的技能
+        const jsSkill = JobSystem.getSkill(skillId);
+        console.log(`JobSystem中的技能:`, jsSkill);
+        
+        // 检查JobSkillsTemplate中的技能
+        if (typeof JobSkillsTemplate !== 'undefined' && JobSkillsTemplate.templates) {
+            const templateSkill = JobSkillsTemplate.templates[skillId];
+            console.log(`JobSkillsTemplate中的技能:`, templateSkill);
+        }
+        
+        // 如果有隐者职业的角色，检查其技能列表
+        for (const member of this.teamMembers) {
+            if (member.job === 'hermit') {
+                console.log(`隐者角色 ${member.name} 的技能:`, member.skills);
+                if (member.skills && member.skills.includes(skillId)) {
+                    console.log(`角色 ${member.name} 拥有技能 ${skillId}`);
+                }
+            }
+        }
+    };
+    
+    // 11. 添加Battle.processEndOfTurnEffect方法
     Battle.processEndOfTurnEffect = function(source, effect, teamMembers, monster) {
         if (!effect || !effect.type) return;
 

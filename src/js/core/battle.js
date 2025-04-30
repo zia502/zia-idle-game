@@ -350,33 +350,33 @@ const Battle = {
                 }
             }
             this.logBattle(`=======================================`);
-            
+
             // 处理回合结束效果
             this.logBattle(`----- 回合结束触发事件 -----`);
-            
+
             // 处理队伍成员的回合结束效果
             for (const member of teamMembers) {
                 if (member.currentStats.hp <= 0) continue;
-                
+
                 // 处理技能的回合结束效果
                 if (member.skills) {
                     for (const skillId of member.skills) {
                         // 获取技能信息
                         let skill = null;
-                        
+
                         // 尝试从 JobSystem 获取技能
                         if (typeof JobSystem !== 'undefined' && typeof JobSystem.getSkill === 'function') {
                             skill = JobSystem.getSkill(skillId);
                         }
-                        
+
                         // 如果从 JobSystem 中没有找到，尝试从 JobSkillsTemplate 获取
                         if (!skill && typeof JobSkillsTemplate !== 'undefined' && JobSkillsTemplate.templates) {
                             skill = JobSkillsTemplate.templates[skillId];
                         }
-                        
+
                         // 如果没有找到技能信息，继续下一个技能
                         if (!skill) continue;
-                        
+
                         // 处理被动技能的回合结束效果
                         if (skill.passive && skill.effects) {
                             for (const effect of skill.effects) {
@@ -386,7 +386,7 @@ const Battle = {
                                 }
                             }
                         }
-                        
+
                         // 处理雷暴技能（特殊情况，如果技能模板没有正确定义）
                         if (skillId === 'thunderstorm' && (!skill.effects || !skill.effects.some(e => e.type === 'endOfTurn'))) {
                             // 创建标准的雷暴效果
@@ -396,13 +396,13 @@ const Battle = {
                                 multiplier: 0.3,
                                 targetType: 'all_enemies'
                             };
-                            
+
                             // 使用通用处理方法
                             this.processEndOfTurnEffect(member, thunderstormEffect, teamMembers, monster, 'thunderstorm');
                         }
                     }
                 }
-                
+
                 // 处理BUFF的回合结束效果
                 if (member.buffs) {
                     for (const buff of member.buffs) {
@@ -412,7 +412,7 @@ const Battle = {
                     }
                 }
             }
-            
+
             // 处理怪物的回合结束效果
             if (monster.currentStats.hp > 0) {
                 // 处理怪物的BUFF回合结束效果
@@ -1146,7 +1146,7 @@ const Battle = {
         const memberThreats = aliveMembers.map(member => {
             // 默认敌对心为100%
             let threatValue = 100;
-            
+
             // 检查角色是否有敌对心BUFF
             if (member.buffs) {
                 for (const buff of member.buffs) {
@@ -1159,28 +1159,28 @@ const Battle = {
                     }
                 }
             }
-            
+
             // 确保威胁值不小于0
             threatValue = Math.max(0, threatValue);
             totalThreat += threatValue;
-            
+
             return {
                 member,
                 threatValue
             };
         });
-        
+
         // 如果总威胁值为0（极少数情况），使用随机选择
         if (totalThreat <= 0) {
             const target = aliveMembers[Math.floor(Math.random() * aliveMembers.length)];
             return target;
         }
-        
+
         // 基于威胁值随机选择目标
         const roll = Math.random() * totalThreat;
         let cumulativeThreat = 0;
         let target = aliveMembers[0]; // 默认值，以防出错
-        
+
         for (const memberThreat of memberThreats) {
             cumulativeThreat += memberThreat.threatValue;
             if (roll < cumulativeThreat) {
@@ -1590,7 +1590,7 @@ const Battle = {
                 if (damageResult.isCritical) {
                     monster.stats.critCount++;
                 }
-                    
+
                     // 记录战斗日志
                 let damageMessage = `${monster.name} `;
 
@@ -1819,170 +1819,10 @@ const Battle = {
         this.battleLog.push(message);
         console.log(`[战斗] ${message}`);
     },
-    
-    /**
-     * 处理回合结束效果
-     * @param {object} source - 效果来源
-     * @param {object} effect - 效果对象
-     * @param {array} teamMembers - 队伍成员
-     * @param {object} monster - 怪物对象
-     * @param {string} skillId - 技能 ID（可选）
-     */
-    processEndOfTurnEffect(source, effect, teamMembers, monster, skillId = '') {
-        if (!effect || !effect.type) return;
-        
-        const skillName = skillId ? `${skillId} 技能` : '回合结束效果';
-        
-        switch (effect.type) {
-            case 'damage':
-                // 单体伤害效果
-                const target = this.getEffectTarget(effect.targetType, source, teamMembers, monster);
-                if (target) {
-                    const rawDamage = Math.floor(source.currentStats.attack * (effect.multiplier || 1.0));
-                    
-                    // 应用伤害
-                    let actualDamage = rawDamage;
-                    if (typeof this.applyDamageToTarget === 'function') {
-                        // 技能伤害不触发暴击
-                        actualDamage = this.applyDamageToTarget(source, target, rawDamage, { skipCritical: true });
-                    } else {
-                        // 简化的伤害计算
-                        const defense = target.currentStats.defense || 0;
-                        actualDamage = Math.max(1, Math.floor(rawDamage * (100 / (100 + defense))));
-                        target.currentStats.hp = Math.max(0, target.currentStats.hp - actualDamage);
-                    }
-                    
-                    this.logBattle(`${source.name} 的${skillName}对 ${target.name} 造成了 ${actualDamage} 点伤害！`);
-                }
-                break;
-                
-            case 'multi_attack':
-                // 多重攻击效果
-                const targets = this.getEffectTargets(effect.targetType, source, teamMembers, monster);
-                if (targets && targets.length > 0) {
-                    const count = effect.count || 1;
-                    const multiplier = effect.multiplier || 0.3;
-                    
-                    for (const target of targets) {
-                        let totalDamage = 0;
-                        
-                        for (let i = 0; i < count; i++) {
-                            if (target.currentStats.hp <= 0) break;
-                            
-                            const rawDamage = Math.floor(source.currentStats.attack * multiplier);
-                            
-                            // 应用伤害
-                            let actualDamage = rawDamage;
-                            if (typeof this.applyDamageToTarget === 'function') {
-                                // 技能伤害不触发暴击
-                                actualDamage = this.applyDamageToTarget(source, target, rawDamage, { skipCritical: true });
-                            } else if (typeof JobSkills !== 'undefined' && typeof JobSkills.applyDamageToTarget === 'function') {
-                                // 使用JobSkills的方法，并跳过暴击计算
-                                actualDamage = JobSkills.applyDamageToTarget(source, target, rawDamage, { skipCritical: true });
-                            } else {
-                                // 简化的伤害计算
-                                const defense = target.currentStats.defense || 0;
-                                actualDamage = Math.max(1, Math.floor(rawDamage * (100 / (100 + defense))));
-                                target.currentStats.hp = Math.max(0, target.currentStats.hp - actualDamage);
-                            }
-                            
-                            totalDamage += actualDamage;
-                        }
-                        
-                        if (totalDamage > 0) {
-                            this.logBattle(`${source.name} 的${skillName}对 ${target.name} 造成了 ${count} 次共 ${totalDamage} 点伤害！`);
-                        }
-                    }
-                }
-                break;
-                
-            case 'heal':
-                // 治疗效果
-                const healTarget = this.getEffectTarget(effect.targetType || 'self', source, teamMembers, monster);
-                if (healTarget) {
-                    const healAmount = Math.floor(effect.value || (source.currentStats.attack * (effect.multiplier || 0.5)));
-                    healTarget.currentStats.hp = Math.min(healTarget.currentStats.hp + healAmount, healTarget.currentStats.maxHp);
-                    this.logBattle(`${source.name} 的${skillName}为 ${healTarget.name} 恢复了 ${healAmount} 点生命值！`);
-                }
-                break;
-                
-            case 'buff':
-            case 'debuff':
-                // BUFF/DEBUFF效果
-                const buffTarget = this.getEffectTarget(effect.targetType || 'self', source, teamMembers, monster);
-                if (buffTarget && typeof BuffSystem !== 'undefined') {
-                    const buffType = effect.buffType || effect.type;
-                    const buff = BuffSystem.createBuff(buffType, effect.value, effect.duration, source);
-                    if (buff) {
-                        BuffSystem.applyBuff(buffTarget, buff);
-                        const buffName = buff.name || buffType;
-                        this.logBattle(`${source.name} 的${skillName}对 ${buffTarget.name} 施加了 ${buffName} 效果！`);
-                    }
-                }
-                break;
-        }
-    },
-    
-    /**
-     * 获取效果目标
-     * @param {string} targetType - 目标类型
-     * @param {object} source - 效果来源
-     * @param {array} teamMembers - 队伍成员
-     * @param {object} monster - 怪物对象
-     * @returns {object|null} 目标对象
-     */
-    getEffectTarget(targetType, source, teamMembers, monster) {
-        switch (targetType) {
-            case 'self':
-                return source;
-                
-            case 'enemy':
-                return source === monster ? teamMembers.find(m => m.currentStats.hp > 0) : monster;
-                
-            case 'ally':
-                if (source === monster) return monster;
-                const allies = teamMembers.filter(m => m !== source && m.currentStats.hp > 0);
-                return allies.length > 0 ? allies[Math.floor(Math.random() * allies.length)] : null;
-                
-            case 'ally_lowest_hp':
-                if (source === monster) return monster;
-                const aliveAllies = teamMembers.filter(m => m.currentStats.hp > 0);
-                if (aliveAllies.length === 0) return null;
-                return aliveAllies.reduce((lowest, current) => 
-                    (current.currentStats.hp / current.currentStats.maxHp) < (lowest.currentStats.hp / lowest.currentStats.maxHp) ? current : lowest, aliveAllies[0]);
-                
-            case 'ally_dead':
-                if (source === monster) return null;
-                const deadAllies = teamMembers.filter(m => m.currentStats.hp <= 0);
-                return deadAllies.length > 0 ? deadAllies[Math.floor(Math.random() * deadAllies.length)] : null;
-                
-            default:
-                return null;
-        }
-    },
-    
-    /**
-     * 获取效果目标列表
-     * @param {string} targetType - 目标类型
-     * @param {object} source - 效果来源
-     * @param {array} teamMembers - 队伍成员
-     * @param {object} monster - 怪物对象
-     * @returns {array} 目标对象列表
-     */
-    getEffectTargets(targetType, source, teamMembers, monster) {
-        switch (targetType) {
-            case 'all_allies':
-                return source === monster ? [monster] : teamMembers.filter(m => m.currentStats.hp > 0);
-                
-            case 'all_enemies':
-                return source === monster ? teamMembers.filter(m => m.currentStats.hp > 0) : [monster];
-                
-            case 'all':
-                return [...teamMembers.filter(m => m.currentStats.hp > 0), monster];
-                
-            default:
-                const target = this.getEffectTarget(targetType, source, teamMembers, monster);
-                return target ? [target] : [];
-        }
-    }
+
+
+
+
+
+
 };

@@ -51,6 +51,62 @@ const UI = {
                 border-radius: 8px;
                 box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
             }
+            .weapon-item-content {
+                height: 100%;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                align-items: center;
+                padding: 5px;
+                border-radius: 4px;
+                border: 2px solid #ccc;
+                cursor: pointer;
+                transition: all 0.2s;
+                position: relative;
+            }
+            .weapon-item-content:hover {
+                transform: scale(1.05);
+                box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            }
+            .weapon-item-content.rarity-common {
+                border-color: #9e9e9e;
+                background: linear-gradient(to bottom right, #ffffff, #f5f5f5);
+            }
+            .weapon-item-content.rarity-3 {
+                border-color: #4169e1;
+                background: linear-gradient(to bottom right, #ffffff, #e3f2fd);
+            }
+            .weapon-item-content.rarity-4 {
+                border-color: #9c27b0;
+                background: linear-gradient(to bottom right, #ffffff, #f3e5f5);
+            }
+            .weapon-item-content.rarity-5 {
+                border-color: #ffd700;
+                background: linear-gradient(to bottom right, #ffffff, #fff8e1);
+                box-shadow: 0 0 10px rgba(255, 215, 0, 0.3);
+            }
+            .weapon-icon {
+                font-size: 24px;
+                margin-bottom: 5px;
+            }
+            .weapon-level-info {
+                font-size: 12px;
+                text-align: center;
+                color: #333;
+                text-shadow: 0 1px 1px rgba(255, 255, 255, 0.8);
+            }
+            .weapon-level {
+                color: #1a237e;
+            }
+            .weapon-breakthrough {
+                color: #4a148c;
+            }
+            .weapon-breakthrough::before {
+                color: #2e7d32;
+            }
+            .weapon-tooltip .weapon-breakthrough {
+                color: #ffd700;
+            }
         `;
         document.head.appendChild(style);
         
@@ -1057,13 +1113,31 @@ const UI = {
                 align-items: center;
                 padding: 5px;
                 border-radius: 4px;
-                border: 1px solid #ccc;
+                border: 2px solid #ccc;
                 cursor: pointer;
                 transition: all 0.2s;
+                position: relative;
             }
             .weapon-item-content:hover {
                 transform: scale(1.05);
                 box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            }
+            .weapon-item-content.rarity-common {
+                border-color: #9e9e9e;
+                background: linear-gradient(to bottom right, #ffffff, #f5f5f5);
+            }
+            .weapon-item-content.rarity-3 {
+                border-color: #4169e1;
+                background: linear-gradient(to bottom right, #ffffff, #e3f2fd);
+            }
+            .weapon-item-content.rarity-4 {
+                border-color: #9c27b0;
+                background: linear-gradient(to bottom right, #ffffff, #f3e5f5);
+            }
+            .weapon-item-content.rarity-5 {
+                border-color: #ffd700;
+                background: linear-gradient(to bottom right, #ffffff, #fff8e1);
+                box-shadow: 0 0 10px rgba(255, 215, 0, 0.3);
             }
             .weapon-icon {
                 font-size: 24px;
@@ -1072,6 +1146,20 @@ const UI = {
             .weapon-level-info {
                 font-size: 12px;
                 text-align: center;
+                color: #333;
+                text-shadow: 0 1px 1px rgba(255, 255, 255, 0.8);
+            }
+            .weapon-level {
+                color: #1a237e;
+            }
+            .weapon-breakthrough {
+                color: #4a148c;
+            }
+            .weapon-breakthrough::before {
+                color: #2e7d32;
+            }
+            .weapon-tooltip .weapon-breakthrough {
+                color: #ffd700;
             }
         `;
         document.head.appendChild(gridStyle);
@@ -1535,13 +1623,16 @@ const UI = {
                 
                 // 先进行突破
                 Weapon.breakthroughWeapon(targetWeaponId, Array.from(selectedMaterials));
-                // 删除用作材料的武器
-                selectedMaterials.forEach(materialId => {
-                    Weapon.deleteWeapon(materialId);
-                });
-                this.showWeaponDetails(targetWeaponId); // 刷新详情显示
-                this.renderWeaponInventory(); // 刷新武器库显示
+                
+                // 保存游戏状态
+                Game.saveGame();
+                
+                // 刷新显示
+                this.showWeaponDetails(targetWeaponId);
+                this.renderWeaponInventory();
                 document.body.removeChild(dialog);
+                
+                this.showNotification('突破成功！', 'success');
             }
         };
     },

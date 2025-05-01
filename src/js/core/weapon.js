@@ -903,9 +903,12 @@ const Weapon = {
             this.deleteWeapon(materialId);
         });
         
-        // 更新突破次数
+        // 更新突破次数和等级上限
         weapon.breakthrough = newBreakthrough;
         weapon.maxLevel = this.breakthroughLevels[weapon.breakthrough];
+        
+        // 确保武器数据被正确保存
+        this.weapons[weaponId] = weapon;
         
         return true;
     },

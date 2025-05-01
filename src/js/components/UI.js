@@ -2458,31 +2458,57 @@ const UI = {
                 return;
             }
 
+            // 获取当前武器盘
+            const weaponBoard = Weapon.getWeaponBoard(boardId);
+            if (!weaponBoard) {
+                console.error(`未找到武器盘: ${boardId}`);
+                return;
+            }
+
+            // 检查武器是否已经装备在当前武器盘中
+            const isEquippedInCurrentBoard = (weaponId) => {
+                for (const slot in weaponBoard.slots) {
+                    if (weaponBoard.slots[slot] === weaponId) {
+                        return slot;
+                    }
+                }
+                return false;
+            };
+
             // 过滤出可用的武器（根据职业限制）
             let availableWeapons = {};
+            let equippedWeapons = {};
 
             // 主手武器槽只能装备职业允许的武器类型
             if (slotType === 'main') {
                 Object.entries(allWeapons).forEach(([id, weapon]) => {
                     // 检查武器类型是否在允许列表中
-                    if (allowedWeaponTypes.includes(weapon.type) && !weapon.isEquipped) {
-                        availableWeapons[id] = weapon;
+                    if (allowedWeaponTypes.includes(weapon.type)) {
+                        const equippedSlot = isEquippedInCurrentBoard(id);
+                        if (equippedSlot) {
+                            equippedWeapons[id] = { ...weapon, equippedSlot };
+                        } else {
+                            availableWeapons[id] = weapon;
+                        }
                     }
                 });
 
-                if (Object.keys(availableWeapons).length === 0) {
+                if (Object.keys(availableWeapons).length === 0 && Object.keys(equippedWeapons).length === 0) {
                     this.showNotification(`没有可用的${allowedWeaponTypes.map(type => this.getWeaponTypeName(type)).join('或')}武器`, 'warning');
                     return;
                 }
             } else {
                 // 副武器槽可以装备任何武器
                 Object.entries(allWeapons).forEach(([id, weapon]) => {
-                    if (!weapon.isEquipped) {
+                    const equippedSlot = isEquippedInCurrentBoard(id);
+                    if (equippedSlot) {
+                        equippedWeapons[id] = { ...weapon, equippedSlot };
+                    } else {
                         availableWeapons[id] = weapon;
                     }
                 });
 
-                if (Object.keys(availableWeapons).length === 0) {
+                if (Object.keys(availableWeapons).length === 0 && Object.keys(equippedWeapons).length === 0) {
                     this.showNotification('没有可用的武器', 'warning');
                     return;
                 }
@@ -2618,6 +2644,21 @@ const UI = {
                     animation: pulse-blue 1.5s infinite;
                     z-index: -1;
                 }
+                .weapon-selection-item.equipped {
+                    border: 2px solid #f44336 !important;
+                    position: relative;
+                }
+                .equipped-label {
+                    position: absolute;
+                    top: 5px;
+                    right: 5px;
+                    background-color: #f44336;
+                    color: white;
+                    font-size: 10px;
+                    padding: 2px 5px;
+                    border-radius: 3px;
+                    z-index: 2;
+                }
                 @keyframes pulse-blue {
                     0% { box-shadow: 0 0 0 0 rgba(65, 105, 225, 0.7); }
                     70% { box-shadow: 0 0 0 5px rgba(65, 105, 225, 0); }
@@ -2694,6 +2735,29 @@ const UI = {
                             '选择要装备的副武器'}
                     </div>
                     <div class="weapon-selection-grid">
+                        ${Object.entries(equippedWeapons).map(([id, weapon]) => {
+                            const rarityClass = this.getRarityClass(weapon.rarity);
+                            const currentStats = Weapon.calculateCurrentStats(weapon);
+                            return `
+                                <div class="weapon-selection-item ${rarityClass} equipped" data-weapon-id="${id}" data-equipped-slot="${weapon.equippedSlot}">
+                                    <div class="equipped-label">已装备</div>
+                                    <div class="weapon-name">${weapon.name}</div>
+                                    <div class="weapon-type">
+                                        <img src="src/assets/${this.weaponTypeIcons[weapon.type]}" class="type-icon" alt="${weapon.type}">
+                                        ${this.getWeaponTypeName(weapon.type)}
+                                    </div>
+                                    <div class="weapon-element">
+                                        <img src="src/assets/${this.elementIcons[weapon.element]}" class="element-icon" alt="${weapon.element}">
+                                        ${this.getWeaponElementName(weapon.element)}
+                                    </div>
+                                    <div class="weapon-stats">
+                                        <div>等级: ${weapon.level}/${Weapon.breakthroughLevels[weapon.breakthrough || 0]}</div>
+                                        <div>攻击: ${currentStats.attack}</div>
+                                        <div>生命: ${currentStats.hp}</div>
+                                    </div>
+                                </div>
+                            `;
+                        }).join('')}
                         ${Object.entries(availableWeapons).map(([id, weapon]) => {
                             const rarityClass = this.getRarityClass(weapon.rarity);
                             const currentStats = Weapon.calculateCurrentStats(weapon);
@@ -2734,6 +2798,7 @@ const UI = {
 
             // 武器选择事件
             let selectedWeaponId = null;
+            let selectedEquippedSlot = null;
             weaponItems.forEach(item => {
                 item.onclick = () => {
                     // 取消之前的选择
@@ -2743,6 +2808,13 @@ const UI = {
                     item.classList.add('selected');
                     selectedWeaponId = item.getAttribute('data-weapon-id');
 
+                    // 检查是否是已装备的武器
+                    if (item.classList.contains('equipped')) {
+                        selectedEquippedSlot = item.getAttribute('data-equipped-slot');
+                    } else {
+                        selectedEquippedSlot = null;
+                    }
+
                     // 更新确认按钮状态
                     confirmBtn.disabled = false;
                 };
@@ -2751,28 +2823,63 @@ const UI = {
             // 确认装备事件
             confirmBtn.onclick = () => {
                 if (selectedWeaponId) {
-                    // 装备武器
-                    if (Weapon.addWeaponToBoard(boardId, selectedWeaponId, slotType)) {
-                        this.showNotification('武器装备成功', 'success');
-
-                        // 更新主界面武器盘显示
-                        if (typeof MainUI !== 'undefined' && typeof MainUI.updateWeaponBoard === 'function') {
-                            console.log('更新主界面武器盘');
-                            MainUI.updateWeaponBoard();
+                    // 如果选择的是已装备的武器，则交换位置
+                    if (selectedEquippedSlot) {
+                        // 如果选择的是当前槽位的武器，不做任何操作
+                        if (selectedEquippedSlot === slotType) {
+                            this.showNotification('该武器已装备在当前槽位', 'info');
+                            document.body.removeChild(dialog);
+                            return;
                         }
 
-                        // 更新队伍武器盘显示
-                        if (typeof TeamWeaponBoard !== 'undefined' && typeof TeamWeaponBoard.renderTeamWeaponBoard === 'function') {
-                            console.log('更新队伍武器盘');
-                            TeamWeaponBoard.renderTeamWeaponBoard();
-                        }
+                        // 获取当前槽位的武器ID
+                        const currentSlotWeaponId = weaponBoard.slots[slotType];
 
-                        // 保存游戏状态
-                        if (typeof Game !== 'undefined' && typeof Game.saveGame === 'function') {
-                            Game.saveGame();
+                        // 获取已装备槽位的武器ID
+                        const equippedSlotWeaponId = weaponBoard.slots[selectedEquippedSlot];
+
+                        // 交换位置
+                        if (currentSlotWeaponId) {
+                            // 如果当前槽位有武器，则交换
+                            Weapon.removeWeaponFromBoard(boardId, slotType);
+                            Weapon.removeWeaponFromBoard(boardId, selectedEquippedSlot);
+
+                            // 重新装备武器
+                            Weapon.addWeaponToBoard(boardId, equippedSlotWeaponId, slotType);
+                            Weapon.addWeaponToBoard(boardId, currentSlotWeaponId, selectedEquippedSlot);
+
+                            this.showNotification('武器位置交换成功', 'success');
+                        } else {
+                            // 如果当前槽位没有武器，则移动
+                            Weapon.removeWeaponFromBoard(boardId, selectedEquippedSlot);
+                            Weapon.addWeaponToBoard(boardId, equippedSlotWeaponId, slotType);
+
+                            this.showNotification('武器移动成功', 'success');
                         }
                     } else {
-                        this.showNotification('武器装备失败', 'error');
+                        // 装备新武器
+                        if (Weapon.addWeaponToBoard(boardId, selectedWeaponId, slotType)) {
+                            this.showNotification('武器装备成功', 'success');
+                        } else {
+                            this.showNotification('武器装备失败', 'error');
+                        }
+                    }
+
+                    // 更新主界面武器盘显示
+                    if (typeof MainUI !== 'undefined' && typeof MainUI.updateWeaponBoard === 'function') {
+                        console.log('更新主界面武器盘');
+                        MainUI.updateWeaponBoard();
+                    }
+
+                    // 更新队伍武器盘显示
+                    if (typeof TeamWeaponBoard !== 'undefined' && typeof TeamWeaponBoard.renderTeamWeaponBoard === 'function') {
+                        console.log('更新队伍武器盘');
+                        TeamWeaponBoard.renderTeamWeaponBoard();
+                    }
+
+                    // 保存游戏状态
+                    if (typeof Game !== 'undefined' && typeof Game.saveGame === 'function') {
+                        Game.saveGame();
                     }
 
                     // 关闭对话框

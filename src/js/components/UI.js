@@ -1034,7 +1034,11 @@ const UI = {
                             <div class="weapon-effects">
                                 <div>特殊效果:</div>
                                 ${weapon.specialEffects.map(effect => {
-                                    return `<div>${this.getWeaponSkillName(effect.type)} Lv.${effect.level}</div>`;
+                                    const isUnlocked = weapon.level >= effect.unlock;
+                                    return `<div class="effect-item ${isUnlocked ? 'unlocked' : 'locked'}">
+                                        ${this.getWeaponSkillName(effect.type)} Lv.${effect.level}
+                                        ${!isUnlocked ? '<span class="unlock-hint">(需要武器等级达到' + effect.unlock + '级)</span>' : ''}
+                                    </div>`;
                                 }).join('')}
                             </div>
                         ` : ''}
@@ -1153,13 +1157,19 @@ const UI = {
                 </div>
                 <div class="weapon-effects">
                     <h4>特殊效果</h4>
-                    ${weapon.specialEffects.map(effect => `
-                        <div class="effect-item">
-                            <div class="effect-name">${this.getWeaponSkillName(effect.type)}</div>
-                            <div class="effect-level">Lv.${effect.level}</div>
-                            <div class="effect-description">${effect.description || ''}</div>
-                        </div>
-                    `).join('')}
+                    ${weapon.specialEffects.map(effect => {
+                        const isUnlocked = weapon.level >= effect.unlock;
+                        return `
+                            <div class="effect-item ${isUnlocked ? 'unlocked' : 'locked'}">
+                                <div class="effect-name">${this.getWeaponSkillName(effect.type)}</div>
+                                <div class="effect-level">Lv.${effect.level}</div>
+                                <div class="effect-description">
+                                    ${effect.description || ''}
+                                    ${!isUnlocked ? '<span class="unlock-hint">(需要武器等级达到' + effect.unlock + '级)</span>' : ''}
+                                </div>
+                            </div>
+                        `;
+                    }).join('')}
                 </div>
             </div>
         `;
@@ -1505,12 +1515,19 @@ function showWeaponDetails(weapon) {
             </div>
             <div class="weapon-effects">
                 <h4>特殊效果</h4>
-                ${weapon.specialEffects.map(effect => `
-                    <div class="effect-item">
-                        <span class="effect-name">${effect.name}</span>
-                        <span class="effect-level">Lv.${effect.level}</span>
-                    </div>
-                `).join('')}
+                ${weapon.specialEffects.map(effect => {
+                    const isUnlocked = weapon.level >= effect.unlock;
+                    return `
+                        <div class="effect-item ${isUnlocked ? 'unlocked' : 'locked'}">
+                            <div class="effect-name">${this.getWeaponSkillName(effect.type)}</div>
+                            <div class="effect-level">Lv.${effect.level}</div>
+                            <div class="effect-description">
+                                ${effect.description || ''}
+                                ${!isUnlocked ? '<span class="unlock-hint">(需要武器等级达到' + effect.unlock + '级)</span>' : ''}
+                            </div>
+                        </div>
+                    `;
+                }).join('')}
             </div>
         </div>
     `;

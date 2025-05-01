@@ -164,6 +164,33 @@ const UI = {
             .weapon-tooltip .weapon-breakthrough .star.final {
                 background-position-y: -790px;
             }
+            .weapon-details-content .weapon-breakthrough-info {
+                display: flex;
+                gap: 2px;
+            }
+            .weapon-details-content .weapon-breakthrough-info .star {
+                display: inline-block;
+                background: url(src/assets/stars.png) no-repeat;
+                width: 20px;
+                height: 20px;
+                margin: 0 -4px;
+                background-size: 44px 834px;
+                background-position-x: 0;
+                transform: scale(0.7);
+                transform-origin: center;
+            }
+            .weapon-details-content .weapon-breakthrough-info .star.breakthrough-0 {
+                background-position-y: -763px;
+            }
+            .weapon-details-content .weapon-breakthrough-info .star.breakthrough-1 {
+                background-position-y: -685px;
+            }
+            .weapon-details-content .weapon-breakthrough-info .star.breakthrough-4 {
+                background-position-y: -737px;
+            }
+            .weapon-details-content .weapon-breakthrough-info .star.final {
+                background-position-y: -790px;
+            }
         `;
         document.head.appendChild(style);
         
@@ -1552,7 +1579,21 @@ const UI = {
                     <div class="weapon-title">
                         <h3>${weapon.name}</h3>
                         <div class="weapon-breakthrough-info">
-                            ${this.getBreakthroughStars(weapon.breakthrough, weapon.breakthrough === 4)}
+                            ${Array(4).fill().map((_, index) => {
+                                const isLast = index === 3;
+                                const isFinal = weapon.breakthrough === 4;
+                                const currentBreakthrough = weapon.breakthrough || 0;
+                                
+                                if (isLast) {
+                                    return `<div class="star ${isFinal ? 'final' : 'breakthrough-4'}"></div>`;
+                                } else {
+                                    if (index < currentBreakthrough) {
+                                        return `<div class="star breakthrough-1"></div>`;
+                                    } else {
+                                        return `<div class="star breakthrough-0"></div>`;
+                                    }
+                                }
+                            }).join('')}
                         </div>
                         <div class="weapon-attributes">
                             <div class="weapon-type">
@@ -2380,7 +2421,21 @@ function showWeaponDetails(weapon) {
                 <div class="weapon-title">
                     <h3>${weapon.name}</h3>
                     <div class="weapon-breakthrough-info">
-                        ${this.getBreakthroughStars(weapon.breakthrough, weapon.breakthrough === 4)}
+                        ${Array(4).fill().map((_, index) => {
+                            const isLast = index === 3;
+                            const isFinal = weapon.breakthrough === 4;
+                            const currentBreakthrough = weapon.breakthrough || 0;
+                            
+                            if (isLast) {
+                                return `<div class="star ${isFinal ? 'final' : 'breakthrough-4'}"></div>`;
+                            } else {
+                                if (index < currentBreakthrough) {
+                                    return `<div class="star breakthrough-1"></div>`;
+                                } else {
+                                    return `<div class="star breakthrough-0"></div>`;
+                                }
+                            }
+                        }).join('')}
                     </div>
                     <div class="weapon-attributes">
                         <div class="weapon-type">

@@ -1071,6 +1071,60 @@ const UI = {
         // 清空现有内容
         inventoryContainer.innerHTML = '';
 
+        // 创建排序和筛选控制面板
+        const controlPanel = document.createElement('div');
+        controlPanel.className = 'weapon-control-panel';
+        
+        // 排序控制
+        const sortControl = document.createElement('div');
+        sortControl.className = 'sort-control';
+        sortControl.innerHTML = `
+            <label>排序方式：</label>
+            <select id="weapon-sort-by">
+                <option value="default">默认</option>
+                <option value="attack">攻击力</option>
+                <option value="hp">生命值</option>
+                <option value="level">等级</option>
+                <option value="breakthrough">突破等级</option>
+                <option value="type">武器类型</option>
+                <option value="element">属性</option>
+            </select>
+            <select id="weapon-sort-order">
+                <option value="asc">升序</option>
+                <option value="desc">降序</option>
+            </select>
+        `;
+
+        // 筛选控制
+        const filterControl = document.createElement('div');
+        filterControl.className = 'filter-control';
+        filterControl.innerHTML = `
+            <label>属性筛选：</label>
+            <select id="weapon-filter-element">
+                <option value="all">全部</option>
+                <option value="fire">火</option>
+                <option value="water">水</option>
+                <option value="earth">土</option>
+                <option value="wind">风</option>
+                <option value="light">光</option>
+                <option value="dark">暗</option>
+            </select>
+            <label>类型筛选：</label>
+            <select id="weapon-filter-type">
+                <option value="all">全部</option>
+                <option value="sword">剑</option>
+                <option value="knife">刀</option>
+                <option value="staff">杖</option>
+                <option value="bow">弓</option>
+                <option value="axe">斧</option>
+                <option value="spear">枪</option>
+            </select>
+        `;
+
+        controlPanel.appendChild(sortControl);
+        controlPanel.appendChild(filterControl);
+        inventoryContainer.appendChild(controlPanel);
+
         // 获取所有武器
         const weapons = Weapon.getAllWeapons();
         console.log('获取到的武器列表:', weapons);
@@ -1091,108 +1145,134 @@ const UI = {
         const totalPages = Math.ceil(totalItems / itemsPerPage);
         let currentPage = 1;
 
+        console.log(`武器总数: ${totalItems}, 总页数: ${totalPages}`);
+
         // 添加网格布局样式
         const gridStyle = document.createElement('style');
         gridStyle.textContent = `
+            .weapon-control-panel {
+                margin-bottom: 20px;
+                padding: 10px;
+                background: #f5f5f5;
+                border-radius: 5px;
+            }
+            .sort-control, .filter-control {
+                margin-bottom: 10px;
+            }
+            .sort-control select, .filter-control select {
+                margin-right: 10px;
+                padding: 5px;
+                border-radius: 3px;
+                border: 1px solid #ccc;
+            }
             .weapons-grid {
                 display: grid;
                 grid-template-columns: repeat(7, 1fr);
-                gap: 10px;
+                grid-gap: 10px;
                 padding: 10px;
             }
             .weapon-item {
-                aspect-ratio: 1;
-                min-width: 80px;
-                max-width: 120px;
-            }
-            .weapon-item-content {
-                height: 100%;
-                display: flex;
-                flex-direction: column;
-                justify-content: center;
-                align-items: center;
-                padding: 5px;
-                border-radius: 4px;
-                border: 2px solid #ccc;
-                cursor: pointer;
-                transition: all 0.2s;
                 position: relative;
+                width: 100%;
+                aspect-ratio: 1;
+                border: 1px solid #ccc;
+                border-radius: 5px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                cursor: pointer;
+                transition: all 0.3s ease;
             }
-            .weapon-item-content:hover {
+            .weapon-item:hover {
                 transform: scale(1.05);
-                box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+                box-shadow: 0 0 10px rgba(0,0,0,0.2);
             }
-            .weapon-item-content.rarity-common {
-                border-color: #9e9e9e;
-                background: linear-gradient(to bottom right, #ffffff, #f5f5f5);
-            }
-            .weapon-item-content.rarity-3 {
-                border-color: #4169e1;
-                background: linear-gradient(to bottom right, #ffffff, #e3f2fd);
-            }
-            .weapon-item-content.rarity-4 {
-                border-color: #9c27b0;
-                background: linear-gradient(to bottom right, #ffffff, #f3e5f5);
-            }
-            .weapon-item-content.rarity-5 {
-                border-color: #ffd700;
-                background: linear-gradient(to bottom right, #ffffff, #fff8e1);
-                box-shadow: 0 0 10px rgba(255, 215, 0, 0.3);
-            }
-            .weapon-icon {
-                font-size: 24px;
-                margin-bottom: 5px;
-            }
-            .weapon-level-info {
-                font-size: 12px;
-                text-align: center;
-                color: #333;
-                text-shadow: 0 1px 1px rgba(255, 255, 255, 0.8);
-            }
-            .weapon-level {
-                color: #1a237e;
-            }
-            .weapon-breakthrough {
-                color: #4a148c;
-            }
-            .weapon-breakthrough span {
-                color: #2e7d32;
-            }
-            .weapon-tooltip .weapon-breakthrough {
-                color: #ffd700;
+            .weapon-item.selected {
+                border-color: #4CAF50;
+                box-shadow: 0 0 10px rgba(76,175,80,0.5);
             }
         `;
         document.head.appendChild(gridStyle);
 
-        // 创建分页控件
-        const paginationControls = document.createElement('div');
-        paginationControls.className = 'pagination-controls';
-        
+        // 创建分页按钮
+        const paginationContainer = document.createElement('div');
+        paginationContainer.className = 'pagination';
         const prevButton = document.createElement('button');
-        prevButton.className = 'page-button prev';
+        prevButton.textContent = '上一页';
         prevButton.disabled = true;
-        
         const nextButton = document.createElement('button');
-        nextButton.className = 'page-button next';
-        nextButton.disabled = true;
-        
-        paginationControls.appendChild(prevButton);
-        paginationControls.appendChild(nextButton);
+        nextButton.textContent = '下一页';
+        nextButton.disabled = totalPages <= 1;
 
-        // 创建标题栏
-        const titleElement = document.createElement('h3');
-        titleElement.innerHTML = '武器库';
-        titleElement.appendChild(paginationControls);
-        inventoryContainer.appendChild(titleElement);
+        paginationContainer.appendChild(prevButton);
+        paginationContainer.appendChild(nextButton);
+        inventoryContainer.appendChild(paginationContainer);
+
+        // 排序和筛选函数
+        const sortAndFilterWeapons = () => {
+            const sortBy = document.getElementById('weapon-sort-by').value;
+            const sortOrder = document.getElementById('weapon-sort-order').value;
+            const filterElement = document.getElementById('weapon-filter-element').value;
+            const filterType = document.getElementById('weapon-filter-type').value;
+
+            let sortedWeapons = Object.entries(weapons);
+
+            // 应用筛选
+            if (filterElement !== 'all') {
+                sortedWeapons = sortedWeapons.filter(([_, weapon]) => weapon.element === filterElement);
+            }
+            if (filterType !== 'all') {
+                sortedWeapons = sortedWeapons.filter(([_, weapon]) => weapon.type === filterType);
+            }
+
+            // 应用排序
+            sortedWeapons.sort((a, b) => {
+                const weaponA = a[1];
+                const weaponB = b[1];
+                let comparison = 0;
+
+                switch(sortBy) {
+                    case 'attack':
+                        comparison = Weapon.calculateCurrentStats(weaponA).attack - Weapon.calculateCurrentStats(weaponB).attack;
+                        break;
+                    case 'hp':
+                        comparison = Weapon.calculateCurrentStats(weaponA).hp - Weapon.calculateCurrentStats(weaponB).hp;
+                        break;
+                    case 'level':
+                        comparison = weaponA.level - weaponB.level;
+                        break;
+                    case 'breakthrough':
+                        comparison = (weaponA.breakthrough || 0) - (weaponB.breakthrough || 0);
+                        break;
+                    case 'type':
+                        comparison = weaponA.type.localeCompare(weaponB.type);
+                        break;
+                    case 'element':
+                        comparison = weaponA.element.localeCompare(weaponB.element);
+                        break;
+                    default:
+                        comparison = 0;
+                }
+
+                return sortOrder === 'asc' ? comparison : -comparison;
+            });
+
+            return sortedWeapons;
+        };
 
         // 渲染当前页的武器
         const renderCurrentPage = () => {
+            console.log(`渲染第 ${currentPage} 页武器`);
             weaponsGrid.innerHTML = '';
+            const sortedWeapons = sortAndFilterWeapons();
             const startIndex = (currentPage - 1) * itemsPerPage;
-            const endIndex = Math.min(startIndex + itemsPerPage, totalItems);
-            const currentWeapons = Object.entries(weapons).slice(startIndex, endIndex);
+            const endIndex = Math.min(startIndex + itemsPerPage, sortedWeapons.length);
+            const currentWeapons = sortedWeapons.slice(startIndex, endIndex);
+
+            console.log(`当前页武器范围: ${startIndex} - ${endIndex}, 数量: ${currentWeapons.length}`);
 
             currentWeapons.forEach(([weaponId, weapon]) => {
+                console.log(`渲染武器: ${weaponId}`, weapon);
                 const weaponElement = document.createElement('div');
                 weaponElement.className = 'weapon-item';
                 weaponElement.setAttribute('data-weapon-id', weaponId);
@@ -1232,18 +1312,16 @@ const UI = {
                             <div>攻击: ${currentStats.attack}</div>
                             <div>生命: ${currentStats.hp}</div>
                         </div>
-                        ${weapon.specialEffects.length > 0 ? `
-                            <div class="weapon-effects">
-                                <div>特殊效果:</div>
-                                ${weapon.specialEffects.map(effect => {
-                                    const isUnlocked = weapon.level >= effect.unlock;
-                                    return `<div class="effect-item ${isUnlocked ? 'unlocked' : 'locked'}">
-                                        ${this.getWeaponSkillName(effect.type)} Lv.${effect.level}
-                                        ${!isUnlocked ? '<span class="unlock-hint">(需要武器等级达到' + effect.unlock + '级)</span>' : ''}
-                                    </div>`;
-                                }).join('')}
-                            </div>
-                        ` : ''}
+                        <div class="weapon-effects">
+                            <div>特殊效果:</div>
+                            ${weapon.specialEffects.map(effect => {
+                                const isUnlocked = weapon.level >= effect.unlock;
+                                return `<div class="effect-item ${isUnlocked ? 'unlocked' : 'locked'}">
+                                    ${this.getWeaponSkillName(effect.type)} Lv.${effect.level}
+                                    ${!isUnlocked ? '<span class="unlock-hint">(需要武器等级达到' + effect.unlock + '级)</span>' : ''}
+                                </div>`;
+                            }).join('')}
+                        </div>
                     `;
                     tooltipContainer.innerHTML = '';
                     tooltipContainer.appendChild(tooltip);
@@ -1275,6 +1353,24 @@ const UI = {
             prevButton.disabled = currentPage === 1;
             nextButton.disabled = currentPage === totalPages;
         };
+
+        // 添加排序和筛选事件监听
+        document.getElementById('weapon-sort-by').addEventListener('change', () => {
+            currentPage = 1;
+            renderCurrentPage();
+        });
+        document.getElementById('weapon-sort-order').addEventListener('change', () => {
+            currentPage = 1;
+            renderCurrentPage();
+        });
+        document.getElementById('weapon-filter-element').addEventListener('change', () => {
+            currentPage = 1;
+            renderCurrentPage();
+        });
+        document.getElementById('weapon-filter-type').addEventListener('change', () => {
+            currentPage = 1;
+            renderCurrentPage();
+        });
 
         // 添加分页按钮事件
         prevButton.addEventListener('click', () => {

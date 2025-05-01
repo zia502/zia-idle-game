@@ -116,10 +116,10 @@ const UI = {
                 background: url(src/assets/stars.png) no-repeat;
                 width: 20px;
                 height: 20px;
-                margin: 0 0px;
+                margin: 0 -4px;  /* 负边距消除间隔 */
                 background-size: 44px 834px;
                 background-position-x: 0;
-                transform: scale(0.7);  /* 缩放显示区域到14x14 */
+                transform: scale(0.7);
                 transform-origin: center;
             }
             .weapon-breakthrough .star.breakthrough-0 {
@@ -131,7 +131,10 @@ const UI = {
                 background-position-y: -685px;
             }
             .weapon-breakthrough .star.breakthrough-4 {
-                background-position-y: -790px;
+                background-position-y: -736px;  /* 未终突时的位置 */
+            }
+            .weapon-breakthrough .star.final {
+                background-position-y: -790px;  /* 终突时的位置 */
             }
             .weapon-tooltip .weapon-breakthrough {
                 color: #ffd700;
@@ -1341,7 +1344,7 @@ const UI = {
                                 ${Array(4).fill().map((_, index) => {
                                     const isFilled = index < (weapon.breakthrough || 0);
                                     const isFinal = weapon.breakthrough === 4;
-                                    return `<div class="star ${isFinal ? 'breakthrough-4' : isFilled ? 'breakthrough-1' : 'breakthrough-0'}"></div>`;
+                                    return `<div class="star ${isFinal ? 'final' : isFilled ? 'breakthrough-1' : 'breakthrough-0'}"></div>`;
                                 }).join('')}
                             </div>
                         </div>

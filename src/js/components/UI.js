@@ -173,11 +173,9 @@ const UI = {
                 background: url(src/assets/stars.png) no-repeat;
                 width: 20px;
                 height: 20px;
-                margin: 0 -4px;
+                margin: 0 2px;
                 background-size: 44px 834px;
                 background-position-x: 0;
-                transform: scale(0.7);
-                transform-origin: center;
             }
             .weapon-details-content .weapon-breakthrough-info .star.breakthrough-0 {
                 background-position-y: -763px;

@@ -466,18 +466,6 @@ const Weapon = {
         // 然后尝试加载完整的武器模板
         this.loadTemplates();
 
-        // 监听模板加载完成事件
-        if (typeof Events !== 'undefined' && typeof Events.on === 'function') {
-            Events.on('weaponTemplate:loaded', () => {
-                console.log('武器模板加载完成，开始创建初始武器');
-                this.createInitialWeapons();
-            });
-        } else {
-            console.warn('Events模块未就绪，无法监听武器模板加载事件');
-            // 如果没有事件系统，直接创建初始武器
-            this.createInitialWeapons();
-        }
-
         console.log('武器系统初始化完成');
     },
 
@@ -600,59 +588,6 @@ const Weapon = {
         if (typeof Events !== 'undefined' && typeof Events.emit === 'function') {
             Events.emit('weaponTemplate:loaded');
         }
-    },
-
-    /**
-     * 创建初始武器
-     */
-    createInitialWeapons() {
-        console.log('开始创建初始武器...');
-        console.log('当前templates状态:', this.templates);
-        
-        // 检查是否有可用的武器模板
-        if (!this.templates || Object.keys(this.templates).length === 0) {
-            console.error('没有可用的武器模板，无法创建初始武器');
-            return;
-        }
-
-        // 为每种武器创建8把
-        const weapons = [
-            'surturFlame', 'surturSword', 'gonggongTouch', 'gonggongPillar',
-            'dagdaBreath', 'dagdaHorn', 'gaiaEmbrace', 'gaiaRoot',
-            'lughBlade', 'lughCrown', 'anubisScale', 'anubisStaff'
-        ];
-
-        console.log('计划创建的武器列表:', weapons);
-
-        weapons.forEach(weaponId => {
-            console.log(`处理武器: ${weaponId}`);
-            console.log(`武器模板数据:`, this.templates[weaponId]);
-            
-            if (!this.templates[weaponId]) {
-                console.error(`未找到武器模板: ${weaponId}`);
-                return;
-            }
-
-            for (let i = 0; i < 8; i++) {
-                const weaponData = {
-                    id: `${weaponId}_${i + 1}`,
-                    name: this.templates[weaponId].name,
-                    type: this.templates[weaponId].type,
-                    element: this.templates[weaponId].element,
-                    rarity: this.templates[weaponId].rarity,
-                    level: 1,
-                    exp: 0,
-                    breakthrough: 0,
-                    baseStats: { ...this.templates[weaponId].baseStats },
-                    specialEffects: [...this.templates[weaponId].specialEffects]
-                };
-                console.log(`创建武器数据:`, weaponData);
-                this.createWeapon(weaponData);
-            }
-        });
-
-        console.log('初始武器创建完成');
-        console.log('当前所有武器:', this.weapons);
     },
 
     /**

@@ -191,6 +191,15 @@ const Game = {
             this.checkUnlocks();
         });
 
+        // 监听角色创建成功事件
+        Events.on('character:created', (data) => {
+            console.log(`角色 ${data.name} 创建成功`);
+            // 初始化武器
+            if (typeof Weapon !== 'undefined' && typeof Weapon.createInitialWeapons === 'function') {
+                Weapon.createInitialWeapons();
+            }
+        });
+
         // 其他游戏事件监听
         Events.on('inventory:itemAdded', (data) => {
             if (data.isRare) {
@@ -521,7 +530,13 @@ const Game = {
                 // 保存队伍数据
                 team: typeof Team !== 'undefined' && typeof Team.getSaveData === 'function'
                     ? Team.getSaveData()
-                    : {}
+                    : {},
+
+                // 保存武器系统数据
+                weapon: typeof Weapon !== 'undefined' ? {
+                    weapons: Weapon.weapons,
+                    weaponBoards: Weapon.weaponBoards
+                } : {}
             };
 
             // 使用存储工具保存数据
@@ -625,6 +640,17 @@ const Game = {
 
             if (typeof Shop !== 'undefined' && saveData.shop && typeof Shop.loadSaveData === 'function') {
                 Shop.loadSaveData(saveData.shop);
+            }
+
+            // 加载武器系统数据
+            if (typeof Weapon !== 'undefined' && saveData.weapon) {
+                console.log('加载武器系统数据');
+                if (saveData.weapon.weapons) {
+                    Weapon.weapons = saveData.weapon.weapons;
+                }
+                if (saveData.weapon.weaponBoards) {
+                    Weapon.weaponBoards = saveData.weapon.weaponBoards;
+                }
             }
 
             // 确保在加载角色数据后再加载队伍数据

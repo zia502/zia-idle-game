@@ -131,7 +131,7 @@ const UI = {
                 background-position-y: -685px;
             }
             .weapon-breakthrough .star.breakthrough-4 {
-                background-position-y: -736px;  /* 未终突时的位置 */
+                background-position-y: -737px;  /* 未终突时的位置 */
             }
             .weapon-breakthrough .star.final {
                 background-position-y: -790px;  /* 终突时的位置 */
@@ -1174,7 +1174,7 @@ const UI = {
         weaponsGrid.className = 'weapons-grid';
 
         // 计算总页数
-        const itemsPerPage = 36; // 6x8
+        const itemsPerPage = 30; // 5x6
         const totalItems = Object.keys(weapons).length;
         const totalPages = Math.ceil(totalItems / itemsPerPage);
         let currentPage = 1;
@@ -1220,16 +1220,16 @@ const UI = {
             }
             .weapons-grid {
                 display: grid;
-                grid-template-columns: repeat(6, 1fr);
+                grid-template-columns: repeat(5, 1fr);
                 grid-gap: 10px;
                 padding: 10px;
-                width: 600px;
+                width: 500px;
                 min-height: 600px;
             }
             .weapon-item {
                 position: relative;
-                width: 100%;
-                aspect-ratio: 1;
+                width: 100px;  /* 设置固定宽度 */
+                height: 80px; /* 设置固定高度 */
                 border: 1px solid #ccc;
                 border-radius: 5px;
                 display: flex;
@@ -1237,6 +1237,7 @@ const UI = {
                 justify-content: center;
                 cursor: pointer;
                 transition: all 0.3s ease;
+                margin: 0 auto; /* 居中显示 */
             }
             .weapon-item:hover {
                 transform: scale(1.05);
@@ -1342,9 +1343,19 @@ const UI = {
                             <div class="weapon-level">Lv.${weapon.level}</div>
                             <div class="weapon-breakthrough">
                                 ${Array(4).fill().map((_, index) => {
-                                    const isFilled = index < (weapon.breakthrough || 0);
+                                    const isLast = index === 3;
                                     const isFinal = weapon.breakthrough === 4;
-                                    return `<div class="star ${isFinal ? 'final' : isFilled ? 'breakthrough-1' : 'breakthrough-0'}"></div>`;
+                                    const currentBreakthrough = weapon.breakthrough || 0;
+                                    
+                                    if (isLast) {
+                                        return `<div class="star ${isFinal ? 'final' : 'breakthrough-4'}"></div>`;
+                                    } else {
+                                        if (index < currentBreakthrough) {
+                                            return `<div class="star breakthrough-1"></div>`;
+                                        } else {
+                                            return `<div class="star breakthrough-0"></div>`;
+                                        }
+                                    }
                                 }).join('')}
                             </div>
                         </div>

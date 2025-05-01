@@ -55,6 +55,27 @@
                 refreshTeamManagement();
             }
         });
+
+        // 监听角色更新事件
+        if (typeof Events !== 'undefined' && typeof Events.on === 'function') {
+            Events.on('character:updated', (data) => {
+                console.log('队伍管理 - 收到角色更新事件', data);
+                // 检查是否是主角的更新
+                if (typeof Character !== 'undefined' && typeof Character.getMainCharacter === 'function') {
+                    const mainCharacter = Character.getMainCharacter();
+                    if (mainCharacter && data.characterId === mainCharacter.id) {
+                        console.log('队伍管理 - 主角信息已更新，刷新队伍管理界面');
+                        refreshTeamManagement();
+                    }
+                }
+            });
+
+            // 监听武器更新事件
+            Events.on('weapon:updated', () => {
+                console.log('队伍管理 - 收到武器更新事件，刷新队伍管理界面');
+                refreshTeamManagement();
+            });
+        }
     }
 
     /**

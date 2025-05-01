@@ -233,6 +233,12 @@ const Team = {
             console.log(`队伍 ${team.name} 成员: ${team.members.join(', ')}`);
         }
 
+        // 更新主角元素属性
+        if (typeof Character !== 'undefined' && typeof Character.updateMainCharacterElement === 'function') {
+            console.log('更新主角元素属性以匹配新队伍的主手武器');
+            Character.updateMainCharacterElement(teamId);
+        }
+
         // 保存游戏状态
         if (typeof Game !== 'undefined' && typeof Game.saveGame === 'function') {
             setTimeout(() => Game.saveGame(), 100);

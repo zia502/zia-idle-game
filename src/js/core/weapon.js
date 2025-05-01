@@ -737,6 +737,26 @@ const Weapon = {
 
         console.log(`将武器 ${weapon.name} 添加到武器盘 ${boardId} 的槽位 ${slotType}`);
 
+        // 如果是主手武器，更新主角元素属性
+        if (slotType === 'main') {
+            // 查找拥有此武器盘的队伍
+            let teamId = null;
+            if (typeof Team !== 'undefined' && Team.teams) {
+                for (const id in Team.teams) {
+                    if (Team.teams[id].weaponBoardId === boardId) {
+                        teamId = id;
+                        break;
+                    }
+                }
+            }
+
+            // 如果找到队伍，更新主角元素属性
+            if (teamId && typeof Character !== 'undefined' && typeof Character.updateMainCharacterElement === 'function') {
+                console.log('更新主角元素属性为武器元素');
+                Character.updateMainCharacterElement(teamId);
+            }
+        }
+
         // 触发武器变化事件
         if (typeof Events !== 'undefined' && typeof Events.emit === 'function') {
             Events.emit('weapon:updated', { boardId, weaponId, slotType });
@@ -780,6 +800,27 @@ const Weapon = {
         board.slots[slotType] = null;
 
         console.log(`从武器盘 ${boardId} 的槽位 ${slotType} 移除武器 ${weaponId}`);
+
+        // 如果是主手武器，更新主角元素属性为默认火属性
+        if (slotType === 'main') {
+            // 查找拥有此武器盘的队伍
+            let teamId = null;
+            if (typeof Team !== 'undefined' && Team.teams) {
+                for (const id in Team.teams) {
+                    if (Team.teams[id].weaponBoardId === boardId) {
+                        teamId = id;
+                        break;
+                    }
+                }
+            }
+
+            // 如果找到队伍，更新主角元素属性
+            if (teamId && typeof Character !== 'undefined' && typeof Character.updateMainCharacterElement === 'function') {
+                console.log('主手武器被移除，重置主角元素属性为火属性');
+                Character.updateMainCharacterElement(teamId);
+            }
+        }
+
         return weaponId;
     },
 

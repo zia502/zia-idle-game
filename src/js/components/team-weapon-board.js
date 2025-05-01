@@ -169,6 +169,7 @@ const TeamWeaponBoard = {
 
             return `
                 <div class="team-weapon-slot ${rarityClass}" data-slot="${slotType}" data-weapon-id="${weaponId}">
+                    <button class="remove-weapon-btn" data-slot="${slotType}" data-board-id="${weaponBoard.id}" title="移除武器">×</button>
                     <div class="team-weapon-item">
                         <div class="team-weapon-icon">${weapon.name.charAt(0)}</div>
                         <div class="team-weapon-name">${weapon.name}</div>
@@ -217,6 +218,7 @@ const TeamWeaponBoard = {
 
                 html += `
                     <div class="team-weapon-slot ${rarityClass}" data-slot="${slotType}" data-weapon-id="${weaponId}">
+                        <button class="remove-weapon-btn" data-slot="${slotType}" data-board-id="${weaponBoard.id}" title="移除武器">×</button>
                         <div class="team-weapon-item">
                             <div class="team-weapon-icon">${weapon.name.charAt(0)}</div>
                             <div class="team-weapon-name">${weapon.name}</div>
@@ -317,6 +319,49 @@ const TeamWeaponBoard = {
     bindWeaponSlotEvents() {
         // 选择所有武器槽，包括空槽和已装备武器的槽
         const weaponSlots = document.querySelectorAll('#team-weapon-board .team-weapon-slot, #team-weapon-board .team-weapon-slot-filled');
+
+        // 选择所有移除按钮
+        const removeButtons = document.querySelectorAll('#team-weapon-board .remove-weapon-btn');
+
+        // 绑定移除按钮事件
+        removeButtons.forEach(btn => {
+            btn.addEventListener('click', (event) => {
+                // 阻止事件冒泡，避免触发槽位的点击事件
+                event.stopPropagation();
+
+                const slotType = btn.getAttribute('data-slot');
+                const boardId = btn.getAttribute('data-board-id');
+
+                console.log(`点击了移除按钮: 槽位 ${slotType}, 武器盘 ${boardId}`);
+
+                // 移除武器
+                if (typeof Weapon !== 'undefined' && typeof Weapon.removeWeaponFromBoard === 'function') {
+                    const removedWeaponId = Weapon.removeWeaponFromBoard(boardId, slotType);
+
+                    if (removedWeaponId) {
+                        console.log(`成功移除武器: ${removedWeaponId}`);
+
+                        // 更新武器盘显示
+                        this.renderTeamWeaponBoard();
+
+                        // 如果MainUI存在，也更新它
+                        if (typeof MainUI !== 'undefined' && typeof MainUI.updateWeaponBoard === 'function') {
+                            MainUI.updateWeaponBoard();
+                        }
+
+                        // 保存游戏状态
+                        if (typeof Game !== 'undefined' && typeof Game.saveGame === 'function') {
+                            Game.saveGame();
+                        }
+
+                        // 显示通知
+                        if (typeof UI !== 'undefined' && typeof UI.showNotification === 'function') {
+                            UI.showNotification('武器已移除', 'success');
+                        }
+                    }
+                }
+            });
+        });
 
         weaponSlots.forEach(slot => {
             // 移除可能存在的旧事件监听器

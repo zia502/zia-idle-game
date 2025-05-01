@@ -66,11 +66,42 @@ const Game = {
         // 检查活动队伍是否存在
         this.checkActiveTeam();
 
+        // 确保主角元素属性与主手武器同步
+        this.syncMainCharacterElement();
+
         this.startGameLoop();
 
         // 触发游戏加载完成事件
         if (typeof Events !== 'undefined') {
             Events.emit('game:loaded', { version: this.state.version });
+        }
+    },
+
+    /**
+     * 同步主角元素属性与主手武器
+     */
+    syncMainCharacterElement() {
+        try {
+            console.log("同步主角元素属性与主手武器...");
+
+            // 检查必要的模块是否存在
+            if (typeof Character === 'undefined' || typeof Character.updateMainCharacterElement !== 'function') {
+                console.warn("Character模块未加载或updateMainCharacterElement方法不存在，无法同步主角元素属性");
+                return;
+            }
+
+            // 获取活动队伍ID
+            const activeTeamId = this.state.activeTeamId;
+            if (!activeTeamId) {
+                console.warn("没有活动队伍，无法同步主角元素属性");
+                return;
+            }
+
+            // 更新主角元素属性
+            Character.updateMainCharacterElement(activeTeamId);
+            console.log("主角元素属性同步完成");
+        } catch (error) {
+            console.error("同步主角元素属性时出错:", error);
         }
     },
 
@@ -200,7 +231,7 @@ const Game = {
                     weaponExists: !!Weapon,
                     createMethodExists: typeof Weapon.createInitialWeapons === 'function'
                 });
-                
+
                 if (typeof Weapon.createInitialWeapons === 'function') {
                     console.log('开始初始化武器...');
                     try {

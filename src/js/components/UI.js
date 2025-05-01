@@ -2515,6 +2515,7 @@ const UI = {
                     max-width: 80%;
                     max-height: 80vh;
                     overflow-y: auto;
+                    position: relative;
                 }
                 .dialog-header {
                     display: flex;
@@ -2524,15 +2525,62 @@ const UI = {
                     padding-bottom: 10px;
                     border-bottom: 1px solid #eee;
                 }
+                .dialog-actions {
+                    position: absolute;
+                    top: 15px;
+                    right: 15px;
+                    display: flex;
+                    gap: 10px;
+                    z-index: 10;
+                }
                 .close-button {
                     background: none;
                     border: none;
                     font-size: 24px;
                     cursor: pointer;
+                    width: 30px;
+                    height: 30px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    border-radius: 50%;
+                    transition: all 0.2s;
+                }
+                .close-button:hover {
+                    background: rgba(0, 0, 0, 0.1);
+                }
+                .action-button {
+                    padding: 5px 10px;
+                    border-radius: 4px;
+                    cursor: pointer;
+                    transition: all 0.2s;
+                    font-size: 14px;
+                }
+                .confirm-action {
+                    background: #4CAF50;
+                    color: white;
+                    border: none;
+                }
+                .confirm-action:hover:not(:disabled) {
+                    background: #45a049;
+                }
+                .confirm-action:disabled {
+                    background: #cccccc;
+                    cursor: not-allowed;
+                    opacity: 0.7;
+                }
+                .cancel-action {
+                    background: #f44336;
+                    color: white;
+                    border: none;
+                }
+                .cancel-action:hover {
+                    background: #d32f2f;
                 }
                 .weapon-selection-info {
                     margin-bottom: 15px;
                     color: #666;
+                    margin-top: 40px;
                 }
                 .weapon-selection-grid {
                     display: grid;
@@ -2541,7 +2589,7 @@ const UI = {
                     margin-bottom: 15px;
                 }
                 .weapon-selection-item {
-                    border: 1px solid #ccc;
+                    border: 2px solid #ccc;
                     border-radius: 5px;
                     padding: 10px;
                     cursor: pointer;
@@ -2553,8 +2601,27 @@ const UI = {
                     box-shadow: 0 0 10px rgba(0,0,0,0.1);
                 }
                 .weapon-selection-item.selected {
-                    border-color: #4169e1;
-                    box-shadow: 0 0 10px rgba(65, 105, 225, 0.3);
+                    border-color: #4169e1 !important;
+                    box-shadow: 0 0 10px rgba(65, 105, 225, 0.5) !important;
+                    position: relative;
+                    z-index: 1;
+                }
+                .weapon-selection-item.selected::before {
+                    content: '';
+                    position: absolute;
+                    top: -3px;
+                    left: -3px;
+                    right: -3px;
+                    bottom: -3px;
+                    border: 2px solid #4169e1;
+                    border-radius: 7px;
+                    animation: pulse-blue 1.5s infinite;
+                    z-index: -1;
+                }
+                @keyframes pulse-blue {
+                    0% { box-shadow: 0 0 0 0 rgba(65, 105, 225, 0.7); }
+                    70% { box-shadow: 0 0 0 5px rgba(65, 105, 225, 0); }
+                    100% { box-shadow: 0 0 0 0 rgba(65, 105, 225, 0); }
                 }
                 .weapon-selection-item.rarity-3 {
                     border-color: #4169e1;
@@ -2606,46 +2673,19 @@ const UI = {
                     font-size: 12px;
                     color: #333;
                 }
-                .dialog-footer {
-                    display: flex;
-                    justify-content: flex-end;
-                    gap: 10px;
-                    margin-top: 15px;
-                }
-                .dialog-footer button {
-                    padding: 8px 16px;
-                    border-radius: 4px;
-                    cursor: pointer;
-                    transition: all 0.2s;
-                }
-                .confirm-btn {
-                    background: #4CAF50;
-                    color: white;
-                    border: none;
-                }
-                .confirm-btn:hover:not(:disabled) {
-                    background: #45a049;
-                }
-                .confirm-btn:disabled {
-                    background: #cccccc;
-                    cursor: not-allowed;
-                }
-                .cancel-btn {
-                    background: white;
-                    border: 1px solid #ccc;
-                }
-                .cancel-btn:hover {
-                    background: #f5f5f5;
-                }
             `;
             document.head.appendChild(style);
 
             // 设置对话框内容
             dialog.innerHTML = `
                 <div class="weapon-selection-content">
+                    <div class="dialog-actions">
+                        <button class="action-button confirm-action" disabled>确认</button>
+                        <button class="action-button cancel-action">取消</button>
+                        <button class="close-button">&times;</button>
+                    </div>
                     <div class="dialog-header">
                         <h3>${slotType === 'main' ? '选择主手武器' : '选择副武器'}</h3>
-                        <button class="close-button">&times;</button>
                     </div>
                     <div class="weapon-selection-info">
                         ${slotType === 'main' ?
@@ -2677,10 +2717,6 @@ const UI = {
                             `;
                         }).join('')}
                     </div>
-                    <div class="dialog-footer">
-                        <button class="confirm-btn" disabled>确认装备</button>
-                        <button class="cancel-btn">取消</button>
-                    </div>
                 </div>
             `;
 
@@ -2689,8 +2725,8 @@ const UI = {
 
             // 绑定事件
             const closeBtn = dialog.querySelector('.close-button');
-            const cancelBtn = dialog.querySelector('.cancel-btn');
-            const confirmBtn = dialog.querySelector('.confirm-btn');
+            const cancelBtn = dialog.querySelector('.cancel-action');
+            const confirmBtn = dialog.querySelector('.confirm-action');
             const weaponItems = dialog.querySelectorAll('.weapon-selection-item');
 
             closeBtn.onclick = () => document.body.removeChild(dialog);

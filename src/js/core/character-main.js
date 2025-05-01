@@ -179,7 +179,68 @@ Character.changeJob = function(characterId, newJobId) {
         return false;
     }
 
-    return JobSystem.changeJob(character, newJobId);
+    // 获取旧职业和新职业信息
+    const oldJobId = character.job.current;
+    const oldJob = JobSystem.getJob(oldJobId);
+    const newJob = JobSystem.getJob(newJobId);
+
+    // 切换职业
+    const success = JobSystem.changeJob(character, newJobId);
+
+    if (success && character.isMainCharacter) {
+        console.log('主角职业变更成功，检查武器兼容性');
+
+        // 获取当前队伍
+        if (typeof Game !== 'undefined' && Game.state && Game.state.activeTeamId) {
+            const teamId = Game.state.activeTeamId;
+            const team = typeof Team !== 'undefined' ? Team.getTeam(teamId) : null;
+
+            if (team) {
+                // 获取武器盘
+                const weaponBoardId = team.weaponBoardId;
+                const weaponBoard = typeof Weapon !== 'undefined' ? Weapon.getWeaponBoard(weaponBoardId) : null;
+
+                if (weaponBoard) {
+                    // 获取主手武器
+                    const mainWeaponId = weaponBoard.slots.main;
+
+                    if (mainWeaponId) {
+                        const mainWeapon = Weapon.getWeapon(mainWeaponId);
+
+                        if (mainWeapon) {
+                            console.log(`检查主手武器 ${mainWeapon.name} (类型: ${mainWeapon.type}) 是否与新职业 ${newJob.name} 兼容`);
+
+                            // 检查新职业是否可以使用当前主手武器
+                            if (!newJob.allowedWeapons.includes(mainWeapon.type)) {
+                                console.log(`新职业 ${newJob.name} 无法使用当前主手武器 ${mainWeapon.name}，将自动移除`);
+
+                                // 移除主手武器
+                                Weapon.removeWeaponFromBoard(weaponBoardId, 'main');
+
+                                // 更新UI
+                                if (typeof MainUI !== 'undefined' && typeof MainUI.updateWeaponBoard === 'function') {
+                                    MainUI.updateWeaponBoard();
+                                }
+
+                                if (typeof TeamWeaponBoard !== 'undefined' && typeof TeamWeaponBoard.renderTeamWeaponBoard === 'function') {
+                                    TeamWeaponBoard.renderTeamWeaponBoard();
+                                }
+
+                                // 显示通知
+                                if (typeof UI !== 'undefined' && typeof UI.showNotification === 'function') {
+                                    UI.showNotification(`由于职业变更，主手武器 ${mainWeapon.name} 已被移除`, 'warning');
+                                }
+                            } else {
+                                console.log(`新职业 ${newJob.name} 可以使用当前主手武器 ${mainWeapon.name}，无需移除`);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    return success;
 };
 
 /**
@@ -221,4 +282,90 @@ Character.getAvailableJobs = function(characterId) {
     }
 
     return JobSystem.getAvailableJobs(character);
+};
+
+/**
+ * 更新主角元素属性 - 根据主手武器属性
+ * @param {string} teamId - 队伍ID
+ * @returns {boolean} 是否成功更新
+ */
+Character.updateMainCharacterElement = function(teamId) {
+    try {
+        console.log('更新主角元素属性，队伍ID:', teamId);
+
+        // 获取主角
+        const mainCharacter = this.getMainCharacter();
+        if (!mainCharacter) {
+            console.error('找不到主角');
+            return false;
+        }
+        console.log('当前主角:', mainCharacter.name, '当前元素:', mainCharacter.attribute);
+
+        // 获取队伍
+        const team = typeof Team !== 'undefined' ? Team.getTeam(teamId) : null;
+        if (!team) {
+            console.error('找不到队伍:', teamId);
+            return false;
+        }
+        console.log('找到队伍:', team.name, '(ID:', team.id, ')');
+
+        // 获取武器盘
+        const weaponBoardId = team.weaponBoardId;
+        console.log('武器盘ID:', weaponBoardId);
+        const weaponBoard = typeof Weapon !== 'undefined' ? Weapon.getWeaponBoard(weaponBoardId) : null;
+        if (!weaponBoard) {
+            console.error('找不到武器盘:', weaponBoardId);
+            return false;
+        }
+        console.log('找到武器盘:', weaponBoard.id);
+
+        // 获取主手武器
+        const mainWeaponId = weaponBoard.slots.main;
+        console.log('主手武器ID:', mainWeaponId);
+
+        if (mainWeaponId) {
+            // 有主手武器，获取武器元素
+            const mainWeapon = Weapon.getWeapon(mainWeaponId);
+            if (mainWeapon && mainWeapon.element) {
+                console.log('找到主手武器:', mainWeapon.name, '元素:', mainWeapon.element);
+
+                // 更新主角元素属性为武器元素
+                const oldElement = mainCharacter.attribute;
+                mainCharacter.attribute = mainWeapon.element;
+                console.log(`主角元素属性已从 ${oldElement} 更新为 ${mainWeapon.element} (来自主手武器 ${mainWeapon.name})`);
+
+                // 触发角色更新事件
+                if (typeof Events !== 'undefined' && typeof Events.emit === 'function') {
+                    console.log('触发character:updated事件');
+                    Events.emit('character:updated', { characterId: mainCharacter.id });
+                }
+
+                return true;
+            } else {
+                console.error('主手武器无效或没有元素属性');
+            }
+        } else {
+            // 没有主手武器，设置为默认火属性
+            if (mainCharacter.attribute !== 'fire') {
+                const oldElement = mainCharacter.attribute;
+                mainCharacter.attribute = 'fire';
+                console.log(`主角元素属性已从 ${oldElement} 重置为默认火属性 (无主手武器)`);
+
+                // 触发角色更新事件
+                if (typeof Events !== 'undefined' && typeof Events.emit === 'function') {
+                    console.log('触发character:updated事件');
+                    Events.emit('character:updated', { characterId: mainCharacter.id });
+                }
+
+                return true;
+            } else {
+                console.log('主角已经是火属性，无需更改');
+            }
+        }
+
+        return false;
+    } catch (error) {
+        console.error('更新主角元素属性时出错:', error);
+        return false;
+    }
 };

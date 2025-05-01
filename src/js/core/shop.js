@@ -136,6 +136,41 @@ const Shop = {
             useInBattle: false,
             stackable: true,
             imgSrc: 'scroll.png'
+        },
+        
+        // 经验材料
+        exp_small: {
+            id: 'exp_small',
+            name: '经验上升(小)',
+            description: '为武器提供10000点经验值',
+            category: 'material',
+            basePrice: 1000,
+            effect: { type: 'weapon_exp', value: 10000 },
+            useInBattle: false,
+            stackable: true,
+            imgSrc: 'exp_small.png'
+        },
+        exp_medium: {
+            id: 'exp_medium',
+            name: '经验上升(中)',
+            description: '为武器提供50000点经验值',
+            category: 'material',
+            basePrice: 4500,
+            effect: { type: 'weapon_exp', value: 50000 },
+            useInBattle: false,
+            stackable: true,
+            imgSrc: 'exp_medium.png'
+        },
+        exp_large: {
+            id: 'exp_large',
+            name: '经验上升(大)',
+            description: '为武器提供100000点经验值',
+            category: 'material',
+            basePrice: 8000,
+            effect: { type: 'weapon_exp', value: 100000 },
+            useInBattle: false,
+            stackable: true,
+            imgSrc: 'exp_large.png'
         }
     },
     

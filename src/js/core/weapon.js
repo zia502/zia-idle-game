@@ -54,8 +54,8 @@ const Weapon = {
                 2: { da: 10, ta: 6 },
                 3: { da: 15, ta: 10 }
             },
-            effect: (stats, level) => {
-                const levelData = this.skills.abandon.levels[level];
+            effect: function(stats, level) {
+                const levelData = Weapon.skills.abandon.levels[level];
                 stats.daRate = (stats.daRate || 0) + levelData.da / 100;
                 stats.taRate = (stats.taRate || 0) + levelData.ta / 100;
                 return stats;
@@ -71,9 +71,9 @@ const Weapon = {
                 2: { hp: 20 },
                 3: { hp: 30 }
             },
-            effect: (stats, level) => {
-                const levelData = this.skills.aegis.levels[level];
-                stats.hp = (stats.hp || 0) * (1 + levelData.hp / 100);
+            effect: function(stats, level) {
+                const levelData = Weapon.skills.aegis.levels[level];
+                stats.hp = Math.floor(stats.hp * (1 + levelData.hp / 100));
                 return stats;
             }
         },
@@ -87,8 +87,8 @@ const Weapon = {
                 2: { cap: 7 },
                 3: { cap: 10 }
             },
-            effect: (stats, level) => {
-                const levelData = this.skills.arts.levels[level];
+            effect: function(stats, level) {
+                const levelData = Weapon.skills.arts.levels[level];
                 stats.skillDamageCap = (stats.skillDamageCap || 1) * (1 + levelData.cap / 100);
                 return stats;
             }
@@ -103,8 +103,8 @@ const Weapon = {
                 2: { cap: 20 },
                 3: { cap: 30 }
             },
-            effect: (stats, level) => {
-                const levelData = this.skills.beastEssence.levels[level];
+            effect: function(stats, level) {
+                const levelData = Weapon.skills.beastEssence.levels[level];
                 stats.damageCap = (stats.damageCap || 1) * (1 + levelData.cap / 100);
                 return stats;
             }
@@ -119,9 +119,9 @@ const Weapon = {
                 2: { hp: 14, crit: 6 },
                 3: { hp: 20, crit: 10 }
             },
-            effect: (stats, level) => {
-                const levelData = this.skills.bladeshield.levels[level];
-                stats.hp = (stats.hp || 0) * (1 + levelData.hp / 100);
+            effect: function(stats, level) {
+                const levelData = Weapon.skills.bladeshield.levels[level];
+                stats.hp = Math.floor(stats.hp * (1 + levelData.hp / 100));
                 stats.critRate = (stats.critRate || 0) + levelData.crit / 100;
                 return stats;
             }
@@ -136,9 +136,9 @@ const Weapon = {
                 2: { atk: 26, crit: 8 },
                 3: { atk: 30, crit: 12 }
             },
-            effect: (stats, level) => {
-                const levelData = this.skills.celere.levels[level];
-                stats.attack = (stats.attack || 0) * (1 + levelData.atk / 100);
+            effect: function(stats, level) {
+                const levelData = Weapon.skills.celere.levels[level];
+                stats.attack = Math.floor(stats.attack * (1 + levelData.atk / 100));
                 stats.critRate = (stats.critRate || 0) + levelData.crit / 100;
                 return stats;
             }
@@ -153,8 +153,8 @@ const Weapon = {
                 2: { exatk: 30, def: 20 },
                 3: { exatk: 40, def: 30 }
             },
-            effect: (stats, level) => {
-                const levelData = this.skills.convergence.levels[level];
+            effect: function(stats, level) {
+                const levelData = Weapon.skills.convergence.levels[level];
                 stats.exAttack = (stats.exAttack || 0) * (1 + levelData.exatk / 100);
                 stats.defense = (stats.defense || 0) * (1 + levelData.def / 100);
                 return stats;
@@ -170,8 +170,8 @@ const Weapon = {
                 2: { bonus: 30000 },
                 3: { bonus: 50000 }
             },
-            effect: (stats, level) => {
-                const levelData = this.skills.deathstrike.levels[level];
+            effect: function(stats, level) {
+                const levelData = Weapon.skills.deathstrike.levels[level];
                 stats.bonusDamage = (stats.bonusDamage || 0) + levelData.bonus;
                 return stats;
             }
@@ -186,8 +186,8 @@ const Weapon = {
                 2: { ta: 9 },
                 3: { ta: 12 }
             },
-            effect: (stats, level) => {
-                const levelData = this.skills.devastation.levels[level];
+            effect: function(stats, level) {
+                const levelData = Weapon.skills.devastation.levels[level];
                 stats.taRate = (stats.taRate || 0) + levelData.ta / 100;
                 return stats;
             }
@@ -202,8 +202,8 @@ const Weapon = {
                 2: { da: 12 },
                 3: { da: 18 }
             },
-            effect: (stats, level) => {
-                const levelData = this.skills.dualEdge.levels[level];
+            effect: function(stats, level) {
+                const levelData = Weapon.skills.dualEdge.levels[level];
                 stats.daRate = (stats.daRate || 0) + levelData.da / 100;
                 return stats;
             }
@@ -218,8 +218,8 @@ const Weapon = {
                 2: { value: 12 },
                 3: { value: 18 }
             },
-            effect: (stats, level) => {
-                const levelData = this.skills.enmity.levels[level];
+            effect: function(stats, level) {
+                const levelData = Weapon.skills.enmity.levels[level];
                 stats.enmity = (stats.enmity || 0) + levelData.value / 100;
                 return stats;
             }
@@ -234,9 +234,9 @@ const Weapon = {
                 2: { atk: 24 },
                 3: { atk: 36 }
             },
-            effect: (stats, level) => {
-                const levelData = this.skills.essence.levels[level];
-                stats.attack = (stats.attack || 0) * (1 + levelData.atk / 100);
+            effect: function(stats, level) {
+                const levelData = Weapon.skills.essence.levels[level];
+                stats.attack = Math.floor(stats.attack * (1 + levelData.atk / 100));
                 return stats;
             }
         },
@@ -250,9 +250,9 @@ const Weapon = {
                 2: { atk: 28, ta: 6 },
                 3: { atk: 32, ta: 9 }
             },
-            effect: (stats, level) => {
-                const levelData = this.skills.fandango.levels[level];
-                stats.attack = (stats.attack || 0) * (1 + levelData.atk / 100);
+            effect: function(stats, level) {
+                const levelData = Weapon.skills.fandango.levels[level];
+                stats.attack = Math.floor(stats.attack * (1 + levelData.atk / 100));
                 stats.taRate = (stats.taRate || 0) + levelData.ta / 100;
                 return stats;
             }
@@ -267,8 +267,8 @@ const Weapon = {
                 2: { def: 32 },
                 3: { def: 45 }
             },
-            effect: (stats, level) => {
-                const levelData = this.skills.fortified.levels[level];
+            effect: function(stats, level) {
+                const levelData = Weapon.skills.fortified.levels[level];
                 stats.defense = (stats.defense || 0) * (1 + levelData.def / 100);
                 return stats;
             }
@@ -283,9 +283,9 @@ const Weapon = {
                 2: { atk: 29, da: 10 },
                 3: { atk: 32, da: 16 }
             },
-            effect: (stats, level) => {
-                const levelData = this.skills.haunt.levels[level];
-                stats.attack = (stats.attack || 0) * (1 + levelData.atk / 100);
+            effect: function(stats, level) {
+                const levelData = Weapon.skills.haunt.levels[level];
+                stats.attack = Math.floor(stats.attack * (1 + levelData.atk / 100));
                 stats.daRate = (stats.daRate || 0) + levelData.da / 100;
                 return stats;
             }
@@ -300,9 +300,9 @@ const Weapon = {
                 2: { hp: 20, da: 10 },
                 3: { hp: 30, da: 15 }
             },
-            effect: (stats, level) => {
-                const levelData = this.skills.heroism.levels[level];
-                stats.hp = (stats.hp || 0) * (1 + levelData.hp / 100);
+            effect: function(stats, level) {
+                const levelData = Weapon.skills.heroism.levels[level];
+                stats.hp = Math.floor(stats.hp * (1 + levelData.hp / 100));
                 stats.daRate = (stats.daRate || 0) + levelData.da / 100;
                 return stats;
             }
@@ -317,10 +317,10 @@ const Weapon = {
                 2: { hp: 24, atk: 24 },
                 3: { hp: 40, atk: 40 }
             },
-            effect: (stats, level) => {
-                const levelData = this.skills.majesty.levels[level];
-                stats.hp = (stats.hp || 0) * (1 + levelData.hp / 100);
-                stats.attack = (stats.attack || 0) * (1 + levelData.atk / 100);
+            effect: function(stats, level) {
+                const levelData = Weapon.skills.majesty.levels[level];
+                stats.hp = Math.floor(stats.hp * (1 + levelData.hp / 100));
+                stats.attack = Math.floor(stats.attack * (1 + levelData.atk / 100));
                 return stats;
             }
         },
@@ -334,9 +334,9 @@ const Weapon = {
                 2: { atk: 26, exatk: 15 },
                 3: { atk: 32, exatk: 18 }
             },
-            effect: (stats, level) => {
-                const levelData = this.skills.might.levels[level];
-                stats.attack = (stats.attack || 0) * (1 + levelData.atk / 100);
+            effect: function(stats, level) {
+                const levelData = Weapon.skills.might.levels[level];
+                stats.attack = Math.floor(stats.attack * (1 + levelData.atk / 100));
                 stats.exAttack = (stats.exAttack || 0) * (1 + levelData.exatk / 100);
                 return stats;
             }
@@ -351,8 +351,8 @@ const Weapon = {
                 2: { crit: 12 },
                 3: { crit: 20 }
             },
-            effect: (stats, level) => {
-                const levelData = this.skills.sephiraTek.levels[level];
+            effect: function(stats, level) {
+                const levelData = Weapon.skills.sephiraTek.levels[level];
                 stats.critRate = (stats.critRate || 0) + levelData.crit / 100;
                 return stats;
             }
@@ -367,8 +367,8 @@ const Weapon = {
                 2: { exatk: 36 },
                 3: { exatk: 46 }
             },
-            effect: (stats, level) => {
-                const levelData = this.skills.sovereign.levels[level];
+            effect: function(stats, level) {
+                const levelData = Weapon.skills.sovereign.levels[level];
                 stats.exAttack = (stats.exAttack || 0) * (1 + levelData.exatk / 100);
                 return stats;
             }
@@ -383,8 +383,8 @@ const Weapon = {
                 2: { da: 10, crit: 13 },
                 3: { da: 15, crit: 17 }
             },
-            effect: (stats, level) => {
-                const levelData = this.skills.restraint.levels[level];
+            effect: function(stats, level) {
+                const levelData = Weapon.skills.restraint.levels[level];
                 stats.daRate = (stats.daRate || 0) + levelData.da / 100;
                 stats.critRate = (stats.critRate || 0) + levelData.crit / 100;
                 return stats;
@@ -400,8 +400,8 @@ const Weapon = {
                 2: { ta: 6, crit: 10 },
                 3: { ta: 8, crit: 15 }
             },
-            effect: (stats, level) => {
-                const levelData = this.skills.spearhead.levels[level];
+            effect: function(stats, level) {
+                const levelData = Weapon.skills.spearhead.levels[level];
                 stats.taRate = (stats.taRate || 0) + levelData.ta / 100;
                 stats.critRate = (stats.critRate || 0) + levelData.crit / 100;
                 return stats;
@@ -417,8 +417,8 @@ const Weapon = {
                 2: { value: 6 },
                 3: { value: 15 }
             },
-            effect: (stats, level) => {
-                const levelData = this.skills.stamina.levels[level];
+            effect: function(stats, level) {
+                const levelData = Weapon.skills.stamina.levels[level];
                 stats.stamina = (stats.stamina || 0) + levelData.value / 100;
                 return stats;
             }
@@ -433,9 +433,9 @@ const Weapon = {
                 2: { hp: 15, stamina: 7 },
                 3: { hp: 18, stamina: 10 }
             },
-            effect: (stats, level) => {
-                const levelData = this.skills.verve.levels[level];
-                stats.hp = (stats.hp || 0) * (1 + levelData.hp / 100);
+            effect: function(stats, level) {
+                const levelData = Weapon.skills.verve.levels[level];
+                stats.hp = Math.floor(stats.hp * (1 + levelData.hp / 100));
                 stats.stamina = (stats.stamina || 0) + levelData.stamina / 100;
                 return stats;
             }
@@ -907,11 +907,28 @@ const Weapon = {
         const currentLevel = weapon.level;
         const maxLevel = this.breakthroughLevels[weapon.breakthrough || 0];
         
-        // 计算当前等级对应的属性值（线性增长）
+        // 计算当前等级对应的基础属性值（线性增长）
         const attack = Math.floor(baseStats.attack + (baseStats["150Attack"] - baseStats.attack) * (currentLevel - 1) / (maxLevel - 1));
         const hp = Math.floor(baseStats.hp + (baseStats["150Hp"] - baseStats.hp) * (currentLevel - 1) / (maxLevel - 1));
         
-        return { attack, hp };
+        // 创建基础属性对象
+        let stats = { attack, hp };
+        
+        // 应用已解锁的技能效果
+        if (weapon.specialEffects && weapon.specialEffects.length > 0) {
+            weapon.specialEffects.forEach(effect => {
+                // 检查技能是否已解锁
+                if (currentLevel >= effect.unlock) {
+                    const skill = this.skills[effect.type];
+                    if (skill && skill.effect) {
+                        // 应用技能效果
+                        stats = skill.effect(stats, effect.level);
+                    }
+                }
+            });
+        }
+        
+        return stats;
     },
 
     /**
@@ -983,15 +1000,24 @@ const Weapon = {
      */
     upgradeWeapon(weaponId, expAmount) {
         const weapon = this.getWeapon(weaponId);
+        if (!weapon) return false;
+        
+        // 检查是否已达到等级上限
+        const maxLevel = this.breakthroughLevels[weapon.breakthrough || 0];
+        if (weapon.level >= maxLevel) {
+            console.log('武器已达到当前突破等级上限，无法继续升级');
+            return false;
+        }
         
         // 添加经验值
         weapon.exp += expAmount;
         
-        // 计算升级所需经验
-        const expToNextLevel = this.calculateExpRequired(weapon.level, weapon.level + 1);
-        
         // 升级直到经验不足或达到等级上限
-        while (weapon.exp >= expToNextLevel && weapon.level < weapon.maxLevel) {
+        while (weapon.level < maxLevel) {
+            const expToNextLevel = this.calculateExpRequired(weapon.level, weapon.level + 1);
+            if (weapon.exp < expToNextLevel) break;
+            
+            // 升级
             weapon.exp -= expToNextLevel;
             weapon.level++;
             

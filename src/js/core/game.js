@@ -66,6 +66,14 @@ const Game = {
         // 检查活动队伍是否存在
         this.checkActiveTeam();
 
+        // 添加初始经验材料
+        if (typeof Inventory !== 'undefined' && !this.hasInitialExpMaterials) {
+            Inventory.addItem('exp_small', 10);
+            Inventory.addItem('exp_medium', 10);
+            Inventory.addItem('exp_large', 10);
+            this.hasInitialExpMaterials = true;
+        }
+
         this.startGameLoop();
 
         // 触发游戏加载完成事件

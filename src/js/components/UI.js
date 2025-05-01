@@ -1260,7 +1260,8 @@ const UI = {
 
         // 更新突破信息
         document.getElementById('current-breakthrough').textContent = weapon.breakthrough || 0;
-        document.getElementById('max-level').textContent = Weapon.breakthroughLevels[weapon.breakthrough || 0];
+        const maxLevel = Weapon.breakthroughLevels[weapon.breakthrough || 0];
+        document.getElementById('max-level').textContent = maxLevel;
 
         // 更新等级信息
         document.getElementById('current-level').textContent = weapon.level;
@@ -1280,14 +1281,30 @@ const UI = {
             console.log('终突武器:', weaponId);
         };
 
-        // 绑定添加经验按钮事件
+        // 绑定升级按钮事件
+        const upgradeBtn = document.getElementById('upgrade-btn');
         const addExpBtn = document.getElementById('add-exp-btn');
+        
+        // 检查是否已达到等级上限
+        const isMaxLevel = weapon.level >= maxLevel;
+        if (isMaxLevel) {
+            upgradeBtn.disabled = true;
+            addExpBtn.disabled = true;
+            upgradeBtn.title = '已达到当前突破等级上限';
+            addExpBtn.title = '已达到当前突破等级上限';
+        } else {
+            upgradeBtn.disabled = false;
+            addExpBtn.disabled = false;
+            upgradeBtn.title = '';
+            addExpBtn.title = '';
+        }
+
+        upgradeBtn.onclick = () => {
+            this.showWeaponUpgradeMaterialSelection(weaponId);
+        };
+
         addExpBtn.onclick = () => {
-            const expAmount = parseInt(document.getElementById('exp-amount').value);
-            if (expAmount > 0) {
-                Weapon.upgradeWeapon(weaponId, expAmount);
-                this.showWeaponDetails(weaponId); // 刷新显示
-            }
+            this.showWeaponUpgradeMaterialSelection(weaponId);
         };
     },
 
@@ -1522,6 +1539,219 @@ const UI = {
                         <div class="material-weapon-level">Lv.${weapon.level}</div>
                         <div class="material-weapon-breakthrough">突破:${weapon.breakthrough || 0}</div>
                     </div>
+                </div>
+            `;
+        }).join('');
+    },
+
+    /**
+     * 显示武器升级材料选择对话框
+     * @param {string} weaponId - 目标武器ID
+     */
+    showWeaponUpgradeMaterialSelection(weaponId) {
+        const weapon = Weapon.getWeapon(weaponId);
+        if (!weapon) return;
+
+        // 创建对话框容器
+        const dialog = document.createElement('div');
+        dialog.className = 'upgrade-dialog';
+        dialog.innerHTML = `
+            <div class="upgrade-dialog-content">
+                <div class="dialog-header">
+                    <h3>选择升级材料</h3>
+                    <button class="close-button">&times;</button>
+                </div>
+                <div class="upgrade-info">
+                    <p>目标武器: ${weapon.name}</p>
+                    <p>当前等级: ${weapon.level}/${Weapon.breakthroughLevels[weapon.breakthrough || 0]}</p>
+                    <p>当前经验: ${weapon.exp}</p>
+                </div>
+                <div class="material-list">
+                    ${this.renderUpgradeMaterials()}
+                </div>
+                <div class="dialog-footer">
+                    <button class="confirm-btn" disabled>确认升级</button>
+                    <button class="cancel-btn">取消</button>
+                </div>
+            </div>
+        `;
+
+        // 添加样式
+        const style = document.createElement('style');
+        style.textContent = `
+            .upgrade-dialog {
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: rgba(0, 0, 0, 0.5);
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                z-index: 1000;
+            }
+            .upgrade-dialog-content {
+                background: white;
+                padding: 20px;
+                border-radius: 8px;
+                min-width: 500px;
+                max-width: 80%;
+                max-height: 80vh;
+                overflow-y: auto;
+            }
+            .dialog-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 15px;
+            }
+            .close-button {
+                background: none;
+                border: none;
+                font-size: 24px;
+                cursor: pointer;
+            }
+            .upgrade-info {
+                margin-bottom: 15px;
+            }
+            .material-list {
+                display: grid;
+                grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+                gap: 10px;
+                margin-bottom: 15px;
+            }
+            .material-item {
+                border: 1px solid #ccc;
+                padding: 10px;
+                border-radius: 4px;
+                cursor: pointer;
+                transition: all 0.2s;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+            }
+            .material-item:hover {
+                border-color: #4169e1;
+            }
+            .material-item.selected {
+                border-color: #4169e1;
+                background: rgba(65, 105, 225, 0.1);
+            }
+            .material-item.disabled {
+                opacity: 0.5;
+                cursor: not-allowed;
+            }
+            .material-item .exp-value {
+                color: #4CAF50;
+                font-weight: bold;
+            }
+            .material-item .quantity {
+                color: #666;
+                font-size: 0.9em;
+            }
+            .dialog-footer {
+                display: flex;
+                justify-content: flex-end;
+                gap: 10px;
+            }
+            .dialog-footer button {
+                padding: 8px 16px;
+                border-radius: 4px;
+                cursor: pointer;
+                transition: all 0.2s;
+            }
+            .confirm-btn {
+                background: #4CAF50;
+                color: white;
+                border: none;
+            }
+            .confirm-btn:hover:not(:disabled) {
+                background: #45a049;
+            }
+            .confirm-btn:disabled {
+                background: #cccccc;
+                cursor: not-allowed;
+            }
+            .cancel-btn {
+                background: white;
+                border: 1px solid #ccc;
+            }
+            .cancel-btn:hover {
+                background: #f5f5f5;
+            }
+        `;
+        document.head.appendChild(style);
+
+        // 添加到文档
+        document.body.appendChild(dialog);
+
+        // 绑定事件
+        const closeBtn = dialog.querySelector('.close-button');
+        const cancelBtn = dialog.querySelector('.cancel-btn');
+        const confirmBtn = dialog.querySelector('.confirm-btn');
+        const materialItems = dialog.querySelectorAll('.material-item');
+
+        closeBtn.onclick = () => document.body.removeChild(dialog);
+        cancelBtn.onclick = () => document.body.removeChild(dialog);
+
+        // 材料选择事件
+        let selectedMaterial = null;
+        materialItems.forEach(item => {
+            item.onclick = () => {
+                if (item.classList.contains('disabled')) return;
+                
+                // 取消之前的选择
+                materialItems.forEach(i => i.classList.remove('selected'));
+                
+                // 选择当前材料
+                item.classList.add('selected');
+                selectedMaterial = item.dataset.itemId;
+                
+                // 更新确认按钮状态
+                confirmBtn.disabled = false;
+            };
+        });
+
+        // 确认升级事件
+        confirmBtn.onclick = () => {
+            if (selectedMaterial) {
+                const item = Shop.getItem(selectedMaterial);
+                if (item && item.effect && item.effect.type === 'weapon_exp') {
+                    // 使用材料
+                    if (Inventory.removeItem(selectedMaterial)) {
+                        // 升级武器
+                        Weapon.upgradeWeapon(weaponId, item.effect.value);
+                        this.showWeaponDetails(weaponId); // 刷新详情显示
+                        this.renderWeaponInventory(); // 刷新武器列表显示
+                        this.showNotification(`成功使用 ${item.name}，获得 ${item.effect.value} 点经验值`, 'success');
+                    } else {
+                        this.showNotification('材料数量不足', 'error');
+                    }
+                }
+                document.body.removeChild(dialog);
+            }
+        };
+    },
+
+    /**
+     * 渲染升级材料列表
+     * @returns {string} 材料列表HTML
+     */
+    renderUpgradeMaterials() {
+        const materials = [
+            { id: 'exp_small', name: '经验上升(小)', exp: 10000 },
+            { id: 'exp_medium', name: '经验上升(中)', exp: 50000 },
+            { id: 'exp_large', name: '经验上升(大)', exp: 100000 }
+        ];
+
+        return materials.map(material => {
+            const quantity = Inventory.getItemCount(material.id);
+            return `
+                <div class="material-item ${quantity <= 0 ? 'disabled' : ''}" data-item-id="${material.id}">
+                    <div class="material-name">${material.name}</div>
+                    <div class="exp-value">+${material.exp} 经验</div>
+                    <div class="quantity">库存: ${quantity}</div>
                 </div>
             `;
         }).join('');

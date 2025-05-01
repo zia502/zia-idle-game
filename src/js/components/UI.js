@@ -1025,6 +1025,8 @@ const UI = {
                             </div>
                         </div>
                         <div class="weapon-stats">
+                            <div>等级: ${weapon.level}/${Weapon.breakthroughLevels[weapon.breakthrough || 0]}</div>
+                            <div>突破: ${weapon.breakthrough || 0}</div>
                             <div>攻击力: ${currentStats.attack}</div>
                             <div>生命值: ${currentStats.hp}</div>
                         </div>
@@ -1051,6 +1053,12 @@ const UI = {
                 });
 
                 weaponElement.addEventListener('click', () => {
+                    // 移除其他武器的选中状态
+                    document.querySelectorAll('.weapon-item').forEach(item => {
+                        item.classList.remove('selected');
+                    });
+                    // 添加当前武器的选中状态
+                    weaponElement.classList.add('selected');
                     this.showWeaponDetails(weaponId);
                 });
 
@@ -1128,7 +1136,7 @@ const UI = {
                 <div class="weapon-stats">
                     <div class="stat-row">
                         <div class="stat-label">等级</div>
-                        <div class="stat-value">${weapon.level}</div>
+                        <div class="stat-value">${weapon.level}/${Weapon.breakthroughLevels[weapon.breakthrough || 0]}</div>
                     </div>
                     <div class="stat-row">
                         <div class="stat-label">突破</div>
@@ -1180,8 +1188,7 @@ const UI = {
         // 绑定突破按钮事件
         const breakthroughBtn = document.getElementById('breakthrough-btn');
         breakthroughBtn.onclick = () => {
-            // 这里需要实现突破逻辑
-            console.log('突破武器:', weaponId);
+            this.showBreakthroughMaterialSelection(weaponId);
         };
 
         // 绑定终突按钮事件
@@ -1200,6 +1207,212 @@ const UI = {
                 this.showWeaponDetails(weaponId); // 刷新显示
             }
         };
+    },
+
+    /**
+     * 显示突破材料选择框
+     * @param {string} targetWeaponId - 目标武器ID
+     */
+    showBreakthroughMaterialSelection(targetWeaponId) {
+        const targetWeapon = Weapon.getWeapon(targetWeaponId);
+        if (!targetWeapon) return;
+
+        // 创建选择框容器
+        const dialog = document.createElement('div');
+        dialog.className = 'breakthrough-dialog';
+        dialog.innerHTML = `
+            <div class="breakthrough-dialog-content">
+                <div class="dialog-header">
+                    <h3>选择突破材料</h3>
+                    <button class="close-button">&times;</button>
+                </div>
+                <div class="breakthrough-info">
+                    <p>目标武器: ${targetWeapon.name}</p>
+                    <p>当前突破等级: ${targetWeapon.breakthrough || 0}</p>
+                </div>
+                <div class="material-weapons-grid">
+                    ${this.renderBreakthroughMaterials(targetWeaponId)}
+                </div>
+                <div class="dialog-footer">
+                    <button class="confirm-btn" disabled>确认突破</button>
+                    <button class="cancel-btn">取消</button>
+                </div>
+            </div>
+        `;
+
+        // 添加样式
+        const style = document.createElement('style');
+        style.textContent = `
+            .breakthrough-dialog {
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: rgba(0, 0, 0, 0.5);
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                z-index: 1000;
+            }
+            .breakthrough-dialog-content {
+                background: white;
+                padding: 20px;
+                border-radius: 8px;
+                min-width: 500px;
+                max-width: 80%;
+                max-height: 80vh;
+                overflow-y: auto;
+            }
+            .dialog-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 15px;
+            }
+            .close-button {
+                background: none;
+                border: none;
+                font-size: 24px;
+                cursor: pointer;
+            }
+            .breakthrough-info {
+                margin-bottom: 15px;
+            }
+            .material-weapons-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+                gap: 10px;
+                margin-bottom: 15px;
+            }
+            .material-weapon-item {
+                border: 1px solid #ccc;
+                padding: 10px;
+                border-radius: 4px;
+                cursor: pointer;
+                transition: all 0.2s;
+            }
+            .material-weapon-item:hover {
+                border-color: #4169e1;
+            }
+            .material-weapon-item.selected {
+                border-color: #4169e1;
+                background: rgba(65, 105, 225, 0.1);
+            }
+            .material-weapon-item.disabled {
+                opacity: 0.5;
+                cursor: not-allowed;
+            }
+            .dialog-footer {
+                display: flex;
+                justify-content: flex-end;
+                gap: 10px;
+            }
+            .dialog-footer button {
+                padding: 8px 16px;
+                border-radius: 4px;
+                cursor: pointer;
+            }
+            .confirm-btn {
+                background: #4169e1;
+                color: white;
+                border: none;
+            }
+            .confirm-btn:disabled {
+                background: #ccc;
+                cursor: not-allowed;
+            }
+            .cancel-btn {
+                background: white;
+                border: 1px solid #ccc;
+            }
+        `;
+        document.head.appendChild(style);
+
+        // 添加到文档
+        document.body.appendChild(dialog);
+
+        // 绑定事件
+        const closeBtn = dialog.querySelector('.close-button');
+        const cancelBtn = dialog.querySelector('.cancel-btn');
+        const confirmBtn = dialog.querySelector('.confirm-btn');
+        const materialItems = dialog.querySelectorAll('.material-weapon-item');
+
+        closeBtn.onclick = () => document.body.removeChild(dialog);
+        cancelBtn.onclick = () => document.body.removeChild(dialog);
+
+        // 材料选择事件
+        let selectedMaterials = new Set();
+        materialItems.forEach(item => {
+            item.onclick = () => {
+                if (item.classList.contains('disabled')) return;
+                
+                if (item.classList.contains('selected')) {
+                    item.classList.remove('selected');
+                    selectedMaterials.delete(item.dataset.weaponId);
+                } else {
+                    item.classList.add('selected');
+                    selectedMaterials.add(item.dataset.weaponId);
+                }
+
+                // 更新确认按钮状态
+                confirmBtn.disabled = selectedMaterials.size === 0;
+            };
+        });
+
+        // 确认突破事件
+        confirmBtn.onclick = () => {
+            if (selectedMaterials.size > 0) {
+                // 先进行突破
+                Weapon.breakthroughWeapon(targetWeaponId, Array.from(selectedMaterials));
+                // 删除用作材料的武器
+                selectedMaterials.forEach(materialId => {
+                    Weapon.deleteWeapon(materialId);
+                });
+                this.showWeaponDetails(targetWeaponId); // 刷新详情显示
+                this.renderWeaponInventory(); // 刷新武器库显示
+                document.body.removeChild(dialog);
+            }
+        };
+    },
+
+    /**
+     * 渲染突破材料列表
+     * @param {string} targetWeaponId - 目标武器ID
+     * @returns {string} 材料列表HTML
+     */
+    renderBreakthroughMaterials(targetWeaponId) {
+        const targetWeapon = Weapon.getWeapon(targetWeaponId);
+        if (!targetWeapon) return '';
+
+        // 获取所有可用作材料的武器
+        const materials = Object.entries(Weapon.getAllWeapons())
+            .filter(([id, weapon]) => {
+                // 排除目标武器自身
+                if (id === targetWeaponId) return false;
+                // 排除已装备的武器
+                if (weapon.isEquipped) return false;
+                // 只显示同名武器
+                if (weapon.name !== targetWeapon.name) return false;
+                return true;
+            });
+
+        if (materials.length === 0) {
+            return '<div class="empty-message">没有可用的突破材料</div>';
+        }
+
+        return materials.map(([id, weapon]) => {
+            const rarityClass = this.getRarityClass(weapon.rarity);
+            return `
+                <div class="material-weapon-item ${weapon.isEquipped ? 'disabled' : ''}" data-weapon-id="${id}">
+                    <div class="material-weapon-content ${rarityClass}">
+                        <div class="material-weapon-name">${weapon.name}</div>
+                        <div class="material-weapon-level">Lv.${weapon.level}</div>
+                        <div class="material-weapon-breakthrough">突破:${weapon.breakthrough || 0}</div>
+                    </div>
+                </div>
+            `;
+        }).join('');
     }
 };
 

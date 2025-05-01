@@ -930,14 +930,19 @@ const Weapon = {
     /**
      * 突破武器
      * @param {string} weaponId - 武器ID
-     * @param {string} materialWeaponId - 材料武器ID
+     * @param {Array<string>} materialWeaponIds - 材料武器ID数组
      */
-    breakthroughWeapon(weaponId, materialWeaponId) {
+    breakthroughWeapon(weaponId, materialWeaponIds) {
         const weapon = this.getWeapon(weaponId);
-        const materialWeapon = this.getWeapon(materialWeaponId);
+        if (!weapon) return false;
+
+        // 确保materialWeaponIds是数组
+        const materials = Array.isArray(materialWeaponIds) ? materialWeaponIds : [materialWeaponIds];
         
-        // 消耗材料武器
-        this.removeWeapon(materialWeaponId);
+        // 消耗所有材料武器
+        materials.forEach(materialId => {
+            this.deleteWeapon(materialId);
+        });
         
         // 更新突破次数
         weapon.breakthrough = (weapon.breakthrough || 0) + 1;
@@ -1071,5 +1076,24 @@ const Weapon = {
             hp: hp,
             skills: skills
         });
+    },
+
+    /**
+     * 删除武器
+     * @param {string} weaponId - 武器ID
+     * @returns {boolean} 是否删除成功
+     */
+    deleteWeapon(weaponId) {
+        const weapon = this.getWeapon(weaponId);
+        if (!weapon) return false;
+
+        // 如果武器已装备，先从所有武器盘中移除
+        if (weapon.isEquipped) {
+            this.removeWeaponFromAllBoards(weaponId);
+        }
+
+        // 删除武器
+        delete this.weapons[weaponId];
+        return true;
     }
 };

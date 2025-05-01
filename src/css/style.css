@@ -483,6 +483,12 @@ button:active, .btn:active {
     aspect-ratio: 1;
 }
 
+.weapon-item.selected .weapon-item-content {
+    border: 2px solid #4169e1;
+    box-shadow: 0 0 10px rgba(65, 105, 225, 0.3);
+    transform: scale(1.05);
+}
+
 .weapon-item-content {
     position: relative;
     display: flex;
@@ -492,7 +498,7 @@ button:active, .btn:active {
     padding: 4px;
     border-radius: 4px;
     background: rgba(0, 0, 0, 0.3);
-    transition: transform 0.2s;
+    transition: all 0.2s ease;
     height: 100%;
 }
 

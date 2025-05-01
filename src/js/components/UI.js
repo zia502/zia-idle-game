@@ -16,6 +16,44 @@ const UI = {
      * 初始化UI系统
      */
     init() {
+        // 添加样式到文档
+        const style = document.createElement('style');
+        style.textContent = `
+            .breakthrough-stars {
+                display: inline-block;
+                margin-left: 5px;
+            }
+            .breakthrough-stars .star {
+                font-size: 16px;
+                margin-right: 2px;
+                text-shadow: 0 0 1px rgba(0, 0, 0, 0.3);
+            }
+            .weapon-details-content .breakthrough-stars .star {
+                font-size: 24px;
+                margin-right: 4px;
+                text-shadow: 0 0 2px rgba(0, 0, 0, 0.4);
+            }
+            .breakthrough-stars .star.filled {
+                color: gold;
+                text-shadow: 0 0 2px rgba(0, 0, 0, 0.5);
+            }
+            .breakthrough-stars .star.final {
+                color: #3498db;
+                text-shadow: 0 0 2px rgba(0, 0, 0, 0.5);
+            }
+            .breakthrough-stars .star.empty {
+                color: #ccc;
+                text-shadow: 0 0 1px rgba(0, 0, 0, 0.3);
+            }
+            .weapon-details-content {
+                background-color: #f0f7f0;
+                padding: 20px;
+                border-radius: 8px;
+                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            }
+        `;
+        document.head.appendChild(style);
+        
         console.log('UI系统初始化');
         this.setupEventListeners();
         this.createUIElements();
@@ -931,6 +969,39 @@ const UI = {
     },
 
     /**
+     * 获取武器突破等级的星星显示
+     * @param {number} breakthrough - 突破等级
+     * @param {boolean} isFinal - 是否为终突
+     * @returns {string} 星星HTML
+     */
+    getBreakthroughStars(breakthrough = 0, isFinal = false) {
+        const totalStars = 4;
+        let html = '<div class="breakthrough-stars">';
+        
+        // 添加已突破的星星
+        for (let i = 0; i < breakthrough; i++) {
+            html += '<span class="star filled">★</span>';
+        }
+        
+        // 如果是终突,添加蓝色星星
+        if (isFinal) {
+            html += '<span class="star final">★</span>';
+            // 补充剩余空星
+            for (let i = breakthrough + 1; i < totalStars; i++) {
+                html += '<span class="star empty">☆</span>';
+            }
+        } else {
+            // 补充剩余空星
+            for (let i = breakthrough; i < totalStars; i++) {
+                html += '<span class="star empty">☆</span>';
+            }
+        }
+        
+        html += '</div>';
+        return html;
+    },
+
+    /**
      * 渲染武器库
      */
     renderWeaponInventory() {
@@ -1016,6 +1087,9 @@ const UI = {
                     tooltip.className = 'weapon-tooltip';
                     tooltip.innerHTML = `
                         <div class="weapon-name">${weapon.name}</div>
+                        <div class="weapon-breakthrough">
+                            突破等级: ${this.getBreakthroughStars(weapon.breakthrough, weapon.breakthrough === 4)}
+                        </div>
                         <div class="weapon-icons">
                             <div class="weapon-type">
                                 <img src="src/assets/${weaponTypeIcons[weapon.type]}" class="type-icon" alt="${weapon.type}">
@@ -1026,9 +1100,8 @@ const UI = {
                         </div>
                         <div class="weapon-stats">
                             <div>等级: ${weapon.level}/${Weapon.breakthroughLevels[weapon.breakthrough || 0]}</div>
-                            <div>突破: ${weapon.breakthrough || 0}</div>
-                            <div>攻击力: ${currentStats.attack}</div>
-                            <div>生命值: ${currentStats.hp}</div>
+                            <div>攻击: ${currentStats.attack}</div>
+                            <div>生命: ${currentStats.hp}</div>
                         </div>
                         ${weapon.specialEffects.length > 0 ? `
                             <div class="weapon-effects">
@@ -1127,6 +1200,9 @@ const UI = {
                     </div>
                     <div class="weapon-title">
                         <h3>${weapon.name}</h3>
+                        <div class="weapon-breakthrough-info">
+                            ${this.getBreakthroughStars(weapon.breakthrough, weapon.breakthrough === 4)}
+                        </div>
                         <div class="weapon-attributes">
                             <div class="weapon-type">
                                 <img src="src/assets/${weaponTypeIcons[weapon.type]}" class="type-icon" alt="${weapon.type}">
@@ -1141,10 +1217,6 @@ const UI = {
                     <div class="stat-row">
                         <div class="stat-label">等级</div>
                         <div class="stat-value">${weapon.level}/${Weapon.breakthroughLevels[weapon.breakthrough || 0]}</div>
-                    </div>
-                    <div class="stat-row">
-                        <div class="stat-label">突破</div>
-                        <div class="stat-value">${weapon.breakthrough || 0}</div>
                     </div>
                     <div class="stat-row">
                         <div class="stat-label">攻击力</div>
@@ -1520,27 +1592,38 @@ function showWeaponDetails(weapon) {
     const currentStats = Weapon.calculateCurrentStats(weapon);
     
     detailsContainer.innerHTML = `
-        <div class="weapon-details-content rarity-${weapon.rarity}">
+        <div class="weapon-details-content ${rarityClass}">
             <div class="weapon-header">
                 <div class="weapon-icon">
                     ${getWeaponTypeIconHtml(weapon.type)}
                 </div>
                 <div class="weapon-title">
                     <h3>${weapon.name}</h3>
+                    <div class="weapon-breakthrough-info">
+                        ${this.getBreakthroughStars(weapon.breakthrough, weapon.breakthrough === 4)}
+                    </div>
                     <div class="weapon-attributes">
-                        <span class="weapon-type">${getWeaponTypeIconHtml(weapon.type)}</span>
-                        <span class="weapon-element">${getElementIconHtml(weapon.element)}</span>
+                        <div class="weapon-type">
+                            <img src="src/assets/${weaponTypeIcons[weapon.type]}" class="type-icon" alt="${weapon.type}">
+                        </div>
+                        <div class="weapon-element">
+                            <img src="src/assets/${elementIcons[weapon.element]}" class="element-icon" alt="${weapon.element}">
+                        </div>
                     </div>
                 </div>
             </div>
             <div class="weapon-stats">
                 <div class="stat-row">
-                    <span class="stat-label">攻击</span>
-                    <span class="stat-value">${currentStats.attack}</span>
+                    <div class="stat-label">等级</div>
+                    <div class="stat-value">${weapon.level}/${Weapon.breakthroughLevels[weapon.breakthrough || 0]}</div>
                 </div>
                 <div class="stat-row">
-                    <span class="stat-label">生命</span>
-                    <span class="stat-value">${currentStats.hp}</span>
+                    <div class="stat-label">攻击力</div>
+                    <div class="stat-value">${currentStats.attack}</div>
+                </div>
+                <div class="stat-row">
+                    <div class="stat-label">生命值</div>
+                    <div class="stat-value">${currentStats.hp}</div>
                 </div>
             </div>
             <div class="weapon-effects">

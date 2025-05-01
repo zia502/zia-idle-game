@@ -107,9 +107,29 @@ const UI = {
             .weapon-breakthrough {
                 color: #4a148c;
                 font-size: 10px;
+                display: flex;
+                align-items: center;
+                gap: 2px;
             }
-            .weapon-breakthrough span {
-                color: #2e7d32;
+            .weapon-breakthrough .star {
+                display: inline-block;
+                background: url(src/assets/stars.png) no-repeat;
+                width: 20px;
+                height: 20px;
+                margin: 0 -2px;
+                background-size: 44px 834px;  /* 按比例缩小背景图片尺寸 */
+                background-position-x: 0;
+            }
+            .weapon-breakthrough .star.breakthrough-0 {
+                background-position-y: -760px;
+            }
+            .weapon-breakthrough .star.breakthrough-1,
+            .weapon-breakthrough .star.breakthrough-2,
+            .weapon-breakthrough .star.breakthrough-3 {
+                background-position-y: -685px;
+            }
+            .weapon-breakthrough .star.breakthrough-4 {
+                background-position-y: -735px;
             }
             .weapon-tooltip .weapon-breakthrough {
                 color: #ffd700;
@@ -1315,7 +1335,13 @@ const UI = {
                         <div class="weapon-icon">${weapon.name.charAt(0)}</div>
                         <div class="weapon-level-info">
                             <div class="weapon-level">Lv.${weapon.level}</div>
-                            <div class="weapon-breakthrough"><span>突</span>${weapon.breakthrough || 0}</div>
+                            <div class="weapon-breakthrough">
+                                ${Array(4).fill().map((_, index) => {
+                                    const isFilled = index < (weapon.breakthrough || 0);
+                                    const isFinal = weapon.breakthrough === 4;
+                                    return `<div class="star ${isFinal ? 'breakthrough-4' : isFilled ? 'breakthrough-1' : 'breakthrough-0'}"></div>`;
+                                }).join('')}
+                            </div>
                         </div>
                     </div>
                 `;

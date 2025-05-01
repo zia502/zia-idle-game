@@ -14,14 +14,16 @@
         },
         "specialEffects": [
             {
-                "type": "Celere",
-                "name":"刹那II",
-                "description": "提高火属性角色攻击力/暴击率"
+                "type": "celere",
+                "level": 2,
+                "unlock": 1,
+                "description": "提高攻击力和暴击率"
             },
             {
-                "type": "Enmity",
-                "name":"背水",
-                "description": "火属性角色HP越少攻击力越高"
+                "type": "enmity",
+                "level": 1,
+                "unlock": 150,
+                "description": "血量越低攻击力越高"
             }
         ],
         "description": "火神苏尔特尔的战斧，蕴含着毁灭性的火焰力量"
@@ -41,9 +43,16 @@
         },
         "specialEffects": [
             {
-                "type": "atkUP",
-                "value": 8,
-                "description": "提高火属性攻击力"
+                "type": "haunt",
+                "level": 2,
+                "unlock": 1,
+                "description": "攻击/DA提升"
+            },
+            {
+                "type": "aegis",
+                "level": 1,
+                "unlock": 150,
+                "description": "HP提升"
             }
         ],
         "description": "火神苏尔特尔的佩剑，能够撕裂世界的火焰之刃"
@@ -63,9 +72,16 @@
         },
         "specialEffects": [
             {
-                "type": "hpUP",
-                "value": 10,
-                "description": "提高水属性生命值"
+                "type": "aegis",
+                "level": 2,
+                "unlock": 1,
+                "description": "提高生命值"
+            },
+            {
+                "type": "convergence",
+                "level": 1,
+                "unlock": 150,
+                "description": "提高EX攻击力和防御力"
             }
         ],
         "description": "水神共工的长枪，蕴含着无尽的水流之力"
@@ -85,9 +101,16 @@
         },
         "specialEffects": [
             {
-                "type": "hpUP",
-                "value": 8,
-                "description": "提高水属性生命值"
+                "type": "sephiraTek",
+                "level": 3,
+                "unlock": 1,
+                "description": "提高暴击率"
+            },
+            {
+                "type": "essence",
+                "level": 1,
+                "unlock": 150,
+                "description": "提高攻击力"
             }
         ],
         "description": "水神共工的法杖，能够操控无尽的水流"
@@ -107,9 +130,16 @@
         },
         "specialEffects": [
             {
-                "type": "atkUP",
-                "value": 9,
-                "description": "提高风属性攻击力"
+                "type": "sephiraTek",
+                "level": 2,
+                "unlock": 1,
+                "description": "提高暴击率"
+            },
+            {
+                "type": "majesty",
+                "level": 1,
+                "unlock": 150,
+                "description": "提高攻击力和生命值"
             }
         ],
         "description": "风神达格达的战斧，蕴含着丰饶之风的力量"
@@ -129,9 +159,16 @@
         },
         "specialEffects": [
             {
-                "type": "atkUP",
-                "value": 8,
-                "description": "提高风属性攻击力"
+                "type": "spearhead",
+                "level": 2,
+                "unlock": 1,
+                "description": "提高TA概率和暴击率"
+            },
+            {
+                "type": "enmity",
+                "level": 1,
+                "unlock": 150,
+                "description": "血量越低攻击越高"
             }
         ],
         "description": "风神达格达的长弓，能够射出撕裂天空的箭矢"
@@ -151,9 +188,16 @@
         },
         "specialEffects": [
             {
-                "type": "hpUP",
-                "value": 10,
-                "description": "提高土属性生命值"
+                "type": "essence",
+                "level": 3,
+                "unlock": 1,
+                "description": "攻击力提升"
+            },
+            {
+                "type": "aegis",
+                "level": 1,
+                "unlock": 150,
+                "description": "提高生命值"
             }
         ],
         "description": "大地之母盖亚的法杖，蕴含着大地的力量"
@@ -173,9 +217,16 @@
         },
         "specialEffects": [
             {
-                "type": "hpUP",
-                "value": 9,
-                "description": "提高土属性生命值"
+                "type": "majesty",
+                "level": 1,
+                "unlock": 1,
+                "description": "攻击/HP提升"
+            },
+            {
+                "type": "essence",
+                "level": 1,
+                "unlock": 150,
+                "description": "攻击力提升"
             }
         ],
         "description": "大地之母盖亚的短刀，蕴含着泰坦的力量"
@@ -195,9 +246,16 @@
         },
         "specialEffects": [
             {
-                "type": "atkUP",
-                "value": 9,
-                "description": "提高光属性攻击力"
+                "type": "stamina",
+                "level": 2,
+                "unlock": 1,
+                "description": "浑身值提升"
+            },
+            {
+                "type": "essence",
+                "level": 1,
+                "unlock": 150,
+                "description": "攻击力提升"
             }
         ],
         "description": "光神鲁格的短刀，能够释放彩虹般的光芒"
@@ -217,9 +275,16 @@
         },
         "specialEffects": [
             {
-                "type": "atkUP",
-                "value": 8,
-                "description": "提高光属性攻击力"
+                "type": "bladeshield",
+                "level": 2,
+                "unlock": 1,
+                "description": "HP/暴击提升"
+            },
+            {
+                "type": "devastation",
+                "level": 1,
+                "unlock": 150,
+                "description": "提高TA概率"
             }
         ],
         "description": "光神鲁格的长枪，能够驱散一切黑暗"
@@ -239,9 +304,16 @@
         },
         "specialEffects": [
             {
-                "type": "atkUP",
-                "value": 10,
-                "description": "提高暗属性攻击力"
+                "type": "enmity",
+                "level": 3,
+                "unlock": 1,
+                "description": "血量越低攻击越高"
+            },
+            {
+                "type": "dualEdge",
+                "level": 1,
+                "unlock": 150,
+                "description": "提高DA概率"
             }
         ],
         "description": "冥神阿努比斯的长弓，能够审判灵魂的重量"
@@ -261,9 +333,16 @@
         },
         "specialEffects": [
             {
-                "type": "atkUP",
-                "value": 9,
-                "description": "提高暗属性攻击力"
+                "type": "essence",
+                "level": 3,
+                "unlock": 1,
+                "description": "攻击力提升"
+            },
+            {
+                "type": "fortified",
+                "level": 1,
+                "unlock": 150,
+                "description": "防御力提升"
             }
         ],
         "description": "冥神阿努比斯的佩剑，能够引导亡者前往冥界"

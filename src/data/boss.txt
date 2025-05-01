@@ -29,6 +29,31 @@
 阿努比斯之杖·渡亡     剑
 
 
+暴风（abandon）：DA/TA提升
+守护（aegis）：HP提升
+穷理（arts）：技能伤害上限提升
+绝涯（beastEssence）：伤害上限提升
+刃界（bladeshield）：HP/暴击提升
+刹那（celere）：攻击/暴击提升
+励行（convergence）：EX攻击/防御提升
+武技（deathstrike）：额外伤害
+破坏（devastation）：TA提升
+二手（dualEdge）：DA提升
+背水（enmity）：血量越低攻击越高
+攻刃（essence）：攻击力提升
+乱舞（fandango）：攻击/TA提升
+坚守（fortified）：防御力提升
+无双（haunt）：攻击/DA提升
+军神（heroism）：HP/DA提升
+神威（majesty）：攻击/HP提升
+愤怒（might）：攻击/EX攻击提升
+技巧（sephiraTek）：暴击率提升
+霸道（sovereign）：EX攻击提升
+克己（restraint）：DA/暴击提升
+锐锋（spearhead）：TA/暴击提升
+浑身（stamina）：浑身值提升
+志气（verve）：HP/浑身提升
+
 Abandon       DA/TA                暴風  da 7ta 3   暴風2  da 10 ta6   暴風3  da 15 ta 10
 Aegis          HP                  守護  hp 14    守護2  hp 20   守護3  hp 30  
 Arts          SKILL DMG  CAP        穷理   5      穷理2    7       穷理3   10

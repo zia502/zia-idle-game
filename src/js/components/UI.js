@@ -116,12 +116,14 @@ const UI = {
                 background: url(src/assets/stars.png) no-repeat;
                 width: 20px;
                 height: 20px;
-                margin: 0 -2px;
-                background-size: 44px 834px;  /* 按比例缩小背景图片尺寸 */
+                margin: 0 0px;
+                background-size: 44px 834px;
                 background-position-x: 0;
+                transform: scale(0.7);  /* 缩放显示区域到14x14 */
+                transform-origin: center;
             }
             .weapon-breakthrough .star.breakthrough-0 {
-                background-position-y: -760px;
+                background-position-y: -763px;
             }
             .weapon-breakthrough .star.breakthrough-1,
             .weapon-breakthrough .star.breakthrough-2,
@@ -129,7 +131,7 @@ const UI = {
                 background-position-y: -685px;
             }
             .weapon-breakthrough .star.breakthrough-4 {
-                background-position-y: -735px;
+                background-position-y: -790px;
             }
             .weapon-tooltip .weapon-breakthrough {
                 color: #ffd700;

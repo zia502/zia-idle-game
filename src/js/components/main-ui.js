@@ -966,7 +966,19 @@ const MainUI = {
             Events.on('battle:log', () => {
                 this.updateBattleLog();
             });
+
+            // 监听武器变化事件
+            Events.on('weapon:updated', () => {
+                console.log('MainUI 收到武器更新事件');
+                this.updateWeaponBoard();
+            });
         }
+
+        // 兼容旧版事件系统
+        document.addEventListener('weaponChanged', () => {
+            console.log('MainUI 收到武器变化事件');
+            this.updateWeaponBoard();
+        });
     }
 };
 

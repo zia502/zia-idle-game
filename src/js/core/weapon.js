@@ -618,7 +618,7 @@ const Weapon = {
 
         const weaponId = data.id || `weapon_${Date.now()}`;
         const type = this.types[data.type] || this.types.sword;
-        
+
         // 转换稀有度数值为对应的名称
         let rarityName = 'common';
         switch(data.rarity) {
@@ -736,6 +736,18 @@ const Weapon = {
         weapon.isEquipped = true;
 
         console.log(`将武器 ${weapon.name} 添加到武器盘 ${boardId} 的槽位 ${slotType}`);
+
+        // 触发武器变化事件
+        if (typeof Events !== 'undefined' && typeof Events.emit === 'function') {
+            Events.emit('weapon:updated', { boardId, weaponId, slotType });
+        } else {
+            // 兼容旧版事件系统
+            const event = new CustomEvent('weaponChanged', {
+                detail: { boardId, weaponId, slotType }
+            });
+            document.dispatchEvent(event);
+        }
+
         return true;
     },
 
@@ -841,14 +853,14 @@ const Weapon = {
         const baseStats = weapon.baseStats;
         const currentLevel = weapon.level;
         const maxLevel = this.breakthroughLevels[weapon.breakthrough || 0];
-        
+
         // 计算当前等级对应的基础属性值（线性增长）
         const attack = Math.floor(baseStats.attack + (baseStats["150Attack"] - baseStats.attack) * (currentLevel - 1) / (maxLevel - 1));
         const hp = Math.floor(baseStats.hp + (baseStats["150Hp"] - baseStats.hp) * (currentLevel - 1) / (maxLevel - 1));
-        
+
         // 创建基础属性对象
         let stats = { attack, hp };
-        
+
         // 应用已解锁的技能效果
         if (weapon.specialEffects && weapon.specialEffects.length > 0) {
             weapon.specialEffects.forEach(effect => {
@@ -862,7 +874,7 @@ const Weapon = {
                 }
             });
         }
-        
+
         return stats;
     },
 
@@ -890,26 +902,26 @@ const Weapon = {
 
         // 确保materialWeaponIds是数组
         const materials = Array.isArray(materialWeaponIds) ? materialWeaponIds : [materialWeaponIds];
-        
+
         // 计算新的突破等级
         const newBreakthrough = (weapon.breakthrough || 0) + materials.length;
         if (newBreakthrough > 3) {
             console.error('突破等级不能超过3');
             return false;
         }
-        
+
         // 消耗所有材料武器
         materials.forEach(materialId => {
             this.deleteWeapon(materialId);
         });
-        
+
         // 更新突破次数和等级上限
         weapon.breakthrough = newBreakthrough;
         weapon.maxLevel = this.breakthroughLevels[weapon.breakthrough];
-        
+
         // 确保武器数据被正确保存
         this.weapons[weaponId] = weapon;
-        
+
         return true;
     },
 
@@ -920,14 +932,14 @@ const Weapon = {
      */
     finalBreakthrough(weaponId, specialMaterialId) {
         const weapon = this.getWeapon(weaponId);
-        
+
         // 消耗特殊材料
         Inventory.removeItem(specialMaterialId);
-        
+
         // 更新突破次数和等级上限
         weapon.breakthrough = 4;
         weapon.maxLevel = this.breakthroughLevels[4];
-        
+
         return true;
     },
 
@@ -939,32 +951,32 @@ const Weapon = {
     upgradeWeapon(weaponId, expAmount) {
         const weapon = this.getWeapon(weaponId);
         if (!weapon) return false;
-        
+
         // 检查是否已达到等级上限
         const maxLevel = this.breakthroughLevels[weapon.breakthrough || 0];
         if (weapon.level >= maxLevel) {
             console.log('武器已达到当前突破等级上限，无法继续升级');
             return false;
         }
-        
+
         // 添加经验值
         weapon.exp += expAmount;
-        
+
         // 升级直到经验不足或达到等级上限
         while (weapon.level < maxLevel) {
             const expToNextLevel = this.calculateExpRequired(weapon.level, weapon.level + 1);
             if (weapon.exp < expToNextLevel) break;
-            
+
             // 升级
             weapon.exp -= expToNextLevel;
             weapon.level++;
-            
+
             // 更新当前属性
             const currentStats = this.calculateCurrentStats(weapon);
             weapon.currentAttack = currentStats.attack;
             weapon.currentHp = currentStats.hp;
         }
-        
+
         return true;
     },
 
@@ -1001,28 +1013,28 @@ const Weapon = {
     createInitialWeapons() {
             console.log('开始创建初始武器...');
             console.log('当前templates状态:', this.templates);
-            
+
             // 检查是否有可用的武器模板
             if (!this.templates || Object.keys(this.templates).length === 0) {
                 console.error('没有可用的武器模板，无法创建初始武器');
                 return;
             }
-    
+
             // 为每种武器创建8把
             const weapons = [
                 'surturFlame', 'surturSword', 'gonggongTouch', 'gonggongPillar',
                 'dagdaBreath', 'dagdaHorn', 'gaiaEmbrace', 'gaiaRoot',
                 'lughBlade', 'lughCrown', 'anubisScale', 'anubisStaff'
             ];
-    
+
             console.log('计划创建的武器列表:', weapons);
-    
+
             weapons.forEach(weaponId => {
                 if (!this.templates[weaponId]) {
                     console.error(`未找到武器模板: ${weaponId}`);
                     return;
                 }
-    
+
                 for (let i = 0; i < 8; i++) {
                     const weaponData = {
                         id: `${weaponId}_${i + 1}`,
@@ -1039,7 +1051,7 @@ const Weapon = {
                     this.createWeapon(weaponData);
                 }
             });
-    
+
             console.log('初始武器创建完成');
             console.log('当前所有武器:', this.weapons);
 

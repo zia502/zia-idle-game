@@ -17,13 +17,28 @@ const TeamWeaponBoard = {
     bindEvents() {
         // 监听队伍变化事件
         document.addEventListener('teamChanged', () => {
+            console.log('TeamWeaponBoard 收到队伍变化事件');
             this.renderTeamWeaponBoard();
         });
 
-        // 监听武器变化事件
+        // 监听武器变化事件 (旧版事件系统)
         document.addEventListener('weaponChanged', () => {
+            console.log('TeamWeaponBoard 收到武器变化事件');
             this.renderTeamWeaponBoard();
         });
+
+        // 新版事件系统
+        if (typeof Events !== 'undefined') {
+            Events.on('team:updated', () => {
+                console.log('TeamWeaponBoard 收到队伍更新事件');
+                this.renderTeamWeaponBoard();
+            });
+
+            Events.on('weapon:updated', () => {
+                console.log('TeamWeaponBoard 收到武器更新事件');
+                this.renderTeamWeaponBoard();
+            });
+        }
     },
 
     /**
@@ -150,7 +165,7 @@ const TeamWeaponBoard = {
             const rarityClass = this.getRarityClass(weapon.rarity);
 
             // 获取武器属性样式
-            const attributeHtml = this.getAttributeHtml(weapon.attribute);
+            const attributeHtml = this.getAttributeHtml(weapon.element);
 
             return `
                 <div class="team-weapon-slot ${rarityClass}" data-slot="${slotType}" data-weapon-id="${weaponId}">
@@ -198,7 +213,7 @@ const TeamWeaponBoard = {
                 const rarityClass = this.getRarityClass(weapon.rarity);
 
                 // 获取武器属性样式
-                const attributeHtml = this.getAttributeHtml(weapon.attribute);
+                const attributeHtml = this.getAttributeHtml(weapon.element);
 
                 html += `
                     <div class="team-weapon-slot ${rarityClass}" data-slot="${slotType}" data-weapon-id="${weaponId}">

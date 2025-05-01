@@ -2719,9 +2719,16 @@ const UI = {
                     if (Weapon.addWeaponToBoard(boardId, selectedWeaponId, slotType)) {
                         this.showNotification('武器装备成功', 'success');
 
-                        // 更新武器盘显示
+                        // 更新主界面武器盘显示
                         if (typeof MainUI !== 'undefined' && typeof MainUI.updateWeaponBoard === 'function') {
+                            console.log('更新主界面武器盘');
                             MainUI.updateWeaponBoard();
+                        }
+
+                        // 更新队伍武器盘显示
+                        if (typeof TeamWeaponBoard !== 'undefined' && typeof TeamWeaponBoard.renderTeamWeaponBoard === 'function') {
+                            console.log('更新队伍武器盘');
+                            TeamWeaponBoard.renderTeamWeaponBoard();
                         }
 
                         // 保存游戏状态

@@ -53,6 +53,7 @@ const UI = {
             }
             .weapon-item-content {
                 height: 100%;
+                width: 100%;
                 display: flex;
                 flex-direction: column;
                 justify-content: center;
@@ -94,12 +95,18 @@ const UI = {
                 text-align: center;
                 color: #333;
                 text-shadow: 0 1px 1px rgba(255, 255, 255, 0.8);
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                gap: 2px;
             }
             .weapon-level {
                 color: #1a237e;
+                font-size: 10px;
             }
             .weapon-breakthrough {
                 color: #4a148c;
+                font-size: 10px;
             }
             .weapon-breakthrough span {
                 color: #2e7d32;
@@ -1142,7 +1149,7 @@ const UI = {
         weaponsGrid.className = 'weapons-grid';
 
         // 计算总页数
-        const itemsPerPage = 56; // 7x8
+        const itemsPerPage = 36; // 6x8
         const totalItems = Object.keys(weapons).length;
         const totalPages = Math.ceil(totalItems / itemsPerPage);
         let currentPage = 1;
@@ -1188,9 +1195,11 @@ const UI = {
             }
             .weapons-grid {
                 display: grid;
-                grid-template-columns: repeat(7, 1fr);
+                grid-template-columns: repeat(6, 1fr);
                 grid-gap: 10px;
                 padding: 10px;
+                width: 600px;
+                min-height: 600px;
             }
             .weapon-item {
                 position: relative;

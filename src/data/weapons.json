@@ -4,6 +4,7 @@
         "name": "苏尔特尔之焰·终末",
         "type": "axe",
         "element": "fire",
+        "rarity": 5,
         "baseStats": {
             "attack": 395,
             "hp": 50,
@@ -33,6 +34,7 @@
         "name": "苏尔特尔之剑·裂世",
         "type": "sword",
         "element": "fire",
+        "rarity": 5,
         "baseStats": {
             "attack": 355,
             "hp": 40,
@@ -62,6 +64,7 @@
         "name": "共工之触·洪渊",
         "type": "spear",
         "element": "water",
+        "rarity": 5,
         "baseStats": {
             "attack": 375,
             "hp": 60,
@@ -91,6 +94,7 @@
         "name": "共工之柱·不断",
         "type": "staff",
         "element": "water",
+        "rarity": 5,
         "baseStats": {
             "attack": 335,
             "hp": 70,
@@ -120,6 +124,7 @@
         "name": "达格达之息·丰饶",
         "type": "axe",
         "element": "wind",
+        "rarity": 5,
         "baseStats": {
             "attack": 375,
             "hp": 50,
@@ -149,6 +154,7 @@
         "name": "达格达之角·裂空",
         "type": "bow",
         "element": "wind",
+        "rarity": 5,
         "baseStats": {
             "attack": 355,
             "hp": 40,
@@ -178,6 +184,7 @@
         "name": "盖亚之拥·地母",
         "type": "staff",
         "element": "earth",
+        "rarity": 5,
         "baseStats": {
             "attack": 335,
             "hp": 70,
@@ -207,6 +214,7 @@
         "name": "盖亚之根·泰坦",
         "type": "knife",
         "element": "earth",
+        "rarity": 5,
         "baseStats": {
             "attack": 395,
             "hp": 50,
@@ -236,6 +244,7 @@
         "name": "鲁格之刃·虹霓",
         "type": "knife",
         "element": "light",
+        "rarity": 5,
         "baseStats": {
             "attack": 375,
             "hp": 40,
@@ -265,6 +274,7 @@
         "name": "鲁格之冠·破晓",
         "type": "spear",
         "element": "light",
+        "rarity": 5,
         "baseStats": {
             "attack": 355,
             "hp": 60,
@@ -294,6 +304,7 @@
         "name": "阿努比斯之裁·冥秤",
         "type": "bow",
         "element": "dark",
+        "rarity": 5,
         "baseStats": {
             "attack": 395,
             "hp": 50,
@@ -323,6 +334,7 @@
         "name": "阿努比斯之杖·渡亡",
         "type": "sword",
         "element": "dark",
+        "rarity": 5,
         "baseStats": {
             "attack": 375,
             "hp": 60,

@@ -467,6 +467,15 @@ const Weapon = {
         }
     },
 
+    // 武器突破等级上限
+    breakthroughLevels: {
+        0: 40,  // 初始最高等级
+        1: 60,  // 第一次突破
+        2: 80,  // 第二次突破
+        3: 100, // 第三次突破
+        4: 150  // 终突
+    },
+
     // 武器模板
     templates: {},
 
@@ -798,102 +807,97 @@ const Weapon = {
     },
 
     /**
+     * 计算武器当前属性
+     * @param {object} weapon - 武器对象
+     * @returns {object} 当前属性
+     */
+    calculateCurrentStats(weapon) {
+        const baseStats = weapon.baseStats;
+        const currentLevel = weapon.level;
+        const maxLevel = this.breakthroughLevels[weapon.breakthrough || 0];
+        
+        // 计算当前等级对应的属性值（线性增长）
+        const attack = Math.floor(baseStats.attack + (baseStats["150Attack"] - baseStats.attack) * (currentLevel - 1) / (maxLevel - 1));
+        const hp = Math.floor(baseStats.hp + (baseStats["150Hp"] - baseStats.hp) * (currentLevel - 1) / (maxLevel - 1));
+        
+        return { attack, hp };
+    },
+
+    /**
+     * 计算升级所需经验
+     * @param {number} currentLevel - 当前等级
+     * @param {number} targetLevel - 目标等级
+     * @returns {number} 所需经验值
+     */
+    calculateExpRequired(currentLevel, targetLevel) {
+        // 线性经验值计算
+        const baseExp = 50000; // 100级所需经验
+        const expPerLevel = baseExp / 99; // 每级所需经验
+        return Math.floor(expPerLevel * (targetLevel - currentLevel));
+    },
+
+    /**
+     * 突破武器
+     * @param {string} weaponId - 武器ID
+     * @param {string} materialWeaponId - 材料武器ID
+     */
+    breakthroughWeapon(weaponId, materialWeaponId) {
+        const weapon = this.getWeapon(weaponId);
+        const materialWeapon = this.getWeapon(materialWeaponId);
+        
+        // 消耗材料武器
+        this.removeWeapon(materialWeaponId);
+        
+        // 更新突破次数
+        weapon.breakthrough = (weapon.breakthrough || 0) + 1;
+        weapon.maxLevel = this.breakthroughLevels[weapon.breakthrough];
+        
+        return true;
+    },
+
+    /**
+     * 终突武器
+     * @param {string} weaponId - 武器ID
+     * @param {string} specialMaterialId - 特殊材料ID
+     */
+    finalBreakthrough(weaponId, specialMaterialId) {
+        const weapon = this.getWeapon(weaponId);
+        
+        // 消耗特殊材料
+        Inventory.removeItem(specialMaterialId);
+        
+        // 更新突破次数和等级上限
+        weapon.breakthrough = 4;
+        weapon.maxLevel = this.breakthroughLevels[4];
+        
+        return true;
+    },
+
+    /**
      * 升级武器
      * @param {string} weaponId - 武器ID
      * @param {number} expAmount - 经验值
      */
     upgradeWeapon(weaponId, expAmount) {
         const weapon = this.getWeapon(weaponId);
-        if (!weapon) return;
-
+        
+        // 添加经验值
         weapon.exp += expAmount;
-
-        // 检查是否可以升级
-        while (weapon.exp >= this.getNextLevelExp(weapon.level) && weapon.level < weapon.maxLevel) {
-            weapon.exp -= this.getNextLevelExp(weapon.level);
+        
+        // 计算升级所需经验
+        const expToNextLevel = this.calculateExpRequired(weapon.level, weapon.level + 1);
+        
+        // 升级直到经验不足或达到等级上限
+        while (weapon.exp >= expToNextLevel && weapon.level < weapon.maxLevel) {
+            weapon.exp -= expToNextLevel;
             weapon.level++;
-
-            // 每升一级增加属性
-            const growthRate = 1 + (weapon.level * 0.05);
-            weapon.attack = Math.floor(weapon.attack * growthRate);
-            weapon.hp = Math.floor(weapon.hp * growthRate);
-
-            console.log(`武器 ${weapon.name} 升级到 ${weapon.level} 级`);
+            
+            // 更新当前属性
+            const currentStats = this.calculateCurrentStats(weapon);
+            weapon.currentAttack = currentStats.attack;
+            weapon.currentHp = currentStats.hp;
         }
-    },
-
-    /**
-     * 获取武器升级所需经验
-     * @param {number} level - 当前等级
-     * @returns {number} 升级所需经验
-     */
-    getNextLevelExp(level) {
-        return Math.floor(50 * Math.pow(1.1, level - 1));
-    },
-
-    /**
-     * 突破武器（提高等级上限）
-     * @param {string} weaponId - 武器ID
-     * @param {string} materialId - 突破材料ID
-     * @param {number} materialCount - 材料数量
-     * @returns {boolean} 是否突破成功
-     */
-    breakthroughWeapon(weaponId, materialId, materialCount) {
-        const weapon = this.getWeapon(weaponId);
-        if (!weapon) return false;
-
-        // 检查是否已达到稀有度的最大等级
-        const rarityData = this.rarities[weapon.rarity];
-        if (weapon.maxLevel >= rarityData.maxLevel) {
-            UI.showMessage('此武器已达到当前稀有度的最大等级上限');
-            return false;
-        }
-
-        // 检查是否有足够的材料
-        if (!Inventory.hasEnoughItems(materialId, materialCount)) {
-            UI.showMessage('材料不足，无法突破');
-            return false;
-        }
-
-        // 消耗材料
-        Inventory.removeItem(materialId, materialCount);
-
-        // 提高等级上限
-        weapon.maxLevel += 10;
-        if (weapon.maxLevel > rarityData.maxLevel) {
-            weapon.maxLevel = rarityData.maxLevel;
-        }
-
-        UI.showNotification(`武器 ${weapon.name} 突破成功，等级上限提升到 ${weapon.maxLevel}`);
-        return true;
-    },
-
-    /**
-     * 升级武器技能
-     * @param {string} weaponId - 武器ID
-     * @param {number} skillIndex - 技能索引
-     * @param {string} materialId - 升级材料ID
-     * @param {number} materialCount - 材料数量
-     * @returns {boolean} 是否升级成功
-     */
-    upgradeWeaponSkill(weaponId, skillIndex, materialId, materialCount) {
-        const weapon = this.getWeapon(weaponId);
-        if (!weapon || skillIndex >= weapon.skills.length) return false;
-
-        // 这里简化处理，实际游戏中可能需要更复杂的技能升级系统
-        // 例如技能等级、技能强化效果等
-
-        // 检查是否有足够的材料
-        if (!Inventory.hasEnoughItems(materialId, materialCount)) {
-            UI.showMessage('材料不足，无法升级技能');
-            return false;
-        }
-
-        // 消耗材料
-        Inventory.removeItem(materialId, materialCount);
-
-        // 这里仅作为示例，实际中可以增加技能等级或效果
-        UI.showNotification(`武器 ${weapon.name} 的技能升级成功`);
+        
         return true;
     },
 

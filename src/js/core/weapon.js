@@ -44,162 +44,399 @@ const Weapon = {
 
     // 武器技能定义
     skills: {
-        // 攻击力相关
-        attackUp: {
-            name: '攻击力上升',
-            description: '攻击力上升20%',
+        // 暴风系列 - DA/TA提升
+        abandon: {
+            name: '暴风',
+            description: '提高DA和TA概率',
             type: 'passive',
-            effect: (stats) => {
-                stats.attack *= 1.2;
+            levels: {
+                1: { da: 7, ta: 3 },
+                2: { da: 10, ta: 6 },
+                3: { da: 15, ta: 10 }
+            },
+            effect: (stats, level) => {
+                const levelData = this.skills.abandon.levels[level];
+                stats.daRate = (stats.daRate || 0) + levelData.da / 100;
+                stats.taRate = (stats.taRate || 0) + levelData.ta / 100;
                 return stats;
             }
         },
-        attackExUp: {
-            name: '攻击力EX上升',
-            description: '攻击力EX上升20%',
+        // 守护系列 - HP提升
+        aegis: {
+            name: '守护',
+            description: '提高生命值',
             type: 'passive',
-            effect: (stats) => {
-                stats.attackEx = (stats.attackEx || 0) + 0.2;
+            levels: {
+                1: { hp: 14 },
+                2: { hp: 20 },
+                3: { hp: 30 }
+            },
+            effect: (stats, level) => {
+                const levelData = this.skills.aegis.levels[level];
+                stats.hp = (stats.hp || 0) * (1 + levelData.hp / 100);
                 return stats;
             }
         },
-
-        // 暴击相关
-        critRateUp: {
-            name: '暴击率上升',
-            description: '暴击率上升10%',
+        // 穷理系列 - 技能伤害上限提升
+        arts: {
+            name: '穷理',
+            description: '提高技能伤害上限',
             type: 'passive',
-            effect: (stats) => {
-                stats.critRate = (stats.critRate || 0.05) + 0.1;
+            levels: {
+                1: { cap: 5 },
+                2: { cap: 7 },
+                3: { cap: 10 }
+            },
+            effect: (stats, level) => {
+                const levelData = this.skills.arts.levels[level];
+                stats.skillDamageCap = (stats.skillDamageCap || 1) * (1 + levelData.cap / 100);
                 return stats;
             }
         },
-        critDamageUp: {
-            name: '暴击伤害上升',
-            description: '暴击伤害上升20%',
+        // 绝涯系列 - 伤害上限提升
+        beastEssence: {
+            name: '绝涯',
+            description: '提高伤害上限',
             type: 'passive',
-            effect: (stats) => {
-                stats.critDamage = (stats.critDamage || 1.5) + 0.2;
+            levels: {
+                1: { cap: 10 },
+                2: { cap: 20 },
+                3: { cap: 30 }
+            },
+            effect: (stats, level) => {
+                const levelData = this.skills.beastEssence.levels[level];
+                stats.damageCap = (stats.damageCap || 1) * (1 + levelData.cap / 100);
                 return stats;
             }
         },
-
-        // 生存相关
-        hpUp: {
-            name: 'HP上升',
-            description: 'HP上升20%',
+        // 刃界系列 - HP/暴击提升
+        bladeshield: {
+            name: '刃界',
+            description: '提高生命值和暴击率',
             type: 'passive',
-            effect: (stats) => {
-                stats.hp *= 1.2;
+            levels: {
+                1: { hp: 12, crit: 4 },
+                2: { hp: 14, crit: 6 },
+                3: { hp: 20, crit: 10 }
+            },
+            effect: (stats, level) => {
+                const levelData = this.skills.bladeshield.levels[level];
+                stats.hp = (stats.hp || 0) * (1 + levelData.hp / 100);
+                stats.critRate = (stats.critRate || 0) + levelData.crit / 100;
                 return stats;
             }
         },
-        defenseUp: {
-            name: '防御力上升',
-            description: '防御力上升20',
+        // 刹那系列 - 攻击/暴击提升
+        celere: {
+            name: '刹那',
+            description: '提高攻击力和暴击率',
             type: 'passive',
-            effect: (stats) => {
-                stats.defense += 20;
+            levels: {
+                1: { atk: 20, crit: 4 },
+                2: { atk: 26, crit: 8 },
+                3: { atk: 30, crit: 12 }
+            },
+            effect: (stats, level) => {
+                const levelData = this.skills.celere.levels[level];
+                stats.attack = (stats.attack || 0) * (1 + levelData.atk / 100);
+                stats.critRate = (stats.critRate || 0) + levelData.crit / 100;
                 return stats;
             }
         },
-
-        // 特殊状态相关
-        backwaterUp: {
-            name: '背水上升',
-            description: '背水上升20%',
+        // 励行系列 - EX攻击/防御提升
+        convergence: {
+            name: '励行',
+            description: '提高EX攻击力和防御力',
             type: 'passive',
-            effect: (stats) => {
-                stats.backwater = (stats.backwater || 0) + 0.2;
+            levels: {
+                1: { exatk: 20, def: 15 },
+                2: { exatk: 30, def: 20 },
+                3: { exatk: 40, def: 30 }
+            },
+            effect: (stats, level) => {
+                const levelData = this.skills.convergence.levels[level];
+                stats.exAttack = (stats.exAttack || 0) * (1 + levelData.exatk / 100);
+                stats.defense = (stats.defense || 0) * (1 + levelData.def / 100);
                 return stats;
             }
         },
-        allInUp: {
-            name: '浑身上升',
-            description: '浑身上升20%',
+        // 武技系列 - 额外伤害
+        deathstrike: {
+            name: '武技',
+            description: '提高额外伤害',
             type: 'passive',
-            effect: (stats) => {
-                stats.allIn = (stats.allIn || 0) + 0.2;
+            levels: {
+                1: { bonus: 10000 },
+                2: { bonus: 30000 },
+                3: { bonus: 50000 }
+            },
+            effect: (stats, level) => {
+                const levelData = this.skills.deathstrike.levels[level];
+                stats.bonusDamage = (stats.bonusDamage || 0) + levelData.bonus;
                 return stats;
             }
         },
-
-        // 伤害相关
-        damageUp: {
-            name: '伤害增加',
-            description: '伤害增加10000',
+        // 破坏系列 - TA提升
+        devastation: {
+            name: '破坏',
+            description: '提高TA概率',
             type: 'passive',
-            effect: (stats) => {
-                stats.damageBonus = (stats.damageBonus || 0) + 10000;
+            levels: {
+                1: { ta: 5 },
+                2: { ta: 9 },
+                3: { ta: 12 }
+            },
+            effect: (stats, level) => {
+                const levelData = this.skills.devastation.levels[level];
+                stats.taRate = (stats.taRate || 0) + levelData.ta / 100;
                 return stats;
             }
         },
-        damageMultiplierUp: {
-            name: '伤害提升',
-            description: '对克制属性伤害提升10%',
+        // 二手系列 - DA提升
+        dualEdge: {
+            name: '二手',
+            description: '提高DA概率',
             type: 'passive',
-            effect: (stats) => {
-                stats.damageMultiplier = (stats.damageMultiplier || 1) * 1.1;
+            levels: {
+                1: { da: 8 },
+                2: { da: 12 },
+                3: { da: 18 }
+            },
+            effect: (stats, level) => {
+                const levelData = this.skills.dualEdge.levels[level];
+                stats.daRate = (stats.daRate || 0) + levelData.da / 100;
                 return stats;
             }
         },
-
-        // 连击相关
-        daRateUp: {
-            name: 'DA概率提升',
-            description: 'DA概率提升10%',
+        // 背水系列 - 血量越低攻击越高
+        enmity: {
+            name: '背水',
+            description: '血量越低攻击力越高',
             type: 'passive',
-            effect: (stats) => {
-                stats.daRate = (stats.daRate || 0.15) + 0.1;
+            levels: {
+                1: { value: 7 },
+                2: { value: 12 },
+                3: { value: 18 }
+            },
+            effect: (stats, level) => {
+                const levelData = this.skills.enmity.levels[level];
+                stats.enmity = (stats.enmity || 0) + levelData.value / 100;
                 return stats;
             }
         },
-        taRateUp: {
-            name: 'TA概率提升',
-            description: 'TA概率提升5%',
+        // 攻刃系列 - 攻击力提升
+        essence: {
+            name: '攻刃',
+            description: '提高攻击力',
             type: 'passive',
-            effect: (stats) => {
-                stats.taRate = (stats.taRate || 0.05) + 0.05;
+            levels: {
+                1: { atk: 16 },
+                2: { atk: 24 },
+                3: { atk: 36 }
+            },
+            effect: (stats, level) => {
+                const levelData = this.skills.essence.levels[level];
+                stats.attack = (stats.attack || 0) * (1 + levelData.atk / 100);
                 return stats;
             }
         },
-
-        // 技能伤害相关
-        skillDamageUp: {
-            name: '技能伤害增加',
-            description: '技能伤害增加100',
+        // 乱舞系列 - 攻击/TA提升
+        fandango: {
+            name: '乱舞',
+            description: '提高攻击力和TA概率',
             type: 'passive',
-            effect: (stats) => {
-                stats.skillDamageBonus = (stats.skillDamageBonus || 0) + 100;
+            levels: {
+                1: { atk: 22, ta: 4 },
+                2: { atk: 28, ta: 6 },
+                3: { atk: 32, ta: 9 }
+            },
+            effect: (stats, level) => {
+                const levelData = this.skills.fandango.levels[level];
+                stats.attack = (stats.attack || 0) * (1 + levelData.atk / 100);
+                stats.taRate = (stats.taRate || 0) + levelData.ta / 100;
                 return stats;
             }
         },
-        skillDamageCapUp: {
-            name: '技能伤害上限增加',
-            description: '技能伤害上限增加20%',
+        // 坚守系列 - 防御力提升
+        fortified: {
+            name: '坚守',
+            description: '提高防御力',
             type: 'passive',
-            effect: (stats) => {
-                stats.skillDamageCap = (stats.skillDamageCap || 1) * 1.2;
+            levels: {
+                1: { def: 20 },
+                2: { def: 32 },
+                3: { def: 45 }
+            },
+            effect: (stats, level) => {
+                const levelData = this.skills.fortified.levels[level];
+                stats.defense = (stats.defense || 0) * (1 + levelData.def / 100);
                 return stats;
             }
         },
-
-        // 伤害上限相关
-        attackDamageCapUp: {
-            name: '攻击伤害上限增加',
-            description: '攻击伤害上限增加20%',
+        // 无双系列 - 攻击/DA提升
+        haunt: {
+            name: '无双',
+            description: '提高攻击力和DA概率',
             type: 'passive',
-            effect: (stats) => {
-                stats.attackDamageCap = (stats.attackDamageCap || 1) * 1.2;
+            levels: {
+                1: { atk: 24, da: 7 },
+                2: { atk: 29, da: 10 },
+                3: { atk: 32, da: 16 }
+            },
+            effect: (stats, level) => {
+                const levelData = this.skills.haunt.levels[level];
+                stats.attack = (stats.attack || 0) * (1 + levelData.atk / 100);
+                stats.daRate = (stats.daRate || 0) + levelData.da / 100;
                 return stats;
             }
         },
-        damageCapUp: {
-            name: '伤害上限增加',
-            description: '伤害上限增加20%',
+        // 军神系列 - HP/DA提升
+        heroism: {
+            name: '军神',
+            description: '提高生命值和DA概率',
             type: 'passive',
-            effect: (stats) => {
-                stats.damageCap = (stats.damageCap || 1) * 1.2;
+            levels: {
+                1: { hp: 14, da: 7 },
+                2: { hp: 20, da: 10 },
+                3: { hp: 30, da: 15 }
+            },
+            effect: (stats, level) => {
+                const levelData = this.skills.heroism.levels[level];
+                stats.hp = (stats.hp || 0) * (1 + levelData.hp / 100);
+                stats.daRate = (stats.daRate || 0) + levelData.da / 100;
+                return stats;
+            }
+        },
+        // 神威系列 - 攻击/HP提升
+        majesty: {
+            name: '神威',
+            description: '提高攻击力和生命值',
+            type: 'passive',
+            levels: {
+                1: { hp: 12, atk: 12 },
+                2: { hp: 24, atk: 24 },
+                3: { hp: 40, atk: 40 }
+            },
+            effect: (stats, level) => {
+                const levelData = this.skills.majesty.levels[level];
+                stats.hp = (stats.hp || 0) * (1 + levelData.hp / 100);
+                stats.attack = (stats.attack || 0) * (1 + levelData.atk / 100);
+                return stats;
+            }
+        },
+        // 愤怒系列 - 攻击/EX攻击提升
+        might: {
+            name: '愤怒',
+            description: '提高攻击力和EX攻击力',
+            type: 'passive',
+            levels: {
+                1: { atk: 20, exatk: 12 },
+                2: { atk: 26, exatk: 15 },
+                3: { atk: 32, exatk: 18 }
+            },
+            effect: (stats, level) => {
+                const levelData = this.skills.might.levels[level];
+                stats.attack = (stats.attack || 0) * (1 + levelData.atk / 100);
+                stats.exAttack = (stats.exAttack || 0) * (1 + levelData.exatk / 100);
+                return stats;
+            }
+        },
+        // 技巧系列 - 暴击率提升
+        sephiraTek: {
+            name: '技巧',
+            description: '提高暴击率',
+            type: 'passive',
+            levels: {
+                1: { crit: 8 },
+                2: { crit: 12 },
+                3: { crit: 20 }
+            },
+            effect: (stats, level) => {
+                const levelData = this.skills.sephiraTek.levels[level];
+                stats.critRate = (stats.critRate || 0) + levelData.crit / 100;
+                return stats;
+            }
+        },
+        // 霸道系列 - EX攻击提升
+        sovereign: {
+            name: '霸道',
+            description: '提高EX攻击力',
+            type: 'passive',
+            levels: {
+                1: { exatk: 28 },
+                2: { exatk: 36 },
+                3: { exatk: 46 }
+            },
+            effect: (stats, level) => {
+                const levelData = this.skills.sovereign.levels[level];
+                stats.exAttack = (stats.exAttack || 0) * (1 + levelData.exatk / 100);
+                return stats;
+            }
+        },
+        // 克己系列 - DA/暴击提升
+        restraint: {
+            name: '克己',
+            description: '提高DA概率和暴击率',
+            type: 'passive',
+            levels: {
+                1: { da: 7, crit: 10 },
+                2: { da: 10, crit: 13 },
+                3: { da: 15, crit: 17 }
+            },
+            effect: (stats, level) => {
+                const levelData = this.skills.restraint.levels[level];
+                stats.daRate = (stats.daRate || 0) + levelData.da / 100;
+                stats.critRate = (stats.critRate || 0) + levelData.crit / 100;
+                return stats;
+            }
+        },
+        // 锐锋系列 - TA/暴击提升
+        spearhead: {
+            name: '锐锋',
+            description: '提高TA概率和暴击率',
+            type: 'passive',
+            levels: {
+                1: { ta: 4, crit: 6 },
+                2: { ta: 6, crit: 10 },
+                3: { ta: 8, crit: 15 }
+            },
+            effect: (stats, level) => {
+                const levelData = this.skills.spearhead.levels[level];
+                stats.taRate = (stats.taRate || 0) + levelData.ta / 100;
+                stats.critRate = (stats.critRate || 0) + levelData.crit / 100;
+                return stats;
+            }
+        },
+        // 浑身系列 - 浑身值提升
+        stamina: {
+            name: '浑身',
+            description: '提高浑身值',
+            type: 'passive',
+            levels: {
+                1: { value: 6 },
+                2: { value: 6 },
+                3: { value: 15 }
+            },
+            effect: (stats, level) => {
+                const levelData = this.skills.stamina.levels[level];
+                stats.stamina = (stats.stamina || 0) + levelData.value / 100;
+                return stats;
+            }
+        },
+        // 志气系列 - HP/浑身提升
+        verve: {
+            name: '志气',
+            description: '提高生命值和浑身值',
+            type: 'passive',
+            levels: {
+                1: { hp: 10, stamina: 4 },
+                2: { hp: 15, stamina: 7 },
+                3: { hp: 18, stamina: 10 }
+            },
+            effect: (stats, level) => {
+                const levelData = this.skills.verve.levels[level];
+                stats.hp = (stats.hp || 0) * (1 + levelData.hp / 100);
+                stats.stamina = (stats.stamina || 0) + levelData.stamina / 100;
                 return stats;
             }
         }
@@ -660,8 +897,6 @@ const Weapon = {
         return true;
     },
 
-    
-
     /**
      * 加载武器数据
      * @param {object} data - 保存的武器数据
@@ -679,8 +914,6 @@ const Weapon = {
         if (!data) return;
         this.weaponBoards = {...data};
     },
-
-    
 
     /**
      * 重置武器系统

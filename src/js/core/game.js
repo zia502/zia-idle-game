@@ -185,19 +185,47 @@ const Game = {
 
         // 监听角色创建成功事件
         Events.on('character:created', (data) => {
-            console.log(`角色 ${data.name} 创建成功，添加初始经验材料`);
-            // 初始化武器
-            if (typeof Weapon !== 'undefined' && typeof Weapon.createInitialWeapons === 'function') {
-                console.log('初始化武器');
-                Weapon.createInitialWeapons();
+            console.log('收到角色创建事件，数据：', data);
+            if (!data) {
+                console.error('角色创建事件数据为空');
+                return;
             }
+
+            const characterName = data.name || (data.character && data.character.name) || '未知角色';
+            console.log(`角色 ${characterName} 创建成功，添加初始经验材料`);
+
+            // 初始化武器
+            if (typeof Weapon !== 'undefined') {
+                console.log('检查武器系统状态:', {
+                    weaponExists: !!Weapon,
+                    createMethodExists: typeof Weapon.createInitialWeapons === 'function'
+                });
+                
+                if (typeof Weapon.createInitialWeapons === 'function') {
+                    console.log('开始初始化武器...');
+                    try {
+                        Weapon.createInitialWeapons();
+                        console.log('武器初始化完成');
+                    } catch (error) {
+                        console.error('初始化武器时出错:', error);
+                    }
+                } else {
+                    console.error('Weapon.createInitialWeapons 方法不存在');
+                }
+            } else {
+                console.error('Weapon 模块未定义');
+            }
+
+            // 添加初始经验材料
             if (typeof Inventory !== 'undefined' && !this.hasInitialExpMaterials) {
+                console.log('添加初始经验材料...');
                 Inventory.addItem('exp_small', 10);
                 Inventory.addItem('exp_medium', 10);
                 Inventory.addItem('exp_large', 10);
                 this.hasInitialExpMaterials = true;
                 // 保存游戏状态
                 this.saveGame();
+                console.log('初始经验材料添加完成');
             }
         });
 

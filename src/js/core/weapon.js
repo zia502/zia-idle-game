@@ -996,58 +996,55 @@ const Weapon = {
     },
 
     /**
-     * 生成随机武器
-     * @param {string} rarity - 稀有度
-     * @returns {string} 武器ID
-     */
-    generateRandomWeapon(rarity = 'common') {
-        // 随机选择武器类型
-        const weaponTypes = Object.keys(this.types);
-        const randomType = weaponTypes[Math.floor(Math.random() * weaponTypes.length)];
-
-        // 随机选择武器名称
-        const prefixes = ['锋利的', '沉重的', '闪亮的', '古老的', '神秘的', '破损的', '坚固的'];
-        const randomPrefix = prefixes[Math.floor(Math.random() * prefixes.length)];
-        const typeName = this.types[randomType].name;
-        const name = `${randomPrefix}${typeName}`;
-
-        // 随机生成属性值（考虑稀有度）
-        const rarityData = this.rarities[rarity] || this.rarities.common;
-        const typeData = this.types[randomType];
-
-        const baseAttack = typeData.baseStats.attack;
-        const baseHp = typeData.baseStats.hp;
-
-        // 添加一些随机波动
-        const attackVariation = Math.random() * 0.2 + 0.9; // 0.9 - 1.1
-        const hpVariation = Math.random() * 0.2 + 0.9; // 0.9 - 1.1
-
-        const attack = Math.floor(baseAttack * rarityData.statMultiplier * attackVariation);
-        const hp = Math.floor(baseHp * rarityData.statMultiplier * hpVariation);
-
-        // 随机选择技能
-        const availableSkills = Object.keys(this.skills);
-        const skillCount = Math.min(rarityData.skillSlots, availableSkills.length);
-        const skills = [];
-
-        for (let i = 0; i < skillCount; i++) {
-            const randomSkill = availableSkills[Math.floor(Math.random() * availableSkills.length)];
-            if (!skills.includes(randomSkill)) {
-                skills.push(randomSkill);
+      * 创建初始武器
+      */
+    createInitialWeapons() {
+            console.log('开始创建初始武器...');
+            console.log('当前templates状态:', this.templates);
+            
+            // 检查是否有可用的武器模板
+            if (!this.templates || Object.keys(this.templates).length === 0) {
+                console.error('没有可用的武器模板，无法创建初始武器');
+                return;
             }
-        }
+    
+            // 为每种武器创建8把
+            const weapons = [
+                'surturFlame', 'surturSword', 'gonggongTouch', 'gonggongPillar',
+                'dagdaBreath', 'dagdaHorn', 'gaiaEmbrace', 'gaiaRoot',
+                'lughBlade', 'lughCrown', 'anubisScale', 'anubisStaff'
+            ];
+    
+            console.log('计划创建的武器列表:', weapons);
+    
+            weapons.forEach(weaponId => {
 
-        // 创建并返回武器
-        return this.createWeapon({
-            name: name,
-            type: randomType,
-            rarity: rarity,
-            level: 1,
-            attack: attack,
-            hp: hp,
-            skills: skills
-        });
-    },
+                
+                if (!this.templates[weaponId]) {
+                    console.error(`未找到武器模板: ${weaponId}`);
+                    return;
+                }
+    
+                for (let i = 0; i < 8; i++) {
+                    const weaponData = {
+                        id: `${weaponId}_${i + 1}`,
+                        name: this.templates[weaponId].name,
+                        type: this.templates[weaponId].type,
+                        element: this.templates[weaponId].element,
+                        rarity: this.templates[weaponId].rarity,
+                        level: 1,
+                        exp: 0,
+                        breakthrough: 0,
+                        baseStats: { ...this.templates[weaponId].baseStats },
+                        specialEffects: [...this.templates[weaponId].specialEffects]
+                    };
+                    this.createWeapon(weaponData);
+                }
+            });
+    
+            console.log('初始武器创建完成');
+            console.log('当前所有武器:', this.weapons);
+        },
 
     /**
      * 删除武器

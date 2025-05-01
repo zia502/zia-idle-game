@@ -862,6 +862,75 @@ const UI = {
     },
 
     /**
+     * 获取武器类型的中文名称
+     * @param {string} type - 武器类型
+     * @returns {string} 中文名称
+     */
+    getWeaponTypeName(type) {
+        const typeMap = {
+            'sword': '剑',
+            'knife': '刀',
+            'staff': '杖',
+            'bow': '弓',
+            'axe': '斧',
+            'spear': '枪'
+        };
+        return typeMap[type] || type;
+    },
+
+    /**
+     * 获取武器属性的中文名称
+     * @param {string} element - 武器属性
+     * @returns {string} 中文名称
+     */
+    getWeaponElementName(element) {
+        const elementMap = {
+            'fire': '火',
+            'water': '水',
+            'earth': '土',
+            'wind': '风',
+            'light': '光',
+            'dark': '暗'
+        };
+        return elementMap[element] || element;
+    },
+
+    /**
+     * 获取武器技能的中文名称
+     * @param {string} skillType - 技能类型
+     * @returns {string} 中文名称
+     */
+    getWeaponSkillName(skillType) {
+        const skillMap = {
+            'abandon': '暴风',
+            'aegis': '守护',
+            'arts': '穷理',
+            'beastEssence': '绝涯',
+            'bladeshield': '刃界',
+            'celere': '刹那',
+            'convergence': '励行',
+            'deathstrike': '武技',
+            'devastation': '破坏',
+            'dualEdge': '二手',
+            'enmity': '背水',
+            'essence': '攻刃',
+            'fandango': '乱舞',
+            'fortified': '坚守',
+            'haunt': '无双',
+            'heroism': '军神',
+            'majesty': '神威',
+            'might': '愤怒',
+            'sephiraTek': '技巧',
+            'sovereign': '霸道',
+            'restraint': '克己',
+            'spearhead': '锐锋',
+            'stamina': '浑身',
+            'verve': '志气'
+        };
+        return skillMap[skillType] || skillType;
+    },
+
+    /**
      * 渲染武器库
      */
     renderWeaponInventory() {
@@ -889,37 +958,134 @@ const UI = {
         const weaponsGrid = document.createElement('div');
         weaponsGrid.className = 'weapons-grid';
 
-        // 遍历武器
-        Object.entries(weapons).forEach(([weaponId, weapon]) => {
-            console.log(`渲染武器: ${weaponId}`, weapon);
-            const weaponElement = document.createElement('div');
-            weaponElement.className = 'weapon-item';
-            weaponElement.setAttribute('data-weapon-id', weaponId);
+        // 创建tooltip容器
+        const tooltipContainer = document.createElement('div');
+        tooltipContainer.className = 'weapon-tooltip-container';
+        document.body.appendChild(tooltipContainer);
 
-            // 获取武器稀有度样式
-            const rarityClass = this.getRarityClass(weapon.rarity);
+        // 创建分页控件
+        const paginationControls = document.createElement('div');
+        paginationControls.className = 'pagination-controls';
 
-            weaponElement.innerHTML = `
-                <div class="weapon-item-content ${rarityClass}">
-                    <div class="weapon-icon">${weapon.name.charAt(0)}</div>
-                    <div class="weapon-info">
-                        <div class="weapon-name">${weapon.name}</div>
-                        <div class="weapon-type">${weapon.type}</div>
-                        <div class="weapon-level">Lv.${weapon.level}</div>
-                        <div class="weapon-breakthrough">突破: ${weapon.breakthrough || 0}</div>
+        // 计算总页数
+        const itemsPerPage = 64; // 8x8
+        const totalItems = Object.keys(weapons).length;
+        const totalPages = Math.ceil(totalItems / itemsPerPage);
+        let currentPage = 1;
+
+        // 创建分页按钮
+        const prevButton = document.createElement('button');
+        prevButton.className = 'page-button';
+        prevButton.textContent = '上一页';
+        prevButton.disabled = true;
+
+        const nextButton = document.createElement('button');
+        nextButton.className = 'page-button';
+        nextButton.textContent = '下一页';
+        nextButton.disabled = totalPages <= 1;
+
+        const pageInfo = document.createElement('span');
+        pageInfo.className = 'page-info';
+        pageInfo.textContent = `第 ${currentPage} 页 / 共 ${totalPages} 页`;
+
+        // 添加分页控件到容器
+        paginationControls.appendChild(prevButton);
+        paginationControls.appendChild(pageInfo);
+        paginationControls.appendChild(nextButton);
+
+        // 渲染当前页的武器
+        const renderCurrentPage = () => {
+            weaponsGrid.innerHTML = '';
+            const startIndex = (currentPage - 1) * itemsPerPage;
+            const endIndex = Math.min(startIndex + itemsPerPage, totalItems);
+            const currentWeapons = Object.entries(weapons).slice(startIndex, endIndex);
+
+            currentWeapons.forEach(([weaponId, weapon]) => {
+                const weaponElement = document.createElement('div');
+                weaponElement.className = 'weapon-item';
+                weaponElement.setAttribute('data-weapon-id', weaponId);
+
+                const rarityClass = this.getRarityClass(weapon.rarity);
+                const currentStats = Weapon.calculateCurrentStats(weapon);
+
+                weaponElement.innerHTML = `
+                    <div class="weapon-item-content ${rarityClass}">
+                        <div class="weapon-icon">${weapon.name.charAt(0)}</div>
+                        <div class="weapon-level-info">
+                            <div class="weapon-level">Lv.${weapon.level}</div>
+                            <div class="weapon-breakthrough">突${weapon.breakthrough || 0}</div>
+                        </div>
                     </div>
-                </div>
-            `;
+                `;
 
-            // 添加点击事件
-            weaponElement.addEventListener('click', () => {
-                this.showWeaponDetails(weaponId);
+                // 添加鼠标悬停事件
+                weaponElement.addEventListener('mouseenter', (e) => {
+                    const tooltip = document.createElement('div');
+                    tooltip.className = 'weapon-tooltip';
+                    tooltip.innerHTML = `
+                        <div class="weapon-name">${weapon.name}</div>
+                        <div class="weapon-type">类型: ${this.getWeaponTypeName(weapon.type)}</div>
+                        <div class="weapon-element">属性: ${this.getWeaponElementName(weapon.element)}</div>
+                        <div class="weapon-stats">
+                            <div>攻击力: ${currentStats.attack}</div>
+                            <div>生命值: ${currentStats.hp}</div>
+                        </div>
+                        ${weapon.specialEffects.length > 0 ? `
+                            <div class="weapon-effects">
+                                <div>特殊效果:</div>
+                                ${weapon.specialEffects.map(effect => {
+                                    return `<div>${this.getWeaponSkillName(effect.type)} Lv.${effect.level}</div>`;
+                                }).join('')}
+                            </div>
+                        ` : ''}
+                    `;
+                    tooltipContainer.innerHTML = '';
+                    tooltipContainer.appendChild(tooltip);
+                    tooltipContainer.style.display = 'block';
+                    
+                    const rect = e.target.getBoundingClientRect();
+                    tooltipContainer.style.left = `${rect.left + rect.width / 2}px`;
+                    tooltipContainer.style.top = `${rect.bottom + 5}px`;
+                });
+
+                weaponElement.addEventListener('mouseleave', () => {
+                    tooltipContainer.style.display = 'none';
+                });
+
+                weaponElement.addEventListener('click', () => {
+                    this.showWeaponDetails(weaponId);
+                });
+
+                weaponsGrid.appendChild(weaponElement);
             });
 
-            weaponsGrid.appendChild(weaponElement);
+            // 更新分页按钮状态
+            prevButton.disabled = currentPage === 1;
+            nextButton.disabled = currentPage === totalPages;
+            pageInfo.textContent = `第 ${currentPage} 页 / 共 ${totalPages} 页`;
+        };
+
+        // 添加分页按钮事件
+        prevButton.addEventListener('click', () => {
+            if (currentPage > 1) {
+                currentPage--;
+                renderCurrentPage();
+            }
         });
 
+        nextButton.addEventListener('click', () => {
+            if (currentPage < totalPages) {
+                currentPage++;
+                renderCurrentPage();
+            }
+        });
+
+        // 初始渲染
+        renderCurrentPage();
+
+        // 添加所有元素到容器
         inventoryContainer.appendChild(weaponsGrid);
+        inventoryContainer.appendChild(paginationControls);
         console.log('武器库存渲染完成');
     },
 
@@ -946,7 +1112,8 @@ const UI = {
                     <div class="weapon-icon">${weapon.name.charAt(0)}</div>
                     <div class="weapon-title">
                         <h3>${weapon.name}</h3>
-                        <div class="weapon-type">${weapon.type}</div>
+                        <div class="weapon-type">${this.getWeaponTypeName(weapon.type)}</div>
+                        <div class="weapon-element">${this.getWeaponElementName(weapon.element)}</div>
                     </div>
                 </div>
                 <div class="weapon-stats">
@@ -971,9 +1138,9 @@ const UI = {
                     <h4>特殊效果</h4>
                     ${weapon.specialEffects.map(effect => `
                         <div class="effect-item">
-                            <div class="effect-name">${effect.type}</div>
+                            <div class="effect-name">${this.getWeaponSkillName(effect.type)}</div>
                             <div class="effect-level">Lv.${effect.level}</div>
-                            <div class="effect-description">${effect.description}</div>
+                            <div class="effect-description">${effect.description || ''}</div>
                         </div>
                     `).join('')}
                 </div>

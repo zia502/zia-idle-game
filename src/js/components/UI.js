@@ -101,7 +101,7 @@ const UI = {
             .weapon-breakthrough {
                 color: #4a148c;
             }
-            .weapon-breakthrough::before {
+            .weapon-breakthrough span {
                 color: #2e7d32;
             }
             .weapon-tooltip .weapon-breakthrough {
@@ -1155,7 +1155,7 @@ const UI = {
             .weapon-breakthrough {
                 color: #4a148c;
             }
-            .weapon-breakthrough::before {
+            .weapon-breakthrough span {
                 color: #2e7d32;
             }
             .weapon-tooltip .weapon-breakthrough {
@@ -1205,7 +1205,7 @@ const UI = {
                         <div class="weapon-icon">${weapon.name.charAt(0)}</div>
                         <div class="weapon-level-info">
                             <div class="weapon-level">Lv.${weapon.level}</div>
-                            <div class="weapon-breakthrough">突${weapon.breakthrough || 0}</div>
+                            <div class="weapon-breakthrough"><span>突</span>${weapon.breakthrough || 0}</div>
                         </div>
                     </div>
                 `;

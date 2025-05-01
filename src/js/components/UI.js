@@ -841,5 +841,188 @@ const UI = {
         dialog.querySelector('.close-button').addEventListener('click', () => {
             document.body.removeChild(dialog);
         });
+    },
+
+    /**
+     * 获取武器稀有度对应的样式类
+     * @param {string} rarity - 武器稀有度
+     * @returns {string} 样式类名
+     */
+    getRarityClass(rarity) {
+        switch(rarity) {
+            case 'rare':
+                return 'rarity-3';
+            case 'epic':
+                return 'rarity-4';
+            case 'legendary':
+                return 'rarity-5';
+            default:
+                return 'rarity-common';
+        }
+    },
+
+    /**
+     * 渲染武器库
+     */
+    renderWeaponInventory() {
+        console.log('开始渲染武器库存...');
+        const inventoryContainer = document.getElementById('weapon-inventory');
+        if (!inventoryContainer) {
+            console.error('找不到武器库存容器');
+            return;
+        }
+
+        // 清空现有内容
+        inventoryContainer.innerHTML = '';
+
+        // 获取所有武器
+        const weapons = Weapon.getAllWeapons();
+        console.log('获取到的武器列表:', weapons);
+        
+        if (!weapons || Object.keys(weapons).length === 0) {
+            console.log('武器库为空');
+            inventoryContainer.innerHTML = '<div class="empty-message">武器库为空</div>';
+            return;
+        }
+
+        // 创建武器网格
+        const weaponsGrid = document.createElement('div');
+        weaponsGrid.className = 'weapons-grid';
+
+        // 遍历武器
+        Object.entries(weapons).forEach(([weaponId, weapon]) => {
+            console.log(`渲染武器: ${weaponId}`, weapon);
+            const weaponElement = document.createElement('div');
+            weaponElement.className = 'weapon-item';
+            weaponElement.setAttribute('data-weapon-id', weaponId);
+
+            // 获取武器稀有度样式
+            const rarityClass = this.getRarityClass(weapon.rarity);
+
+            weaponElement.innerHTML = `
+                <div class="weapon-item-content ${rarityClass}">
+                    <div class="weapon-icon">${weapon.name.charAt(0)}</div>
+                    <div class="weapon-info">
+                        <div class="weapon-name">${weapon.name}</div>
+                        <div class="weapon-type">${weapon.type}</div>
+                        <div class="weapon-level">Lv.${weapon.level}</div>
+                        <div class="weapon-breakthrough">突破: ${weapon.breakthrough || 0}</div>
+                    </div>
+                </div>
+            `;
+
+            // 添加点击事件
+            weaponElement.addEventListener('click', () => {
+                this.showWeaponDetails(weaponId);
+            });
+
+            weaponsGrid.appendChild(weaponElement);
+        });
+
+        inventoryContainer.appendChild(weaponsGrid);
+        console.log('武器库存渲染完成');
+    },
+
+    /**
+     * 显示武器详情
+     * @param {string} weaponId - 武器ID
+     */
+    showWeaponDetails(weaponId) {
+        const detailsContainer = document.getElementById('weapon-details');
+        if (!detailsContainer) return;
+
+        const weapon = Weapon.getWeapon(weaponId);
+        if (!weapon) return;
+
+        // 获取武器稀有度样式
+        const rarityClass = this.getRarityClass(weapon.rarity);
+
+        // 计算当前属性
+        const currentStats = Weapon.calculateCurrentStats(weapon);
+
+        detailsContainer.innerHTML = `
+            <div class="weapon-details-content ${rarityClass}">
+                <div class="weapon-header">
+                    <div class="weapon-icon">${weapon.name.charAt(0)}</div>
+                    <div class="weapon-title">
+                        <h3>${weapon.name}</h3>
+                        <div class="weapon-type">${weapon.type}</div>
+                    </div>
+                </div>
+                <div class="weapon-stats">
+                    <div class="stat-row">
+                        <div class="stat-label">等级</div>
+                        <div class="stat-value">${weapon.level}</div>
+                    </div>
+                    <div class="stat-row">
+                        <div class="stat-label">突破</div>
+                        <div class="stat-value">${weapon.breakthrough || 0}</div>
+                    </div>
+                    <div class="stat-row">
+                        <div class="stat-label">攻击力</div>
+                        <div class="stat-value">${currentStats.attack}</div>
+                    </div>
+                    <div class="stat-row">
+                        <div class="stat-label">生命值</div>
+                        <div class="stat-value">${currentStats.hp}</div>
+                    </div>
+                </div>
+                <div class="weapon-effects">
+                    <h4>特殊效果</h4>
+                    ${weapon.specialEffects.map(effect => `
+                        <div class="effect-item">
+                            <div class="effect-name">${effect.type}</div>
+                            <div class="effect-level">Lv.${effect.level}</div>
+                            <div class="effect-description">${effect.description}</div>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+        `;
+
+        // 更新强化界面的信息
+        this.updateEnhancementInfo(weaponId);
+    },
+
+    /**
+     * 更新强化界面信息
+     * @param {string} weaponId - 武器ID
+     */
+    updateEnhancementInfo(weaponId) {
+        const weapon = Weapon.getWeapon(weaponId);
+        if (!weapon) return;
+
+        // 更新突破信息
+        document.getElementById('current-breakthrough').textContent = weapon.breakthrough || 0;
+        document.getElementById('max-level').textContent = Weapon.breakthroughLevels[weapon.breakthrough || 0];
+
+        // 更新等级信息
+        document.getElementById('current-level').textContent = weapon.level;
+        document.getElementById('current-exp').textContent = weapon.exp;
+        document.getElementById('required-exp').textContent = Weapon.calculateExpRequired(weapon.level, weapon.level + 1);
+
+        // 绑定突破按钮事件
+        const breakthroughBtn = document.getElementById('breakthrough-btn');
+        breakthroughBtn.onclick = () => {
+            // 这里需要实现突破逻辑
+            console.log('突破武器:', weaponId);
+        };
+
+        // 绑定终突按钮事件
+        const finalBreakthroughBtn = document.getElementById('final-breakthrough-btn');
+        finalBreakthroughBtn.onclick = () => {
+            // 这里需要实现终突逻辑
+            console.log('终突武器:', weaponId);
+        };
+
+        // 绑定添加经验按钮事件
+        const addExpBtn = document.getElementById('add-exp-btn');
+        addExpBtn.onclick = () => {
+            const expAmount = parseInt(document.getElementById('exp-amount').value);
+            if (expAmount > 0) {
+                Weapon.upgradeWeapon(weaponId, expAmount);
+                this.showWeaponDetails(weaponId); // 刷新显示
+            }
+        };
     }
 };

@@ -38,6 +38,20 @@ document.addEventListener('DOMContentLoaded', function() {
             console.warn('找不到Item模块，跳过初始化');
         }
 
+        // 初始化武器系统
+        if (typeof Weapon !== 'undefined') {
+            console.log('初始化武器系统...');
+            Weapon.init();
+            
+            // 监听武器模板加载完成事件
+            Events.on('weaponTemplate:loaded', () => {
+                console.log('武器模板加载完成，更新UI');
+                UI.renderWeaponInventory();
+            });
+        } else {
+            console.warn('找不到Weapon模块，跳过初始化');
+        }
+
         // 初始化职业技能模板系统
         if (typeof JobSkillsTemplate !== 'undefined') {
             console.log('初始化职业技能模板系统...');

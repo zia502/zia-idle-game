@@ -204,13 +204,6 @@
                 <h2>武器管理</h2>
                 <div class="screen-content">
                     <div class="section">
-                        <h3>武器盘</h3>
-                        <div id="weapon-board">
-                            <!-- 武器盘将通过JS动态生成 -->
-                        </div>
-                    </div>
-
-                    <div class="section">
                         <h3>武器库</h3>
                         <div id="weapon-inventory">
                             <!-- 武器库将通过JS动态生成 -->
@@ -221,6 +214,43 @@
                         <h3>武器详情</h3>
                         <div id="weapon-details">
                             <!-- 武器详情将通过JS动态生成 -->
+                        </div>
+                    </div>
+
+                    <div class="section">
+                        <h3>武器强化</h3>
+                        <div id="weapon-enhancement">
+                            <div class="enhancement-section">
+                                <h4>武器突破</h4>
+                                <div class="breakthrough-info">
+                                    <p>当前突破等级: <span id="current-breakthrough">0</span></p>
+                                    <p>最大等级: <span id="max-level">40</span></p>
+                                </div>
+                                <div class="breakthrough-actions">
+                                    <button id="breakthrough-btn" class="btn btn-primary">突破</button>
+                                    <button id="final-breakthrough-btn" class="btn btn-primary">终突</button>
+                                </div>
+                                <div class="breakthrough-requirements">
+                                    <p>突破需求: 相同武器 x1</p>
+                                    <p>终突需求: 特殊材料 x1</p>
+                                </div>
+                            </div>
+
+                            <div class="enhancement-section">
+                                <h4>武器升级</h4>
+                                <div class="level-info">
+                                    <p>当前等级: <span id="current-level">1</span></p>
+                                    <p>当前经验: <span id="current-exp">0</span></p>
+                                    <p>升级所需经验: <span id="required-exp">500</span></p>
+                                </div>
+                                <div class="upgrade-actions">
+                                    <button id="upgrade-btn" class="btn btn-primary">升级</button>
+                                    <div class="exp-input">
+                                        <input type="number" id="exp-amount" min="1" value="1000">
+                                        <button id="add-exp-btn" class="btn">添加经验</button>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -334,6 +364,7 @@
     <script src="src/js/core/dungeon.js"></script>
     <script src="src/js/core/buff-system.js"></script>
     <script src="src/js/core/battle.js"></script>
+    <script src="src/js/core/quest.js"></script>
     <script src="src/js/core/job-skills-template.js"></script>
     <script src="src/js/core/job-skills.js"></script>
     <script src="src/js/core/shop.js"></script>

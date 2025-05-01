@@ -442,31 +442,6 @@ const Weapon = {
         }
     },
 
-    // 武器稀有度定义
-    rarities: {
-        rare: {
-            name: '稀有',
-            color: '#2196f3',
-            statMultiplier: 1.5,
-            maxLevel: 60,
-            skillSlots: 2
-        },
-        epic: {
-            name: '史诗',
-            color: '#9c27b0',
-            statMultiplier: 1.8,
-            maxLevel: 80,
-            skillSlots: 3
-        },
-        legendary: {
-            name: '传说',
-            color: '#ff9800',
-            statMultiplier: 2.2,
-            maxLevel: 100,
-            skillSlots: 3
-        }
-    },
-
     // 武器突破等级上限
     breakthroughLevels: {
         0: 40,  // 初始最高等级
@@ -483,15 +458,76 @@ const Weapon = {
      * 初始化武器系统
      */
     init() {
-        console.log('武器系统已初始化');
+        console.log('武器系统开始初始化...');
+
+        // 先加载基本武器模板，确保templates不为空
+        this.loadBasicTemplates();
+
+        // 然后尝试加载完整的武器模板
         this.loadTemplates();
+
+        // 监听模板加载完成事件
+        if (typeof Events !== 'undefined' && typeof Events.on === 'function') {
+            Events.on('weaponTemplate:loaded', () => {
+                console.log('武器模板加载完成，开始创建初始武器');
+                this.createInitialWeapons();
+            });
+        } else {
+            console.warn('Events模块未就绪，无法监听武器模板加载事件');
+            // 如果没有事件系统，直接创建初始武器
+            this.createInitialWeapons();
+        }
+
+        console.log('武器系统初始化完成');
+    },
+
+    /**
+     * 加载基本武器模板，确保templates不为空
+     */
+    loadBasicTemplates() {
+        console.log('加载基本武器模板');
+        this.templates = {
+            // 基本武器类型
+            sword: {
+                name: '剑',
+                description: '平衡型武器，提供均衡的攻击和生命值',
+                baseStats: { attack: 10, hp: 50 }
+            },
+            knife: {
+                name: '刀',
+                description: '快速型武器，提供较高的攻击速度',
+                baseStats: { attack: 8, hp: 40 }
+            },
+            staff: {
+                name: '杖',
+                description: '魔法武器，提供特殊效果和能力',
+                baseStats: { attack: 7, hp: 45 }
+            },
+            bow: {
+                name: '弓',
+                description: '远程武器，提供中等攻击和速度',
+                baseStats: { attack: 12, hp: 25 }
+            },
+            axe: {
+                name: '斧',
+                description: '重型武器，提供高攻击但速度较慢',
+                baseStats: { attack: 15, hp: 30 }
+            },
+            spear: {
+                name: '枪',
+                description: '长柄武器，提供均衡的攻击和防御',
+                baseStats: { attack: 11, hp: 35 }
+            }
+        };
+        console.log('基本武器模板加载完成');
     },
 
     /**
      * 加载武器模板数据
      */
     loadTemplates() {
-        console.log('加载武器模板数据');
+        console.log('开始加载武器模板数据...');
+        console.log('当前templates状态:', this.templates);
 
         // 保存当前的基本武器模板
         const basicTemplates = { ...this.templates };
@@ -500,23 +536,26 @@ const Weapon = {
         const serverUrl = 'http://localhost:8000';
         const jsonPath = '/src/data/weapons.json';
 
-        console.log(`从服务器加载JSON: ${serverUrl}${jsonPath}`);
+        console.log(`尝试从服务器加载JSON: ${serverUrl}${jsonPath}`);
 
         fetch(`${serverUrl}${jsonPath}`)
             .then(response => {
+                console.log('服务器响应状态:', response.status);
                 if (!response.ok) {
                     throw new Error(`HTTP错误! 状态: ${response.status}`);
                 }
                 return response.json();
             })
             .then(data => {
+                console.log('成功从服务器获取数据:', data);
                 // 合并新加载的武器模板与已有的基本武器模板
                 this.templates = { ...basicTemplates, ...data };
+                console.log('合并后的templates:', this.templates);
                 console.log('武器模板数据加载成功');
                 this.emitLoadedEvent();
             })
             .catch(error => {
-                console.error('加载武器模板数据失败:', error);
+                console.error('从服务器加载武器模板数据失败:', error);
                 this.loadTemplatesFallback();
             });
     },
@@ -525,30 +564,33 @@ const Weapon = {
      * 备用方法：当服务器不可用时使用
      */
     loadTemplatesFallback() {
-        console.log('使用备用方法加载武器模板数据');
+        console.log('开始使用备用方法加载武器模板数据...');
+        console.log('当前templates状态:', this.templates);
 
-        try {
-            const xhr = new XMLHttpRequest();
-            xhr.open('GET', 'src/data/weapon-templates.json', false);
-            xhr.send(null);
-
-            if (xhr.status === 200) {
-                const loadedTemplates = JSON.parse(xhr.responseText);
+        fetch('src/data/weapons.json')
+            .then(response => {
+                console.log('获取响应:', response);
+                if (!response.ok) {
+                    throw new Error(`HTTP错误! 状态: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('成功获取武器模板数据:', data);
                 const basicTemplates = { ...this.templates };
-                this.templates = { ...basicTemplates, ...loadedTemplates };
+                this.templates = { ...basicTemplates, ...data };
+                console.log('合并后的templates:', this.templates);
                 console.log('成功直接加载武器模板数据');
-            } else {
-                throw new Error(`无法加载武器模板数据，状态码: ${xhr.status}`);
-            }
-        } catch (error) {
-            console.error('直接加载武器模板数据失败:', error);
-            console.error('%c无法加载完整的武器模板数据!', 'color: red; font-size: 24px; font-weight: bold;');
-            console.error('%c请确保 src/data/weapon-templates.json 文件存在', 'color: red; font-size: 18px;');
-            console.error('%c或者启动 Python 服务器: python server.py', 'color: red; font-size: 18px;');
-            console.warn('将使用基本武器模板继续...');
-        }
-
-        this.emitLoadedEvent();
+                this.emitLoadedEvent();
+            })
+            .catch(error => {
+                console.error('直接加载武器模板数据失败:', error);
+                console.error('%c无法加载完整的武器模板数据!', 'color: red; font-size: 24px; font-weight: bold;');
+                console.error('%c请确保 src/data/weapons.json 文件存在', 'color: red; font-size: 18px;');
+                console.error('%c或者启动 Python 服务器: python server.py', 'color: red; font-size: 18px;');
+                console.warn('将使用基本武器模板继续...');
+                this.emitLoadedEvent();
+            });
     },
 
     /**
@@ -564,16 +606,53 @@ const Weapon = {
      * 创建初始武器
      */
     createInitialWeapons() {
-        // 为主角创建一把初始武器
-        this.createWeapon({
-            name: '新手剑',
-            type: 'sword',
-            rarity: 'common',
-            level: 1,
-            attack: 10,
-            hp: 50,
-            skills: ['powerStrike']
+        console.log('开始创建初始武器...');
+        console.log('当前templates状态:', this.templates);
+        
+        // 检查是否有可用的武器模板
+        if (!this.templates || Object.keys(this.templates).length === 0) {
+            console.error('没有可用的武器模板，无法创建初始武器');
+            return;
+        }
+
+        // 为每种武器创建8把
+        const weapons = [
+            'surturFlame', 'surturSword', 'gonggongTouch', 'gonggongPillar',
+            'dagdaBreath', 'dagdaHorn', 'gaiaEmbrace', 'gaiaRoot',
+            'lughBlade', 'lughCrown', 'anubisScale', 'anubisStaff'
+        ];
+
+        console.log('计划创建的武器列表:', weapons);
+
+        weapons.forEach(weaponId => {
+            console.log(`处理武器: ${weaponId}`);
+            console.log(`武器模板数据:`, this.templates[weaponId]);
+            
+            if (!this.templates[weaponId]) {
+                console.error(`未找到武器模板: ${weaponId}`);
+                return;
+            }
+
+            for (let i = 0; i < 8; i++) {
+                const weaponData = {
+                    id: `${weaponId}_${i + 1}`,
+                    name: this.templates[weaponId].name,
+                    type: this.templates[weaponId].type,
+                    element: this.templates[weaponId].element,
+                    rarity: this.templates[weaponId].rarity,
+                    level: 1,
+                    exp: 0,
+                    breakthrough: 0,
+                    baseStats: { ...this.templates[weaponId].baseStats },
+                    specialEffects: [...this.templates[weaponId].specialEffects]
+                };
+                console.log(`创建武器数据:`, weaponData);
+                this.createWeapon(weaponData);
+            }
         });
+
+        console.log('初始武器创建完成');
+        console.log('当前所有武器:', this.weapons);
     },
 
     /**
@@ -599,36 +678,48 @@ const Weapon = {
      * @returns {string} 武器ID
      */
     createWeapon(data) {
+        console.log('开始创建武器...');
+        console.log('武器数据:', data);
+
         const weaponId = data.id || `weapon_${Date.now()}`;
         const type = this.types[data.type] || this.types.sword;
-        const rarity = this.rarities[data.rarity] || this.rarities.common;
+        
+        // 转换稀有度数值为对应的名称
+        let rarityName = 'common';
+        switch(data.rarity) {
+            case 3:
+                rarityName = 'rare';
+                break;
+            case 4:
+                rarityName = 'epic';
+                break;
+            case 5:
+                rarityName = 'legendary';
+                break;
+            default:
+                rarityName = 'common';
+        }
 
-        // 计算基础属性
-        const baseAttack = data.attack || type.baseStats.attack;
-        const baseHp = data.hp || type.baseStats.hp;
+        console.log('武器类型:', type);
+        console.log('武器稀有度:', rarityName);
 
-        // 应用稀有度倍率
-        const attack = Math.floor(baseAttack * rarity.statMultiplier);
-        const hp = Math.floor(baseHp * rarity.statMultiplier);
-
-        // 限制技能槽位数量
-        const skills = (data.skills || []).slice(0, rarity.skillSlots);
-
+        // 创建武器对象
         this.weapons[weaponId] = {
             id: weaponId,
             name: data.name || '未命名武器',
             type: data.type,
-            rarity: data.rarity,
+            element: data.element,
+            rarity: rarityName,
             level: data.level || 1,
-            maxLevel: rarity.maxLevel,
             exp: data.exp || 0,
-            attack: attack,
-            hp: hp,
-            skills: skills,
+            breakthrough: data.breakthrough || 0,
+            baseStats: { ...data.baseStats },
+            specialEffects: [...(data.specialEffects || [])],
             isEquipped: false
         };
 
-        console.log(`创建武器: ${this.weapons[weaponId].name}`);
+        console.log(`创建武器成功: ${this.weapons[weaponId].name}`);
+        console.log('武器详情:', this.weapons[weaponId]);
         Game.stats.weaponsCollected++;
 
         return weaponId;

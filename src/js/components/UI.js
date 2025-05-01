@@ -1093,6 +1093,7 @@ const UI = {
                 <option value="asc">升序</option>
                 <option value="desc">降序</option>
             </select>
+            <button id="reset-sort-btn" class="btn btn-small">重置排序</button>
         `;
 
         // 筛选控制
@@ -1119,6 +1120,7 @@ const UI = {
                 <option value="axe">斧</option>
                 <option value="spear">枪</option>
             </select>
+            <button id="reset-filter-btn" class="btn btn-small">重置筛选</button>
         `;
 
         controlPanel.appendChild(sortControl);
@@ -1155,15 +1157,34 @@ const UI = {
                 padding: 10px;
                 background: #f5f5f5;
                 border-radius: 5px;
+                font-size: 12px;
             }
             .sort-control, .filter-control {
                 margin-bottom: 10px;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+            }
+            .sort-control label, .filter-control label {
+                white-space: nowrap;
             }
             .sort-control select, .filter-control select {
-                margin-right: 10px;
-                padding: 5px;
+                margin-right: 5px;
+                padding: 3px;
                 border-radius: 3px;
                 border: 1px solid #ccc;
+                font-size: 12px;
+            }
+            .btn-small {
+                padding: 3px 8px;
+                font-size: 12px;
+                border-radius: 3px;
+                background-color: #e0e0e0;
+                border: 1px solid #ccc;
+                cursor: pointer;
+            }
+            .btn-small:hover {
+                background-color: #d0d0d0;
             }
             .weapons-grid {
                 display: grid;
@@ -1398,6 +1419,21 @@ const UI = {
         // 添加所有元素到容器
         inventoryContainer.appendChild(weaponsGrid);
         console.log('武器库存渲染完成');
+
+        // 添加重置按钮事件监听
+        document.getElementById('reset-sort-btn').addEventListener('click', () => {
+            document.getElementById('weapon-sort-by').value = 'default';
+            document.getElementById('weapon-sort-order').value = 'asc';
+            currentPage = 1;
+            renderCurrentPage();
+        });
+
+        document.getElementById('reset-filter-btn').addEventListener('click', () => {
+            document.getElementById('weapon-filter-element').value = 'all';
+            document.getElementById('weapon-filter-type').value = 'all';
+            currentPage = 1;
+            renderCurrentPage();
+        });
     },
 
     /**

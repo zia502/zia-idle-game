@@ -47,7 +47,8 @@ const JobSystem = {
             skills: ['warriorSlash', 'armorBreak', 'fiercePounce', 'whirlwind'],
             fixedSkill: 'warriorSlash',
             nextTiers: ['berserker', 'beastLord'],
-            unlocked: true // 默认解锁
+            unlocked: true, // 默认解锁
+            allowedWeapons: ['sword', 'axe'] // 允许使用剑和斧
         },
         fortress: {
             name: '堡垒',
@@ -57,7 +58,8 @@ const JobSystem = {
             skills: ['fortressGuard', 'shieldWall', 'guardianFormation', 'cover'],
             fixedSkill: 'fortressGuard',
             nextTiers: ['spartan', 'oathShielder'],
-            unlocked: true // 默认解锁
+            unlocked: true, // 默认解锁
+            allowedWeapons: ['sword', 'spear'] // 允许使用剑和枪
         },
         cleric: {
             name: '牧师',
@@ -67,7 +69,8 @@ const JobSystem = {
             skills: ['clericLight', 'heal', 'flashSpell', 'resurrection'],
             fixedSkill: 'clericLight',
             nextTiers: ['bishop', 'saint'],
-            unlocked: true // 默认解锁
+            unlocked: true, // 默认解锁
+            allowedWeapons: ['staff', 'spear'] // 允许使用杖和枪
         },
         arcanist: {
             name: '秘法师',
@@ -77,7 +80,8 @@ const JobSystem = {
             skills: ['arcanistBolt', 'fireball', 'frostBolt', 'thunderstorm'],
             fixedSkill: 'arcanistBolt',
             nextTiers: ['hermit', 'warlock'],
-            unlocked: true // 默认解锁
+            unlocked: true, // 默认解锁
+            allowedWeapons: ['staff', 'knife'] // 允许使用杖和刀
         },
         spellblade: {
             name: '魔剑士',
@@ -87,7 +91,8 @@ const JobSystem = {
             skills: ['spellbladeStrike', 'weaken', 'enhance', 'shadowSlash'],
             fixedSkill: 'spellbladeStrike',
             nextTiers: ['darkKnight', 'chaosLord'],
-            unlocked: true // 默认解锁
+            unlocked: true, // 默认解锁
+            allowedWeapons: ['knife', 'bow'] // 允许使用刀和弓
         },
         archer: {
             name: '射手',
@@ -97,7 +102,8 @@ const JobSystem = {
             skills: ['archerShot', 'preciseShot', 'multiShot', 'arrowRain'],
             fixedSkill: 'archerShot',
             nextTiers: ['rattlesnake', 'robinHood'],
-            unlocked: true // 默认解锁
+            unlocked: true, // 默认解锁
+            allowedWeapons: ['axe', 'bow'] // 允许使用斧和弓
         },
 
         // 二阶职业 - 战士进阶
@@ -110,7 +116,8 @@ const JobSystem = {
             fixedSkill: 'berserkerRage',
             requiredJob: 'warrior',
             requiredLevel: 20,
-            unlocked: false // 默认未解锁
+            unlocked: false, // 默认未解锁
+            allowedWeapons: ['sword', 'axe'] // 允许使用剑和斧
         },
         beastLord: {
             name: '兽王',
@@ -121,7 +128,8 @@ const JobSystem = {
             fixedSkill: 'beastLordCommand',
             requiredJob: 'warrior',
             requiredLevel: 20,
-            unlocked: false // 默认未解锁
+            unlocked: false, // 默认未解锁
+            allowedWeapons: ['axe', 'bow'] // 允许使用斧和弓
         },
 
         // 二阶职业 - 堡垒进阶
@@ -134,7 +142,8 @@ const JobSystem = {
             fixedSkill: 'spartanStance',
             requiredJob: 'fortress',
             requiredLevel: 20,
-            unlocked: false // 默认未解锁
+            unlocked: false, // 默认未解锁
+            allowedWeapons: ['sword', 'spear'] // 允许使用剑和枪
         },
         oathShielder: {
             name: '盾誓者',
@@ -145,7 +154,8 @@ const JobSystem = {
             fixedSkill: 'oathShielderVow',
             requiredJob: 'fortress',
             requiredLevel: 20,
-            unlocked: false // 默认未解锁
+            unlocked: false, // 默认未解锁
+            allowedWeapons: ['axe', 'spear'] // 允许使用斧和枪
         },
 
         // 二阶职业 - 牧师进阶
@@ -158,7 +168,8 @@ const JobSystem = {
             fixedSkill: 'bishopBlessing',
             requiredJob: 'cleric',
             requiredLevel: 20,
-            unlocked: false // 默认未解锁
+            unlocked: false, // 默认未解锁
+            allowedWeapons: ['staff', 'bow'] // 允许使用杖和弓
         },
         saint: {
             name: '圣者',
@@ -169,7 +180,8 @@ const JobSystem = {
             fixedSkill: 'saintPrayer',
             requiredJob: 'cleric',
             requiredLevel: 20,
-            unlocked: false // 默认未解锁
+            unlocked: false, // 默认未解锁
+            allowedWeapons: ['spear', 'staff'] // 允许使用枪和杖
         },
 
         // 二阶职业 - 秘法师进阶
@@ -182,7 +194,8 @@ const JobSystem = {
             fixedSkill: 'hermitSpell',
             requiredJob: 'arcanist',
             requiredLevel: 20,
-            unlocked: false // 默认未解锁
+            unlocked: false, // 默认未解锁
+            allowedWeapons: ['spear', 'knife'] // 允许使用枪和刀
         },
         warlock: {
             name: '术士',
@@ -193,7 +206,8 @@ const JobSystem = {
             fixedSkill: 'warlockCurse',
             requiredJob: 'arcanist',
             requiredLevel: 20,
-            unlocked: false // 默认未解锁
+            unlocked: false, // 默认未解锁
+            allowedWeapons: ['knife', 'staff'] // 允许使用刀和杖
         },
 
         // 二阶职业 - 魔剑士进阶
@@ -206,7 +220,8 @@ const JobSystem = {
             fixedSkill: 'darkKnightSlash',
             requiredJob: 'spellblade',
             requiredLevel: 20,
-            unlocked: false // 默认未解锁
+            unlocked: false, // 默认未解锁
+            allowedWeapons: ['sword', 'knife'] // 允许使用剑和刀
         },
         chaosLord: {
             name: '混沌领主',
@@ -217,7 +232,8 @@ const JobSystem = {
             fixedSkill: 'chaosLordDisruption',
             requiredJob: 'spellblade',
             requiredLevel: 20,
-            unlocked: false // 默认未解锁
+            unlocked: false, // 默认未解锁
+            allowedWeapons: ['axe', 'knife'] // 允许使用斧和刀
         },
 
         // 二阶职业 - 射手进阶
@@ -230,7 +246,8 @@ const JobSystem = {
             fixedSkill: 'rattlesnakeAim',
             requiredJob: 'archer',
             requiredLevel: 20,
-            unlocked: false // 默认未解锁
+            unlocked: false, // 默认未解锁
+            allowedWeapons: ['bow', 'staff'] // 允许使用弓和杖
         },
         robinHood: {
             name: '罗宾汉',
@@ -241,11 +258,10 @@ const JobSystem = {
             fixedSkill: 'robinHoodArrow',
             requiredJob: 'archer',
             requiredLevel: 20,
-            unlocked: false // 默认未解锁
+            unlocked: false, // 默认未解锁
+            allowedWeapons: ['bow', 'sword'] // 允许使用弓和剑
         }
     },
-
-
 
     /**
      * 获取职业信息
@@ -510,5 +526,27 @@ const JobSystem = {
 
         console.log(`切换职业成功：从${oldJobId}切换到${newJobId}`);
         return true;
+    },
+
+    /**
+     * 检查武器是否可以被职业使用
+     * @param {string} jobId - 职业ID
+     * @param {string} weaponType - 武器类型
+     * @returns {boolean} 是否可以使用该武器
+     */
+    canUseWeapon(jobId, weaponType) {
+        const job = this.getJob(jobId);
+        if (!job || !job.allowedWeapons) return false;
+        return job.allowedWeapons.includes(weaponType);
+    },
+
+    /**
+     * 获取职业允许使用的武器列表
+     * @param {string} jobId - 职业ID
+     * @returns {array} 允许使用的武器类型列表
+     */
+    getAllowedWeapons(jobId) {
+        const job = this.getJob(jobId);
+        return job?.allowedWeapons || [];
     }
 };

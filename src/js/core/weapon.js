@@ -13,159 +13,305 @@ const Weapon = {
         sword: {
             name: '剑',
             description: '平衡型武器，提供均衡的攻击和生命值',
-            baseStats: { attack: 10, hp: 50 },
-            compatibleTypes: ['attack', 'defense']
+            baseStats: { attack: 10, hp: 50 }
         },
-        axe: {
-            name: '斧',
-            description: '重型武器，提供高攻击但速度较慢',
-            baseStats: { attack: 15, hp: 30 },
-            compatibleTypes: ['attack']
+        knife: {
+            name: '刀',
+            description: '快速型武器，提供较高的攻击速度',
+            baseStats: { attack: 8, hp: 40 }
         },
         staff: {
-            name: '法杖',
+            name: '杖',
             description: '魔法武器，提供特殊效果和能力',
-            baseStats: { attack: 8, hp: 40 },
-            compatibleTypes: ['special', 'healing']
+            baseStats: { attack: 7, hp: 45 }
         },
         bow: {
             name: '弓',
             description: '远程武器，提供中等攻击和速度',
-            baseStats: { attack: 12, hp: 25 },
-            compatibleTypes: ['attack', 'special']
+            baseStats: { attack: 12, hp: 25 }
         },
-        shield: {
-            name: '盾',
-            description: '防御武器，提供高生命值',
-            baseStats: { attack: 5, hp: 100 },
-            compatibleTypes: ['defense']
+        axe: {
+            name: '斧',
+            description: '重型武器，提供高攻击但速度较慢',
+            baseStats: { attack: 15, hp: 30 }
         },
-        book: {
-            name: '魔导书',
-            description: '知识武器，提供特殊技能和效果',
-            baseStats: { attack: 7, hp: 45 },
-            compatibleTypes: ['special', 'healing']
+        spear: {
+            name: '枪',
+            description: '长柄武器，提供均衡的攻击和防御',
+            baseStats: { attack: 11, hp: 35 }
         }
     },
 
     // 武器技能定义
     skills: {
-        // 攻击技能
-        powerStrike: {
-            name: '强力一击',
-            description: '增加20%攻击力',
+        // 攻击力相关
+        attackUp: {
+            name: '攻击力上升',
+            description: '攻击力上升20%',
             type: 'passive',
             effect: (stats) => {
                 stats.attack *= 1.2;
                 return stats;
             }
         },
-        criticalHit: {
-            name: '暴击',
-            description: '有15%几率造成双倍伤害',
-            type: 'passive',
-            effect: (damage) => {
-                if (Math.random() < 0.15) {
-                    return damage * 2;
-                }
-                return damage;
-            }
-        },
-
-        // 防御技能
-        toughness: {
-            name: '坚韧',
-            description: '增加30%生命值',
+        attackExUp: {
+            name: '攻击力EX上升',
+            description: '攻击力EX上升20%',
             type: 'passive',
             effect: (stats) => {
-                stats.hp *= 1.3;
+                stats.attackEx = (stats.attackEx || 0) + 0.2;
                 return stats;
             }
         },
-        shield: {
-            name: '护盾',
-            description: '受到伤害时有20%几率减少50%伤害',
+
+        // 暴击相关
+        critRateUp: {
+            name: '暴击率上升',
+            description: '暴击率上升10%',
             type: 'passive',
-            effect: (damage) => {
-                if (Math.random() < 0.2) {
-                    return damage * 0.5;
-                }
-                return damage;
+            effect: (stats) => {
+                stats.critRate = (stats.critRate || 0.05) + 0.1;
+                return stats;
+            }
+        },
+        critDamageUp: {
+            name: '暴击伤害上升',
+            description: '暴击伤害上升20%',
+            type: 'passive',
+            effect: (stats) => {
+                stats.critDamage = (stats.critDamage || 1.5) + 0.2;
+                return stats;
             }
         },
 
-        // 属性技能
-        fireEnhance: {
-            name: '火属性强化',
-            description: '对风属性敌人伤害增加30%',
+        // 生存相关
+        hpUp: {
+            name: 'HP上升',
+            description: 'HP上升20%',
             type: 'passive',
-            effect: (damage, attacker, target) => {
-                if (attacker.attribute === 'fire' && target.attribute === 'wind') {
-                    return damage * 1.3;
-                }
-                return damage;
+            effect: (stats) => {
+                stats.hp *= 1.2;
+                return stats;
             }
         },
-        waterEnhance: {
-            name: '水属性强化',
-            description: '对火属性敌人伤害增加30%',
+        defenseUp: {
+            name: '防御力上升',
+            description: '防御力上升20',
             type: 'passive',
-            effect: (damage, attacker, target) => {
-                if (attacker.attribute === 'water' && target.attribute === 'fire') {
-                    return damage * 1.3;
-                }
-                return damage;
+            effect: (stats) => {
+                stats.defense += 20;
+                return stats;
+            }
+        },
+
+        // 特殊状态相关
+        backwaterUp: {
+            name: '背水上升',
+            description: '背水上升20%',
+            type: 'passive',
+            effect: (stats) => {
+                stats.backwater = (stats.backwater || 0) + 0.2;
+                return stats;
+            }
+        },
+        allInUp: {
+            name: '浑身上升',
+            description: '浑身上升20%',
+            type: 'passive',
+            effect: (stats) => {
+                stats.allIn = (stats.allIn || 0) + 0.2;
+                return stats;
+            }
+        },
+
+        // 伤害相关
+        damageUp: {
+            name: '伤害增加',
+            description: '伤害增加10000',
+            type: 'passive',
+            effect: (stats) => {
+                stats.damageBonus = (stats.damageBonus || 0) + 10000;
+                return stats;
+            }
+        },
+        damageMultiplierUp: {
+            name: '伤害提升',
+            description: '对克制属性伤害提升10%',
+            type: 'passive',
+            effect: (stats) => {
+                stats.damageMultiplier = (stats.damageMultiplier || 1) * 1.1;
+                return stats;
+            }
+        },
+
+        // 连击相关
+        daRateUp: {
+            name: 'DA概率提升',
+            description: 'DA概率提升10%',
+            type: 'passive',
+            effect: (stats) => {
+                stats.daRate = (stats.daRate || 0.15) + 0.1;
+                return stats;
+            }
+        },
+        taRateUp: {
+            name: 'TA概率提升',
+            description: 'TA概率提升5%',
+            type: 'passive',
+            effect: (stats) => {
+                stats.taRate = (stats.taRate || 0.05) + 0.05;
+                return stats;
+            }
+        },
+
+        // 技能伤害相关
+        skillDamageUp: {
+            name: '技能伤害增加',
+            description: '技能伤害增加100',
+            type: 'passive',
+            effect: (stats) => {
+                stats.skillDamageBonus = (stats.skillDamageBonus || 0) + 100;
+                return stats;
+            }
+        },
+        skillDamageCapUp: {
+            name: '技能伤害上限增加',
+            description: '技能伤害上限增加20%',
+            type: 'passive',
+            effect: (stats) => {
+                stats.skillDamageCap = (stats.skillDamageCap || 1) * 1.2;
+                return stats;
+            }
+        },
+
+        // 伤害上限相关
+        attackDamageCapUp: {
+            name: '攻击伤害上限增加',
+            description: '攻击伤害上限增加20%',
+            type: 'passive',
+            effect: (stats) => {
+                stats.attackDamageCap = (stats.attackDamageCap || 1) * 1.2;
+                return stats;
+            }
+        },
+        damageCapUp: {
+            name: '伤害上限增加',
+            description: '伤害上限增加20%',
+            type: 'passive',
+            effect: (stats) => {
+                stats.damageCap = (stats.damageCap || 1) * 1.2;
+                return stats;
             }
         }
     },
 
     // 武器稀有度定义
     rarities: {
-        common: {
-            name: '普通',
-            color: '#9e9e9e',
-            statMultiplier: 1.0,
-            maxLevel: 20,
-            skillSlots: 1
-        },
-        uncommon: {
-            name: '优秀',
-            color: '#4caf50',
-            statMultiplier: 1.2,
-            maxLevel: 30,
-            skillSlots: 2
-        },
         rare: {
             name: '稀有',
             color: '#2196f3',
             statMultiplier: 1.5,
-            maxLevel: 40,
+            maxLevel: 60,
             skillSlots: 2
         },
         epic: {
             name: '史诗',
             color: '#9c27b0',
             statMultiplier: 1.8,
-            maxLevel: 50,
+            maxLevel: 80,
             skillSlots: 3
         },
         legendary: {
             name: '传说',
             color: '#ff9800',
             statMultiplier: 2.2,
-            maxLevel: 60,
+            maxLevel: 100,
             skillSlots: 3
         }
     },
+
+    // 武器模板
+    templates: {},
 
     /**
      * 初始化武器系统
      */
     init() {
         console.log('武器系统已初始化');
+        this.loadTemplates();
+    },
 
-        // 创建一些初始武器
-        this.createInitialWeapons();
+    /**
+     * 加载武器模板数据
+     */
+    loadTemplates() {
+        console.log('加载武器模板数据');
+
+        // 保存当前的基本武器模板
+        const basicTemplates = { ...this.templates };
+
+        // 从Python服务器获取JSON数据
+        const serverUrl = 'http://localhost:8000';
+        const jsonPath = '/src/data/weapons.json';
+
+        console.log(`从服务器加载JSON: ${serverUrl}${jsonPath}`);
+
+        fetch(`${serverUrl}${jsonPath}`)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP错误! 状态: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                // 合并新加载的武器模板与已有的基本武器模板
+                this.templates = { ...basicTemplates, ...data };
+                console.log('武器模板数据加载成功');
+                this.emitLoadedEvent();
+            })
+            .catch(error => {
+                console.error('加载武器模板数据失败:', error);
+                this.loadTemplatesFallback();
+            });
+    },
+
+    /**
+     * 备用方法：当服务器不可用时使用
+     */
+    loadTemplatesFallback() {
+        console.log('使用备用方法加载武器模板数据');
+
+        try {
+            const xhr = new XMLHttpRequest();
+            xhr.open('GET', 'src/data/weapon-templates.json', false);
+            xhr.send(null);
+
+            if (xhr.status === 200) {
+                const loadedTemplates = JSON.parse(xhr.responseText);
+                const basicTemplates = { ...this.templates };
+                this.templates = { ...basicTemplates, ...loadedTemplates };
+                console.log('成功直接加载武器模板数据');
+            } else {
+                throw new Error(`无法加载武器模板数据，状态码: ${xhr.status}`);
+            }
+        } catch (error) {
+            console.error('直接加载武器模板数据失败:', error);
+            console.error('%c无法加载完整的武器模板数据!', 'color: red; font-size: 24px; font-weight: bold;');
+            console.error('%c请确保 src/data/weapon-templates.json 文件存在', 'color: red; font-size: 18px;');
+            console.error('%c或者启动 Python 服务器: python server.py', 'color: red; font-size: 18px;');
+            console.warn('将使用基本武器模板继续...');
+        }
+
+        this.emitLoadedEvent();
+    },
+
+    /**
+     * 触发武器模板加载完成事件
+     */
+    emitLoadedEvent() {
+        if (typeof Events !== 'undefined' && typeof Events.emit === 'function') {
+            Events.emit('weaponTemplate:loaded');
+        }
     },
 
     /**
@@ -514,6 +660,8 @@ const Weapon = {
         return true;
     },
 
+    
+
     /**
      * 加载武器数据
      * @param {object} data - 保存的武器数据
@@ -531,6 +679,8 @@ const Weapon = {
         if (!data) return;
         this.weaponBoards = {...data};
     },
+
+    
 
     /**
      * 重置武器系统

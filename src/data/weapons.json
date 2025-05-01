@@ -1,0 +1,14 @@
+{
+    "weapon1": {
+        "name": "武器1",
+        "description": "武器1的描述",
+        "baseStats": {
+            "attack": 100,
+            "hp": 500
+        },
+        "skills": [
+            "skill1",
+            "skill2"
+        ]
+    }
+} 

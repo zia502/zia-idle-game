@@ -1016,8 +1016,14 @@ const UI = {
                     tooltip.className = 'weapon-tooltip';
                     tooltip.innerHTML = `
                         <div class="weapon-name">${weapon.name}</div>
-                        <div class="weapon-type">类型: ${this.getWeaponTypeName(weapon.type)}</div>
-                        <div class="weapon-element">属性: ${this.getWeaponElementName(weapon.element)}</div>
+                        <div class="weapon-icons">
+                            <div class="weapon-type">
+                                <img src="src/assets/${weaponTypeIcons[weapon.type]}" class="type-icon" alt="${weapon.type}">
+                            </div>
+                            <div class="weapon-element">
+                                <img src="src/assets/${elementIcons[weapon.element]}" class="element-icon" alt="${weapon.element}">
+                            </div>
+                        </div>
                         <div class="weapon-stats">
                             <div>攻击力: ${currentStats.attack}</div>
                             <div>生命值: ${currentStats.hp}</div>
@@ -1104,11 +1110,19 @@ const UI = {
         detailsContainer.innerHTML = `
             <div class="weapon-details-content ${rarityClass}">
                 <div class="weapon-header">
-                    <div class="weapon-icon">${weapon.name.charAt(0)}</div>
+                    <div class="weapon-icon">
+                        <img src="src/assets/${weaponTypeIcons[weapon.type]}" class="type-icon" alt="${weapon.type}">
+                    </div>
                     <div class="weapon-title">
                         <h3>${weapon.name}</h3>
-                        <div class="weapon-type">${this.getWeaponTypeName(weapon.type)}</div>
-                        <div class="weapon-element">${this.getWeaponElementName(weapon.element)}</div>
+                        <div class="weapon-attributes">
+                            <div class="weapon-type">
+                                <img src="src/assets/${weaponTypeIcons[weapon.type]}" class="type-icon" alt="${weapon.type}">
+                            </div>
+                            <div class="weapon-element">
+                                <img src="src/assets/${elementIcons[weapon.element]}" class="element-icon" alt="${weapon.element}">
+                            </div>
+                        </div>
                     </div>
                 </div>
                 <div class="weapon-stats">
@@ -1188,3 +1202,103 @@ const UI = {
         };
     }
 };
+
+// 添加武器类型和属性的图标映射
+const weaponTypeIcons = {
+    sword: 'weapon_sword.png',
+    knife: 'weapon_knife.png',
+    spear: 'weapon_spear.png',
+    staff: 'weapon_staff.png',
+    axe: 'weapon_axe.png',
+    bow: 'weapon_bow.png'
+};
+
+const elementIcons = {
+    fire: 'element_fire.png',
+    water: 'element_water.png',
+    wind: 'element_wind.png',
+    light: 'element_light.png',
+    dark: 'element_dark.png',
+    earth: 'element_earth.png'
+};
+
+// 获取武器类型图标HTML
+function getWeaponTypeIconHtml(type) {
+    const iconPath = weaponTypeIcons[type];
+    return iconPath ? `<img src="src/assets/${iconPath}" class="type-icon" alt="${type}">` : type;
+}
+
+// 获取属性图标HTML
+function getElementIconHtml(element) {
+    const iconPath = elementIcons[element];
+    return iconPath ? `<img src="src/assets/${iconPath}" class="element-icon" alt="${element}">` : element;
+}
+
+// 修改tooltip内容生成
+function createWeaponTooltip(weapon) {
+    const currentStats = Weapon.calculateCurrentStats(weapon);
+    return `
+        <div class="weapon-tooltip">
+            <div class="weapon-name">${weapon.name}</div>
+            <div class="weapon-icons">
+                <div class="weapon-type">
+                    <img src="src/assets/${weaponTypeIcons[weapon.type]}" class="type-icon" alt="${weapon.type}">
+                </div>
+                <div class="weapon-element">
+                    <img src="src/assets/${elementIcons[weapon.element]}" class="element-icon" alt="${weapon.element}">
+                </div>
+            </div>
+            <div class="weapon-stats">
+                <div>攻击: ${currentStats.attack}</div>
+                <div>生命: ${currentStats.hp}</div>
+            </div>
+            <div class="weapon-effects">
+                ${weapon.specialEffects.map(effect => `<div>${effect.name} Lv.${effect.level}</div>`).join('')}
+            </div>
+        </div>
+    `;
+}
+
+// 修改武器详情页面显示
+function showWeaponDetails(weapon) {
+    const detailsContainer = document.getElementById('weapon-details');
+    if (!detailsContainer || !weapon) return;
+
+    const currentStats = Weapon.calculateCurrentStats(weapon);
+    
+    detailsContainer.innerHTML = `
+        <div class="weapon-details-content rarity-${weapon.rarity}">
+            <div class="weapon-header">
+                <div class="weapon-icon">
+                    ${getWeaponTypeIconHtml(weapon.type)}
+                </div>
+                <div class="weapon-title">
+                    <h3>${weapon.name}</h3>
+                    <div class="weapon-attributes">
+                        <span class="weapon-type">${getWeaponTypeIconHtml(weapon.type)}</span>
+                        <span class="weapon-element">${getElementIconHtml(weapon.element)}</span>
+                    </div>
+                </div>
+            </div>
+            <div class="weapon-stats">
+                <div class="stat-row">
+                    <span class="stat-label">攻击</span>
+                    <span class="stat-value">${currentStats.attack}</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">生命</span>
+                    <span class="stat-value">${currentStats.hp}</span>
+                </div>
+            </div>
+            <div class="weapon-effects">
+                <h4>特殊效果</h4>
+                ${weapon.specialEffects.map(effect => `
+                    <div class="effect-item">
+                        <span class="effect-name">${effect.name}</span>
+                        <span class="effect-level">Lv.${effect.level}</span>
+                    </div>
+                `).join('')}
+            </div>
+        </div>
+    `;
+}

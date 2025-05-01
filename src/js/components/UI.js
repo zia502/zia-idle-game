@@ -1517,27 +1517,68 @@ const UI = {
             }
             .material-weapons-grid {
                 display: grid;
-                grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+                grid-template-columns: repeat(7, 1fr);
                 gap: 10px;
                 margin-bottom: 15px;
             }
             .material-weapon-item {
-                border: 1px solid #ccc;
-                padding: 10px;
+                aspect-ratio: 1;
+                min-width: 80px;
+                max-width: 120px;
+            }
+            .material-weapon-content {
+                height: 100%;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                align-items: center;
+                padding: 5px;
                 border-radius: 4px;
+                border: 2px solid #ccc;
                 cursor: pointer;
                 transition: all 0.2s;
+                position: relative;
             }
-            .material-weapon-item:hover {
-                border-color: #4169e1;
+            .material-weapon-content:hover {
+                transform: scale(1.05);
+                box-shadow: 0 2px 8px rgba(0,0,0,0.1);
             }
-            .material-weapon-item.selected {
-                border-color: #4169e1;
+            .material-weapon-item.selected .material-weapon-content {
+                border: 2px solid #4169e1;
+                box-shadow: 0 0 8px rgba(65, 105, 225, 0.5);
                 background: rgba(65, 105, 225, 0.1);
             }
-            .material-weapon-item.disabled {
-                opacity: 0.5;
-                cursor: not-allowed;
+            .material-weapon-content.rarity-common {
+                border-color: #9e9e9e;
+                background: linear-gradient(to bottom right, #ffffff, #f5f5f5);
+            }
+            .material-weapon-content.rarity-3 {
+                border-color: #4169e1;
+                background: linear-gradient(to bottom right, #ffffff, #e3f2fd);
+            }
+            .material-weapon-content.rarity-4 {
+                border-color: #9c27b0;
+                background: linear-gradient(to bottom right, #ffffff, #f3e5f5);
+            }
+            .material-weapon-content.rarity-5 {
+                border-color: #ffd700;
+                background: linear-gradient(to bottom right, #ffffff, #fff8e1);
+                box-shadow: 0 0 10px rgba(255, 215, 0, 0.3);
+            }
+            .material-weapon-name {
+                font-size: 12px;
+                text-align: center;
+                color: #333;
+                text-shadow: 0 1px 1px rgba(255, 255, 255, 0.8);
+            }
+            .material-weapon-level {
+                color: #1a237e;
+            }
+            .material-weapon-breakthrough {
+                color: #4a148c;
+            }
+            .material-weapon-breakthrough span {
+                color: #2e7d32;
             }
             .dialog-footer {
                 display: flex;
@@ -1600,8 +1641,46 @@ const UI = {
                         this.showNotification(`最多只能选择${maxMaterials}把武器作为突破材料`, 'warning');
                         return;
                     }
+
+                    // 检查武器突破等级
+                    const weaponId = item.dataset.weaponId;
+                    const weapon = Weapon.getWeapon(weaponId);
+                    if (weapon && weapon.breakthrough > 0) {
+                        // 显示确认对话框
+                        const confirmDialog = document.createElement('div');
+                        confirmDialog.className = 'confirm-dialog';
+                        confirmDialog.innerHTML = `
+                            <div class="confirm-dialog-content">
+                                <div class="dialog-message">当前武器突破等级不为0，是否确认使用？</div>
+                                <div class="dialog-buttons">
+                                    <button class="confirm-btn">确认</button>
+                                    <button class="cancel-btn">取消</button>
+                                </div>
+                            </div>
+                        `;
+                        document.body.appendChild(confirmDialog);
+
+                        // 添加确认按钮事件
+                        confirmDialog.querySelector('.confirm-btn').onclick = () => {
+                            item.classList.add('selected');
+                            selectedMaterials.add(weaponId);
+                            document.body.removeChild(confirmDialog);
+                            // 更新选择数量显示
+                            selectedCountElement.textContent = selectedMaterials.size;
+                            // 更新确认按钮状态
+                            confirmBtn.disabled = selectedMaterials.size === 0;
+                        };
+
+                        // 添加取消按钮事件
+                        confirmDialog.querySelector('.cancel-btn').onclick = () => {
+                            document.body.removeChild(confirmDialog);
+                        };
+
+                        return;
+                    }
+
                     item.classList.add('selected');
-                    selectedMaterials.add(item.dataset.weaponId);
+                    selectedMaterials.add(weaponId);
                 }
 
                 // 更新选择数量显示
@@ -1609,7 +1688,110 @@ const UI = {
                 // 更新确认按钮状态
                 confirmBtn.disabled = selectedMaterials.size === 0;
             };
+
+            // 添加tooltip
+            item.addEventListener('mouseenter', (e) => {
+                const weaponId = item.dataset.weaponId;
+                const weapon = Weapon.getWeapon(weaponId);
+                if (!weapon) return;
+
+                const tooltip = document.createElement('div');
+                tooltip.className = 'weapon-tooltip';
+                const currentStats = Weapon.calculateCurrentStats(weapon);
+                tooltip.innerHTML = `
+                    <div class="weapon-name">${weapon.name}</div>
+                    <div class="weapon-breakthrough">
+                        突破等级: ${this.getBreakthroughStars(weapon.breakthrough, weapon.breakthrough === 4)}
+                    </div>
+                    <div class="weapon-icons">
+                        <div class="weapon-type">
+                            <img src="src/assets/${weaponTypeIcons[weapon.type]}" class="type-icon" alt="${weapon.type}">
+                        </div>
+                        <div class="weapon-element">
+                            <img src="src/assets/${elementIcons[weapon.element]}" class="element-icon" alt="${weapon.element}">
+                        </div>
+                    </div>
+                    <div class="weapon-stats">
+                        <div>等级: ${weapon.level}/${Weapon.breakthroughLevels[weapon.breakthrough || 0]}</div>
+                        <div>攻击: ${currentStats.attack}</div>
+                        <div>生命: ${currentStats.hp}</div>
+                    </div>
+                    ${weapon.specialEffects.length > 0 ? `
+                        <div class="weapon-effects">
+                            <div>特殊效果:</div>
+                            ${weapon.specialEffects.map(effect => {
+                                const isUnlocked = weapon.level >= effect.unlock;
+                                return `<div class="effect-item ${isUnlocked ? 'unlocked' : 'locked'}">
+                                    ${this.getWeaponSkillName(effect.type)} Lv.${effect.level}
+                                    ${!isUnlocked ? '<span class="unlock-hint">(需要武器等级达到' + effect.unlock + '级)</span>' : ''}
+                                </div>`;
+                            }).join('')}
+                        </div>
+                    ` : ''}
+                `;
+                tooltipContainer.innerHTML = '';
+                tooltipContainer.appendChild(tooltip);
+                tooltipContainer.style.display = 'block';
+                
+                const rect = e.target.getBoundingClientRect();
+                tooltipContainer.style.left = `${rect.left + rect.width / 2}px`;
+                tooltipContainer.style.top = `${rect.bottom + 5}px`;
+            });
+
+            item.addEventListener('mouseleave', () => {
+                tooltipContainer.style.display = 'none';
+            });
         });
+
+        // 添加确认对话框样式
+        const confirmStyle = document.createElement('style');
+        confirmStyle.textContent = `
+            .confirm-dialog {
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: rgba(0, 0, 0, 0.5);
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                z-index: 1000;
+            }
+            .confirm-dialog-content {
+                background: white;
+                padding: 20px;
+                border-radius: 8px;
+                min-width: 300px;
+                text-align: center;
+            }
+            .dialog-message {
+                margin-bottom: 20px;
+                font-size: 16px;
+                color: #333;
+            }
+            .dialog-buttons {
+                display: flex;
+                justify-content: center;
+                gap: 10px;
+            }
+            .dialog-buttons button {
+                padding: 8px 16px;
+                border-radius: 4px;
+                cursor: pointer;
+                border: none;
+                font-size: 14px;
+            }
+            .confirm-btn {
+                background: #4CAF50;
+                color: white;
+            }
+            .cancel-btn {
+                background: #f44336;
+                color: white;
+            }
+        `;
+        document.head.appendChild(confirmStyle);
 
         // 确认突破事件
         confirmBtn.onclick = () => {
@@ -1669,7 +1851,7 @@ const UI = {
                     <div class="material-weapon-content ${rarityClass}">
                         <div class="material-weapon-name">${weapon.name}</div>
                         <div class="material-weapon-level">Lv.${weapon.level}</div>
-                        <div class="material-weapon-breakthrough">突破:${weapon.breakthrough || 0}</div>
+                        <div class="material-weapon-breakthrough"><span>突</span>${weapon.breakthrough || 0}</div>
                     </div>
                 </div>
             `;

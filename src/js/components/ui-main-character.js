@@ -51,6 +51,12 @@
             jobLevel = Character.getJobLevel(mainCharacter);
         }
 
+        // 获取允许使用的武器
+        let allowedWeapons = [];
+        if (typeof JobSystem !== 'undefined' && typeof JobSystem.getAllowedWeapons === 'function') {
+            allowedWeapons = JobSystem.getAllowedWeapons(mainCharacter.job.current);
+        }
+
         // 创建主角卡片
         const characterCard = document.createElement('div');
         characterCard.className = 'character-card main-character-card';
@@ -81,6 +87,11 @@
                 <div class="character-job">
                     <span class="job-name">${jobName}</span>
                     <span class="job-level">Lv.${jobLevel}</span>
+                    <div class="allowed-weapons">
+                        ${allowedWeapons.map(weaponType => `
+                            <img src="src/assets/${UI.weaponTypeIcons[weaponType]}" alt="${UI.getWeaponTypeName(weaponType)}" title="${UI.getWeaponTypeName(weaponType)}">
+                        `).join('')}
+                    </div>
                 </div>
                 <div class="character-attributes">
                     <span class="attribute-tag attribute-${mainCharacter.attribute || 'fire'}">${mainCharacter.attribute || '火'}</span>

@@ -12,6 +12,45 @@ const UI = {
      */
     notifications: [],
 
+    // 武器类型和属性的图标映射
+    weaponTypeIcons: {
+        'sword': 'sword.png',
+        'knife': 'knife.png',
+        'staff': 'staff.png',
+        'bow': 'bow.png',
+        'axe': 'axe.png',
+        'spear': 'spear.png'
+    },
+
+    elementIcons: {
+        fire: 'element_fire.png',
+        water: 'element_water.png',
+        wind: 'element_wind.png',
+        light: 'element_light.png',
+        dark: 'element_dark.png',
+        earth: 'element_earth.png'
+    },
+
+    /**
+     * 获取武器类型图标HTML
+     * @param {string} type - 武器类型
+     * @returns {string} 图标HTML
+     */
+    getWeaponTypeIconHtml(type) {
+        const iconPath = this.weaponTypeIcons[type];
+        return iconPath ? `<img src="src/assets/${iconPath}" class="type-icon" alt="${type}">` : type;
+    },
+
+    /**
+     * 获取属性图标HTML
+     * @param {string} element - 属性
+     * @returns {string} 图标HTML
+     */
+    getElementIconHtml(element) {
+        const iconPath = this.elementIcons[element];
+        return iconPath ? `<img src="src/assets/${iconPath}" class="element-icon" alt="${element}">` : element;
+    },
+
     /**
      * 初始化UI系统
      */
@@ -189,9 +228,27 @@ const UI = {
             .weapon-details-content .weapon-breakthrough-info .star.final {
                 background-position-y: -790px;
             }
+            .character-info {
+                display: flex;
+                flex-direction: column;
+                gap: 5px;
+            }
+            .character-job {
+                display: flex;
+                align-items: center;
+                gap: 5px;
+            }
+            .character-job .allowed-weapons {
+                display: flex;
+                gap: 2px;
+            }
+            .character-job .allowed-weapons img {
+                width: 100%;
+                height: 100%;
+            }
         `;
         document.head.appendChild(style);
-        
+
         console.log('UI系统初始化');
         this.setupEventListeners();
         this.createUIElements();
@@ -589,6 +646,10 @@ const UI = {
         const charContainer = document.getElementById(`character-${character.id}`);
         if (!charContainer) return;
 
+        // 获取职业信息
+        const job = JobSystem.getJob(character.job.current);
+        const allowedWeapons = job ? JobSystem.getAllowedWeapons(character.job.current) : [];
+
         // 更新血量
         const hpBar = charContainer.querySelector('.hp-bar');
         if (hpBar) {
@@ -608,6 +669,19 @@ const UI = {
         if (expBar) {
             const expPercent = (character.exp / Character.getExpToNextLevel(character.level)) * 100;
             expBar.style.width = `${expPercent}%`;
+        }
+
+        // 更新职业信息
+        const jobElement = charContainer.querySelector('.character-job');
+        if (jobElement) {
+            jobElement.innerHTML = `
+                <span>${job ? job.name : '无职业'}</span>
+                <div class="allowed-weapons">
+                    ${allowedWeapons.map(weaponType => `
+                        <img src="src/assets/${this.weaponTypeIcons[weaponType]}" alt="${this.getWeaponTypeName(weaponType)}" title="${this.getWeaponTypeName(weaponType)}">
+                    `).join('')}
+                </div>
+            `;
         }
     },
 
@@ -1115,12 +1189,12 @@ const UI = {
     getBreakthroughStars(breakthrough = 0, isFinal = false) {
         const totalStars = 4;
         let html = '<div class="breakthrough-stars">';
-        
+
         // 添加已突破的星星
         for (let i = 0; i < breakthrough; i++) {
             html += '<span class="star filled">★</span>';
         }
-        
+
         // 如果是终突,添加蓝色星星
         if (isFinal) {
             html += '<span class="star final">★</span>';
@@ -1134,7 +1208,7 @@ const UI = {
                 html += '<span class="star empty">☆</span>';
             }
         }
-        
+
         html += '</div>';
         return html;
     },
@@ -1156,7 +1230,7 @@ const UI = {
         // 创建排序和筛选控制面板
         const controlPanel = document.createElement('div');
         controlPanel.className = 'weapon-control-panel';
-        
+
         // 排序控制
         const sortControl = document.createElement('div');
         sortControl.className = 'sort-control';
@@ -1212,7 +1286,7 @@ const UI = {
         // 获取所有武器
         const weapons = Weapon.getAllWeapons();
         console.log('获取到的武器列表:', weapons);
-        
+
         if (!weapons || Object.keys(weapons).length === 0) {
             console.log('武器库为空');
             inventoryContainer.innerHTML = '<div class="empty-message">武器库为空</div>';
@@ -1396,7 +1470,7 @@ const UI = {
                                     const isLast = index === 3;
                                     const isFinal = weapon.breakthrough === 4;
                                     const currentBreakthrough = weapon.breakthrough || 0;
-                                    
+
                                     if (isLast) {
                                         return `<div class="star ${isFinal ? 'final' : 'breakthrough-4'}"></div>`;
                                     } else {
@@ -1423,7 +1497,7 @@ const UI = {
                                 const isLast = index === 3;
                                 const isFinal = weapon.breakthrough === 4;
                                 const currentBreakthrough = weapon.breakthrough || 0;
-                                
+
                                 if (isLast) {
                                     return `<div class="star ${isFinal ? 'final' : 'breakthrough-4'}"></div>`;
                                 } else {
@@ -1437,10 +1511,10 @@ const UI = {
                         </div>
                         <div class="weapon-icons">
                             <div class="weapon-type">
-                                <img src="src/assets/${weaponTypeIcons[weapon.type]}" class="type-icon" alt="${weapon.type}">
+                                <img src="src/assets/${this.weaponTypeIcons[weapon.type]}" class="type-icon" alt="${weapon.type}">
                             </div>
                             <div class="weapon-element">
-                                <img src="src/assets/${elementIcons[weapon.element]}" class="element-icon" alt="${weapon.element}">
+                                <img src="src/assets/${this.elementIcons[weapon.element]}" class="element-icon" alt="${weapon.element}">
                             </div>
                         </div>
                         <div class="weapon-stats">
@@ -1462,7 +1536,7 @@ const UI = {
                     tooltipContainer.innerHTML = '';
                     tooltipContainer.appendChild(tooltip);
                     tooltipContainer.style.display = 'block';
-                    
+
                     const rect = e.target.getBoundingClientRect();
                     tooltipContainer.style.left = `${rect.left + rect.width / 2}px`;
                     tooltipContainer.style.top = `${rect.bottom + 5}px`;
@@ -1572,7 +1646,7 @@ const UI = {
             <div class="weapon-details-content ${rarityClass}">
                 <div class="weapon-header">
                     <div class="weapon-icon">
-                        <img src="src/assets/${weaponTypeIcons[weapon.type]}" class="type-icon" alt="${weapon.type}">
+                        <img src="src/assets/${this.weaponTypeIcons[weapon.type]}" class="type-icon" alt="${weapon.type}">
                     </div>
                     <div class="weapon-title">
                         <h3>${weapon.name}</h3>
@@ -1581,7 +1655,7 @@ const UI = {
                                 const isLast = index === 3;
                                 const isFinal = weapon.breakthrough === 4;
                                 const currentBreakthrough = weapon.breakthrough || 0;
-                                
+
                                 if (isLast) {
                                     return `<div class="star ${isFinal ? 'final' : 'breakthrough-4'}"></div>`;
                                 } else {
@@ -1595,10 +1669,10 @@ const UI = {
                         </div>
                         <div class="weapon-attributes">
                             <div class="weapon-type">
-                                <img src="src/assets/${weaponTypeIcons[weapon.type]}" class="type-icon" alt="${weapon.type}">
+                                <img src="src/assets/${this.weaponTypeIcons[weapon.type]}" class="type-icon" alt="${weapon.type}">
                             </div>
                             <div class="weapon-element">
-                                <img src="src/assets/${elementIcons[weapon.element]}" class="element-icon" alt="${weapon.element}">
+                                <img src="src/assets/${this.elementIcons[weapon.element]}" class="element-icon" alt="${weapon.element}">
                             </div>
                         </div>
                     </div>
@@ -1674,7 +1748,7 @@ const UI = {
         // 绑定升级按钮事件
         const upgradeBtn = document.getElementById('upgrade-btn');
         const addExpBtn = document.getElementById('add-exp-btn');
-        
+
         // 检查是否已达到等级上限
         const isMaxLevel = weapon.level >= maxLevel;
         if (isMaxLevel) {
@@ -1892,7 +1966,7 @@ const UI = {
         materialItems.forEach(item => {
             item.onclick = () => {
                 if (item.classList.contains('disabled')) return;
-                
+
                 if (item.classList.contains('selected')) {
                     item.classList.remove('selected');
                     selectedMaterials.delete(item.dataset.weaponId);
@@ -1966,7 +2040,7 @@ const UI = {
                             const isLast = index === 3;
                             const isFinal = weapon.breakthrough === 4;
                             const currentBreakthrough = weapon.breakthrough || 0;
-                            
+
                             if (isLast) {
                                 return `<div class="star ${isFinal ? 'final' : 'breakthrough-4'}"></div>`;
                             } else {
@@ -1980,10 +2054,10 @@ const UI = {
                     </div>
                     <div class="weapon-icons">
                         <div class="weapon-type">
-                            <img src="src/assets/${weaponTypeIcons[weapon.type]}" class="type-icon" alt="${weapon.type}">
+                            <img src="src/assets/${this.weaponTypeIcons[weapon.type]}" class="type-icon" alt="${weapon.type}">
                         </div>
                         <div class="weapon-element">
-                            <img src="src/assets/${elementIcons[weapon.element]}" class="element-icon" alt="${weapon.element}">
+                            <img src="src/assets/${this.elementIcons[weapon.element]}" class="element-icon" alt="${weapon.element}">
                         </div>
                     </div>
                     <div class="weapon-stats">
@@ -2007,7 +2081,7 @@ const UI = {
                 tooltipContainer.innerHTML = '';
                 tooltipContainer.appendChild(tooltip);
                 tooltipContainer.style.display = 'block';
-                
+
                 const rect = e.target.getBoundingClientRect();
                 tooltipContainer.style.left = `${rect.left + rect.width / 2}px`;
                 tooltipContainer.style.top = `${rect.bottom + 5}px`;
@@ -2077,18 +2151,18 @@ const UI = {
                     this.showNotification('突破等级不能超过3', 'error');
                     return;
                 }
-                
+
                 // 先进行突破
                 Weapon.breakthroughWeapon(targetWeaponId, Array.from(selectedMaterials));
-                
+
                 // 保存游戏状态
                 Game.saveGame();
-                
+
                 // 刷新显示
                 this.showWeaponDetails(targetWeaponId);
                 this.renderWeaponInventory();
                 document.body.removeChild(dialog);
-                
+
                 this.showNotification('突破成功！', 'success');
             }
         };
@@ -2289,14 +2363,14 @@ const UI = {
         materialItems.forEach(item => {
             item.onclick = () => {
                 if (item.classList.contains('disabled')) return;
-                
+
                 // 取消之前的选择
                 materialItems.forEach(i => i.classList.remove('selected'));
-                
+
                 // 选择当前材料
                 item.classList.add('selected');
                 selectedMaterial = item.dataset.itemId;
-                
+
                 // 更新确认按钮状态
                 confirmBtn.disabled = false;
             };
@@ -2346,135 +2420,3 @@ const UI = {
         }).join('');
     }
 };
-
-// 添加武器类型和属性的图标映射
-const weaponTypeIcons = {
-    sword: 'weapon_sword.png',
-    knife: 'weapon_knife.png',
-    spear: 'weapon_spear.png',
-    staff: 'weapon_staff.png',
-    axe: 'weapon_axe.png',
-    bow: 'weapon_bow.png'
-};
-
-const elementIcons = {
-    fire: 'element_fire.png',
-    water: 'element_water.png',
-    wind: 'element_wind.png',
-    light: 'element_light.png',
-    dark: 'element_dark.png',
-    earth: 'element_earth.png'
-};
-
-// 获取武器类型图标HTML
-function getWeaponTypeIconHtml(type) {
-    const iconPath = weaponTypeIcons[type];
-    return iconPath ? `<img src="src/assets/${iconPath}" class="type-icon" alt="${type}">` : type;
-}
-
-// 获取属性图标HTML
-function getElementIconHtml(element) {
-    const iconPath = elementIcons[element];
-    return iconPath ? `<img src="src/assets/${iconPath}" class="element-icon" alt="${element}">` : element;
-}
-
-// 修改tooltip内容生成
-function createWeaponTooltip(weapon) {
-    const currentStats = Weapon.calculateCurrentStats(weapon);
-    return `
-        <div class="weapon-tooltip">
-            <div class="weapon-name">${weapon.name}</div>
-            <div class="weapon-icons">
-                <div class="weapon-type">
-                    <img src="src/assets/${weaponTypeIcons[weapon.type]}" class="type-icon" alt="${weapon.type}">
-                </div>
-                <div class="weapon-element">
-                    <img src="src/assets/${elementIcons[weapon.element]}" class="element-icon" alt="${weapon.element}">
-                </div>
-            </div>
-            <div class="weapon-stats">
-                <div>攻击: ${currentStats.attack}</div>
-                <div>生命: ${currentStats.hp}</div>
-            </div>
-            <div class="weapon-effects">
-                ${weapon.specialEffects.map(effect => `<div>${effect.name} Lv.${effect.level}</div>`).join('')}
-            </div>
-        </div>
-    `;
-}
-
-// 修改武器详情页面显示
-function showWeaponDetails(weapon) {
-    const detailsContainer = document.getElementById('weapon-details');
-    if (!detailsContainer || !weapon) return;
-
-    const currentStats = Weapon.calculateCurrentStats(weapon);
-    
-    detailsContainer.innerHTML = `
-        <div class="weapon-details-content ${rarityClass}">
-            <div class="weapon-header">
-                <div class="weapon-icon">
-                    ${getWeaponTypeIconHtml(weapon.type)}
-                </div>
-                <div class="weapon-title">
-                    <h3>${weapon.name}</h3>
-                    <div class="weapon-breakthrough-info">
-                        ${Array(4).fill().map((_, index) => {
-                            const isLast = index === 3;
-                            const isFinal = weapon.breakthrough === 4;
-                            const currentBreakthrough = weapon.breakthrough || 0;
-                            
-                            if (isLast) {
-                                return `<div class="star ${isFinal ? 'final' : 'breakthrough-4'}"></div>`;
-                            } else {
-                                if (index < currentBreakthrough) {
-                                    return `<div class="star breakthrough-1"></div>`;
-                                } else {
-                                    return `<div class="star breakthrough-0"></div>`;
-                                }
-                            }
-                        }).join('')}
-                    </div>
-                    <div class="weapon-attributes">
-                        <div class="weapon-type">
-                            <img src="src/assets/${weaponTypeIcons[weapon.type]}" class="type-icon" alt="${weapon.type}">
-                        </div>
-                        <div class="weapon-element">
-                            <img src="src/assets/${elementIcons[weapon.element]}" class="element-icon" alt="${weapon.element}">
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="weapon-stats">
-                <div class="stat-row">
-                    <div class="stat-label">等级</div>
-                    <div class="stat-value">${weapon.level}/${Weapon.breakthroughLevels[weapon.breakthrough || 0]}</div>
-                </div>
-                <div class="stat-row">
-                    <div class="stat-label">攻击力</div>
-                    <div class="stat-value">${currentStats.attack}</div>
-                </div>
-                <div class="stat-row">
-                    <div class="stat-label">生命值</div>
-                    <div class="stat-value">${currentStats.hp}</div>
-                </div>
-            </div>
-            <div class="weapon-effects">
-                <h4>特殊效果</h4>
-                ${weapon.specialEffects.map(effect => {
-                    const isUnlocked = weapon.level >= effect.unlock;
-                    return `
-                        <div class="effect-item ${isUnlocked ? 'unlocked' : 'locked'}">
-                            <div class="effect-name">${this.getWeaponSkillName(effect.type)}</div>
-                            <div class="effect-level">Lv.${effect.level}</div>
-                            <div class="effect-description">
-                                ${effect.description || ''}
-                                ${!isUnlocked ? '<span class="unlock-hint">(需要武器等级达到' + effect.unlock + '级)</span>' : ''}
-                            </div>
-                        </div>
-                    `;
-                }).join('')}
-            </div>
-        </div>
-    `;
-}

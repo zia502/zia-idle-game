@@ -1018,8 +1018,6 @@ const Weapon = {
             console.log('计划创建的武器列表:', weapons);
     
             weapons.forEach(weaponId => {
-
-                
                 if (!this.templates[weaponId]) {
                     console.error(`未找到武器模板: ${weaponId}`);
                     return;
@@ -1044,6 +1042,18 @@ const Weapon = {
     
             console.log('初始武器创建完成');
             console.log('当前所有武器:', this.weapons);
+
+            // 保存游戏状态
+            if (typeof Game !== 'undefined' && typeof Game.saveGame === 'function') {
+                console.log('保存武器数据到游戏状态');
+                setTimeout(() => Game.saveGame(), 100);
+            }
+
+            // 更新UI显示
+            if (typeof UI !== 'undefined' && typeof UI.renderWeaponInventory === 'function') {
+                console.log('更新武器库存UI显示');
+                setTimeout(() => UI.renderWeaponInventory(), 200);
+            }
         },
 
     /**

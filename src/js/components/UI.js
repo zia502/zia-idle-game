@@ -958,14 +958,20 @@ const UI = {
         const weaponsGrid = document.createElement('div');
         weaponsGrid.className = 'weapons-grid';
 
-        // 创建tooltip容器
-        const tooltipContainer = document.createElement('div');
-        tooltipContainer.className = 'weapon-tooltip-container';
-        document.body.appendChild(tooltipContainer);
-
         // 创建分页控件
         const paginationControls = document.createElement('div');
         paginationControls.className = 'pagination-controls';
+        
+        const prevButton = document.createElement('button');
+        prevButton.className = 'page-button prev';
+        prevButton.disabled = true;
+        
+        const nextButton = document.createElement('button');
+        nextButton.className = 'page-button next';
+        nextButton.disabled = true;
+        
+        paginationControls.appendChild(prevButton);
+        paginationControls.appendChild(nextButton);
 
         // 计算总页数
         const itemsPerPage = 64; // 8x8
@@ -973,25 +979,11 @@ const UI = {
         const totalPages = Math.ceil(totalItems / itemsPerPage);
         let currentPage = 1;
 
-        // 创建分页按钮
-        const prevButton = document.createElement('button');
-        prevButton.className = 'page-button';
-        prevButton.textContent = '上一页';
-        prevButton.disabled = true;
-
-        const nextButton = document.createElement('button');
-        nextButton.className = 'page-button';
-        nextButton.textContent = '下一页';
-        nextButton.disabled = totalPages <= 1;
-
-        const pageInfo = document.createElement('span');
-        pageInfo.className = 'page-info';
-        pageInfo.textContent = `第 ${currentPage} 页 / 共 ${totalPages} 页`;
-
-        // 添加分页控件到容器
-        paginationControls.appendChild(prevButton);
-        paginationControls.appendChild(pageInfo);
-        paginationControls.appendChild(nextButton);
+        // 创建标题栏
+        const titleElement = document.createElement('h3');
+        titleElement.innerHTML = '武器库';
+        titleElement.appendChild(paginationControls);
+        inventoryContainer.appendChild(titleElement);
 
         // 渲染当前页的武器
         const renderCurrentPage = () => {
@@ -1062,7 +1054,6 @@ const UI = {
             // 更新分页按钮状态
             prevButton.disabled = currentPage === 1;
             nextButton.disabled = currentPage === totalPages;
-            pageInfo.textContent = `第 ${currentPage} 页 / 共 ${totalPages} 页`;
         };
 
         // 添加分页按钮事件
@@ -1080,12 +1071,16 @@ const UI = {
             }
         });
 
+        // 创建tooltip容器
+        const tooltipContainer = document.createElement('div');
+        tooltipContainer.className = 'weapon-tooltip-container';
+        document.body.appendChild(tooltipContainer);
+
         // 初始渲染
         renderCurrentPage();
 
         // 添加所有元素到容器
         inventoryContainer.appendChild(weaponsGrid);
-        inventoryContainer.appendChild(paginationControls);
         console.log('武器库存渲染完成');
     },
 

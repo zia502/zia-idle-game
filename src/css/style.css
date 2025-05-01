@@ -104,7 +104,11 @@ body {
     margin-bottom: 15px;
 }
 
+/* 武器库标题栏 */
 .section h3 {
+    display: flex;
+    align-items: center;
+    gap: 10px;
     margin-bottom: 10px;
     border-bottom: 1px dashed var(--border-color);
     padding-bottom: 5px;
@@ -515,37 +519,59 @@ button:active, .btn:active {
     color: #ffd700;
 }
 
-/* 分页控件样式 */
+/* 武器库分页控件 */
 .pagination-controls {
     display: flex;
-    justify-content: center;
     align-items: center;
-    gap: 10px;
-    margin-top: 10px;
-    padding: 10px;
+    gap: 5px;
+    margin-left: auto;
 }
 
 .page-button {
-    padding: 5px 10px;
+    width: 20px;
+    height: 20px;
+    padding: 0;
     border: 1px solid #666;
-    background: rgba(0, 0, 0, 0.3);
+    border-radius: 4px;
+    background-color: #333;
     color: #fff;
     cursor: pointer;
-    border-radius: 4px;
+    transition: all 0.3s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
-.page-button:hover {
-    background: rgba(0, 0, 0, 0.5);
+.page-button:hover:not(:disabled) {
+    background-color: #444;
 }
 
-.page-button.active {
-    background: rgba(255, 255, 255, 0.2);
-    border-color: #fff;
+.page-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.page-button::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    border: 2px solid #fff;
+    border-right: 0;
+    border-bottom: 0;
+}
+
+.page-button.prev::before {
+    transform: rotate(-45deg);
+    margin-right: 2px;
+}
+
+.page-button.next::before {
+    transform: rotate(135deg);
+    margin-left: 2px;
 }
 
 .page-info {
-    color: #fff;
-    font-size: 14px;
+    display: none;
 }
 
 /* Tooltip容器样式 */

@@ -66,14 +66,6 @@ const Game = {
         // 检查活动队伍是否存在
         this.checkActiveTeam();
 
-        // 添加初始经验材料
-        if (typeof Inventory !== 'undefined' && !this.hasInitialExpMaterials) {
-            Inventory.addItem('exp_small', 10);
-            Inventory.addItem('exp_medium', 10);
-            Inventory.addItem('exp_large', 10);
-            this.hasInitialExpMaterials = true;
-        }
-
         this.startGameLoop();
 
         // 触发游戏加载完成事件
@@ -193,10 +185,19 @@ const Game = {
 
         // 监听角色创建成功事件
         Events.on('character:created', (data) => {
-            console.log(`角色 ${data.name} 创建成功`);
+            console.log(`角色 ${data.name} 创建成功，添加初始经验材料`);
             // 初始化武器
             if (typeof Weapon !== 'undefined' && typeof Weapon.createInitialWeapons === 'function') {
+                console.log('初始化武器');
                 Weapon.createInitialWeapons();
+            }
+            if (typeof Inventory !== 'undefined' && !this.hasInitialExpMaterials) {
+                Inventory.addItem('exp_small', 10);
+                Inventory.addItem('exp_medium', 10);
+                Inventory.addItem('exp_large', 10);
+                this.hasInitialExpMaterials = true;
+                // 保存游戏状态
+                this.saveGame();
             }
         });
 
@@ -630,12 +631,10 @@ const Game = {
                 Character.loadSaveData(saveData.character);
             }
 
+            // 加载物品栏数据
             if (typeof Inventory !== 'undefined' && saveData.inventory) {
-                if (typeof Inventory.loadSaveData === 'function') {
-                    Inventory.loadSaveData(saveData.inventory);
-                } else if (typeof Inventory.loadData === 'function') {
-                    Inventory.loadData(saveData.inventory);
-                }
+                console.log('加载物品栏数据');
+                Inventory.items = saveData.inventory.items || {};
             }
 
             if (typeof Shop !== 'undefined' && saveData.shop && typeof Shop.loadSaveData === 'function') {
@@ -826,7 +825,24 @@ const Game = {
 
             console.log("游戏状态已重置");
 
-            // 重置其他模块
+            // 重置物品栏系统
+            if (typeof Inventory !== 'undefined' && typeof Inventory.reset === 'function') {
+                console.log("重置物品栏系统...");
+                Inventory.reset();
+            }
+
+            // 重置武器系统 - 在角色系统重置之前执行
+            if (typeof Weapon !== 'undefined') {
+                console.log("重置武器系统...");
+                Weapon.weapons = {};
+                Weapon.weaponBoards = {};
+                // 重新初始化武器系统
+                if (typeof Weapon.init === 'function') {
+                    Weapon.init();
+                }
+            }
+
+            // 重置角色系统
             if (typeof Character !== 'undefined' && typeof Character.reset === 'function') {
                 console.log("重置角色系统...");
                 Character.reset();
@@ -839,16 +855,7 @@ const Game = {
                 }
             }
 
-            if (typeof Inventory !== 'undefined' && typeof Inventory.reset === 'function') {
-                console.log("重置物品栏系统...");
-                Inventory.reset();
-            }
-
-            if (typeof Shop !== 'undefined' && typeof Shop.reset === 'function') {
-                console.log("重置商店系统...");
-                Shop.reset();
-            }
-
+            // 重置队伍系统
             if (typeof Team !== 'undefined' && typeof Team.reset === 'function') {
                 console.log("重置队伍系统...");
                 Team.reset();

@@ -175,12 +175,17 @@ const MainUI = {
             const defense = mainCharacter.defense || 5;
             const speed = mainCharacter.speed || 5;
 
+            // 获取主角元素属性（默认为火属性）
+            const elementAttribute = mainCharacter.attribute || 'fire';
+            const elementName = this.getElementName(elementAttribute);
+
             // 构建主角信息HTML
             let html = `
                 <div class="hero-basic-info">
                     <div class="hero-avatar">${mainCharacter.name.charAt(0)}</div>
                     <div class="hero-details">
-                        <div class="hero-name">${mainCharacter.name}</div>`;
+                        <div class="hero-name">${mainCharacter.name}</div>
+                        <div class="hero-element attribute-${elementAttribute}">${elementName}</div>`;
 
             // 只有当有职业时才显示职业信息
             if (hasJob) {
@@ -946,12 +951,30 @@ const MainUI = {
     },
 
     /**
+     * 获取元素属性的中文名称
+     * @param {string} element - 元素属性
+     * @returns {string} 中文名称
+     */
+    getElementName(element) {
+        const elementMap = {
+            'fire': '火',
+            'water': '水',
+            'earth': '土',
+            'wind': '风',
+            'light': '光',
+            'dark': '暗'
+        };
+        return elementMap[element] || element;
+    },
+
+    /**
      * 注册事件监听
      */
     registerEventListeners() {
         // 监听角色变化事件
         if (typeof Events !== 'undefined') {
-            Events.on('character:updated', () => {
+            Events.on('character:updated', (data) => {
+                console.log('MainUI 收到角色更新事件', data);
                 this.updateMainHeroInfo();
             });
 

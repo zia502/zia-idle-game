@@ -438,6 +438,41 @@
     color: #777;
 }
 
+.hero-element {
+    font-size: 12px;
+    color: #fff;
+    padding: 2px 6px;
+    border-radius: 3px;
+    display: inline-block;
+    margin-bottom: 5px;
+}
+
+/* 元素属性样式 */
+.attribute-fire {
+    background-color: #f44336;
+}
+
+.attribute-water {
+    background-color: #2196f3;
+}
+
+.attribute-earth {
+    background-color: #795548;
+}
+
+.attribute-wind {
+    background-color: #8bc34a;
+}
+
+.attribute-light {
+    background-color: #ffeb3b;
+    color: #333; /* 浅色背景使用深色文字 */
+}
+
+.attribute-dark {
+    background-color: #673ab7;
+}
+
 .hero-stats {
     display: grid;
     grid-template-columns: repeat(2, 1fr);

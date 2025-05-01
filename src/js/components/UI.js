@@ -2838,23 +2838,62 @@ const UI = {
                         // 获取已装备槽位的武器ID
                         const equippedSlotWeaponId = weaponBoard.slots[selectedEquippedSlot];
 
-                        // 交换位置
-                        if (currentSlotWeaponId) {
-                            // 如果当前槽位有武器，则交换
-                            Weapon.removeWeaponFromBoard(boardId, slotType);
-                            Weapon.removeWeaponFromBoard(boardId, selectedEquippedSlot);
+                        // 临时禁用元素更新，避免中间状态触发更新
+                        const originalUpdateFunction = Character.updateMainCharacterElement;
+                        Character.updateMainCharacterElement = function() {
+                            console.log('元素更新已临时禁用');
+                            return false;
+                        };
 
-                            // 重新装备武器
-                            Weapon.addWeaponToBoard(boardId, equippedSlotWeaponId, slotType);
-                            Weapon.addWeaponToBoard(boardId, currentSlotWeaponId, selectedEquippedSlot);
+                        try {
+                            // 交换位置
+                            if (currentSlotWeaponId) {
+                                // 如果当前槽位有武器，则交换
+                                // 直接修改武器盘数据，而不是调用移除和添加方法
+                                weaponBoard.slots[slotType] = null;
+                                weaponBoard.slots[selectedEquippedSlot] = null;
 
-                            this.showNotification('武器位置交换成功', 'success');
-                        } else {
-                            // 如果当前槽位没有武器，则移动
-                            Weapon.removeWeaponFromBoard(boardId, selectedEquippedSlot);
-                            Weapon.addWeaponToBoard(boardId, equippedSlotWeaponId, slotType);
+                                // 重新装备武器
+                                weaponBoard.slots[slotType] = equippedSlotWeaponId;
+                                weaponBoard.slots[selectedEquippedSlot] = currentSlotWeaponId;
 
-                            this.showNotification('武器移动成功', 'success');
+                                this.showNotification('武器位置交换成功', 'success');
+                            } else {
+                                // 如果当前槽位没有武器，则移动
+                                weaponBoard.slots[selectedEquippedSlot] = null;
+                                weaponBoard.slots[slotType] = equippedSlotWeaponId;
+
+                                this.showNotification('武器移动成功', 'success');
+                            }
+                        } finally {
+                            // 恢复元素更新函数
+                            Character.updateMainCharacterElement = originalUpdateFunction;
+
+                            // 手动触发一次元素更新
+                            // 查找拥有此武器盘的队伍
+                            let teamId = null;
+                            for (const id in Team.teams) {
+                                if (Team.teams[id].weaponBoardId === boardId) {
+                                    teamId = id;
+                                    break;
+                                }
+                            }
+
+                            if (teamId) {
+                                console.log('手动触发元素更新');
+                                Character.updateMainCharacterElement(teamId);
+
+                                // 手动更新UI显示
+                                if (typeof MainUI !== 'undefined' && typeof MainUI.updateMainHeroInfo === 'function') {
+                                    console.log('手动更新主角信息显示');
+                                    MainUI.updateMainHeroInfo();
+                                }
+
+                                if (typeof UI !== 'undefined' && typeof UI.renderMainCharacter === 'function') {
+                                    console.log('手动更新角色界面主角信息');
+                                    UI.renderMainCharacter();
+                                }
+                            }
                         }
                     } else {
                         // 装备新武器

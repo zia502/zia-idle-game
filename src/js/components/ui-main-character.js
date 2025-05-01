@@ -317,6 +317,19 @@
             UI.renderMainCharacter();
         });
 
+        // 在角色更新时重新渲染主角信息（包括元素属性变化）
+        Events.on('character:updated', (data) => {
+            console.log('角色更新事件触发，重新渲染主角信息', data);
+            // 检查是否是主角的更新
+            if (typeof Character !== 'undefined' && typeof Character.getMainCharacter === 'function') {
+                const mainCharacter = Character.getMainCharacter();
+                if (mainCharacter && data.characterId === mainCharacter.id) {
+                    console.log('主角信息已更新，重新渲染UI');
+                    UI.renderMainCharacter();
+                }
+            }
+        });
+
         // 在切换到角色界面时也渲染主角信息
         Events.on('ui:screenChanged', (data) => {
             if (data.screen === 'character-screen') {

@@ -300,29 +300,61 @@ const TeamWeaponBoard = {
      * 绑定武器槽点击事件
      */
     bindWeaponSlotEvents() {
-        const weaponSlots = document.querySelectorAll('#team-weapon-board .team-weapon-slot');
+        // 选择所有武器槽，包括空槽和已装备武器的槽
+        const weaponSlots = document.querySelectorAll('#team-weapon-board .team-weapon-slot, #team-weapon-board .team-weapon-slot-filled');
 
         weaponSlots.forEach(slot => {
-            slot.addEventListener('click', () => {
-                const slotType = slot.getAttribute('data-slot');
-                const weaponId = slot.getAttribute('data-weapon-id');
+            // 移除可能存在的旧事件监听器
+            const newSlot = slot.cloneNode(true);
+            slot.parentNode.replaceChild(newSlot, slot);
+
+            newSlot.addEventListener('click', () => {
+                const slotType = newSlot.getAttribute('data-slot');
+                const weaponId = newSlot.getAttribute('data-weapon-id');
 
                 console.log(`点击了武器槽: ${slotType}, 武器ID: ${weaponId || '无'}`);
 
-                // 如果武器系统已加载，切换到武器界面
-                if (typeof UI !== 'undefined' && typeof UI.switchScreen === 'function') {
-                    // 保存当前选中的槽位，以便在武器界面中使用
-                    if (typeof Weapon !== 'undefined') {
-                        Weapon.selectedSlot = slotType;
+                // 获取当前队伍ID
+                const activeTeamId = Game.state.activeTeamId;
+                if (!activeTeamId) {
+                    console.error('未找到当前队伍ID');
+                    return;
+                }
 
-                        // 如果是队伍武器盘，保存队伍ID
-                        const activeTeamId = Game.state.activeTeamId;
-                        if (activeTeamId) {
-                            Weapon.selectedTeamId = activeTeamId;
+                // 获取队伍信息
+                const team = Team.teams[activeTeamId];
+                if (!team) {
+                    console.error('未找到队伍信息');
+                    return;
+                }
+
+                // 获取武器盘ID
+                const weaponBoardId = team.weaponBoardId;
+                if (!weaponBoardId) {
+                    console.error('未找到武器盘ID');
+                    return;
+                }
+
+                // 使用新的武器选择对话框
+                if (typeof UI !== 'undefined' && typeof UI.showWeaponSelectionDialog === 'function') {
+                    UI.showWeaponSelectionDialog(weaponBoardId, slotType, activeTeamId);
+                } else {
+                    console.warn('UI.showWeaponSelectionDialog方法不存在，回退到旧的武器选择方式');
+
+                    // 如果武器系统已加载，切换到武器界面（旧方式）
+                    if (typeof UI !== 'undefined' && typeof UI.switchScreen === 'function') {
+                        // 保存当前选中的槽位，以便在武器界面中使用
+                        if (typeof Weapon !== 'undefined') {
+                            Weapon.selectedSlot = slotType;
+
+                            // 保存队伍ID
+                            if (activeTeamId) {
+                                Weapon.selectedTeamId = activeTeamId;
+                            }
                         }
-                    }
 
-                    UI.switchScreen('weapon-screen');
+                        UI.switchScreen('weapon-screen');
+                    }
                 }
             });
         });

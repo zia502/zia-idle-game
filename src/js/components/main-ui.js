@@ -589,14 +589,14 @@ const MainUI = {
             const rarityClass = this.getRarityClass(weapon.rarity);
 
             // 获取武器属性样式
-            const attributeHtml = this.getAttributeHtml(weapon.attribute);
+            const attributeHtml = this.getAttributeHtml(weapon.element);
 
             return `
-                <div class="empty-weapon-slot ${rarityClass}" data-slot="${slotType}" data-weapon-id="${weaponId}">
+                <div class="weapon-slot ${rarityClass}" data-slot="${slotType}" data-weapon-id="${weaponId}">
                     <div class="weapon-item">
                         <div class="weapon-icon">${weapon.name.charAt(0)}</div>
                         <div class="weapon-name">${weapon.name}</div>
-                        <div class="weapon-type">${weapon.type || '未知类型'}</div>
+                        <div class="weapon-type">${this.getWeaponTypeName(weapon.type) || '未知类型'}</div>
                         <div class="weapon-attributes">${attributeHtml}</div>
                     </div>
                 </div>
@@ -637,14 +637,14 @@ const MainUI = {
                 const rarityClass = this.getRarityClass(weapon.rarity);
 
                 // 获取武器属性样式
-                const attributeHtml = this.getAttributeHtml(weapon.attribute);
+                const attributeHtml = this.getAttributeHtml(weapon.element);
 
                 html += `
-                    <div class="empty-weapon-slot ${rarityClass}" data-slot="${slotType}" data-weapon-id="${weaponId}">
+                    <div class="weapon-slot ${rarityClass}" data-slot="${slotType}" data-weapon-id="${weaponId}">
                         <div class="weapon-item">
                             <div class="weapon-icon">${weapon.name.charAt(0)}</div>
                             <div class="weapon-name">${weapon.name}</div>
-                            <div class="weapon-type">${weapon.type || '未知类型'}</div>
+                            <div class="weapon-type">${this.getWeaponTypeName(weapon.type) || '未知类型'}</div>
                             <div class="weapon-attributes">${attributeHtml}</div>
                         </div>
                     </div>
@@ -736,11 +736,47 @@ const MainUI = {
     },
 
     /**
+     * 获取武器类型名称
+     * @param {string} type - 武器类型
+     * @returns {string} 武器类型名称
+     */
+    getWeaponTypeName(type) {
+        if (!type) return '未知类型';
+
+        // 武器类型映射
+        const typeNames = {
+            'sword': '剑',
+            'knife': '刀',
+            'staff': '杖',
+            'bow': '弓',
+            'axe': '斧',
+            'spear': '枪',
+            'fist': '拳套',
+            'gun': '枪械',
+            'hammer': '锤',
+            'wand': '魔杖',
+            'dagger': '匕首',
+            'katana': '太刀',
+            'whip': '鞭',
+            'scythe': '镰刀',
+            'shield': '盾',
+            'book': '书',
+            'orb': '宝珠',
+            'harp': '竖琴',
+            'lance': '长枪',
+            'mace': '钉锤'
+        };
+
+        return typeNames[type.toLowerCase()] || type;
+    },
+
+    /**
      * 绑定武器槽点击事件
      * @param {string} weaponBoardId - 武器盘ID
      */
     bindWeaponSlotEvents(weaponBoardId) {
-        const weaponSlots = document.querySelectorAll('#main-weapon-board .empty-weapon-slot');
+        // 选择所有武器槽，包括空槽和已装备武器的槽
+        const weaponSlots = document.querySelectorAll('#main-weapon-board .empty-weapon-slot, #main-weapon-board .weapon-slot');
 
         weaponSlots.forEach(slot => {
             // 移除可能存在的旧事件监听器
@@ -754,21 +790,30 @@ const MainUI = {
 
                 console.log(`点击了武器槽: ${slotType}, 武器ID: ${weaponId || '无'}, 武器盘ID: ${weaponBoardId}`);
 
-                // 如果武器系统已加载，切换到武器界面
-                if (typeof UI !== 'undefined' && typeof UI.switchScreen === 'function') {
-                    // 保存当前选中的槽位，以便在武器界面中使用
-                    if (typeof Weapon !== 'undefined') {
-                        Weapon.selectedSlot = slotType;
-                        Weapon.selectedBoardId = weaponBoardId;
+                // 获取当前队伍ID
+                const activeTeamId = Game.state.activeTeamId;
 
-                        // 如果是队伍武器盘，保存队伍ID
-                        const activeTeamId = Game.state.activeTeamId;
-                        if (activeTeamId) {
-                            Weapon.selectedTeamId = activeTeamId;
+                // 使用新的武器选择对话框
+                if (typeof UI !== 'undefined' && typeof UI.showWeaponSelectionDialog === 'function') {
+                    UI.showWeaponSelectionDialog(weaponBoardId, slotType, activeTeamId);
+                } else {
+                    console.warn('UI.showWeaponSelectionDialog方法不存在，回退到旧的武器选择方式');
+
+                    // 如果武器系统已加载，切换到武器界面（旧方式）
+                    if (typeof UI !== 'undefined' && typeof UI.switchScreen === 'function') {
+                        // 保存当前选中的槽位，以便在武器界面中使用
+                        if (typeof Weapon !== 'undefined') {
+                            Weapon.selectedSlot = slotType;
+                            Weapon.selectedBoardId = weaponBoardId;
+
+                            // 如果是队伍武器盘，保存队伍ID
+                            if (activeTeamId) {
+                                Weapon.selectedTeamId = activeTeamId;
+                            }
                         }
-                    }
 
-                    UI.switchScreen('weapon-screen');
+                        UI.switchScreen('weapon-screen');
+                    }
                 }
             });
         });

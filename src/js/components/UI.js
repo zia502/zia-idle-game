@@ -2418,5 +2418,327 @@ const UI = {
                 </div>
             `;
         }).join('');
+    },
+
+    /**
+     * 显示武器选择对话框
+     * @param {string} boardId - 武器盘ID
+     * @param {string} slotType - 槽位类型
+     * @param {string} teamId - 队伍ID
+     */
+    showWeaponSelectionDialog(boardId, slotType, teamId) {
+        try {
+            console.log(`显示武器选择对话框: 武器盘=${boardId}, 槽位=${slotType}, 队伍=${teamId}`);
+
+            // 获取当前队伍和主角信息
+            const team = Team.teams[teamId];
+            if (!team) {
+                console.error('找不到队伍信息');
+                return;
+            }
+
+            const mainCharacter = Character.getMainCharacter();
+            if (!mainCharacter) {
+                console.error('找不到主角信息');
+                return;
+            }
+
+            // 获取职业允许的武器类型
+            let allowedWeaponTypes = [];
+            if (typeof JobSystem !== 'undefined' && typeof JobSystem.getAllowedWeapons === 'function') {
+                allowedWeaponTypes = JobSystem.getAllowedWeapons(mainCharacter.job.current);
+            }
+
+            console.log(`当前职业允许的武器类型:`, allowedWeaponTypes);
+
+            // 获取所有武器
+            const allWeapons = Weapon.getAllWeapons();
+            if (!allWeapons || Object.keys(allWeapons).length === 0) {
+                this.showNotification('没有可用的武器', 'warning');
+                return;
+            }
+
+            // 过滤出可用的武器（根据职业限制）
+            let availableWeapons = {};
+
+            // 主手武器槽只能装备职业允许的武器类型
+            if (slotType === 'main') {
+                Object.entries(allWeapons).forEach(([id, weapon]) => {
+                    // 检查武器类型是否在允许列表中
+                    if (allowedWeaponTypes.includes(weapon.type) && !weapon.isEquipped) {
+                        availableWeapons[id] = weapon;
+                    }
+                });
+
+                if (Object.keys(availableWeapons).length === 0) {
+                    this.showNotification(`没有可用的${allowedWeaponTypes.map(type => this.getWeaponTypeName(type)).join('或')}武器`, 'warning');
+                    return;
+                }
+            } else {
+                // 副武器槽可以装备任何武器
+                Object.entries(allWeapons).forEach(([id, weapon]) => {
+                    if (!weapon.isEquipped) {
+                        availableWeapons[id] = weapon;
+                    }
+                });
+
+                if (Object.keys(availableWeapons).length === 0) {
+                    this.showNotification('没有可用的武器', 'warning');
+                    return;
+                }
+            }
+
+            // 创建对话框
+            const dialog = document.createElement('div');
+            dialog.className = 'weapon-selection-dialog';
+
+            // 添加样式
+            const style = document.createElement('style');
+            style.textContent = `
+                .weapon-selection-dialog {
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    right: 0;
+                    bottom: 0;
+                    background: rgba(0, 0, 0, 0.7);
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                    z-index: 1000;
+                }
+                .weapon-selection-content {
+                    background: white;
+                    padding: 20px;
+                    border-radius: 8px;
+                    min-width: 600px;
+                    max-width: 80%;
+                    max-height: 80vh;
+                    overflow-y: auto;
+                }
+                .dialog-header {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    margin-bottom: 15px;
+                    padding-bottom: 10px;
+                    border-bottom: 1px solid #eee;
+                }
+                .close-button {
+                    background: none;
+                    border: none;
+                    font-size: 24px;
+                    cursor: pointer;
+                }
+                .weapon-selection-info {
+                    margin-bottom: 15px;
+                    color: #666;
+                }
+                .weapon-selection-grid {
+                    display: grid;
+                    grid-template-columns: repeat(5, 1fr);
+                    gap: 10px;
+                    margin-bottom: 15px;
+                }
+                .weapon-selection-item {
+                    border: 1px solid #ccc;
+                    border-radius: 5px;
+                    padding: 10px;
+                    cursor: pointer;
+                    transition: all 0.2s;
+                    position: relative;
+                }
+                .weapon-selection-item:hover {
+                    transform: scale(1.05);
+                    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+                }
+                .weapon-selection-item.selected {
+                    border-color: #4169e1;
+                    box-shadow: 0 0 10px rgba(65, 105, 225, 0.3);
+                }
+                .weapon-selection-item.rarity-3 {
+                    border-color: #4169e1;
+                    background: linear-gradient(to bottom right, #ffffff, #e3f2fd);
+                }
+                .weapon-selection-item.rarity-4 {
+                    border-color: #9c27b0;
+                    background: linear-gradient(to bottom right, #ffffff, #f3e5f5);
+                }
+                .weapon-selection-item.rarity-5 {
+                    border-color: #ffd700;
+                    background: linear-gradient(to bottom right, #ffffff, #fff8e1);
+                    box-shadow: 0 0 10px rgba(255, 215, 0, 0.3);
+                }
+                .weapon-name {
+                    font-weight: bold;
+                    margin-bottom: 5px;
+                    text-align: center;
+                }
+                .weapon-type {
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    gap: 5px;
+                    margin-bottom: 5px;
+                    font-size: 12px;
+                    color: #666;
+                }
+                .weapon-type img {
+                    width: 16px;
+                    height: 16px;
+                }
+                .weapon-element {
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    gap: 5px;
+                    margin-bottom: 5px;
+                    font-size: 12px;
+                    color: #666;
+                }
+                .weapon-element img {
+                    width: 16px;
+                    height: 16px;
+                }
+                .weapon-stats {
+                    display: flex;
+                    flex-direction: column;
+                    font-size: 12px;
+                    color: #333;
+                }
+                .dialog-footer {
+                    display: flex;
+                    justify-content: flex-end;
+                    gap: 10px;
+                    margin-top: 15px;
+                }
+                .dialog-footer button {
+                    padding: 8px 16px;
+                    border-radius: 4px;
+                    cursor: pointer;
+                    transition: all 0.2s;
+                }
+                .confirm-btn {
+                    background: #4CAF50;
+                    color: white;
+                    border: none;
+                }
+                .confirm-btn:hover:not(:disabled) {
+                    background: #45a049;
+                }
+                .confirm-btn:disabled {
+                    background: #cccccc;
+                    cursor: not-allowed;
+                }
+                .cancel-btn {
+                    background: white;
+                    border: 1px solid #ccc;
+                }
+                .cancel-btn:hover {
+                    background: #f5f5f5;
+                }
+            `;
+            document.head.appendChild(style);
+
+            // 设置对话框内容
+            dialog.innerHTML = `
+                <div class="weapon-selection-content">
+                    <div class="dialog-header">
+                        <h3>${slotType === 'main' ? '选择主手武器' : '选择副武器'}</h3>
+                        <button class="close-button">&times;</button>
+                    </div>
+                    <div class="weapon-selection-info">
+                        ${slotType === 'main' ?
+                            `当前职业 <strong>${JobSystem.getJob(mainCharacter.job.current).name}</strong> 可使用的武器类型:
+                            ${allowedWeaponTypes.map(type => `<strong>${this.getWeaponTypeName(type)}</strong>`).join('、')}` :
+                            '选择要装备的副武器'}
+                    </div>
+                    <div class="weapon-selection-grid">
+                        ${Object.entries(availableWeapons).map(([id, weapon]) => {
+                            const rarityClass = this.getRarityClass(weapon.rarity);
+                            const currentStats = Weapon.calculateCurrentStats(weapon);
+                            return `
+                                <div class="weapon-selection-item ${rarityClass}" data-weapon-id="${id}">
+                                    <div class="weapon-name">${weapon.name}</div>
+                                    <div class="weapon-type">
+                                        <img src="src/assets/${this.weaponTypeIcons[weapon.type]}" class="type-icon" alt="${weapon.type}">
+                                        ${this.getWeaponTypeName(weapon.type)}
+                                    </div>
+                                    <div class="weapon-element">
+                                        <img src="src/assets/${this.elementIcons[weapon.element]}" class="element-icon" alt="${weapon.element}">
+                                        ${this.getWeaponElementName(weapon.element)}
+                                    </div>
+                                    <div class="weapon-stats">
+                                        <div>等级: ${weapon.level}/${Weapon.breakthroughLevels[weapon.breakthrough || 0]}</div>
+                                        <div>攻击: ${currentStats.attack}</div>
+                                        <div>生命: ${currentStats.hp}</div>
+                                    </div>
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>
+                    <div class="dialog-footer">
+                        <button class="confirm-btn" disabled>确认装备</button>
+                        <button class="cancel-btn">取消</button>
+                    </div>
+                </div>
+            `;
+
+            // 添加到文档
+            document.body.appendChild(dialog);
+
+            // 绑定事件
+            const closeBtn = dialog.querySelector('.close-button');
+            const cancelBtn = dialog.querySelector('.cancel-btn');
+            const confirmBtn = dialog.querySelector('.confirm-btn');
+            const weaponItems = dialog.querySelectorAll('.weapon-selection-item');
+
+            closeBtn.onclick = () => document.body.removeChild(dialog);
+            cancelBtn.onclick = () => document.body.removeChild(dialog);
+
+            // 武器选择事件
+            let selectedWeaponId = null;
+            weaponItems.forEach(item => {
+                item.onclick = () => {
+                    // 取消之前的选择
+                    weaponItems.forEach(i => i.classList.remove('selected'));
+
+                    // 选择当前武器
+                    item.classList.add('selected');
+                    selectedWeaponId = item.getAttribute('data-weapon-id');
+
+                    // 更新确认按钮状态
+                    confirmBtn.disabled = false;
+                };
+            });
+
+            // 确认装备事件
+            confirmBtn.onclick = () => {
+                if (selectedWeaponId) {
+                    // 装备武器
+                    if (Weapon.addWeaponToBoard(boardId, selectedWeaponId, slotType)) {
+                        this.showNotification('武器装备成功', 'success');
+
+                        // 更新武器盘显示
+                        if (typeof MainUI !== 'undefined' && typeof MainUI.updateWeaponBoard === 'function') {
+                            MainUI.updateWeaponBoard();
+                        }
+
+                        // 保存游戏状态
+                        if (typeof Game !== 'undefined' && typeof Game.saveGame === 'function') {
+                            Game.saveGame();
+                        }
+                    } else {
+                        this.showNotification('武器装备失败', 'error');
+                    }
+
+                    // 关闭对话框
+                    document.body.removeChild(dialog);
+                }
+            };
+        } catch (error) {
+            console.error('显示武器选择对话框时出错:', error);
+            this.showNotification('显示武器选择对话框时出错', 'error');
+        }
     }
 };

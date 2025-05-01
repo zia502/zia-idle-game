@@ -1227,6 +1227,13 @@ const UI = {
         const targetWeapon = Weapon.getWeapon(targetWeaponId);
         if (!targetWeapon) return;
 
+        // 计算最大可选材料数量
+        const maxMaterials = 3 - (targetWeapon.breakthrough || 0);
+        if (maxMaterials <= 0) {
+            this.showNotification('该武器已达到最大突破等级,请使用终突功能', 'warning');
+            return;
+        }
+
         // 创建选择框容器
         const dialog = document.createElement('div');
         dialog.className = 'breakthrough-dialog';
@@ -1239,6 +1246,7 @@ const UI = {
                 <div class="breakthrough-info">
                     <p>目标武器: ${targetWeapon.name}</p>
                     <p>当前突破等级: ${targetWeapon.breakthrough || 0}</p>
+                    <p>可选材料数量: <span id="selected-count">0</span>/<span id="max-materials">${maxMaterials}</span></p>
                 </div>
                 <div class="material-weapons-grid">
                     ${this.renderBreakthroughMaterials(targetWeaponId)}
@@ -1322,19 +1330,26 @@ const UI = {
                 padding: 8px 16px;
                 border-radius: 4px;
                 cursor: pointer;
+                transition: all 0.2s;
             }
             .confirm-btn {
-                background: #4169e1;
+                background: #4CAF50;
                 color: white;
                 border: none;
             }
+            .confirm-btn:hover:not(:disabled) {
+                background: #45a049;
+            }
             .confirm-btn:disabled {
-                background: #ccc;
+                background: #cccccc;
                 cursor: not-allowed;
             }
             .cancel-btn {
                 background: white;
                 border: 1px solid #ccc;
+            }
+            .cancel-btn:hover {
+                background: #f5f5f5;
             }
         `;
         document.head.appendChild(style);
@@ -1347,6 +1362,7 @@ const UI = {
         const cancelBtn = dialog.querySelector('.cancel-btn');
         const confirmBtn = dialog.querySelector('.confirm-btn');
         const materialItems = dialog.querySelectorAll('.material-weapon-item');
+        const selectedCountElement = dialog.querySelector('#selected-count');
 
         closeBtn.onclick = () => document.body.removeChild(dialog);
         cancelBtn.onclick = () => document.body.removeChild(dialog);
@@ -1361,10 +1377,17 @@ const UI = {
                     item.classList.remove('selected');
                     selectedMaterials.delete(item.dataset.weaponId);
                 } else {
+                    // 检查是否达到最大选择数量
+                    if (selectedMaterials.size >= maxMaterials) {
+                        this.showNotification(`最多只能选择${maxMaterials}把武器作为突破材料`, 'warning');
+                        return;
+                    }
                     item.classList.add('selected');
                     selectedMaterials.add(item.dataset.weaponId);
                 }
 
+                // 更新选择数量显示
+                selectedCountElement.textContent = selectedMaterials.size;
                 // 更新确认按钮状态
                 confirmBtn.disabled = selectedMaterials.size === 0;
             };
@@ -1373,6 +1396,13 @@ const UI = {
         // 确认突破事件
         confirmBtn.onclick = () => {
             if (selectedMaterials.size > 0) {
+                // 计算新的突破等级
+                const newBreakthrough = (targetWeapon.breakthrough || 0) + selectedMaterials.size;
+                if (newBreakthrough > 3) {
+                    this.showNotification('突破等级不能超过3', 'error');
+                    return;
+                }
+                
                 // 先进行突破
                 Weapon.breakthroughWeapon(targetWeaponId, Array.from(selectedMaterials));
                 // 删除用作材料的武器

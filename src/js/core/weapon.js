@@ -939,13 +939,20 @@ const Weapon = {
         // 确保materialWeaponIds是数组
         const materials = Array.isArray(materialWeaponIds) ? materialWeaponIds : [materialWeaponIds];
         
+        // 计算新的突破等级
+        const newBreakthrough = (weapon.breakthrough || 0) + materials.length;
+        if (newBreakthrough > 3) {
+            console.error('突破等级不能超过3');
+            return false;
+        }
+        
         // 消耗所有材料武器
         materials.forEach(materialId => {
             this.deleteWeapon(materialId);
         });
         
         // 更新突破次数
-        weapon.breakthrough = (weapon.breakthrough || 0) + 1;
+        weapon.breakthrough = newBreakthrough;
         weapon.maxLevel = this.breakthroughLevels[weapon.breakthrough];
         
         return true;

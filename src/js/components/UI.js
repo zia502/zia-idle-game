@@ -1029,6 +1029,53 @@ const UI = {
         const weaponsGrid = document.createElement('div');
         weaponsGrid.className = 'weapons-grid';
 
+        // 计算总页数
+        const itemsPerPage = 56; // 7x8
+        const totalItems = Object.keys(weapons).length;
+        const totalPages = Math.ceil(totalItems / itemsPerPage);
+        let currentPage = 1;
+
+        // 添加网格布局样式
+        const gridStyle = document.createElement('style');
+        gridStyle.textContent = `
+            .weapons-grid {
+                display: grid;
+                grid-template-columns: repeat(7, 1fr);
+                gap: 10px;
+                padding: 10px;
+            }
+            .weapon-item {
+                aspect-ratio: 1;
+                min-width: 80px;
+                max-width: 120px;
+            }
+            .weapon-item-content {
+                height: 100%;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                align-items: center;
+                padding: 5px;
+                border-radius: 4px;
+                border: 1px solid #ccc;
+                cursor: pointer;
+                transition: all 0.2s;
+            }
+            .weapon-item-content:hover {
+                transform: scale(1.05);
+                box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            }
+            .weapon-icon {
+                font-size: 24px;
+                margin-bottom: 5px;
+            }
+            .weapon-level-info {
+                font-size: 12px;
+                text-align: center;
+            }
+        `;
+        document.head.appendChild(gridStyle);
+
         // 创建分页控件
         const paginationControls = document.createElement('div');
         paginationControls.className = 'pagination-controls';
@@ -1043,12 +1090,6 @@ const UI = {
         
         paginationControls.appendChild(prevButton);
         paginationControls.appendChild(nextButton);
-
-        // 计算总页数
-        const itemsPerPage = 64; // 8x8
-        const totalItems = Object.keys(weapons).length;
-        const totalPages = Math.ceil(totalItems / itemsPerPage);
-        let currentPage = 1;
 
         // 创建标题栏
         const titleElement = document.createElement('h3');

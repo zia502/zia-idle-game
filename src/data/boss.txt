@@ -7,6 +7,57 @@
 光  鲁格
 暗 阿努比斯
 
+
+苏尔特尔之焰·终末    斧
+苏尔特尔之剑·裂世    剑
+
+
+共工之触·洪渊       枪
+共工之柱·不断       杖
+
+达格达之息·丰饶      斧
+达格达之角·裂空      弓
+
+盖亚之拥·地母        杖
+盖亚之根·泰坦        刀
+
+鲁格之刃·虹霓       刀
+鲁格之冠·破晓       枪
+
+
+阿努比斯之裁·冥秤     弓
+阿努比斯之杖·渡亡     剑
+
+
+Abandon       DA/TA                暴風  da 7ta 3   暴風2  da 10 ta6   暴風3  da 15 ta 10
+Aegis          HP                  守護  hp 14    守護2  hp 20   守護3  hp 30  
+Arts          SKILL DMG  CAP        穷理   5      穷理2    7       穷理3   10
+Beast Essence    DMG CAP            绝涯   10      绝涯2    20      绝涯3  30
+Bladeshield      HP/CRIT           刃界 hp 12  crit 4   刃界2 hp14  crit6      刃界3 hp 20  crit10
+Celere          ATK/CRIT          刹那  atk 20  crit 4   刹那2  atk 26  crit 8   刹那3  atk 30  crit 12
+Convergence     EXATK/DEF        励行  exatk 20 def 15     励行2  exatk 30 def 20    励行3 exatk 40 def 30   
+Deathstrike     BONUS DMG       武技 10000    武技2 30000    武技3 50000
+Devastation       TA              破壊  ta5    破壊2  ta 9    破壊3   ta 12
+Dual-Edge         DA            二手  DA 8     二手2  DA 12   二手3  DA 18
+Enmity           Enmity          背水  7         背水2   12       背水3  18
+Essence           ATK            攻刃  16          攻刃2    24     攻刃3   36
+Fandango         ATK/TA             乱舞 atk  22   ta 4    乱舞2  atk 28   ta 6     乱舞3 atk  32  ta 9
+Fortified         DEF             堅守   20       堅守2   32           堅守3  45
+Haunt              ATK/DA        無双   atk 24   da7    無双2   atk 29   da10     無双3   atk 32   da 16  
+Heroism            HP/DA          軍神   hp 14  da 7   軍神2  hp20  da 10    軍神3  hp 30  DA 15
+Majesty          ATK/HP          神威   hp 12  atk 12    神威2 hp24  atk 24   神威3  hp 40   atk 40
+Might            ATK/EXATK        愤怒   atk 20 exatk 12   愤怒2   atk 26  exatk 15   愤怒3   atk 32 exatk 18 
+Sephira Tek          CRIT        技巧   crit 8         技巧2   crit 12   技巧3   crit 20
+Sovereign           EXATK        覇道  exatk 28          覇道2  exatk36       覇道3  exatk 46
+Restraint           DA/CRIT      克己  da 7 CRIT 10     克己2  da 10 CRIT 13    克己3  da15 CRIT 17
+Spearhead           TA/CRIT       鋭鋒   ta 4   crit 6   鋭鋒2   ta 6   crit 10      鋭鋒3   ta 8   crit 15  
+Stamina              Stamina       渾身  6        渾身2  6   渾身3  15
+Verve            HP/Stamina       志气  hp 10  Stamina 4  志气2  hp 15  Stamina 7    志气3  hp 18  Stamina 10
+ 
+
+
+
+
 火 · 苏尔特尔（Surtr）
 「终末之焰」（象征诸神黄昏的灭世之火）
 

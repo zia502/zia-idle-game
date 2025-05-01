@@ -1,14 +1,271 @@
 {
-    "weapon1": {
-        "name": "武器1",
-        "description": "武器1的描述",
+    "surturFlame": {
+        "id": "surturFlame",
+        "name": "苏尔特尔之焰·终末",
+        "type": "axe",
+        "element": "fire",
         "baseStats": {
-            "attack": 100,
-            "hp": 500
+            "attack": 395,
+            "hp": 50,
+            "100Attack": 1677,
+            "100Hp": 664,
+            "150Attack": 2030,
+            "150Hp": 800
         },
-        "skills": [
-            "skill1",
-            "skill2"
-        ]
+        "specialEffects": [
+            {
+                "type": "Celere",
+                "name":"刹那II",
+                "description": "提高火属性角色攻击力/暴击率"
+            },
+            {
+                "type": "Enmity",
+                "name":"背水",
+                "description": "火属性角色HP越少攻击力越高"
+            }
+        ],
+        "description": "火神苏尔特尔的战斧，蕴含着毁灭性的火焰力量"
+    },
+    "surturSword": {
+        "id": "surturSword",
+        "name": "苏尔特尔之剑·裂世",
+        "type": "sword",
+        "element": "fire",
+        "baseStats": {
+            "attack": 355,
+            "hp": 40,
+            "100Attack": 1507,
+            "100Hp": 531,
+            "150Attack": 1827,
+            "150Hp": 640
+        },
+        "specialEffects": [
+            {
+                "type": "atkUP",
+                "value": 8,
+                "description": "提高火属性攻击力"
+            }
+        ],
+        "description": "火神苏尔特尔的佩剑，能够撕裂世界的火焰之刃"
+    },
+    "gonggongTouch": {
+        "id": "gonggongTouch",
+        "name": "共工之触·洪渊",
+        "type": "spear",
+        "element": "water",
+        "baseStats": {
+            "attack": 375,
+            "hp": 60,
+            "100Attack": 1592,
+            "100Hp": 797,
+            "150Attack": 1927,
+            "150Hp": 960
+        },
+        "specialEffects": [
+            {
+                "type": "hpUP",
+                "value": 10,
+                "description": "提高水属性生命值"
+            }
+        ],
+        "description": "水神共工的长枪，蕴含着无尽的水流之力"
+    },
+    "gonggongPillar": {
+        "id": "gonggongPillar",
+        "name": "共工之柱·不断",
+        "type": "staff",
+        "element": "water",
+        "baseStats": {
+            "attack": 335,
+            "hp": 70,
+            "100Attack": 1422,
+            "100Hp": 930,
+            "150Attack": 1722,
+            "150Hp": 1120
+        },
+        "specialEffects": [
+            {
+                "type": "hpUP",
+                "value": 8,
+                "description": "提高水属性生命值"
+            }
+        ],
+        "description": "水神共工的法杖，能够操控无尽的水流"
+    },
+    "dagdaBreath": {
+        "id": "dagdaBreath",
+        "name": "达格达之息·丰饶",
+        "type": "axe",
+        "element": "wind",
+        "baseStats": {
+            "attack": 375,
+            "hp": 50,
+            "100Attack": 1592,
+            "100Hp": 664,
+            "150Attack": 1927,
+            "150Hp": 800
+        },
+        "specialEffects": [
+            {
+                "type": "atkUP",
+                "value": 9,
+                "description": "提高风属性攻击力"
+            }
+        ],
+        "description": "风神达格达的战斧，蕴含着丰饶之风的力量"
+    },
+    "dagdaHorn": {
+        "id": "dagdaHorn",
+        "name": "达格达之角·裂空",
+        "type": "bow",
+        "element": "wind",
+        "baseStats": {
+            "attack": 355,
+            "hp": 40,
+            "100Attack": 1507,
+            "100Hp": 531,
+            "150Attack": 1827,
+            "150Hp": 640
+        },
+        "specialEffects": [
+            {
+                "type": "atkUP",
+                "value": 8,
+                "description": "提高风属性攻击力"
+            }
+        ],
+        "description": "风神达格达的长弓，能够射出撕裂天空的箭矢"
+    },
+    "gaiaEmbrace": {
+        "id": "gaiaEmbrace",
+        "name": "盖亚之拥·地母",
+        "type": "staff",
+        "element": "earth",
+        "baseStats": {
+            "attack": 335,
+            "hp": 70,
+            "100Attack": 1422,
+            "100Hp": 930,
+            "150Attack": 1722,
+            "150Hp": 1120
+        },
+        "specialEffects": [
+            {
+                "type": "hpUP",
+                "value": 10,
+                "description": "提高土属性生命值"
+            }
+        ],
+        "description": "大地之母盖亚的法杖，蕴含着大地的力量"
+    },
+    "gaiaRoot": {
+        "id": "gaiaRoot",
+        "name": "盖亚之根·泰坦",
+        "type": "knife",
+        "element": "earth",
+        "baseStats": {
+            "attack": 395,
+            "hp": 50,
+            "100Attack": 1677,
+            "100Hp": 664,
+            "150Attack": 2030,
+            "150Hp": 800
+        },
+        "specialEffects": [
+            {
+                "type": "hpUP",
+                "value": 9,
+                "description": "提高土属性生命值"
+            }
+        ],
+        "description": "大地之母盖亚的短刀，蕴含着泰坦的力量"
+    },
+    "lughBlade": {
+        "id": "lughBlade",
+        "name": "鲁格之刃·虹霓",
+        "type": "knife",
+        "element": "light",
+        "baseStats": {
+            "attack": 375,
+            "hp": 40,
+            "100Attack": 1592,
+            "100Hp": 531,
+            "150Attack": 1927,
+            "150Hp": 640
+        },
+        "specialEffects": [
+            {
+                "type": "atkUP",
+                "value": 9,
+                "description": "提高光属性攻击力"
+            }
+        ],
+        "description": "光神鲁格的短刀，能够释放彩虹般的光芒"
+    },
+    "lughCrown": {
+        "id": "lughCrown",
+        "name": "鲁格之冠·破晓",
+        "type": "spear",
+        "element": "light",
+        "baseStats": {
+            "attack": 355,
+            "hp": 60,
+            "100Attack": 1507,
+            "100Hp": 797,
+            "150Attack": 1827,
+            "150Hp": 960
+        },
+        "specialEffects": [
+            {
+                "type": "atkUP",
+                "value": 8,
+                "description": "提高光属性攻击力"
+            }
+        ],
+        "description": "光神鲁格的长枪，能够驱散一切黑暗"
+    },
+    "anubisScale": {
+        "id": "anubisScale",
+        "name": "阿努比斯之裁·冥秤",
+        "type": "bow",
+        "element": "dark",
+        "baseStats": {
+            "attack": 395,
+            "hp": 50,
+            "100Attack": 1677,
+            "100Hp": 664,
+            "150Attack": 2030,
+            "150Hp": 800
+        },
+        "specialEffects": [
+            {
+                "type": "atkUP",
+                "value": 10,
+                "description": "提高暗属性攻击力"
+            }
+        ],
+        "description": "冥神阿努比斯的长弓，能够审判灵魂的重量"
+    },
+    "anubisStaff": {
+        "id": "anubisStaff",
+        "name": "阿努比斯之杖·渡亡",
+        "type": "sword",
+        "element": "dark",
+        "baseStats": {
+            "attack": 375,
+            "hp": 60,
+            "100Attack": 1592,
+            "100Hp": 797,
+            "150Attack": 1927,
+            "150Hp": 960
+        },
+        "specialEffects": [
+            {
+                "type": "atkUP",
+                "value": 9,
+                "description": "提高暗属性攻击力"
+            }
+        ],
+        "description": "冥神阿努比斯的佩剑，能够引导亡者前往冥界"
     }
-} 
+}

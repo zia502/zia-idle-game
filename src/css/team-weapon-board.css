@@ -109,10 +109,60 @@
     margin-bottom: 3px;
 }
 
-.team-weapon-type {
+.team-weapon-type, .team-weapon-element {
+    display: flex;
+    align-items: center;
+    gap: 5px;
     font-size: 10px;
     color: #777;
     text-align: center;
+    margin-bottom: 3px;
+}
+
+.team-weapon-type img, .team-weapon-element img {
+    width: 16px;
+    height: 16px;
+}
+
+.team-weapon-stats {
+    font-size: 10px;
+    color: #333;
+    text-align: center;
+    margin-bottom: 3px;
+}
+
+.team-weapon-breakthrough {
+    display: flex;
+    gap: 2px;
+    margin-top: 3px;
+}
+
+.team-weapon-breakthrough .star {
+    display: inline-block;
+    background: url(src/assets/stars.png) no-repeat;
+    width: 20px;
+    height: 20px;
+    margin: 0 -4px;
+    background-size: 44px 834px;
+    background-position-x: 0;
+    transform: scale(0.7);
+    transform-origin: center;
+}
+
+.team-weapon-breakthrough .star.breakthrough-0 {
+    background-position-y: -763px;
+}
+
+.team-weapon-breakthrough .star.breakthrough-1 {
+    background-position-y: -685px;
+}
+
+.team-weapon-breakthrough .star.breakthrough-4 {
+    background-position-y: -737px;
+}
+
+.team-weapon-breakthrough .star.final {
+    background-position-y: -790px;
 }
 
 /* 武器稀有度样式 */

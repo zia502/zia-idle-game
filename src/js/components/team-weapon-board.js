@@ -163,17 +163,46 @@ const TeamWeaponBoard = {
 
             // 获取武器稀有度样式
             const rarityClass = this.getRarityClass(weapon.rarity);
+            const currentStats = Weapon.calculateCurrentStats(weapon);
 
-            // 获取武器属性样式
-            const attributeHtml = this.getAttributeHtml(weapon.element);
+            // 构建突破星星HTML
+            const breakthroughStars = Array(4).fill().map((_, index) => {
+                const isLast = index === 3;
+                const isFinal = weapon.breakthrough === 4;
+                const currentBreakthrough = weapon.breakthrough || 0;
+
+                if (isLast) {
+                    return `<div class="star ${isFinal ? 'final' : 'breakthrough-4'}"></div>`;
+                } else {
+                    if (index < currentBreakthrough) {
+                        return `<div class="star breakthrough-1"></div>`;
+                    } else {
+                        return `<div class="star breakthrough-0"></div>`;
+                    }
+                }
+            }).join('');
 
             return `
                 <div class="team-weapon-slot ${rarityClass}" data-slot="${slotType}" data-weapon-id="${weaponId}">
                     <div class="team-weapon-item">
                         <div class="team-weapon-icon">${weapon.name.charAt(0)}</div>
                         <div class="team-weapon-name">${weapon.name}</div>
-                        <div class="team-weapon-type">${weapon.type || '未知类型'}</div>
-                        <div class="team-weapon-attributes">${attributeHtml}</div>
+                        <div class="team-weapon-type">
+                            <img src="src/assets/${UI.weaponTypeIcons[weapon.type]}" class="type-icon" alt="${weapon.type}">
+                            ${UI.getWeaponTypeName(weapon.type)}
+                        </div>
+                        <div class="team-weapon-element">
+                            <img src="src/assets/${UI.elementIcons[weapon.element]}" class="element-icon" alt="${weapon.element}">
+                            ${UI.getWeaponElementName(weapon.element)}
+                        </div>
+                        <div class="team-weapon-stats">
+                            <div>等级: ${weapon.level}/${Weapon.breakthroughLevels[weapon.breakthrough || 0]}</div>
+                            <div>攻击: ${currentStats.attack}</div>
+                            <div>生命: ${currentStats.hp}</div>
+                        </div>
+                        <div class="team-weapon-breakthrough">
+                            ${breakthroughStars}
+                        </div>
                     </div>
                 </div>
             `;
@@ -211,17 +240,46 @@ const TeamWeaponBoard = {
 
                 // 获取武器稀有度样式
                 const rarityClass = this.getRarityClass(weapon.rarity);
+                const currentStats = Weapon.calculateCurrentStats(weapon);
 
-                // 获取武器属性样式
-                const attributeHtml = this.getAttributeHtml(weapon.element);
+                // 构建突破星星HTML
+                const breakthroughStars = Array(4).fill().map((_, index) => {
+                    const isLast = index === 3;
+                    const isFinal = weapon.breakthrough === 4;
+                    const currentBreakthrough = weapon.breakthrough || 0;
+
+                    if (isLast) {
+                        return `<div class="star ${isFinal ? 'final' : 'breakthrough-4'}"></div>`;
+                    } else {
+                        if (index < currentBreakthrough) {
+                            return `<div class="star breakthrough-1"></div>`;
+                        } else {
+                            return `<div class="star breakthrough-0"></div>`;
+                        }
+                    }
+                }).join('');
 
                 html += `
                     <div class="team-weapon-slot ${rarityClass}" data-slot="${slotType}" data-weapon-id="${weaponId}">
                         <div class="team-weapon-item">
                             <div class="team-weapon-icon">${weapon.name.charAt(0)}</div>
                             <div class="team-weapon-name">${weapon.name}</div>
-                            <div class="team-weapon-type">${weapon.type || '未知类型'}</div>
-                            <div class="team-weapon-attributes">${attributeHtml}</div>
+                            <div class="team-weapon-type">
+                                <img src="src/assets/${UI.weaponTypeIcons[weapon.type]}" class="type-icon" alt="${weapon.type}">
+                                ${UI.getWeaponTypeName(weapon.type)}
+                            </div>
+                            <div class="team-weapon-element">
+                                <img src="src/assets/${UI.elementIcons[weapon.element]}" class="element-icon" alt="${weapon.element}">
+                                ${UI.getWeaponElementName(weapon.element)}
+                            </div>
+                            <div class="team-weapon-stats">
+                                <div>等级: ${weapon.level}/${Weapon.breakthroughLevels[weapon.breakthrough || 0]}</div>
+                                <div>攻击: ${currentStats.attack}</div>
+                                <div>生命: ${currentStats.hp}</div>
+                            </div>
+                            <div class="team-weapon-breakthrough">
+                                ${breakthroughStars}
+                            </div>
                         </div>
                     </div>
                 `;
@@ -230,8 +288,6 @@ const TeamWeaponBoard = {
             return html;
         } catch (error) {
             console.error('渲染副武器槽时出错:', error);
-
-            // 出错时返回空槽位
             let html = '';
             for (let i = 1; i <= 9; i++) {
                 html += `<div class="team-weapon-slot" data-slot="sub${i}">副武器${i}</div>`;
@@ -318,10 +374,86 @@ const TeamWeaponBoard = {
         // 选择所有武器槽，包括空槽和已装备武器的槽
         const weaponSlots = document.querySelectorAll('#team-weapon-board .team-weapon-slot, #team-weapon-board .team-weapon-slot-filled');
 
+        // 创建tooltip容器
+        const tooltipContainer = document.createElement('div');
+        tooltipContainer.className = 'weapon-tooltip-container';
+        document.body.appendChild(tooltipContainer);
+
         weaponSlots.forEach(slot => {
             // 移除可能存在的旧事件监听器
             const newSlot = slot.cloneNode(true);
             slot.parentNode.replaceChild(newSlot, slot);
+
+            // 添加鼠标悬停事件
+            newSlot.addEventListener('mouseenter', (e) => {
+                const weaponId = newSlot.getAttribute('data-weapon-id');
+                if (!weaponId) return;
+
+                const weapon = Weapon.getWeapon(weaponId);
+                if (!weapon) return;
+
+                const currentStats = Weapon.calculateCurrentStats(weapon);
+
+                const tooltip = document.createElement('div');
+                tooltip.className = 'weapon-tooltip';
+                tooltip.innerHTML = `
+                    <div class="weapon-name">${weapon.name}</div>
+                    <div class="weapon-breakthrough">
+                        ${Array(4).fill().map((_, index) => {
+                            const isLast = index === 3;
+                            const isFinal = weapon.breakthrough === 4;
+                            const currentBreakthrough = weapon.breakthrough || 0;
+
+                            if (isLast) {
+                                return `<div class="star ${isFinal ? 'final' : 'breakthrough-4'}"></div>`;
+                            } else {
+                                if (index < currentBreakthrough) {
+                                    return `<div class="star breakthrough-1"></div>`;
+                                } else {
+                                    return `<div class="star breakthrough-0"></div>`;
+                                }
+                            }
+                        }).join('')}
+                    </div>
+                    <div class="weapon-icons">
+                        <div class="weapon-type">
+                            <img src="src/assets/${UI.weaponTypeIcons[weapon.type]}" class="type-icon" alt="${weapon.type}">
+                        </div>
+                        <div class="weapon-element">
+                            <img src="src/assets/${UI.elementIcons[weapon.element]}" class="element-icon" alt="${weapon.element}">
+                        </div>
+                    </div>
+                    <div class="weapon-stats">
+                        <div>等级: ${weapon.level}/${Weapon.breakthroughLevels[weapon.breakthrough || 0]}</div>
+                        <div>攻击: ${currentStats.attack}</div>
+                        <div>生命: ${currentStats.hp}</div>
+                    </div>
+                    ${weapon.specialEffects.length > 0 ? `
+                        <div class="weapon-effects">
+                            <div>特殊效果:</div>
+                            ${weapon.specialEffects.map(effect => {
+                                const isUnlocked = weapon.level >= effect.unlock;
+                                return `<div class="effect-item ${isUnlocked ? 'unlocked' : 'locked'}">
+                                    ${UI.getWeaponSkillName(effect.type)} Lv.${effect.level}
+                                    ${!isUnlocked ? '<span class="unlock-hint">(需要武器等级达到' + effect.unlock + '级)</span>' : ''}
+                                </div>`;
+                            }).join('')}
+                        </div>
+                    ` : ''}
+                `;
+
+                tooltipContainer.innerHTML = '';
+                tooltipContainer.appendChild(tooltip);
+                tooltipContainer.style.display = 'block';
+
+                const rect = e.target.getBoundingClientRect();
+                tooltipContainer.style.left = `${rect.left + rect.width / 2}px`;
+                tooltipContainer.style.top = `${rect.bottom + 5}px`;
+            });
+
+            newSlot.addEventListener('mouseleave', () => {
+                tooltipContainer.style.display = 'none';
+            });
 
             newSlot.addEventListener('click', () => {
                 const slotType = newSlot.getAttribute('data-slot');
@@ -329,14 +461,13 @@ const TeamWeaponBoard = {
 
                 console.log(`点击了武器槽: ${slotType}, 武器ID: ${weaponId || '无'}`);
 
-                // 获取当前队伍ID
+                // 获取当前队伍
                 const activeTeamId = Game.state.activeTeamId;
                 if (!activeTeamId) {
-                    console.error('未找到当前队伍ID');
+                    console.error('未找到活动队伍');
                     return;
                 }
 
-                // 获取队伍信息
                 const team = Team.teams[activeTeamId];
                 if (!team) {
                     console.error('未找到队伍信息');
@@ -350,27 +481,8 @@ const TeamWeaponBoard = {
                     return;
                 }
 
-                // 使用新的武器选择对话框
-                if (typeof UI !== 'undefined' && typeof UI.showWeaponSelectionDialog === 'function') {
-                    UI.showWeaponSelectionDialog(weaponBoardId, slotType, activeTeamId);
-                } else {
-                    console.warn('UI.showWeaponSelectionDialog方法不存在，回退到旧的武器选择方式');
-
-                    // 如果武器系统已加载，切换到武器界面（旧方式）
-                    if (typeof UI !== 'undefined' && typeof UI.switchScreen === 'function') {
-                        // 保存当前选中的槽位，以便在武器界面中使用
-                        if (typeof Weapon !== 'undefined') {
-                            Weapon.selectedSlot = slotType;
-
-                            // 保存队伍ID
-                            if (activeTeamId) {
-                                Weapon.selectedTeamId = activeTeamId;
-                            }
-                        }
-
-                        UI.switchScreen('weapon-screen');
-                    }
-                }
+                // 显示武器选择对话框
+                UI.showWeaponSelectionDialog(weaponBoardId, slotType, team.id);
             });
         });
     }

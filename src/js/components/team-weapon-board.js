@@ -108,6 +108,9 @@ const TeamWeaponBoard = {
                 return this.renderTeamWeaponBoard();
             }
 
+            // 打印武器盘属性统计
+            Weapon.printWeaponBoardStats(weaponBoardId);
+
             // 构建武器盘HTML
             let html = `
                 <div class="team-weapon-board-container">

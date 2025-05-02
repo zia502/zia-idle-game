@@ -50,14 +50,14 @@ const Weapon = {
             description: '提高DA和TA概率',
             type: 'passive',
             levels: {
-                1: { da: 7, ta: 3 },
-                2: { da: 10, ta: 6 },
-                3: { da: 15, ta: 10 }
+                1: { daRate: 7, taRate: 3 },
+                2: { daRate: 10, taRate: 6 },
+                3: { daRate: 15, taRate: 10 }
             },
             effect: function(stats, level) {
                 const levelData = Weapon.skills.abandon.levels[level];
-                stats.daRate = (stats.daRate || 0) + levelData.da / 100;
-                stats.taRate = (stats.taRate || 0) + levelData.ta / 100;
+                stats.daRate = (stats.daRate || 0) + levelData.daRate / 100;
+                stats.taRate = (stats.taRate || 0) + levelData.taRate / 100;
                 return stats;
             }
         },
@@ -83,13 +83,13 @@ const Weapon = {
             description: '提高技能伤害上限',
             type: 'passive',
             levels: {
-                1: { cap: 5 },
-                2: { cap: 7 },
-                3: { cap: 10 }
+                1: { na_cap: 5 },
+                2: { na_cap: 7 },
+                3: { na_cap: 10 }
             },
             effect: function(stats, level) {
                 const levelData = Weapon.skills.arts.levels[level];
-                stats.skillDamageCap = (stats.skillDamageCap || 1) * (1 + levelData.cap / 100);
+                stats.na_cap = (stats.na_cap || 1) * (1 + levelData.na_cap / 100);
                 return stats;
             }
         },
@@ -99,13 +99,13 @@ const Weapon = {
             description: '提高伤害上限',
             type: 'passive',
             levels: {
-                1: { cap: 10 },
-                2: { cap: 20 },
-                3: { cap: 30 }
+                1: { skill_cap: 10 },
+                2: { skill_cap: 20 },
+                3: { skill_cap: 30 }
             },
             effect: function(stats, level) {
                 const levelData = Weapon.skills.beastEssence.levels[level];
-                stats.damageCap = (stats.damageCap || 1) * (1 + levelData.cap / 100);
+                stats.skill_cap = (stats.skill_cap || 1) * (1 + levelData.skill_cap / 100);
                 return stats;
             }
         },
@@ -115,14 +115,14 @@ const Weapon = {
             description: '提高生命值和暴击率',
             type: 'passive',
             levels: {
-                1: { hp: 12, crit: 4 },
-                2: { hp: 14, crit: 6 },
-                3: { hp: 20, crit: 10 }
+                1: { hp: 12, critRate: 4 },
+                2: { hp: 14, critRate: 6 },
+                3: { hp: 20, critRate: 10 }
             },
             effect: function(stats, level) {
                 const levelData = Weapon.skills.bladeshield.levels[level];
                 stats.hp = Math.floor(stats.hp * (1 + levelData.hp / 100));
-                stats.critRate = (stats.critRate || 0) + levelData.crit / 100;
+                stats.critRate = (stats.critRate || 0) + levelData.critRate / 100;
                 return stats;
             }
         },
@@ -132,14 +132,14 @@ const Weapon = {
             description: '提高攻击力和暴击率',
             type: 'passive',
             levels: {
-                1: { atk: 20, crit: 4 },
-                2: { atk: 26, crit: 8 },
-                3: { atk: 30, crit: 12 }
+                1: { attack: 20, critRate: 4 },
+                2: { attack: 26, critRate: 8 },
+                3: { attack: 30, critRate: 12 }
             },
             effect: function(stats, level) {
                 const levelData = Weapon.skills.celere.levels[level];
-                stats.attack = Math.floor(stats.attack * (1 + levelData.atk / 100));
-                stats.critRate = (stats.critRate || 0) + levelData.crit / 100;
+                stats.attack = Math.floor(stats.attack * (1 + levelData.attack / 100));
+                stats.critRate = (stats.critRate || 0) + levelData.critRate / 100;
                 return stats;
             }
         },
@@ -149,14 +149,14 @@ const Weapon = {
             description: '提高EX攻击力和防御力',
             type: 'passive',
             levels: {
-                1: { exatk: 20, def: 15 },
-                2: { exatk: 30, def: 20 },
-                3: { exatk: 40, def: 30 }
+                1: { exAttack: 20, defense: 15 },
+                2: { exAttack: 30, defense: 20 },
+                3: { exAttack: 40, defense: 30 }
             },
             effect: function(stats, level) {
                 const levelData = Weapon.skills.convergence.levels[level];
-                stats.exAttack = (stats.exAttack || 0) * (1 + levelData.exatk / 100);
-                stats.defense = (stats.defense || 0) * (1 + levelData.def / 100);
+                stats.exAttack = (stats.exAttack || 0) * (1 + levelData.exAttack / 100);
+                stats.defense = (stats.defense || 0) * (1 + levelData.defense / 100);
                 return stats;
             }
         },
@@ -182,13 +182,13 @@ const Weapon = {
             description: '提高TA概率',
             type: 'passive',
             levels: {
-                1: { ta: 5 },
-                2: { ta: 9 },
-                3: { ta: 12 }
+                1: { taRate: 5 },
+                2: { taRate: 9 },
+                3: { taRate: 12 }
             },
             effect: function(stats, level) {
                 const levelData = Weapon.skills.devastation.levels[level];
-                stats.taRate = (stats.taRate || 0) + levelData.ta / 100;
+                stats.taRate = (stats.taRate || 0) + levelData.taRate / 100;
                 return stats;
             }
         },
@@ -198,13 +198,13 @@ const Weapon = {
             description: '提高DA概率',
             type: 'passive',
             levels: {
-                1: { da: 8 },
-                2: { da: 12 },
-                3: { da: 18 }
+                1: { daRate: 8 },
+                2: { daRate: 12 },
+                3: { daRate: 18 }
             },
             effect: function(stats, level) {
                 const levelData = Weapon.skills.dualEdge.levels[level];
-                stats.daRate = (stats.daRate || 0) + levelData.da / 100;
+                stats.daRate = (stats.daRate || 0) + levelData.daRate / 100;
                 return stats;
             }
         },
@@ -214,9 +214,9 @@ const Weapon = {
             description: '血量越低攻击力越高',
             type: 'passive',
             levels: {
-                1: { value: 7 },
-                2: { value: 12 },
-                3: { value: 18 }
+                1: { enmity: 7 },
+                2: { enmity: 12 },
+                3: { enmity: 18 }
             },
             effect: function(stats, level) {
                 const levelData = Weapon.skills.enmity.levels[level];
@@ -230,14 +230,21 @@ const Weapon = {
             description: '提高攻击力',
             type: 'passive',
             levels: {
-                1: { atk: 16 },
-                2: { atk: 24 },
-                3: { atk: 36 }
+                1: { attack: 16 },
+                2: { attack: 24 },
+                3: { attack: 36 }
             },
             effect: function(stats, level) {
                 const levelData = Weapon.skills.essence.levels[level];
-                stats.attack = Math.floor(stats.attack * (1 + levelData.atk / 100));
-                return stats;
+                // 确保stats.attack是数字
+                const currentAttack = Number(stats.attack) || 0;
+                // 计算加成
+                const attackBonus = levelData.attack / 100;
+                // 返回新的攻击力
+                return {
+                    ...stats,
+                    attack: currentAttack * (1 + attackBonus)
+                };
             }
         },
         // 乱舞系列 - 攻击/TA提升
@@ -246,14 +253,14 @@ const Weapon = {
             description: '提高攻击力和TA概率',
             type: 'passive',
             levels: {
-                1: { atk: 22, ta: 4 },
-                2: { atk: 28, ta: 6 },
-                3: { atk: 32, ta: 9 }
+                1: { attack: 22, taRate: 4 },
+                2: { attack: 28, taRate: 6 },
+                3: { attack: 32, taRate: 9 }
             },
             effect: function(stats, level) {
                 const levelData = Weapon.skills.fandango.levels[level];
-                stats.attack = Math.floor(stats.attack * (1 + levelData.atk / 100));
-                stats.taRate = (stats.taRate || 0) + levelData.ta / 100;
+                stats.attack = Math.floor(stats.attack * (1 + levelData.attack / 100));
+                stats.taRate = (stats.taRate || 0) + levelData.taRate / 100;
                 return stats;
             }
         },
@@ -263,13 +270,13 @@ const Weapon = {
             description: '提高防御力',
             type: 'passive',
             levels: {
-                1: { def: 20 },
-                2: { def: 32 },
-                3: { def: 45 }
+                1: { defense: 20 },
+                2: { defense: 32 },
+                3: { defense: 45 }
             },
             effect: function(stats, level) {
                 const levelData = Weapon.skills.fortified.levels[level];
-                stats.defense = (stats.defense || 0) * (1 + levelData.def / 100);
+                stats.defense = (stats.defense || 0) * (1 + levelData.defense / 100);
                 return stats;
             }
         },
@@ -279,14 +286,14 @@ const Weapon = {
             description: '提高攻击力和DA概率',
             type: 'passive',
             levels: {
-                1: { atk: 24, da: 7 },
-                2: { atk: 29, da: 10 },
-                3: { atk: 32, da: 16 }
+                1: { attack: 24, daRate: 7 },
+                2: { attack: 29, daRate: 10 },
+                3: { attack: 32, daRate: 16 }
             },
             effect: function(stats, level) {
                 const levelData = Weapon.skills.haunt.levels[level];
-                stats.attack = Math.floor(stats.attack * (1 + levelData.atk / 100));
-                stats.daRate = (stats.daRate || 0) + levelData.da / 100;
+                stats.attack = Math.floor(stats.attack * (1 + levelData.attack / 100));
+                stats.daRate = (stats.daRate || 0) + levelData.daRate / 100;
                 return stats;
             }
         },
@@ -296,14 +303,14 @@ const Weapon = {
             description: '提高生命值和DA概率',
             type: 'passive',
             levels: {
-                1: { hp: 14, da: 7 },
-                2: { hp: 20, da: 10 },
-                3: { hp: 30, da: 15 }
+                1: { hp: 14, daRate: 7 },
+                2: { hp: 20, daRate: 10 },
+                3: { hp: 30, daRate: 15 }
             },
             effect: function(stats, level) {
                 const levelData = Weapon.skills.heroism.levels[level];
                 stats.hp = Math.floor(stats.hp * (1 + levelData.hp / 100));
-                stats.daRate = (stats.daRate || 0) + levelData.da / 100;
+                stats.daRate = (stats.daRate || 0) + levelData.daRate / 100;
                 return stats;
             }
         },
@@ -313,14 +320,14 @@ const Weapon = {
             description: '提高攻击力和生命值',
             type: 'passive',
             levels: {
-                1: { hp: 12, atk: 12 },
-                2: { hp: 24, atk: 24 },
-                3: { hp: 40, atk: 40 }
+                1: { hp: 12, attack: 12 },
+                2: { hp: 24, attack: 24 },
+                3: { hp: 40, attack: 40 }
             },
             effect: function(stats, level) {
                 const levelData = Weapon.skills.majesty.levels[level];
                 stats.hp = Math.floor(stats.hp * (1 + levelData.hp / 100));
-                stats.attack = Math.floor(stats.attack * (1 + levelData.atk / 100));
+                stats.attack = Math.floor(stats.attack * (1 + levelData.attack / 100));
                 return stats;
             }
         },
@@ -330,14 +337,14 @@ const Weapon = {
             description: '提高攻击力和EX攻击力',
             type: 'passive',
             levels: {
-                1: { atk: 20, exatk: 12 },
-                2: { atk: 26, exatk: 15 },
-                3: { atk: 32, exatk: 18 }
+                1: { attack: 20, exAttack: 12 },
+                2: { attack: 26, exAttack: 15 },
+                3: { attack: 32, exAttack: 18 }
             },
             effect: function(stats, level) {
                 const levelData = Weapon.skills.might.levels[level];
-                stats.attack = Math.floor(stats.attack * (1 + levelData.atk / 100));
-                stats.exAttack = (stats.exAttack || 0) * (1 + levelData.exatk / 100);
+                stats.attack = Math.floor(stats.attack * (1 + levelData.attack / 100));
+                stats.exAttack = (stats.exAttack || 0) * (1 + levelData.exAttack / 100);
                 return stats;
             }
         },
@@ -347,13 +354,13 @@ const Weapon = {
             description: '提高暴击率',
             type: 'passive',
             levels: {
-                1: { crit: 8 },
-                2: { crit: 12 },
-                3: { crit: 20 }
+                1: { critRate: 8 },
+                2: { critRate: 12 },
+                3: { critRate: 20 }
             },
             effect: function(stats, level) {
                 const levelData = Weapon.skills.sephiraTek.levels[level];
-                stats.critRate = (stats.critRate || 0) + levelData.crit / 100;
+                stats.critRate = (stats.critRate || 0) + levelData.critRate / 100;
                 return stats;
             }
         },
@@ -363,13 +370,13 @@ const Weapon = {
             description: '提高EX攻击力',
             type: 'passive',
             levels: {
-                1: { exatk: 28 },
-                2: { exatk: 36 },
-                3: { exatk: 46 }
+                1: { exAttack: 28 },
+                2: { exAttack: 36 },
+                3: { exAttack: 46 }
             },
             effect: function(stats, level) {
                 const levelData = Weapon.skills.sovereign.levels[level];
-                stats.exAttack = (stats.exAttack || 0) * (1 + levelData.exatk / 100);
+                stats.exAttack = (stats.exAttack || 0) * (1 + levelData.exAttack / 100);
                 return stats;
             }
         },
@@ -379,14 +386,14 @@ const Weapon = {
             description: '提高DA概率和暴击率',
             type: 'passive',
             levels: {
-                1: { da: 7, crit: 10 },
-                2: { da: 10, crit: 13 },
-                3: { da: 15, crit: 17 }
+                1: { daRate: 7, critRate: 10 },
+                2: { daRate: 10, critRate: 13 },
+                3: { daRate: 15, critRate: 17 }
             },
             effect: function(stats, level) {
                 const levelData = Weapon.skills.restraint.levels[level];
-                stats.daRate = (stats.daRate || 0) + levelData.da / 100;
-                stats.critRate = (stats.critRate || 0) + levelData.crit / 100;
+                stats.daRate = (stats.daRate || 0) + levelData.daRate / 100;
+                stats.critRate = (stats.critRate || 0) + levelData.critRate / 100;
                 return stats;
             }
         },
@@ -396,14 +403,14 @@ const Weapon = {
             description: '提高TA概率和暴击率',
             type: 'passive',
             levels: {
-                1: { ta: 4, crit: 6 },
-                2: { ta: 6, crit: 10 },
-                3: { ta: 8, crit: 15 }
+                1: { taRate: 4, critRate: 6 },
+                2: { taRate: 6, critRate: 10 },
+                3: { taRate: 8, critRate: 15 }
             },
             effect: function(stats, level) {
                 const levelData = Weapon.skills.spearhead.levels[level];
-                stats.taRate = (stats.taRate || 0) + levelData.ta / 100;
-                stats.critRate = (stats.critRate || 0) + levelData.crit / 100;
+                stats.taRate = (stats.taRate || 0) + levelData.taRate / 100;
+                stats.critRate = (stats.critRate || 0) + levelData.critRate / 100;
                 return stats;
             }
         },
@@ -413,9 +420,9 @@ const Weapon = {
             description: '提高浑身值',
             type: 'passive',
             levels: {
-                1: { value: 6 },
-                2: { value: 6 },
-                3: { value: 15 }
+                1: { stamina: 6 },
+                2: { stamina: 6 },
+                3: { stamina: 15 }
             },
             effect: function(stats, level) {
                 const levelData = Weapon.skills.stamina.levels[level];
@@ -757,6 +764,9 @@ const Weapon = {
             }
         }
 
+        // 打印更新后的武器盘属性
+        this.printWeaponBoardStats(boardId);
+
         // 触发武器变化事件
         if (typeof Events !== 'undefined' && typeof Events.emit === 'function') {
             Events.emit('weapon:updated', { boardId, weaponId, slotType });
@@ -821,6 +831,9 @@ const Weapon = {
             }
         }
 
+        // 打印更新后的武器盘属性
+        this.printWeaponBoardStats(boardId);
+
         return weaponId;
     },
 
@@ -848,15 +861,32 @@ const Weapon = {
      */
     calculateWeaponBoardStats(boardId) {
         const board = this.getWeaponBoard(boardId);
-        if (!board) return { base: { attack: 0, hp: 0 }, percentage: { attack: 0, hp: 0 } };
+        if (!board) return { 
+            base: { attack: 0, hp: 0 }, 
+            elementStats: {
+                fire: { hp: 0, attack: 0, critRate: 0 },
+                water: { hp: 0, attack: 0, critRate: 0 },
+                earth: { hp: 0, attack: 0, critRate: 0 },
+                wind: { hp: 0, attack: 0, critRate: 0 },
+                light: { hp: 0, attack: 0, critRate: 0 },
+                dark: { hp: 0, attack: 0, critRate: 0 }
+            }
+        };
 
         // 初始化结果
         const result = {
             base: { attack: 0, hp: 0 },
-            percentage: { attack: 0, hp: 0 }
+            elementStats: {
+                fire: { hp: 0, attack: 0, critRate: 0 },
+                water: { hp: 0, attack: 0, critRate: 0 },
+                earth: { hp: 0, attack: 0, critRate: 0 },
+                wind: { hp: 0, attack: 0, critRate: 0 },
+                light: { hp: 0, attack: 0, critRate: 0 },
+                dark: { hp: 0, attack: 0, critRate: 0 }
+            }
         };
 
-        // 计算所有武器的基础属性总和
+        // 计算所有武器的基础属性总和和技能加成
         for (const slotType in board.slots) {
             const weaponId = board.slots[slotType];
             if (!weaponId) continue;
@@ -864,21 +894,64 @@ const Weapon = {
             const weapon = this.getWeapon(weaponId);
             if (!weapon) continue;
 
+            // 获取武器当前属性
+            const currentStats = this.calculateCurrentStats(weapon);
+
             // 添加基础属性
-            result.base.attack += weapon.attack;
-            result.base.hp += weapon.hp;
+            result.base.attack += currentStats.attack;
+            result.base.hp += currentStats.hp;
 
             // 处理武器技能
-            for (const skillId of weapon.skills) {
-                const skill = this.skills[skillId];
-                if (skill && skill.type === 'passive') {
-                    // 计算属性加成百分比（简化处理）
-                    if (skillId === 'powerStrike') {
-                        result.percentage.attack += 0.2;
-                    } else if (skillId === 'toughness') {
-                        result.percentage.hp += 0.3;
+            if (weapon.specialEffects && weapon.specialEffects.length > 0) {
+                weapon.specialEffects.forEach(effect => {
+                    // 检查技能是否已解锁
+                    if (weapon.level >= effect.unlock) {
+                        const skill = this.skills[effect.type];
+                        if (skill && skill.effect) {
+                            // 直接使用技能等级数据
+                            const levelData = skill.levels[effect.level];
+                            
+                            // 根据武器属性添加技能加成
+                            const element = weapon.element.toLowerCase();
+                            if (levelData.hp) {
+                                result.elementStats[element].hp += levelData.hp;
+                            }
+                            if (levelData.attack) {
+                                result.elementStats[element].attack += levelData.attack;
+                            }
+                            if (levelData.critRate) {
+                                result.elementStats[element].critRate += levelData.critRate;
+                            }
+                            if (levelData.daRate) {
+                                result.elementStats[element].daRate += levelData.daRate;
+                            }
+                            if (levelData.taRate) {
+                                result.elementStats[element].taRate += levelData.taRate;
+                            }
+                            if (levelData.exAttack) {
+                                result.elementStats[element].exAttack += levelData.exAttack;
+                            }
+                            if (levelData.defense) {
+                                result.elementStats[element].defense += levelData.defense;
+                            }
+                            if (levelData.stamina) {
+                                result.elementStats[element].stamina += levelData.stamina;
+                            }
+                            if (levelData.enmity) {
+                                result.elementStats[element].enmity += levelData.enmity;
+                            }
+                            if (levelData.na_cap) {
+                                result.elementStats[element].na_cap += levelData.na_cap;
+                            }
+                            if (levelData.skill_cap) {
+                                result.elementStats[element].skill_cap += levelData.skill_cap;
+                            }
+                            if (levelData.bonus) {
+                                result.elementStats[element].bonusDamage += levelData.bonus;
+                            }
+                        }
                     }
-                }
+                });
             }
         }
 
@@ -1126,5 +1199,91 @@ const Weapon = {
         // 删除武器
         delete this.weapons[weaponId];
         return true;
+    },
+
+    /**
+     * 打印武器盘上所有武器的技能信息
+     * @param {string} boardId - 武器盘ID
+     */
+    printWeaponBoardSkills(boardId) {
+        const board = this.getWeaponBoard(boardId);
+        if (!board) {
+            console.log('未找到武器盘:', boardId);
+            return;
+        }
+
+        console.log('\n=== 武器盘技能详情 ===');
+        console.log(`武器盘ID: ${boardId}`);
+        
+        for (const slotType in board.slots) {
+            const weaponId = board.slots[slotType];
+            if (!weaponId) continue;
+
+            const weapon = this.getWeapon(weaponId);
+            if (!weapon) continue;
+
+            console.log(`\n槽位 ${slotType}: ${weapon.name}`);
+            console.log(`- 等级: ${weapon.level}`);
+            console.log(`- 属性: ${weapon.element}`);
+            console.log(`- 突破: ${weapon.breakthrough || 0}`);
+            
+            if (weapon.specialEffects && weapon.specialEffects.length > 0) {
+                console.log('- 技能:');
+                weapon.specialEffects.forEach(effect => {
+                    const skill = this.skills[effect.type];
+                    const isUnlocked = weapon.level >= effect.unlock;
+                    console.log(`  * ${skill.name} Lv.${effect.level} ${isUnlocked ? '(已解锁)' : `(需要${effect.unlock}级)`}`);
+                    if (isUnlocked) {
+                        const skillEffect = skill.effect({}, effect.level);
+                        console.log(`    效果:`, skillEffect);
+                    }
+                });
+            } else {
+                console.log('- 无技能');
+            }
+        }
+    },
+
+    /**
+     * 打印武器盘属性
+     * @param {string} boardId - 武器盘ID
+     */
+    printWeaponBoardStats(boardId) {
+        // 先打印技能详情
+        this.printWeaponBoardSkills(boardId);
+        
+        const stats = this.calculateWeaponBoardStats(boardId);
+        
+        console.log('\n=== 武器盘属性统计 ===');
+        console.log('基础属性:');
+        console.log(`- 总攻击力: ${stats.base.attack}`);
+        console.log(`- 总生命值: ${stats.base.hp}`);
+        
+        console.log('\n属性加成:');
+        const elements = ['fire', 'water', 'earth', 'wind', 'light', 'dark'];
+        const elementNames = {
+            fire: '火',
+            water: '水',
+            earth: '土',
+            wind: '风',
+            light: '光',
+            dark: '暗'
+        };
+        
+        elements.forEach(element => {
+            const elementStats = stats.elementStats[element];
+            if (elementStats.hp > 0 || elementStats.attack > 0 || elementStats.critRate > 0) {
+                console.log(`\n${elementNames[element]}属性加成:`);
+                if (elementStats.hp > 0) {
+                    console.log(`- HP提升: ${elementStats.hp}%`);
+                }
+                if (elementStats.attack > 0) {
+                    console.log(`- 攻击力提升: ${elementStats.attack}%`);
+                }
+                if (elementStats.critRate > 0) {
+                    console.log(`- 暴击率提升: ${elementStats.critRate}%`);
+                }
+            }
+        });
     }
 };

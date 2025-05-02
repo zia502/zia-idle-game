@@ -866,37 +866,23 @@ const MainUI = {
             const newSlot = slot.cloneNode(true);
             slot.parentNode.replaceChild(newSlot, slot);
 
-            // 添加点击事件
+            // 添加自定义样式，表明武器槽不可点击
+            newSlot.style.cursor = 'default';
+
+            // 不再添加点击事件，武器盘点击更换武器功能已关闭
+            // 可以添加一个提示信息
+            newSlot.setAttribute('title', '武器盘更换功能已关闭');
+
+            // 如果需要，可以添加一个点击事件只显示提示信息
             newSlot.addEventListener('click', () => {
                 const slotType = newSlot.getAttribute('data-slot');
                 const weaponId = newSlot.getAttribute('data-weapon-id');
 
-                console.log(`点击了武器槽: ${slotType}, 武器ID: ${weaponId || '无'}, 武器盘ID: ${weaponBoardId}`);
+                console.log(`点击了武器槽，但更换功能已关闭: ${slotType}, 武器ID: ${weaponId || '无'}`);
 
-                // 获取当前队伍ID
-                const activeTeamId = Game.state.activeTeamId;
-
-                // 使用新的武器选择对话框
-                if (typeof UI !== 'undefined' && typeof UI.showWeaponSelectionDialog === 'function') {
-                    UI.showWeaponSelectionDialog(weaponBoardId, slotType, activeTeamId);
-                } else {
-                    console.warn('UI.showWeaponSelectionDialog方法不存在，回退到旧的武器选择方式');
-
-                    // 如果武器系统已加载，切换到武器界面（旧方式）
-                    if (typeof UI !== 'undefined' && typeof UI.switchScreen === 'function') {
-                        // 保存当前选中的槽位，以便在武器界面中使用
-                        if (typeof Weapon !== 'undefined') {
-                            Weapon.selectedSlot = slotType;
-                            Weapon.selectedBoardId = weaponBoardId;
-
-                            // 如果是队伍武器盘，保存队伍ID
-                            if (activeTeamId) {
-                                Weapon.selectedTeamId = activeTeamId;
-                            }
-                        }
-
-                        UI.switchScreen('weapon-screen');
-                    }
+                // 如果有UI.showMessage方法，可以显示一个提示
+                if (typeof UI !== 'undefined' && typeof UI.showMessage === 'function') {
+                    UI.showMessage('请使用队伍管理界面更换武器');
                 }
             });
         });

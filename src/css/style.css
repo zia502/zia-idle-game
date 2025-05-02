@@ -940,3 +940,13 @@ button:active, .btn:active {
     height: 90% !important;
     object-fit: contain;
 }
+
+.weapon-selection-item .weapon-stats {
+    display: flex;
+    flex-direction: column;
+    font-size: 10px;
+    color: #333;
+    line-height: 1;
+    margin-top: 1px;
+    gap: 4px;
+}

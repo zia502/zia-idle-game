@@ -2617,10 +2617,12 @@ const UI = {
                 .weapon-selection-item {
                     border: 2px solid #ccc;
                     border-radius: 5px;
-                    padding: 10px;
+                    padding: 4px;
                     cursor: pointer;
                     transition: all 0.2s;
                     position: relative;
+                    height: auto;
+                    line-height: 1.1;
                 }
                 .weapon-selection-item:hover {
                     transform: scale(1.05);
@@ -2679,40 +2681,75 @@ const UI = {
                 }
                 .weapon-name {
                     font-weight: bold;
-                    margin-bottom: 5px;
+                    margin-bottom: 2px;
                     text-align: center;
+                    font-size: 13px;
                 }
-                .weapon-type {
+                .weapon-selection-item .weapon-attributes-row {
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                    gap: 0;
+                    margin-bottom: 2px;
+                    margin-left: -5px;
+                    margin-right: -5px;
+                }
+                .weapon-selection-item .weapon-type,
+                .weapon-selection-item .weapon-element {
                     display: flex;
                     align-items: center;
                     justify-content: center;
-                    gap: 5px;
-                    margin-bottom: 5px;
-                    font-size: 12px;
+                    gap: 0;
+                    font-size: 11px;
                     color: #666;
+                    padding: 0;
+                    margin: 0 -5px;
                 }
-                .weapon-type img {
-                    width: 16px;
-                    height: 16px;
+                .weapon-selection-item .weapon-type img,
+                .weapon-selection-item .weapon-element img {
+                    width: auto;
+                    height: auto;
+                    max-width: 70%;
+                    max-height: 70%;
                 }
-                .weapon-element {
+                .weapon-selection-item .weapon-breakthrough {
                     display: flex;
-                    align-items: center;
+                    gap: 0px;
+                    margin-top: 1px;
+                    margin-bottom: 1px;
                     justify-content: center;
-                    gap: 5px;
-                    margin-bottom: 5px;
-                    font-size: 12px;
-                    color: #666;
+                    width: 100%;
                 }
-                .weapon-element img {
-                    width: 16px;
-                    height: 16px;
+                .weapon-selection-item .weapon-breakthrough .star {
+                    display: inline-block;
+                    background: url(src/assets/stars.png) no-repeat;
+                    width: 20px;
+                    height: 20px;
+                    margin: 0 -5px;
+                    background-size: 44px 834px;
+                    background-position-x: 0;
+                    transform: scale(0.6);
+                    transform-origin: center;
+                }
+                .weapon-selection-item .weapon-breakthrough .star.breakthrough-0 {
+                    background-position-y: -763px;
+                }
+                .weapon-selection-item .weapon-breakthrough .star.breakthrough-1 {
+                    background-position-y: -685px;
+                }
+                .weapon-selection-item .weapon-breakthrough .star.breakthrough-4 {
+                    background-position-y: -737px;
+                }
+                .weapon-selection-item .weapon-breakthrough .star.final {
+                    background-position-y: -790px;
                 }
                 .weapon-stats {
                     display: flex;
                     flex-direction: column;
-                    font-size: 12px;
+                    font-size: 11px;
                     color: #333;
+                    line-height: 1.1;
+                    margin-top: 2px;
                 }
             `;
             document.head.appendChild(style);
@@ -2742,13 +2779,31 @@ const UI = {
                                 <div class="weapon-selection-item ${rarityClass} equipped" data-weapon-id="${id}" data-equipped-slot="${weapon.equippedSlot}">
                                     <div class="equipped-label">已装备</div>
                                     <div class="weapon-name">${weapon.name}</div>
-                                    <div class="weapon-type">
-                                        <img src="src/assets/${this.weaponTypeIcons[weapon.type]}" class="type-icon" alt="${weapon.type}">
-                                        ${this.getWeaponTypeName(weapon.type)}
+                                    <div class="weapon-breakthrough">
+                                        ${Array(4).fill().map((_, index) => {
+                                            const isLast = index === 3;
+                                            const isFinal = weapon.breakthrough === 4;
+                                            const currentBreakthrough = weapon.breakthrough || 0;
+
+                                            if (isLast) {
+                                                return `<div class="star ${isFinal ? 'final' : 'breakthrough-4'}"></div>`;
+                                            } else {
+                                                if (index < currentBreakthrough) {
+                                                    return `<div class="star breakthrough-1"></div>`;
+                                                } else {
+                                                    return `<div class="star breakthrough-0"></div>`;
+                                                }
+                                            }
+                                        }).join('')}
                                     </div>
-                                    <div class="weapon-element">
-                                        <img src="src/assets/${this.elementIcons[weapon.element]}" class="element-icon" alt="${weapon.element}">
-                                        ${this.getWeaponElementName(weapon.element)}
+                                    <div class="weapon-attributes-row">
+                                        <div class="weapon-type">
+                                            <img src="src/assets/${this.weaponTypeIcons[weapon.type]}" class="type-icon" alt="${weapon.type}">
+                                        </div>
+                                        <span style="margin: 0 -2px;"></span>
+                                        <div class="weapon-element">
+                                            <img src="src/assets/${this.elementIcons[weapon.element]}" class="element-icon" alt="${weapon.element}">
+                                        </div>
                                     </div>
                                     <div class="weapon-stats">
                                         <div>等级: ${weapon.level}/${Weapon.breakthroughLevels[weapon.breakthrough || 0]}</div>
@@ -2764,13 +2819,31 @@ const UI = {
                             return `
                                 <div class="weapon-selection-item ${rarityClass}" data-weapon-id="${id}">
                                     <div class="weapon-name">${weapon.name}</div>
-                                    <div class="weapon-type">
-                                        <img src="src/assets/${this.weaponTypeIcons[weapon.type]}" class="type-icon" alt="${weapon.type}">
-                                        ${this.getWeaponTypeName(weapon.type)}
+                                    <div class="weapon-breakthrough">
+                                        ${Array(4).fill().map((_, index) => {
+                                            const isLast = index === 3;
+                                            const isFinal = weapon.breakthrough === 4;
+                                            const currentBreakthrough = weapon.breakthrough || 0;
+
+                                            if (isLast) {
+                                                return `<div class="star ${isFinal ? 'final' : 'breakthrough-4'}"></div>`;
+                                            } else {
+                                                if (index < currentBreakthrough) {
+                                                    return `<div class="star breakthrough-1"></div>`;
+                                                } else {
+                                                    return `<div class="star breakthrough-0"></div>`;
+                                                }
+                                            }
+                                        }).join('')}
                                     </div>
-                                    <div class="weapon-element">
-                                        <img src="src/assets/${this.elementIcons[weapon.element]}" class="element-icon" alt="${weapon.element}">
-                                        ${this.getWeaponElementName(weapon.element)}
+                                    <div class="weapon-attributes-row">
+                                        <div class="weapon-type">
+                                            <img src="src/assets/${this.weaponTypeIcons[weapon.type]}" class="type-icon" alt="${weapon.type}">
+                                        </div>
+                                        <span style="margin: 0 -2px;"></span>
+                                        <div class="weapon-element">
+                                            <img src="src/assets/${this.elementIcons[weapon.element]}" class="element-icon" alt="${weapon.element}">
+                                        </div>
                                     </div>
                                     <div class="weapon-stats">
                                         <div>等级: ${weapon.level}/${Weapon.breakthroughLevels[weapon.breakthrough || 0]}</div>

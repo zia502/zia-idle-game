@@ -42,7 +42,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (typeof Weapon !== 'undefined') {
             console.log('初始化武器系统...');
             Weapon.init();
-            
+
             // 监听武器模板加载完成事件
             Events.on('weaponTemplate:loaded', () => {
                 console.log('武器模板加载完成，更新UI');
@@ -129,6 +129,22 @@ document.addEventListener('DOMContentLoaded', function() {
             Team.init();
         } else {
             console.warn('找不到Team模块，跳过初始化');
+        }
+
+        // 初始化BUFF系统
+        if (typeof BuffSystem !== 'undefined') {
+            console.log('初始化BUFF系统...');
+            BuffSystem.init();
+        } else {
+            console.warn('找不到BuffSystem模块，跳过初始化');
+        }
+
+        // 初始化武器盘加成系统
+        if (typeof WeaponBoardBonusSystem !== 'undefined') {
+            console.log('初始化武器盘加成系统...');
+            WeaponBoardBonusSystem.init();
+        } else {
+            console.warn('找不到WeaponBoardBonusSystem模块，跳过初始化');
         }
 
         // 在职业系统就绪后初始化UI系统

@@ -142,6 +142,19 @@ const Battle = {
         // 记录战斗开始
         this.logBattle(`遇到了 ${monster.name}${monster.isBoss ? (monster.isMiniBoss ? '(小BOSS)' : '(大BOSS)') : ''}`);
 
+        // 应用武器盘加成
+        if (typeof WeaponBoardBonusSystem !== 'undefined') {
+            this.logBattle('应用武器盘加成...');
+            const bonusApplied = WeaponBoardBonusSystem.applyWeaponBoardBonuses(team, teamMembers);
+            if (bonusApplied) {
+                this.logBattle('武器盘加成已应用到队伍成员');
+            } else {
+                this.logBattle('无法应用武器盘加成');
+            }
+        } else {
+            console.warn('WeaponBoardBonusSystem未定义，无法应用武器盘加成');
+        }
+
         // 战斗循环
         let battleResult = this.processBattle(teamMembers, monsterCharacter);
 
@@ -532,7 +545,7 @@ const Battle = {
                 }
             }
         }
-        
+
         if (!character || !character.traits) return;
 
         for (const traitId of character.traits) {
@@ -595,7 +608,7 @@ const Battle = {
         // 处理队伍成员的BUFF
         for (const member of teamMembers) {
             if (member.currentStats.hp <= 0) continue;
-            
+
             if (typeof BuffSystem !== 'undefined') {
                 const result = BuffSystem.processBuffsAtTurnStart(member);
 
@@ -607,7 +620,7 @@ const Battle = {
                     this.logBattle(`${member.name} 恢复了 ${result.healing} 点生命值！`);
                 }
             }
-            
+
             // 处理被动技能
             if (member.skills) {
                 for (const skillId of member.skills) {
@@ -629,7 +642,7 @@ const Battle = {
                 }
             }
         }
-        
+
         // 处理怪物的BUFF
         if (monster.currentStats.hp > 0 && typeof BuffSystem !== 'undefined') {
             const result = BuffSystem.processBuffsAtTurnStart(monster);

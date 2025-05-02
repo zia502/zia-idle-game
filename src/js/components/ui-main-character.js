@@ -39,104 +39,12 @@
 
         console.log('主角信息:', mainCharacter);
 
-        // 获取职业信息
-        let jobName = '新手';
-        let jobLevel = 1;
-
-        if (typeof Character.getJobName === 'function') {
-            jobName = Character.getJobName(mainCharacter);
-        }
-
-        if (typeof Character.getJobLevel === 'function') {
-            jobLevel = Character.getJobLevel(mainCharacter);
-        }
-
-        // 获取允许使用的武器
-        let allowedWeapons = [];
-        if (typeof JobSystem !== 'undefined' && typeof JobSystem.getAllowedWeapons === 'function') {
-            allowedWeapons = JobSystem.getAllowedWeapons(mainCharacter.job.current);
-        }
-
-        // 创建主角卡片
-        const characterCard = document.createElement('div');
-        characterCard.className = 'character-card main-character-card';
-        characterCard.id = `character-${mainCharacter.id}`;
-
-        // 计算HP百分比
-        const hpPercent = (mainCharacter.currentStats?.hp / mainCharacter.baseStats?.hp) * 100 || 100;
-
-        // 计算经验百分比
-        let expPercent = 0;
-        let expToNext = 100;
-
-        if (typeof Character.getExpToNextLevel === 'function') {
-            expToNext = Character.getExpToNextLevel(mainCharacter.level);
-            expPercent = (mainCharacter.exp / expToNext) * 100;
-        } else {
-            console.warn('Character.getExpToNextLevel方法不存在');
-        }
-
-        // 设置主角卡片内容
-        characterCard.innerHTML = `
-            <div class="character-header">
-                <div class="character-avatar">
-                    <img src="${mainCharacter.avatarSrc || 'assets/images/characters/default.png'}" alt="${mainCharacter.name}">
-                    <div class="character-level">${mainCharacter.level || 1}</div>
-                </div>
-                <div class="character-name">${mainCharacter.name}</div>
-                <div class="character-job">
-                    <span class="job-name">${jobName}</span>
-                    <span class="job-level">Lv.${jobLevel}</span>
-                    <div class="allowed-weapons">
-                        ${allowedWeapons.map(weaponType => `
-                            <img src="src/assets/${UI.weaponTypeIcons[weaponType]}" alt="${UI.getWeaponTypeName(weaponType)}" title="${UI.getWeaponTypeName(weaponType)}">
-                        `).join('')}
-                    </div>
-                </div>
-                <div class="character-attributes">
-                    <span class="attribute-tag attribute-${mainCharacter.attribute || 'fire'}">${mainCharacter.attribute || '火'}</span>
-                    <span class="type-tag type-${mainCharacter.type || 'attack'}">${mainCharacter.type || '攻击'}</span>
-                </div>
-            </div>
-            <div class="character-stats">
-                <div class="stat-row">
-                    <div class="stat-label">生命值</div>
-                    <div class="hp-container">
-                        <div class="hp-bar" style="width: ${hpPercent}%" data-tooltip="${mainCharacter.currentStats?.hp || 0}/${mainCharacter.baseStats?.hp || 0}"></div>
-                    </div>
-                    <div class="hp-value">${mainCharacter.currentStats?.hp || 0}/${mainCharacter.baseStats?.hp || 0}</div>
-                </div>
-                <div class="stat-row">
-                    <div class="stat-label">经验</div>
-                    <div class="exp-container">
-                        <div class="exp-bar" style="width: ${expPercent}%"></div>
-                    </div>
-                    <div class="exp-value">${mainCharacter.exp || 0}/${expToNext}</div>
-                </div>
-                <div class="stat-row">
-                    <div class="stat-label">攻击力</div>
-                    <div class="stat-value">${mainCharacter.baseStats?.attack || 0}</div>
-                </div>
-                <div class="stat-row">
-                    <div class="stat-label">防御力</div>
-                    <div class="stat-value">${mainCharacter.baseStats?.defense || 0}</div>
-                </div>
-                <div class="stat-row">
-                    <div class="stat-label">速度</div>
-                    <div class="stat-value">${mainCharacter.baseStats?.speed || 0}</div>
-                </div>
-            </div>
-            <div class="character-actions">
-                <button class="details-button" data-character-id="${mainCharacter.id}">详情</button>
-                <button class="job-button" data-character-id="${mainCharacter.id}">职业</button>
-            </div>
-        `;
-
-        // 添加到容器
-        mainCharacterContainer.appendChild(characterCard);
+        // 使用 MainCharacterInfo 组件渲染主角信息
+        const mainCharacterInfo = new MainCharacterInfo(mainCharacter);
+        mainCharacterContainer.innerHTML = mainCharacterInfo.render();
 
         // 添加详情按钮事件
-        const detailsButton = characterCard.querySelector('.details-button');
+        const detailsButton = mainCharacterContainer.querySelector('.details-button');
         if (detailsButton) {
             detailsButton.addEventListener('click', function() {
                 if (typeof UI.showCharacterDetails === 'function') {
@@ -150,7 +58,7 @@
         }
 
         // 添加职业按钮事件
-        const jobButton = characterCard.querySelector('.job-button');
+        const jobButton = mainCharacterContainer.querySelector('.job-button');
         if (jobButton) {
             jobButton.addEventListener('click', function() {
                 if (typeof UI.showJobSelection === 'function') {
@@ -161,8 +69,6 @@
                 }
             });
         }
-
-        console.log('主角信息渲染完成');
     };
 
     /**

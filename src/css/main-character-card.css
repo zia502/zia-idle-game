@@ -1,0 +1,338 @@
+.character-card.main-character {
+    background-color: #000000;
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 16px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    border: 2px solid;
+}
+
+.character-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #333;
+}
+
+.character-name {
+    font-size: 1.2em;
+    font-weight: bold;
+    color: #ffffff;
+}
+
+.element-badge {
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.9em;
+    font-weight: bold;
+}
+
+.character-job {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+    padding: 4px 0;
+}
+
+.job-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.job-name {
+    font-size: 1em;
+    color: #000000;
+    font-weight: bold;
+}
+
+.job-level {
+    font-size: 0.9em;
+    color: #ffd700;
+}
+
+.allowed-weapons {
+    display: flex;
+    gap: 4px;
+}
+
+.allowed-weapons img {
+    width: 20px;
+    height: 20px;
+}
+
+.info-stats {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
+    padding: 4px 0;
+}
+
+.stat-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.stat-label {
+    font-size: 0.9em;
+    color: #cccccc;
+}
+
+.stat-value {
+    font-size: 1em;
+    color: #000000;
+    font-weight: bold;
+}
+
+.weapon-board-bonus {
+    margin-bottom: 8px;
+    padding: 4px 0;
+}
+
+.weapon-board-bonus h3 {
+    font-size: 1em;
+    color: #ffffff;
+    margin-bottom: 4px;
+    padding-bottom: 4px;
+    border-bottom: 1px solid #333;
+}
+
+.weapon-board-bonus .stat-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 2px 0;
+}
+
+.weapon-board-bonus .stat-label {
+    color: #cccccc;
+}
+
+.weapon-board-bonus .stat-value {
+    color: #006600;
+    font-weight: bold;
+}
+
+.expected-damage {
+    margin-bottom: 8px;
+    padding: 4px 0;
+}
+
+.expected-damage h3 {
+    font-size: 1em;
+    color: #ffffff;
+    margin-bottom: 4px;
+    padding-bottom: 4px;
+    border-bottom: 1px solid #333;
+}
+
+.expected-damage .stat-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.expected-damage .stat-label {
+    color: #cccccc;
+}
+
+.expected-damage .stat-value {
+    color: #cc3300;
+    font-size: 1.1em;
+    font-weight: bold;
+}
+
+.character-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 12px;
+}
+
+.details-button,
+.job-button {
+    padding: 6px 12px;
+    border: none;
+    border-radius: 4px;
+    background-color: #333333;
+    color: #ffffff;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.details-button:hover,
+.job-button:hover {
+    background-color: #444444;
+}
+.character-card.main-character {
+    background-color: #2c2c2c;
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 16px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    border: 2px solid;
+}
+
+.character-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #444;
+}
+
+.character-name {
+    font-size: 1.2em;
+    font-weight: bold;
+    color: #e0e0e0;
+}
+
+.element-badge {
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.9em;
+    font-weight: bold;
+}
+
+.character-job {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+    padding: 4px 0;
+}
+
+.job-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.job-name {
+    font-size: 1em;
+    color: #000000;
+    font-weight: bold;
+}
+
+.job-level {
+    font-size: 0.9em;
+    color: #ffd700;
+}
+
+.allowed-weapons {
+    display: flex;
+    gap: 4px;
+}
+
+.allowed-weapons img {
+    width: 20px;
+    height: 20px;
+}
+
+.info-stats {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
+    padding: 4px 0;
+}
+
+.stat-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.stat-label {
+    font-size: 0.9em;
+    color: #b0b0b0;
+}
+
+.stat-value {
+    font-size: 1em;
+    color: #000000;
+    font-weight: bold;
+}
+
+.weapon-board-bonus {
+    margin-bottom: 8px;
+    padding: 4px 0;
+}
+
+.weapon-board-bonus h3 {
+    font-size: 1em;
+    color: #e0e0e0;
+    margin-bottom: 4px;
+    padding-bottom: 4px;
+    border-bottom: 1px solid #444;
+}
+
+.weapon-board-bonus .stat-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 2px 0;
+}
+
+.weapon-board-bonus .stat-label {
+    color: #b0b0b0;
+}
+
+.weapon-board-bonus .stat-value {
+    color: #006600;
+    font-weight: bold;
+}
+
+.expected-damage {
+    margin-bottom: 8px;
+    padding: 4px 0;
+}
+
+.expected-damage h3 {
+    font-size: 1em;
+    color: #e0e0e0;
+    margin-bottom: 4px;
+    padding-bottom: 4px;
+    border-bottom: 1px solid #444;
+}
+
+.expected-damage .stat-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.expected-damage .stat-label {
+    color: #b0b0b0;
+}
+
+.expected-damage .stat-value {
+    color: #cc3300;
+    font-size: 1.1em;
+    font-weight: bold;
+}
+
+.character-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 12px;
+}
+
+.details-button,
+.job-button {
+    padding: 6px 12px;
+    border: none;
+    border-radius: 4px;
+    background-color: #4a4a4a;
+    color: #e0e0e0;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.details-button:hover,
+.job-button:hover {
+    background-color: #5a5a5a;
+}

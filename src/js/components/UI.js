@@ -2652,7 +2652,7 @@ const UI = {
                 }
                 .equipped-label {
                     position: absolute;
-                    top: 5px;
+                    bottom: 5px;
                     right: 5px;
                     background-color: #f44336;
                     color: white;

@@ -581,34 +581,57 @@ const MainUI = {
             const weaponId = weaponBoard.slots[slotType];
 
             if (!weaponId) {
-                return `<div class="empty-weapon-slot" data-slot="${slotType}">主手武器</div>`;
+                return `<div class="weapon-slot" data-slot="${slotType}">主手武器</div>`;
             }
 
             // 获取武器信息
             const weapon = Weapon.getWeapon(weaponId);
             if (!weapon) {
-                return `<div class="empty-weapon-slot" data-slot="${slotType}">主手武器</div>`;
+                return `<div class="weapon-slot" data-slot="${slotType}">主手武器</div>`;
             }
 
             // 获取武器稀有度样式
             const rarityClass = this.getRarityClass(weapon.rarity);
 
-            // 获取武器属性样式
-            const attributeHtml = this.getAttributeHtml(weapon.element);
+            // 构建突破星星HTML
+            const breakthroughStars = Array(4).fill().map((_, index) => {
+                const isLast = index === 3;
+                const isFinal = weapon.breakthrough === 4;
+                const currentBreakthrough = weapon.breakthrough || 0;
+
+                if (isLast) {
+                    return `<div class="star ${isFinal ? 'final' : 'breakthrough-4'}"></div>`;
+                } else {
+                    if (index < currentBreakthrough) {
+                        return `<div class="star breakthrough-1"></div>`;
+                    } else {
+                        return `<div class="star breakthrough-0"></div>`;
+                    }
+                }
+            }).join('');
 
             return `
                 <div class="weapon-slot ${rarityClass}" data-slot="${slotType}" data-weapon-id="${weaponId}">
                     <div class="weapon-item">
                         <div class="weapon-icon">${weapon.name.charAt(0)}</div>
                         <div class="weapon-name">${weapon.name}</div>
-                        <div class="weapon-type">${this.getWeaponTypeName(weapon.type) || '未知类型'}</div>
-                        <div class="weapon-attributes">${attributeHtml}</div>
+                        <div class="weapon-attributes">
+                            <div class="weapon-type">
+                                <img src="src/assets/${UI.weaponTypeIcons[weapon.type]}" class="type-icon" alt="${weapon.type}">
+                            </div>
+                            <div class="weapon-element">
+                                <img src="src/assets/${UI.elementIcons[weapon.element]}" class="element-icon" alt="${weapon.element}">
+                            </div>
+                        </div>
+                        <div class="weapon-breakthrough">
+                            ${breakthroughStars}
+                        </div>
                     </div>
                 </div>
             `;
         } catch (error) {
             console.error('渲染武器槽时出错:', error);
-            return `<div class="empty-weapon-slot" data-slot="${slotType}">主手武器</div>`;
+            return `<div class="weapon-slot" data-slot="${slotType}">主手武器</div>`;
         }
     },
 
@@ -627,30 +650,53 @@ const MainUI = {
                 const weaponId = weaponBoard.slots[slotType];
 
                 if (!weaponId) {
-                    html += `<div class="empty-weapon-slot" data-slot="${slotType}">副武器${i}</div>`;
+                    html += `<div class="weapon-slot" data-slot="${slotType}">副武器${i}</div>`;
                     continue;
                 }
 
                 // 获取武器信息
                 const weapon = Weapon.getWeapon(weaponId);
                 if (!weapon) {
-                    html += `<div class="empty-weapon-slot" data-slot="${slotType}">副武器${i}</div>`;
+                    html += `<div class="weapon-slot" data-slot="${slotType}">副武器${i}</div>`;
                     continue;
                 }
 
                 // 获取武器稀有度样式
                 const rarityClass = this.getRarityClass(weapon.rarity);
 
-                // 获取武器属性样式
-                const attributeHtml = this.getAttributeHtml(weapon.element);
+                // 构建突破星星HTML
+                const breakthroughStars = Array(4).fill().map((_, index) => {
+                    const isLast = index === 3;
+                    const isFinal = weapon.breakthrough === 4;
+                    const currentBreakthrough = weapon.breakthrough || 0;
+
+                    if (isLast) {
+                        return `<div class="star ${isFinal ? 'final' : 'breakthrough-4'}"></div>`;
+                    } else {
+                        if (index < currentBreakthrough) {
+                            return `<div class="star breakthrough-1"></div>`;
+                        } else {
+                            return `<div class="star breakthrough-0"></div>`;
+                        }
+                    }
+                }).join('');
 
                 html += `
                     <div class="weapon-slot ${rarityClass}" data-slot="${slotType}" data-weapon-id="${weaponId}">
                         <div class="weapon-item">
                             <div class="weapon-icon">${weapon.name.charAt(0)}</div>
                             <div class="weapon-name">${weapon.name}</div>
-                            <div class="weapon-type">${this.getWeaponTypeName(weapon.type) || '未知类型'}</div>
-                            <div class="weapon-attributes">${attributeHtml}</div>
+                            <div class="weapon-attributes">
+                                <div class="weapon-type">
+                                    <img src="src/assets/${UI.weaponTypeIcons[weapon.type]}" class="type-icon" alt="${weapon.type}">
+                                </div>
+                                <div class="weapon-element">
+                                    <img src="src/assets/${UI.elementIcons[weapon.element]}" class="element-icon" alt="${weapon.element}">
+                                </div>
+                            </div>
+                            <div class="weapon-breakthrough">
+                                ${breakthroughStars}
+                            </div>
                         </div>
                     </div>
                 `;
@@ -659,11 +705,9 @@ const MainUI = {
             return html;
         } catch (error) {
             console.error('渲染副武器槽时出错:', error);
-
-            // 出错时返回空槽位
             let html = '';
             for (let i = 1; i <= 9; i++) {
-                html += `<div class="empty-weapon-slot" data-slot="sub${i}">副武器${i}</div>`;
+                html += `<div class="weapon-slot" data-slot="sub${i}">副武器${i}</div>`;
             }
             return html;
         }

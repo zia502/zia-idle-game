@@ -2,37 +2,50 @@
 .weapon-board-container, .team-weapon-board-container {
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 15px;
 }
 
 .main-weapon-slot, .team-main-weapon-slot {
+    margin-bottom: 2px;
     width: 100%;
-    height: 80px;
-    margin-bottom: 10px;
+    display: flex;
+    justify-content: center;
 }
 
 .sub-weapons-grid, .team-sub-weapons-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    grid-template-rows: repeat(3, 1fr);
-    gap: 10px;
+    gap: 2px;
+    width: 100%;
 }
 
 .weapon-slot, .team-weapon-slot, .empty-weapon-slot {
-    border: 1px solid #ccc;
+    background-color: #e0e0e0;
+    border: 1px dashed #aaa;
     border-radius: 5px;
-    padding: 10px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    color: #777;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s ease;
     height: 100%;
     min-height: 80px;
-    position: relative;
-    cursor: pointer;
-    transition: all 0.2s;
-    background-color: #f9f9f9;
+    padding: 5px;
+    box-sizing: border-box;
+}
+
+.main-weapon-slot .weapon-slot {
+    height: 100%;
+    min-height: 330px;
 }
 
 .weapon-slot:hover, .team-weapon-slot:hover {
-    transform: scale(1.02);
-    box-shadow: 0 0 5px rgba(0,0,0,0.1);
+    background-color: #d0d0d0;
+    transform: translateY(-2px);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
 }
 
 .empty-weapon-slot {
@@ -44,89 +57,190 @@
 }
 
 .weapon-item, .team-weapon-item {
+    width: 100%;
+    height: 100%;
     display: flex;
     flex-direction: column;
-    height: 100%;
+    justify-content: flex-start;
+    align-items: center;
+    background-color: #f0f0f0;
+    border-radius: 5px;
+    padding: 8px;
+    box-sizing: border-box;
+    gap: 4px;
 }
 
 .weapon-icon, .team-weapon-icon {
-    width: 30px;
-    height: 30px;
-    border-radius: 50%;
-    background-color: #eee;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: bold;
+    width: 40px;
+    height: 40px;
+    background-color: #ddd;
+    border-radius: 5px;
     margin-bottom: 5px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 20px;
+    color: #555;
 }
 
 .weapon-name, .team-weapon-name {
+    font-size: 12px;
     font-weight: bold;
+    text-align: center;
     margin-bottom: 3px;
-    font-size: 14px;
+    color: #333;
 }
 
-.weapon-type, .team-weapon-type {
-    font-size: 12px;
+.weapon-type, .team-weapon-type, .weapon-element, .team-weapon-element {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 10px;
     color: #666;
+    text-align: center;
     margin-bottom: 3px;
+    width: 100%;
+    justify-content: center;
+    height: 20px;
+}
+
+.weapon-type img, .team-weapon-type img, .weapon-element img, .team-weapon-element img {
+    height: 100%;
+    width: auto;
+    object-fit: contain;
 }
 
 .weapon-attributes, .team-weapon-attributes {
     display: flex;
-    gap: 5px;
+    gap: 2px;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
 }
 
-.weapon-attribute, .team-weapon-attribute {
-    width: 15px;
-    height: 15px;
-    border-radius: 50%;
+.weapon-attributes .weapon-type,
+.weapon-attributes .weapon-element,
+.team-weapon-attributes .team-weapon-type,
+.team-weapon-attributes .team-weapon-element {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
 }
 
-/* 稀有度样式 */
-.common {
-    border-color: #aaa;
+.weapon-attributes .type-icon,
+.weapon-attributes .element-icon,
+.team-weapon-attributes .type-icon,
+.team-weapon-attributes .element-icon {
+    width: 70%;
+    height: 70%;
+    object-fit: contain;
 }
 
-.uncommon {
+.weapon-stats, .team-weapon-stats {
+    font-size: 10px;
+    color: #333;
+    text-align: center;
+    margin-bottom: 3px;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.weapon-stats > div, .team-weapon-stats > div {
+    display: flex;
+    justify-content: space-between;
+    padding: 0 5px;
+}
+
+.weapon-breakthrough, .team-weapon-breakthrough {
+    display: flex;
+    gap: 2px;
+    margin-top: 3px;
+    justify-content: center;
+    width: 100%;
+}
+
+.weapon-breakthrough .star, .team-weapon-breakthrough .star {
+    display: inline-block;
+    background: url(../assets/stars.png) no-repeat;
+    width: 20px;
+    height: 20px;
+    margin: 0 -4px;
+    background-size: 44px 834px;
+    background-position-x: 0;
+    transform: scale(0.7);
+    transform-origin: center;
+}
+
+.weapon-breakthrough .star.breakthrough-0, .team-weapon-breakthrough .star.breakthrough-0 {
+    background-position-y: -763px;
+}
+
+.weapon-breakthrough .star.breakthrough-1, .team-weapon-breakthrough .star.breakthrough-1 {
+    background-position-y: -685px;
+}
+
+.weapon-breakthrough .star.breakthrough-4, .team-weapon-breakthrough .star.breakthrough-4 {
+    background-position-y: -737px;
+}
+
+.weapon-breakthrough .star.final, .team-weapon-breakthrough .star.final {
+    background-position-y: -790px;
+}
+
+/* 武器稀有度样式 */
+.weapon-slot.common, .team-weapon-slot.common {
+    border-color: #9e9e9e;
+}
+
+.weapon-slot.uncommon, .team-weapon-slot.uncommon {
     border-color: #4caf50;
 }
 
-.rare {
+.weapon-slot.rare, .team-weapon-slot.rare {
     border-color: #2196f3;
 }
 
-.epic {
+.weapon-slot.epic, .team-weapon-slot.epic {
     border-color: #9c27b0;
 }
 
-.legendary {
+.weapon-slot.legendary, .team-weapon-slot.legendary {
     border-color: #ff9800;
-    box-shadow: 0 0 5px rgba(255, 152, 0, 0.5);
 }
 
-/* 属性样式 */
-.fire {
+/* 武器属性样式 */
+.weapon-attribute, .team-weapon-attribute {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    margin-right: 3px;
+}
+
+.weapon-attribute.fire, .team-weapon-attribute.fire {
     background-color: #f44336;
 }
 
-.water {
+.weapon-attribute.water, .team-weapon-attribute.water {
     background-color: #2196f3;
 }
 
-.earth {
+.weapon-attribute.earth, .team-weapon-attribute.earth {
     background-color: #795548;
 }
 
-.wind {
-    background-color: #8bc34a;
+.weapon-attribute.wind, .team-weapon-attribute.wind {
+    background-color: #4caf50;
 }
 
-.light {
+.weapon-attribute.light, .team-weapon-attribute.light {
     background-color: #ffeb3b;
 }
 
-.dark {
+.weapon-attribute.dark, .team-weapon-attribute.dark {
     background-color: #673ab7;
 }

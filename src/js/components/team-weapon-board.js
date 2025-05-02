@@ -108,8 +108,12 @@ const TeamWeaponBoard = {
                 return this.renderTeamWeaponBoard();
             }
 
-            // 打印武器盘属性统计
-            Weapon.printWeaponBoardStats(weaponBoardId);
+            // 打印武器盘属性统计并获取属性对象
+            const weaponBoardStats = Weapon.printWeaponBoardStats(weaponBoardId);
+            console.log('武器盘属性统计:', weaponBoardStats);
+
+            // 构建武器盘属性统计HTML
+            const statsHtml = this.renderWeaponBoardStats(weaponBoardStats);
 
             // 构建武器盘HTML
             let html = `
@@ -126,6 +130,10 @@ const TeamWeaponBoard = {
                             <!-- 9个副武器槽 -->
                             ${this.renderSubWeaponSlots(weaponBoard)}
                         </div>
+                    </div>
+                    <div class="team-weapon-board-stats">
+                        <h3>武器盘属性统计</h3>
+                        ${statsHtml}
                     </div>
                 </div>
             `;

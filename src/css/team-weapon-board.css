@@ -249,3 +249,61 @@
 .team-weapon-attribute.dark {
     background-color: #673ab7;
 }
+
+/* 武器盘属性统计样式 */
+.team-weapon-board-stats {
+    margin-top: 20px;
+    padding: 15px;
+    background-color: #f5f5f5;
+    border-radius: 5px;
+    border: 1px solid #ddd;
+}
+
+.team-weapon-board-stats h3 {
+    font-size: 16px;
+    font-weight: bold;
+    margin-bottom: 15px;
+    color: #333;
+    text-align: center;
+}
+
+.team-weapon-board-stats h4 {
+    font-size: 14px;
+    font-weight: bold;
+    margin: 10px 0;
+    color: #555;
+    border-bottom: 1px solid #ddd;
+    padding-bottom: 5px;
+}
+
+.weapon-board-base-stats,
+.weapon-board-element-stats {
+    margin-bottom: 15px;
+}
+
+.weapon-board-element-stats {
+    padding: 10px;
+    border-radius: 5px;
+    background-color: #fff;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.stat-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 5px 10px;
+    font-size: 12px;
+    color: #333;
+}
+
+.stat-row:nth-child(even) {
+    background-color: rgba(0,0,0,0.03);
+}
+
+.stat-label {
+    font-weight: 500;
+}
+
+.stat-value {
+    font-weight: bold;
+}

@@ -722,8 +722,8 @@ const Weapon = {
      */
     calculateWeaponBoardStats(boardId) {
         const board = this.getWeaponBoard(boardId);
-        if (!board) return { 
-            base: { attack: 0, hp: 0 }, 
+        if (!board) return {
+            base: { attack: 0, hp: 0 },
             elementStats: {
                 fire: { hp: 0, attack: 0, critRate: 0, daRate: 0, taRate: 0, exAttack: 0, defense: 0, stamina: 0, enmity: 0, na_cap: 0, skill_cap: 0, bonusDamage: 0 },
                 water: { hp: 0, attack: 0, critRate: 0, daRate: 0, taRate: 0, exAttack: 0, defense: 0, stamina: 0, enmity: 0, na_cap: 0, skill_cap: 0, bonusDamage: 0 },
@@ -771,7 +771,7 @@ const Weapon = {
                         if (skill && skill.levels) {
                             // 直接使用技能等级数据
                             const levelData = skill.levels[effect.level];
-                            
+
                             // 根据武器属性添加技能加成
                             const element = weapon.element.toLowerCase();
                             if (levelData.hp) {
@@ -1062,7 +1062,7 @@ const Weapon = {
 
         console.log('\n=== 武器盘技能详情 ===');
         console.log(`武器盘ID: ${boardId}`);
-        
+
         for (const slotType in board.slots) {
             const weaponId = board.slots[slotType];
             if (!weaponId) continue;
@@ -1074,7 +1074,7 @@ const Weapon = {
             console.log(`- 等级: ${weapon.level}`);
             console.log(`- 属性: ${weapon.element}`);
             console.log(`- 突破: ${weapon.breakthrough || 0}`);
-            
+
             if (weapon.specialEffects && weapon.specialEffects.length > 0) {
                 console.log('- 技能:');
                 weapon.specialEffects.forEach(effect => {
@@ -1107,20 +1107,21 @@ const Weapon = {
     },
 
     /**
-     * 打印武器盘属性
+     * 打印武器盘属性并返回属性对象
      * @param {string} boardId - 武器盘ID
+     * @returns {object} 武器盘属性对象，包含base和elementStats
      */
     printWeaponBoardStats(boardId) {
         // 先打印技能详情
         this.printWeaponBoardSkills(boardId);
-        
+
         const stats = this.calculateWeaponBoardStats(boardId);
-        
+
         console.log('\n=== 武器盘属性统计 ===');
         console.log('基础属性:');
         console.log(`- 总攻击力: ${stats.base.attack}`);
         console.log(`- 总生命值: ${stats.base.hp}`);
-        
+
         console.log('\n属性加成:');
         const elements = ['fire', 'water', 'earth', 'wind', 'light', 'dark'];
         const elementNames = {
@@ -1131,12 +1132,12 @@ const Weapon = {
             light: '光',
             dark: '暗'
         };
-        
+
         elements.forEach(element => {
             const elementStats = stats.elementStats[element];
-            if (elementStats.hp > 0 || elementStats.attack > 0 || elementStats.critRate > 0 || 
-                elementStats.daRate > 0 || elementStats.taRate > 0 || elementStats.exAttack > 0 || 
-                elementStats.defense > 0 || elementStats.stamina > 0 || elementStats.enmity > 0 || 
+            if (elementStats.hp > 0 || elementStats.attack > 0 || elementStats.critRate > 0 ||
+                elementStats.daRate > 0 || elementStats.taRate > 0 || elementStats.exAttack > 0 ||
+                elementStats.defense > 0 || elementStats.stamina > 0 || elementStats.enmity > 0 ||
                 elementStats.na_cap > 0 || elementStats.skill_cap > 0 || elementStats.bonusDamage > 0) {
                 console.log(`\n${elementNames[element]}属性加成:`);
                 if (elementStats.hp > 0) {
@@ -1177,5 +1178,8 @@ const Weapon = {
                 }
             }
         });
+
+        // 返回武器盘属性对象，以便在UI中使用
+        return stats;
     }
 };

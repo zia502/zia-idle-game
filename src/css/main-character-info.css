@@ -1,0 +1,182 @@
+/* 主角信息样式 */
+.main-character-info {
+    background-color: #f9f9f9;
+    border: 2px solid #ddd;
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.info-header {
+    margin-bottom: 15px;
+    border-bottom: 1px solid #ddd;
+    padding-bottom: 10px;
+}
+
+.info-header h2 {
+    margin: 0;
+    font-size: 18px;
+    color: #333;
+}
+
+.character-job {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.job-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.job-name {
+    font-weight: bold;
+    color: #333;
+}
+
+.job-level {
+    color: #666;
+    font-size: 0.9em;
+}
+
+.element-badge {
+    padding: 3px 8px;
+    border-radius: 4px;
+    color: white;
+    font-size: 0.8em;
+}
+
+.allowed-weapons {
+    display: flex;
+    gap: 5px;
+}
+
+.allowed-weapons img {
+    width: 24px;
+    height: 24px;
+}
+
+.info-stats {
+    margin-bottom: 15px;
+    background-color: #f0f0f0;
+    padding: 10px;
+    border-radius: 5px;
+}
+
+.stat-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 5px 0;
+}
+
+.stat-label {
+    color: #666;
+}
+
+.stat-value {
+    font-weight: bold;
+    color: #333;
+}
+
+/* 武器盘加成样式 */
+.weapon-board-bonus {
+    margin-bottom: 15px;
+    background-color: #f0f0f0;
+    padding: 10px;
+    border-radius: 5px;
+}
+
+.weapon-board-bonus h3 {
+    margin-top: 0;
+    margin-bottom: 10px;
+    font-size: 16px;
+    color: #333;
+    border-bottom: 1px solid #ddd;
+    padding-bottom: 5px;
+}
+
+.weapon-board-bonus h4 {
+    margin: 10px 0 5px;
+    font-size: 14px;
+    color: #555;
+}
+
+.weapon-board-base-stats {
+    margin-bottom: 10px;
+}
+
+.weapon-board-element-stats {
+    background-color: #fff;
+    border-radius: 5px;
+    padding: 10px;
+    margin-bottom: 10px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.weapon-board-bonus .stat-row {
+    padding: 3px 0;
+}
+
+.weapon-board-bonus .stat-label {
+    color: #666;
+}
+
+.weapon-board-bonus .stat-value {
+    color: #007700;
+    font-weight: bold;
+}
+
+/* 预期伤害样式 */
+.expected-damage {
+    margin-bottom: 15px;
+    background-color: #f0f0f0;
+    padding: 10px;
+    border-radius: 5px;
+}
+
+.expected-damage h3 {
+    margin-top: 0;
+    margin-bottom: 10px;
+    font-size: 16px;
+    color: #333;
+    border-bottom: 1px solid #ddd;
+    padding-bottom: 5px;
+}
+
+.expected-damage .stat-value {
+    color: #cc0000;
+    font-weight: bold;
+}
+
+/* 角色操作按钮 */
+.character-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 15px;
+}
+
+.character-actions button {
+    padding: 5px 15px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.character-actions button:hover {
+    background-color: #45a049;
+}
+
+.character-actions .job-button {
+    background-color: #2196F3;
+}
+
+.character-actions .job-button:hover {
+    background-color: #0b7dda;
+}

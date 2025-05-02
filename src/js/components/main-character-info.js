@@ -57,20 +57,45 @@ class MainCharacterInfo {
         }
 
         // 获取武器盘属性加成
-        let weaponBoardStats = { elementStats: {} };
+        let weaponBoardStats = { base: { attack: 0, hp: 0 }, elementStats: {} };
         try {
-            if (typeof Weapon !== 'undefined' && typeof Weapon.calculateWeaponBoardStats === 'function' && character.weaponBoardId) {
-                weaponBoardStats = Weapon.calculateWeaponBoardStats(character.weaponBoardId);
+            // 主角没有直接的 weaponBoardId，需要通过当前队伍获取
+            let weaponBoardId = null;
+
+            // 获取当前队伍
+            if (typeof Game !== 'undefined' && Game.state && Game.state.activeTeamId) {
+                const teamId = Game.state.activeTeamId;
+                const team = typeof Team !== 'undefined' ? Team.getTeam(teamId) : null;
+
+                if (team && team.weaponBoardId) {
+                    weaponBoardId = team.weaponBoardId;
+                    console.log(`找到主角队伍的武器盘ID: ${weaponBoardId}`);
+                }
+            }
+
+            if (typeof Weapon !== 'undefined' && weaponBoardId) {
+                // 直接使用 printWeaponBoardStats 方法获取武器盘属性
+                if (typeof Weapon.printWeaponBoardStats === 'function') {
+                    // printWeaponBoardStats 会在控制台打印详细信息，并返回属性对象
+                    weaponBoardStats = Weapon.printWeaponBoardStats(weaponBoardId);
+                    console.log('成功获取武器盘属性:', weaponBoardStats);
+                }
+                // 如果 printWeaponBoardStats 不可用，则使用 calculateWeaponBoardStats
+                else if (typeof Weapon.calculateWeaponBoardStats === 'function') {
+                    weaponBoardStats = Weapon.calculateWeaponBoardStats(weaponBoardId);
+                    console.log('成功计算武器盘属性:', weaponBoardStats);
+                }
             } else {
                 console.log('无法获取武器盘属性加成，使用默认值');
                 weaponBoardStats = {
+                    base: { attack: 0, hp: 0 },
                     elementStats: {
-                        fire: { attack: 0, hp: 0, critRate: 0, daRate: 0, taRate: 0, exAttack: 0, defense: 0, stamina: 0, enmity: 0 },
-                        water: { attack: 0, hp: 0, critRate: 0, daRate: 0, taRate: 0, exAttack: 0, defense: 0, stamina: 0, enmity: 0 },
-                        earth: { attack: 0, hp: 0, critRate: 0, daRate: 0, taRate: 0, exAttack: 0, defense: 0, stamina: 0, enmity: 0 },
-                        wind: { attack: 0, hp: 0, critRate: 0, daRate: 0, taRate: 0, exAttack: 0, defense: 0, stamina: 0, enmity: 0 },
-                        light: { attack: 0, hp: 0, critRate: 0, daRate: 0, taRate: 0, exAttack: 0, defense: 0, stamina: 0, enmity: 0 },
-                        dark: { attack: 0, hp: 0, critRate: 0, daRate: 0, taRate: 0, exAttack: 0, defense: 0, stamina: 0, enmity: 0 }
+                        fire: { attack: 0, hp: 0, critRate: 0, daRate: 0, taRate: 0, exAttack: 0, defense: 0, stamina: 0, enmity: 0, na_cap: 0, skill_cap: 0, bonusDamage: 0 },
+                        water: { attack: 0, hp: 0, critRate: 0, daRate: 0, taRate: 0, exAttack: 0, defense: 0, stamina: 0, enmity: 0, na_cap: 0, skill_cap: 0, bonusDamage: 0 },
+                        earth: { attack: 0, hp: 0, critRate: 0, daRate: 0, taRate: 0, exAttack: 0, defense: 0, stamina: 0, enmity: 0, na_cap: 0, skill_cap: 0, bonusDamage: 0 },
+                        wind: { attack: 0, hp: 0, critRate: 0, daRate: 0, taRate: 0, exAttack: 0, defense: 0, stamina: 0, enmity: 0, na_cap: 0, skill_cap: 0, bonusDamage: 0 },
+                        light: { attack: 0, hp: 0, critRate: 0, daRate: 0, taRate: 0, exAttack: 0, defense: 0, stamina: 0, enmity: 0, na_cap: 0, skill_cap: 0, bonusDamage: 0 },
+                        dark: { attack: 0, hp: 0, critRate: 0, daRate: 0, taRate: 0, exAttack: 0, defense: 0, stamina: 0, enmity: 0, na_cap: 0, skill_cap: 0, bonusDamage: 0 }
                     }
                 };
             }
@@ -78,19 +103,26 @@ class MainCharacterInfo {
             console.error('获取武器盘属性加成时出错:', error);
         }
 
+        // 获取当前元素的属性加成
         const elementStats = weaponBoardStats.elementStats[element] || {
-            attack: 0, hp: 0, critRate: 0, daRate: 0, taRate: 0, exAttack: 0, defense: 0, stamina: 0, enmity: 0
+            attack: 0, hp: 0, critRate: 0, daRate: 0, taRate: 0, exAttack: 0, defense: 0,
+            stamina: 0, enmity: 0, na_cap: 0, skill_cap: 0, bonusDamage: 0
         };
 
+        // 调试信息
+        console.log(`当前元素: ${element}`);
+        console.log('武器盘基础属性:', weaponBoardStats.base);
+        console.log(`${element}元素属性加成:`, elementStats);
+
         // 计算预期伤害
-        const baseAttack = character.attack;
+        const baseAttack = character.attack || 0;
         const elementMultiplier = 1.5; // 克制属性倍率
         const expectedDamage = Math.floor(baseAttack * elementMultiplier);
 
         return `
             <div class="main-character-info" style="border-color: ${elementColor}">
                 <div class="info-header">
-                    <h2>${character.name}</h2>
+                    <h2>${character.name || '未知角色'}</h2>
                 </div>
 
                 <div class="character-job">
@@ -113,21 +145,34 @@ class MainCharacterInfo {
                 <div class="info-stats">
                     <div class="stat-row">
                         <span class="stat-label">等级</span>
-                        <span class="stat-value">${character.level}</span>
+                        <span class="stat-value">${character.level || 1}</span>
                     </div>
                     <div class="stat-row">
                         <span class="stat-label">攻击力</span>
-                        <span class="stat-value">${character.attack}</span>
+                        <span class="stat-value">${character.attack || 0}</span>
                     </div>
                     <div class="stat-row">
                         <span class="stat-label">生命值</span>
-                        <span class="stat-value">${character.hp}</span>
+                        <span class="stat-value">${character.hp || 0}</span>
                     </div>
                 </div>
 
                 <div class="weapon-board-bonus">
                     <h3>武器盘加成</h3>
-                    <div class="bonus-stats">
+                    <div class="weapon-board-base-stats">
+                        <h4>基础属性</h4>
+                        <div class="stat-row">
+                            <span class="stat-label">总攻击力</span>
+                            <span class="stat-value">${weaponBoardStats.base.attack}</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">总生命值</span>
+                            <span class="stat-value">${weaponBoardStats.base.hp}</span>
+                        </div>
+                    </div>
+
+                    <div class="weapon-board-element-stats">
+                        <h4>${elementName}属性加成</h4>
                         ${elementStats.attack > 0 ? `
                             <div class="stat-row">
                                 <span class="stat-label">攻击力提升</span>
@@ -180,6 +225,24 @@ class MainCharacterInfo {
                             <div class="stat-row">
                                 <span class="stat-label">背水值提升</span>
                                 <span class="stat-value">+${elementStats.enmity}%</span>
+                            </div>
+                        ` : ''}
+                        ${elementStats.na_cap > 0 ? `
+                            <div class="stat-row">
+                                <span class="stat-label">技能伤害上限提升</span>
+                                <span class="stat-value">+${elementStats.na_cap}%</span>
+                            </div>
+                        ` : ''}
+                        ${elementStats.skill_cap > 0 ? `
+                            <div class="stat-row">
+                                <span class="stat-label">伤害上限提升</span>
+                                <span class="stat-value">+${elementStats.skill_cap}%</span>
+                            </div>
+                        ` : ''}
+                        ${elementStats.bonusDamage > 0 ? `
+                            <div class="stat-row">
+                                <span class="stat-label">额外伤害</span>
+                                <span class="stat-value">${elementStats.bonusDamage}</span>
                             </div>
                         ` : ''}
                     </div>

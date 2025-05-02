@@ -120,13 +120,48 @@ class MainCharacterInfo {
         console.log('武器盘基础属性:', weaponBoardStats.base);
         console.log(`${element}元素属性加成:`, elementStats);
 
-        // 计算预期伤害
-        const baseAttack = character.baseStats?.attack || character.currentStats?.attack || 0;
+        // 获取包含武器盘加成的完整属性值
+        let fullStats = { ...character.currentStats };
+        let totalAttack = character.currentStats?.attack || 0;
+        let totalHp = character.currentStats?.hp || 0;
+
+        // 尝试使用 Character.getCharacterFullStats 获取完整属性
+        try {
+            if (typeof Character !== 'undefined' && typeof Character.getCharacterFullStats === 'function' && Game.state.activeTeamId) {
+                const teamId = Game.state.activeTeamId;
+                const completeStats = Character.getCharacterFullStats(character.id, teamId);
+
+                if (completeStats) {
+                    console.log('获取到完整属性:', completeStats);
+                    fullStats = completeStats;
+                    totalAttack = completeStats.attack || totalAttack;
+                    totalHp = completeStats.hp || totalHp;
+                }
+            } else {
+                // 如果无法使用 getCharacterFullStats，则手动添加武器盘加成
+                totalAttack = (character.currentStats?.attack || 0) + weaponBoardStats.base.attack;
+                totalHp = (character.currentStats?.hp || 0) + weaponBoardStats.base.hp;
+            }
+        } catch (error) {
+            console.error('获取完整属性时出错:', error);
+            // 出错时使用手动计算的值
+            totalAttack = (character.currentStats?.attack || 0) + weaponBoardStats.base.attack;
+            totalHp = (character.currentStats?.hp || 0) + weaponBoardStats.base.hp;
+        }
+
+        console.log('角色基础攻击力:', character.currentStats?.attack);
+        console.log('武器盘攻击力加成:', weaponBoardStats.base.attack);
+        console.log('总攻击力:', totalAttack);
+        console.log('角色基础生命值:', character.currentStats?.hp);
+        console.log('武器盘生命值加成:', weaponBoardStats.base.hp);
+        console.log('总生命值:', totalHp);
+
+        // 计算预期伤害 (使用包含武器盘加成的总攻击力)
         const elementMultiplier = 1.5; // 克制属性倍率
-        const expectedDamage = Math.floor(baseAttack * elementMultiplier);
+        const expectedDamage = Math.floor(totalAttack * elementMultiplier);
 
         // 调试信息：输出攻击力和预期伤害
-        console.log('基础攻击力:', baseAttack);
+        console.log('总攻击力:', totalAttack);
         console.log('预期伤害:', expectedDamage);
 
         return `
@@ -159,11 +194,11 @@ class MainCharacterInfo {
                     </div>
                     <div class="stat-row">
                         <span class="stat-label">攻击力</span>
-                        <span class="stat-value">${character.currentStats?.attack }</span>
+                        <span class="stat-value">${totalAttack}</span>
                     </div>
                     <div class="stat-row">
                         <span class="stat-label">生命值</span>
-                        <span class="stat-value">${character.currentStats?.hp }</span>
+                        <span class="stat-value">${totalHp}</span>
                     </div>
                 </div>
 

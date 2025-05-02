@@ -121,7 +121,6 @@ class MainCharacterInfo {
         console.log(`${element}元素属性加成:`, elementStats);
 
         // 获取包含武器盘加成的完整属性值
-        let fullStats = { ...character.currentStats };
         let totalAttack = character.currentStats?.attack || 0;
         let totalHp = character.currentStats?.hp || 0;
 
@@ -133,7 +132,6 @@ class MainCharacterInfo {
 
                 if (completeStats) {
                     console.log('获取到完整属性:', completeStats);
-                    fullStats = completeStats;
                     totalAttack = completeStats.attack || totalAttack;
                     totalHp = completeStats.hp || totalHp;
                 }
@@ -158,10 +156,51 @@ class MainCharacterInfo {
 
         // 计算预期伤害 (使用包含武器盘加成的总攻击力)
         const elementMultiplier = 1.5; // 克制属性倍率
-        const expectedDamage = Math.floor(totalAttack * elementMultiplier);
+
+        // 计算暴击倍率 - 只有当暴击率=100%时才使用1.5倍伤害
+        // 检查角色的暴击率，如果没有明确设置，则假设不是100%
+        const hasCritical = elementStats.critRate >= 100; // 只有当暴击率达到100%时才计算暴击
+        const critMultiplier = hasCritical ? 1.5 : 1.0;
+
+        // 计算攻击力提升百分比效果
+        const attackPercentBonus = elementStats.attack / 100 || 0;
+
+        // 计算EX攻击力提升百分比效果
+        const exAttackBonus = elementStats.exAttack / 100 || 0;
+
+        // 计算浑身提升效果
+        // 浑身提升效果 = (100 / (56 - (浑身数值 + (0.4))))^2.9 + 2.1
+        let staminaBonus = 0;
+        if (elementStats.stamina > 0) {
+            const staminaCoefficient = elementStats.stamina + 0.4;
+            const staminaBase = 56 - staminaCoefficient;
+            if (staminaBase > 0) { // 防止除以零或负数
+                staminaBonus = Math.pow(100 / staminaBase, 2.9) + 2.1;
+                staminaBonus = staminaBonus / 100; // 转换为小数
+            }
+        }
+
+        // 计算最终预期伤害
+        // 预期伤害 = 总攻击力 * 1.5(克属) * (1+ 攻击力提升%) * (1.5 如果暴击100%) * (1+EX攻击力提升%) * (1+浑身提升效果%)
+        const expectedDamage = Math.floor(
+            totalAttack *
+            elementMultiplier *
+            (1 + attackPercentBonus) *
+            critMultiplier *
+            (1 + exAttackBonus) *
+            (1 + staminaBonus)
+        );
 
         // 调试信息：输出攻击力和预期伤害
         console.log('总攻击力:', totalAttack);
+        console.log('元素克制倍率:', elementMultiplier);
+        console.log('攻击力提升百分比:', attackPercentBonus);
+        console.log('暴击率:', elementStats.critRate, '%');
+        console.log('暴击率是否达到100%:', hasCritical);
+        console.log('暴击倍率:', critMultiplier);
+        console.log('EX攻击力提升:', exAttackBonus);
+        console.log('浑身值:', elementStats.stamina);
+        console.log('浑身提升效果:', staminaBonus);
         console.log('预期伤害:', expectedDamage);
 
         return `

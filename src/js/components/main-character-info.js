@@ -155,15 +155,15 @@ class MainCharacterInfo {
                 <div class="info-stats">
                     <div class="stat-row">
                         <span class="stat-label">等级</span>
-                        <span class="stat-value">${character.level || 1}</span>
+                        <span class="stat-value">${character.level}</span>
                     </div>
                     <div class="stat-row">
                         <span class="stat-label">攻击力</span>
-                        <span class="stat-value">${character.baseStats?.attack || character.currentStats?.attack || 0}</span>
+                        <span class="stat-value">${character.currentStats?.attack }</span>
                     </div>
                     <div class="stat-row">
                         <span class="stat-label">生命值</span>
-                        <span class="stat-value">${character.baseStats?.hp || character.currentStats?.hp || 0}</span>
+                        <span class="stat-value">${character.currentStats?.hp }</span>
                     </div>
                 </div>
 

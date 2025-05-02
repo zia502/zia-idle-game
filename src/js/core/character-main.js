@@ -33,8 +33,12 @@ Character.createMainCharacter = function(data) {
             defense: 5,
             speed: 5
         },
+        // 当前属性初始化为与基础属性相同
         currentStats: {
-            hp: 100
+            hp: 100,
+            attack: 10,
+            defense: 5,
+            speed: 5
         },
         // 装备
         equipment: {
@@ -56,6 +60,11 @@ Character.createMainCharacter = function(data) {
                     ...characterData.baseStats,
                     ...jobInfo.baseStats
                 };
+                // 完全复制基础属性到当前属性
+                characterData.currentStats = { ...characterData.baseStats };
+                // 强制确保 currentStats 与 baseStats 一致
+                characterData.currentStats.attack = characterData.baseStats.attack;
+                characterData.currentStats.defense = characterData.baseStats.defense;
                 characterData.currentStats.hp = characterData.baseStats.hp;
             }
 

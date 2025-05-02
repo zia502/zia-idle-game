@@ -514,8 +514,17 @@ const JobSystem = {
                 ...newJob.baseStats
             };
 
-            // 更新当前生命值
+            // 完全复制基础属性到当前属性
+            character.currentStats = { ...character.baseStats };
+
+            // 更新当前生命值（保持原有的生命值比例）
             character.currentStats.hp = Math.floor(character.baseStats.hp * hpRatio);
+
+
+            // 强制确保 currentStats 与 baseStats 一致（除了 hp）
+            character.currentStats.attack = character.baseStats.attack;
+            character.currentStats.defense = character.baseStats.defense;
+
         }
 
         // 更新技能

@@ -314,8 +314,20 @@ const Character = {
             // 更新属性 - 根据需求，只有HP和攻击力会随等级提升
             character.baseStats.hp += character.growthRates.hp;
             character.baseStats.attack += character.growthRates.attack;
-            character.currentStats.hp = character.baseStats.hp;
-            character.currentStats.attack = character.baseStats.attack;
+
+            // 确保 currentStats 包含所有 baseStats 的属性
+            if (!character.currentStats) {
+                character.currentStats = { ...character.baseStats };
+            } else {
+                // 更新当前属性
+                character.currentStats.hp = character.baseStats.hp;
+                character.currentStats.attack = character.baseStats.attack;
+                character.currentStats.defense = character.baseStats.defense;
+                character.currentStats.speed = character.baseStats.speed;
+            }
+
+            console.log('升级后的基础属性:', character.baseStats);
+            console.log('升级后的当前属性:', character.currentStats);
 
             // 检查是否解锁新特性
             if (!character.isMainCharacter) { // 非主角的特性解锁机制

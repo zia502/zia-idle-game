@@ -170,10 +170,8 @@ const MainUI = {
             }
 
             // 获取主角属性（确保属性存在，否则使用默认值）
-            const maxHp = mainCharacter.maxHp || mainCharacter.hp || 100;
-            const attack = mainCharacter.attack || 10;
-            const defense = mainCharacter.defense || 5;
-            const speed = mainCharacter.speed || 5;
+            const maxHp = mainCharacter.currentStats.hp ;
+            const attack = mainCharacter.currentStats.attack ;
 
             // 获取主角元素属性（默认为火属性）
             const elementAttribute = mainCharacter.attribute || 'fire';
@@ -205,14 +203,6 @@ const MainUI = {
                     <div class="stat-item">
                         <span class="stat-name">攻击力</span>
                         <span class="stat-value">${attack}</span>
-                    </div>
-                    <div class="stat-item">
-                        <span class="stat-name">防御力</span>
-                        <span class="stat-value">${defense}</span>
-                    </div>
-                    <div class="stat-item">
-                        <span class="stat-name">速度</span>
-                        <span class="stat-value">${speed}</span>
                     </div>
                 </div>
             `;

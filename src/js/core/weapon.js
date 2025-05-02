@@ -864,12 +864,12 @@ const Weapon = {
         if (!board) return { 
             base: { attack: 0, hp: 0 }, 
             elementStats: {
-                fire: { hp: 0, attack: 0, critRate: 0 },
-                water: { hp: 0, attack: 0, critRate: 0 },
-                earth: { hp: 0, attack: 0, critRate: 0 },
-                wind: { hp: 0, attack: 0, critRate: 0 },
-                light: { hp: 0, attack: 0, critRate: 0 },
-                dark: { hp: 0, attack: 0, critRate: 0 }
+                fire: { hp: 0, attack: 0, critRate: 0, daRate: 0, taRate: 0, exAttack: 0, defense: 0, stamina: 0, enmity: 0, na_cap: 0, skill_cap: 0, bonusDamage: 0 },
+                water: { hp: 0, attack: 0, critRate: 0, daRate: 0, taRate: 0, exAttack: 0, defense: 0, stamina: 0, enmity: 0, na_cap: 0, skill_cap: 0, bonusDamage: 0 },
+                earth: { hp: 0, attack: 0, critRate: 0, daRate: 0, taRate: 0, exAttack: 0, defense: 0, stamina: 0, enmity: 0, na_cap: 0, skill_cap: 0, bonusDamage: 0 },
+                wind: { hp: 0, attack: 0, critRate: 0, daRate: 0, taRate: 0, exAttack: 0, defense: 0, stamina: 0, enmity: 0, na_cap: 0, skill_cap: 0, bonusDamage: 0 },
+                light: { hp: 0, attack: 0, critRate: 0, daRate: 0, taRate: 0, exAttack: 0, defense: 0, stamina: 0, enmity: 0, na_cap: 0, skill_cap: 0, bonusDamage: 0 },
+                dark: { hp: 0, attack: 0, critRate: 0, daRate: 0, taRate: 0, exAttack: 0, defense: 0, stamina: 0, enmity: 0, na_cap: 0, skill_cap: 0, bonusDamage: 0 }
             }
         };
 
@@ -877,12 +877,12 @@ const Weapon = {
         const result = {
             base: { attack: 0, hp: 0 },
             elementStats: {
-                fire: { hp: 0, attack: 0, critRate: 0 },
-                water: { hp: 0, attack: 0, critRate: 0 },
-                earth: { hp: 0, attack: 0, critRate: 0 },
-                wind: { hp: 0, attack: 0, critRate: 0 },
-                light: { hp: 0, attack: 0, critRate: 0 },
-                dark: { hp: 0, attack: 0, critRate: 0 }
+                fire: { hp: 0, attack: 0, critRate: 0, daRate: 0, taRate: 0, exAttack: 0, defense: 0, stamina: 0, enmity: 0, na_cap: 0, skill_cap: 0, bonusDamage: 0 },
+                water: { hp: 0, attack: 0, critRate: 0, daRate: 0, taRate: 0, exAttack: 0, defense: 0, stamina: 0, enmity: 0, na_cap: 0, skill_cap: 0, bonusDamage: 0 },
+                earth: { hp: 0, attack: 0, critRate: 0, daRate: 0, taRate: 0, exAttack: 0, defense: 0, stamina: 0, enmity: 0, na_cap: 0, skill_cap: 0, bonusDamage: 0 },
+                wind: { hp: 0, attack: 0, critRate: 0, daRate: 0, taRate: 0, exAttack: 0, defense: 0, stamina: 0, enmity: 0, na_cap: 0, skill_cap: 0, bonusDamage: 0 },
+                light: { hp: 0, attack: 0, critRate: 0, daRate: 0, taRate: 0, exAttack: 0, defense: 0, stamina: 0, enmity: 0, na_cap: 0, skill_cap: 0, bonusDamage: 0 },
+                dark: { hp: 0, attack: 0, critRate: 0, daRate: 0, taRate: 0, exAttack: 0, defense: 0, stamina: 0, enmity: 0, na_cap: 0, skill_cap: 0, bonusDamage: 0 }
             }
         };
 
@@ -907,7 +907,7 @@ const Weapon = {
                     // 检查技能是否已解锁
                     if (weapon.level >= effect.unlock) {
                         const skill = this.skills[effect.type];
-                        if (skill && skill.effect) {
+                        if (skill && skill.levels) {
                             // 直接使用技能等级数据
                             const levelData = skill.levels[effect.level];
                             
@@ -1234,8 +1234,22 @@ const Weapon = {
                     const isUnlocked = weapon.level >= effect.unlock;
                     console.log(`  * ${skill.name} Lv.${effect.level} ${isUnlocked ? '(已解锁)' : `(需要${effect.unlock}级)`}`);
                     if (isUnlocked) {
-                        const skillEffect = skill.effect({}, effect.level);
-                        console.log(`    效果:`, skillEffect);
+                        const levelData = skill.levels[effect.level];
+                        const effectStats = {
+                            attack: levelData.attack || 0,
+                            hp: levelData.hp || 0,
+                            critRate: levelData.critRate || 0,
+                            daRate: levelData.daRate || 0,
+                            taRate: levelData.taRate || 0,
+                            exAttack: levelData.exAttack || 0,
+                            defense: levelData.defense || 0,
+                            stamina: levelData.stamina || 0,
+                            enmity: levelData.enmity || 0,
+                            na_cap: levelData.na_cap || 0,
+                            skill_cap: levelData.skill_cap || 0,
+                            bonus: levelData.bonus || 0
+                        };
+                        console.log(`    效果:`, effectStats);
                     }
                 });
             } else {

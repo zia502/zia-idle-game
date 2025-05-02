@@ -1286,7 +1286,10 @@ const Weapon = {
         
         elements.forEach(element => {
             const elementStats = stats.elementStats[element];
-            if (elementStats.hp > 0 || elementStats.attack > 0 || elementStats.critRate > 0) {
+            if (elementStats.hp > 0 || elementStats.attack > 0 || elementStats.critRate > 0 || 
+                elementStats.daRate > 0 || elementStats.taRate > 0 || elementStats.exAttack > 0 || 
+                elementStats.defense > 0 || elementStats.stamina > 0 || elementStats.enmity > 0 || 
+                elementStats.na_cap > 0 || elementStats.skill_cap > 0 || elementStats.bonusDamage > 0) {
                 console.log(`\n${elementNames[element]}属性加成:`);
                 if (elementStats.hp > 0) {
                     console.log(`- HP提升: ${elementStats.hp}%`);
@@ -1296,6 +1299,33 @@ const Weapon = {
                 }
                 if (elementStats.critRate > 0) {
                     console.log(`- 暴击率提升: ${elementStats.critRate}%`);
+                }
+                if (elementStats.daRate > 0) {
+                    console.log(`- DA率提升: ${elementStats.daRate}%`);
+                }
+                if (elementStats.taRate > 0) {
+                    console.log(`- TA率提升: ${elementStats.taRate}%`);
+                }
+                if (elementStats.exAttack > 0) {
+                    console.log(`- EX攻击力提升: ${elementStats.exAttack}%`);
+                }
+                if (elementStats.defense > 0) {
+                    console.log(`- 防御力提升: ${elementStats.defense}%`);
+                }
+                if (elementStats.stamina > 0) {
+                    console.log(`- 浑身值提升: ${elementStats.stamina}%`);
+                }
+                if (elementStats.enmity > 0) {
+                    console.log(`- 背水值提升: ${elementStats.enmity}%`);
+                }
+                if (elementStats.na_cap > 0) {
+                    console.log(`- 技能伤害上限提升: ${elementStats.na_cap}%`);
+                }
+                if (elementStats.skill_cap > 0) {
+                    console.log(`- 伤害上限提升: ${elementStats.skill_cap}%`);
+                }
+                if (elementStats.bonusDamage > 0) {
+                    console.log(`- 额外伤害: ${elementStats.bonusDamage}`);
                 }
             }
         });

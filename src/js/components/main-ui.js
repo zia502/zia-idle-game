@@ -169,9 +169,53 @@ const MainUI = {
                 }
             }
 
-            // 获取主角属性（确保属性存在，否则使用默认值）
-            const maxHp = mainCharacter.currentStats.hp ;
-            const attack = mainCharacter.currentStats.attack ;
+            // 获取主角属性（包含武器盘加成）
+            let maxHp = mainCharacter.currentStats.hp;
+            let attack = mainCharacter.currentStats.attack;
+
+            // 尝试获取包含武器盘加成的完整属性
+            try {
+                console.log('1');
+                // 尝试手动添加武器盘加成作为备用方案
+                if (typeof Game !== 'undefined' && Game.state && Game.state.activeTeamId) {
+                    const teamId = Game.state.activeTeamId;
+                    const team = typeof Team !== 'undefined' && typeof Team.getTeam === 'function' ? Team.getTeam(teamId) : null;
+
+                    if (team && team.weaponBoardId && typeof Weapon !== 'undefined' && typeof Weapon.calculateWeaponBoardStats === 'function') {
+                        const weaponBoardStats = Weapon.calculateWeaponBoardStats(team.weaponBoardId);
+                        if (weaponBoardStats && weaponBoardStats.base) {
+                            attack += weaponBoardStats.base.attack || 0;
+                            maxHp += weaponBoardStats.base.hp || 0;
+                            console.log('手动添加武器盘加成:', weaponBoardStats.base);
+                        }
+                    }
+                }
+
+                console.log('2');
+                // // 然后尝试使用getCharacterFullStats方法获取更准确的值
+                // if (typeof Character !== 'undefined' && typeof Character.getCharacterFullStats === 'function' &&
+                //     typeof Game !== 'undefined' && Game.state && Game.state.activeTeamId &&
+                //     mainCharacter && mainCharacter.id) {
+
+                //     const teamId = Game.state.activeTeamId;
+
+                //     // 确保所有必要的对象都存在
+                //     if (typeof Team !== 'undefined' && typeof Team.getTeam === 'function' && Team.getTeam(teamId) &&
+                //         typeof Weapon !== 'undefined' && typeof Weapon.getWeaponBoard === 'function') {
+
+                //         const completeStats = Character.getCharacterFullStats(mainCharacter.id, teamId);
+
+                //         if (completeStats) {
+                //             console.log('获取到主角完整属性:', completeStats);
+                //             attack = completeStats.attack || attack;
+                //             maxHp = completeStats.hp || maxHp;
+                //         }
+                //     }
+                // }
+            } catch (error) {
+                console.error('获取主角完整属性时出错:', error);
+                // 已经尝试了手动添加武器盘加成，所以这里不需要再次处理
+            }
 
             // 获取主角元素属性（默认为火属性）
             const elementAttribute = mainCharacter.attribute || 'fire';

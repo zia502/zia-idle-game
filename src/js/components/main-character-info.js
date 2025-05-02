@@ -126,32 +126,40 @@ class MainCharacterInfo {
 
         // 尝试使用 Character.getCharacterFullStats 获取完整属性
         try {
-            if (typeof Character !== 'undefined' && typeof Character.getCharacterFullStats === 'function' && Game.state.activeTeamId) {
-                const teamId = Game.state.activeTeamId;
-                const completeStats = Character.getCharacterFullStats(character.id, teamId);
+            // 首先使用手动计算的方式作为备用值
+            totalAttack = (character.currentStats?.attack || 0) + (weaponBoardStats.base?.attack || 0);
+            totalHp = (character.currentStats?.hp || 0) + (weaponBoardStats.base?.hp || 0);
 
-                if (completeStats) {
-                    console.log('获取到完整属性:', completeStats);
-                    totalAttack = completeStats.attack || totalAttack;
-                    totalHp = completeStats.hp || totalHp;
-                }
-            } else {
-                // 如果无法使用 getCharacterFullStats，则手动添加武器盘加成
-                totalAttack = (character.currentStats?.attack || 0) + weaponBoardStats.base.attack;
-                totalHp = (character.currentStats?.hp || 0) + weaponBoardStats.base.hp;
-            }
+            // // 然后尝试使用getCharacterFullStats方法获取更准确的值
+            // if (typeof Character !== 'undefined' && typeof Character.getCharacterFullStats === 'function' &&
+            //     typeof Game !== 'undefined' && Game.state && Game.state.activeTeamId) {
+
+            //     const teamId = Game.state.activeTeamId;
+
+            //     // 确保所有必要的对象都存在
+            //     if (character && character.id && teamId &&
+            //         typeof Team !== 'undefined' && Team.getTeam && Team.getTeam(teamId) &&
+            //         typeof Weapon !== 'undefined' && Weapon.getWeaponBoard) {
+
+            //         const completeStats = Character.getCharacterFullStats(character.id, teamId);
+
+            //         if (completeStats) {
+            //             console.log('获取到完整属性:', completeStats);
+            //             totalAttack = completeStats.attack || totalAttack;
+            //             totalHp = completeStats.hp || totalHp;
+            //         }
+            //     }
+            // }
         } catch (error) {
             console.error('获取完整属性时出错:', error);
-            // 出错时使用手动计算的值
-            totalAttack = (character.currentStats?.attack || 0) + weaponBoardStats.base.attack;
-            totalHp = (character.currentStats?.hp || 0) + weaponBoardStats.base.hp;
+            // 已经在try块开始时设置了备用值，所以这里不需要再次设置
         }
 
         console.log('角色基础攻击力:', character.currentStats?.attack);
-        console.log('武器盘攻击力加成:', weaponBoardStats.base.attack);
+        console.log('武器盘攻击力加成:', weaponBoardStats.base?.attack || 0);
         console.log('总攻击力:', totalAttack);
         console.log('角色基础生命值:', character.currentStats?.hp);
-        console.log('武器盘生命值加成:', weaponBoardStats.base.hp);
+        console.log('武器盘生命值加成:', weaponBoardStats.base?.hp || 0);
         console.log('总生命值:', totalHp);
 
         // 计算预期伤害 (使用包含武器盘加成的总攻击力)

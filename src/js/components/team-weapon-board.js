@@ -187,13 +187,13 @@ const TeamWeaponBoard = {
                     <div class="team-weapon-item">
                         <div class="team-weapon-icon">${weapon.name.charAt(0)}</div>
                         <div class="team-weapon-name">${weapon.name}</div>
-                        <div class="team-weapon-type">
-                            <img src="src/assets/${UI.weaponTypeIcons[weapon.type]}" class="type-icon" alt="${weapon.type}">
-                            ${UI.getWeaponTypeName(weapon.type)}
-                        </div>
-                        <div class="team-weapon-element">
-                            <img src="src/assets/${UI.elementIcons[weapon.element]}" class="element-icon" alt="${weapon.element}">
-                            ${UI.getWeaponElementName(weapon.element)}
+                        <div class="team-weapon-attributes">
+                            <div class="team-weapon-type">
+                                <img src="src/assets/${UI.weaponTypeIcons[weapon.type]}" class="type-icon" alt="${weapon.type}">
+                            </div>
+                            <div class="team-weapon-element">
+                                <img src="src/assets/${UI.elementIcons[weapon.element]}" class="element-icon" alt="${weapon.element}">
+                            </div>
                         </div>
                         <div class="team-weapon-stats">
                             <div>等级: ${weapon.level}/${Weapon.breakthroughLevels[weapon.breakthrough || 0]}</div>
@@ -264,13 +264,13 @@ const TeamWeaponBoard = {
                         <div class="team-weapon-item">
                             <div class="team-weapon-icon">${weapon.name.charAt(0)}</div>
                             <div class="team-weapon-name">${weapon.name}</div>
-                            <div class="team-weapon-type">
-                                <img src="src/assets/${UI.weaponTypeIcons[weapon.type]}" class="type-icon" alt="${weapon.type}">
-                                ${UI.getWeaponTypeName(weapon.type)}
-                            </div>
-                            <div class="team-weapon-element">
-                                <img src="src/assets/${UI.elementIcons[weapon.element]}" class="element-icon" alt="${weapon.element}">
-                                ${UI.getWeaponElementName(weapon.element)}
+                            <div class="team-weapon-attributes">
+                                <div class="team-weapon-type">
+                                    <img src="src/assets/${UI.weaponTypeIcons[weapon.type]}" class="type-icon" alt="${weapon.type}">
+                                </div>
+                                <div class="team-weapon-element">
+                                    <img src="src/assets/${UI.elementIcons[weapon.element]}" class="element-icon" alt="${weapon.element}">
+                                </div>
                             </div>
                             <div class="team-weapon-stats">
                                 <div>等级: ${weapon.level}/${Weapon.breakthroughLevels[weapon.breakthrough || 0]}</div>

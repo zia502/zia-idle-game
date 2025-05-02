@@ -53,12 +53,6 @@ const Weapon = {
                 1: { daRate: 7, taRate: 3 },
                 2: { daRate: 10, taRate: 6 },
                 3: { daRate: 15, taRate: 10 }
-            },
-            effect: function(stats, level) {
-                const levelData = Weapon.skills.abandon.levels[level];
-                stats.daRate = (stats.daRate || 0) + levelData.daRate / 100;
-                stats.taRate = (stats.taRate || 0) + levelData.taRate / 100;
-                return stats;
             }
         },
         // 守护系列 - HP提升
@@ -70,11 +64,6 @@ const Weapon = {
                 1: { hp: 14 },
                 2: { hp: 20 },
                 3: { hp: 30 }
-            },
-            effect: function(stats, level) {
-                const levelData = Weapon.skills.aegis.levels[level];
-                stats.hp = Math.floor(stats.hp * (1 + levelData.hp / 100));
-                return stats;
             }
         },
         // 穷理系列 - 技能伤害上限提升
@@ -86,11 +75,6 @@ const Weapon = {
                 1: { na_cap: 5 },
                 2: { na_cap: 7 },
                 3: { na_cap: 10 }
-            },
-            effect: function(stats, level) {
-                const levelData = Weapon.skills.arts.levels[level];
-                stats.na_cap = (stats.na_cap || 1) * (1 + levelData.na_cap / 100);
-                return stats;
             }
         },
         // 绝涯系列 - 伤害上限提升
@@ -102,11 +86,6 @@ const Weapon = {
                 1: { skill_cap: 10 },
                 2: { skill_cap: 20 },
                 3: { skill_cap: 30 }
-            },
-            effect: function(stats, level) {
-                const levelData = Weapon.skills.beastEssence.levels[level];
-                stats.skill_cap = (stats.skill_cap || 1) * (1 + levelData.skill_cap / 100);
-                return stats;
             }
         },
         // 刃界系列 - HP/暴击提升
@@ -118,12 +97,6 @@ const Weapon = {
                 1: { hp: 12, critRate: 4 },
                 2: { hp: 14, critRate: 6 },
                 3: { hp: 20, critRate: 10 }
-            },
-            effect: function(stats, level) {
-                const levelData = Weapon.skills.bladeshield.levels[level];
-                stats.hp = Math.floor(stats.hp * (1 + levelData.hp / 100));
-                stats.critRate = (stats.critRate || 0) + levelData.critRate / 100;
-                return stats;
             }
         },
         // 刹那系列 - 攻击/暴击提升
@@ -135,12 +108,6 @@ const Weapon = {
                 1: { attack: 20, critRate: 4 },
                 2: { attack: 26, critRate: 8 },
                 3: { attack: 30, critRate: 12 }
-            },
-            effect: function(stats, level) {
-                const levelData = Weapon.skills.celere.levels[level];
-                stats.attack = Math.floor(stats.attack * (1 + levelData.attack / 100));
-                stats.critRate = (stats.critRate || 0) + levelData.critRate / 100;
-                return stats;
             }
         },
         // 励行系列 - EX攻击/防御提升
@@ -152,12 +119,6 @@ const Weapon = {
                 1: { exAttack: 20, defense: 15 },
                 2: { exAttack: 30, defense: 20 },
                 3: { exAttack: 40, defense: 30 }
-            },
-            effect: function(stats, level) {
-                const levelData = Weapon.skills.convergence.levels[level];
-                stats.exAttack = (stats.exAttack || 0) * (1 + levelData.exAttack / 100);
-                stats.defense = (stats.defense || 0) * (1 + levelData.defense / 100);
-                return stats;
             }
         },
         // 武技系列 - 额外伤害
@@ -169,11 +130,6 @@ const Weapon = {
                 1: { bonus: 10000 },
                 2: { bonus: 30000 },
                 3: { bonus: 50000 }
-            },
-            effect: function(stats, level) {
-                const levelData = Weapon.skills.deathstrike.levels[level];
-                stats.bonusDamage = (stats.bonusDamage || 0) + levelData.bonus;
-                return stats;
             }
         },
         // 破坏系列 - TA提升
@@ -185,11 +141,6 @@ const Weapon = {
                 1: { taRate: 5 },
                 2: { taRate: 9 },
                 3: { taRate: 12 }
-            },
-            effect: function(stats, level) {
-                const levelData = Weapon.skills.devastation.levels[level];
-                stats.taRate = (stats.taRate || 0) + levelData.taRate / 100;
-                return stats;
             }
         },
         // 二手系列 - DA提升
@@ -201,11 +152,6 @@ const Weapon = {
                 1: { daRate: 8 },
                 2: { daRate: 12 },
                 3: { daRate: 18 }
-            },
-            effect: function(stats, level) {
-                const levelData = Weapon.skills.dualEdge.levels[level];
-                stats.daRate = (stats.daRate || 0) + levelData.daRate / 100;
-                return stats;
             }
         },
         // 背水系列 - 血量越低攻击越高
@@ -217,11 +163,6 @@ const Weapon = {
                 1: { enmity: 7 },
                 2: { enmity: 12 },
                 3: { enmity: 18 }
-            },
-            effect: function(stats, level) {
-                const levelData = Weapon.skills.enmity.levels[level];
-                stats.enmity = (stats.enmity || 0) + levelData.value / 100;
-                return stats;
             }
         },
         // 攻刃系列 - 攻击力提升
@@ -233,18 +174,6 @@ const Weapon = {
                 1: { attack: 16 },
                 2: { attack: 24 },
                 3: { attack: 36 }
-            },
-            effect: function(stats, level) {
-                const levelData = Weapon.skills.essence.levels[level];
-                // 确保stats.attack是数字
-                const currentAttack = Number(stats.attack) || 0;
-                // 计算加成
-                const attackBonus = levelData.attack / 100;
-                // 返回新的攻击力
-                return {
-                    ...stats,
-                    attack: currentAttack * (1 + attackBonus)
-                };
             }
         },
         // 乱舞系列 - 攻击/TA提升
@@ -256,12 +185,6 @@ const Weapon = {
                 1: { attack: 22, taRate: 4 },
                 2: { attack: 28, taRate: 6 },
                 3: { attack: 32, taRate: 9 }
-            },
-            effect: function(stats, level) {
-                const levelData = Weapon.skills.fandango.levels[level];
-                stats.attack = Math.floor(stats.attack * (1 + levelData.attack / 100));
-                stats.taRate = (stats.taRate || 0) + levelData.taRate / 100;
-                return stats;
             }
         },
         // 坚守系列 - 防御力提升
@@ -273,11 +196,6 @@ const Weapon = {
                 1: { defense: 20 },
                 2: { defense: 32 },
                 3: { defense: 45 }
-            },
-            effect: function(stats, level) {
-                const levelData = Weapon.skills.fortified.levels[level];
-                stats.defense = (stats.defense || 0) * (1 + levelData.defense / 100);
-                return stats;
             }
         },
         // 无双系列 - 攻击/DA提升
@@ -289,12 +207,6 @@ const Weapon = {
                 1: { attack: 24, daRate: 7 },
                 2: { attack: 29, daRate: 10 },
                 3: { attack: 32, daRate: 16 }
-            },
-            effect: function(stats, level) {
-                const levelData = Weapon.skills.haunt.levels[level];
-                stats.attack = Math.floor(stats.attack * (1 + levelData.attack / 100));
-                stats.daRate = (stats.daRate || 0) + levelData.daRate / 100;
-                return stats;
             }
         },
         // 军神系列 - HP/DA提升
@@ -306,12 +218,6 @@ const Weapon = {
                 1: { hp: 14, daRate: 7 },
                 2: { hp: 20, daRate: 10 },
                 3: { hp: 30, daRate: 15 }
-            },
-            effect: function(stats, level) {
-                const levelData = Weapon.skills.heroism.levels[level];
-                stats.hp = Math.floor(stats.hp * (1 + levelData.hp / 100));
-                stats.daRate = (stats.daRate || 0) + levelData.daRate / 100;
-                return stats;
             }
         },
         // 神威系列 - 攻击/HP提升
@@ -323,12 +229,6 @@ const Weapon = {
                 1: { hp: 12, attack: 12 },
                 2: { hp: 24, attack: 24 },
                 3: { hp: 40, attack: 40 }
-            },
-            effect: function(stats, level) {
-                const levelData = Weapon.skills.majesty.levels[level];
-                stats.hp = Math.floor(stats.hp * (1 + levelData.hp / 100));
-                stats.attack = Math.floor(stats.attack * (1 + levelData.attack / 100));
-                return stats;
             }
         },
         // 愤怒系列 - 攻击/EX攻击提升
@@ -340,12 +240,6 @@ const Weapon = {
                 1: { attack: 20, exAttack: 12 },
                 2: { attack: 26, exAttack: 15 },
                 3: { attack: 32, exAttack: 18 }
-            },
-            effect: function(stats, level) {
-                const levelData = Weapon.skills.might.levels[level];
-                stats.attack = Math.floor(stats.attack * (1 + levelData.attack / 100));
-                stats.exAttack = (stats.exAttack || 0) * (1 + levelData.exAttack / 100);
-                return stats;
             }
         },
         // 技巧系列 - 暴击率提升
@@ -357,11 +251,6 @@ const Weapon = {
                 1: { critRate: 8 },
                 2: { critRate: 12 },
                 3: { critRate: 20 }
-            },
-            effect: function(stats, level) {
-                const levelData = Weapon.skills.sephiraTek.levels[level];
-                stats.critRate = (stats.critRate || 0) + levelData.critRate / 100;
-                return stats;
             }
         },
         // 霸道系列 - EX攻击提升
@@ -373,11 +262,6 @@ const Weapon = {
                 1: { exAttack: 28 },
                 2: { exAttack: 36 },
                 3: { exAttack: 46 }
-            },
-            effect: function(stats, level) {
-                const levelData = Weapon.skills.sovereign.levels[level];
-                stats.exAttack = (stats.exAttack || 0) * (1 + levelData.exAttack / 100);
-                return stats;
             }
         },
         // 克己系列 - DA/暴击提升
@@ -389,12 +273,6 @@ const Weapon = {
                 1: { daRate: 7, critRate: 10 },
                 2: { daRate: 10, critRate: 13 },
                 3: { daRate: 15, critRate: 17 }
-            },
-            effect: function(stats, level) {
-                const levelData = Weapon.skills.restraint.levels[level];
-                stats.daRate = (stats.daRate || 0) + levelData.daRate / 100;
-                stats.critRate = (stats.critRate || 0) + levelData.critRate / 100;
-                return stats;
             }
         },
         // 锐锋系列 - TA/暴击提升
@@ -406,12 +284,6 @@ const Weapon = {
                 1: { taRate: 4, critRate: 6 },
                 2: { taRate: 6, critRate: 10 },
                 3: { taRate: 8, critRate: 15 }
-            },
-            effect: function(stats, level) {
-                const levelData = Weapon.skills.spearhead.levels[level];
-                stats.taRate = (stats.taRate || 0) + levelData.taRate / 100;
-                stats.critRate = (stats.critRate || 0) + levelData.critRate / 100;
-                return stats;
             }
         },
         // 浑身系列 - 浑身值提升
@@ -423,11 +295,6 @@ const Weapon = {
                 1: { stamina: 6 },
                 2: { stamina: 6 },
                 3: { stamina: 15 }
-            },
-            effect: function(stats, level) {
-                const levelData = Weapon.skills.stamina.levels[level];
-                stats.stamina = (stats.stamina || 0) + levelData.value / 100;
-                return stats;
             }
         },
         // 志气系列 - HP/浑身提升
@@ -439,12 +306,6 @@ const Weapon = {
                 1: { hp: 10, stamina: 4 },
                 2: { hp: 15, stamina: 7 },
                 3: { hp: 18, stamina: 10 }
-            },
-            effect: function(stats, level) {
-                const levelData = Weapon.skills.verve.levels[level];
-                stats.hp = Math.floor(stats.hp * (1 + levelData.hp / 100));
-                stats.stamina = (stats.stamina || 0) + levelData.stamina / 100;
-                return stats;
             }
         }
     },
@@ -969,25 +830,12 @@ const Weapon = {
         const maxLevel = this.breakthroughLevels[weapon.breakthrough || 0];
 
         // 计算当前等级对应的基础属性值（线性增长）
-        const attack = Math.floor(baseStats.attack + (baseStats["150Attack"] - baseStats.attack) * (currentLevel - 1) / (maxLevel - 1));
-        const hp = Math.floor(baseStats.hp + (baseStats["150Hp"] - baseStats.hp) * (currentLevel - 1) / (maxLevel - 1));
+        const attack = Math.floor(baseStats.attack + Math.floor((baseStats["150Attack"] - baseStats.attack) * (currentLevel - 1) / (maxLevel - 1)));
+        const hp = Math.floor(baseStats.hp + Math.floor((baseStats["150Hp"] - baseStats.hp) * (currentLevel - 1) / (maxLevel - 1)));
 
         // 创建基础属性对象
         let stats = { attack, hp };
 
-        // 应用已解锁的技能效果
-        if (weapon.specialEffects && weapon.specialEffects.length > 0) {
-            weapon.specialEffects.forEach(effect => {
-                // 检查技能是否已解锁
-                if (currentLevel >= effect.unlock) {
-                    const skill = this.skills[effect.type];
-                    if (skill && skill.effect) {
-                        // 应用技能效果
-                        stats = skill.effect(stats, effect.level);
-                    }
-                }
-            });
-        }
 
         return stats;
     },

@@ -898,5 +898,12 @@ button:active, .btn:active {
 .weapon-attributes {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 2px;
+}
+
+.weapon-attributes .type-icon,
+.weapon-attributes .element-icon {
+    width: 90% !important;
+    height: 90% !important;
+    object-fit: contain;
 }

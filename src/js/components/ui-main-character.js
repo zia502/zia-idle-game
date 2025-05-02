@@ -144,10 +144,6 @@
                     </div>
 
                     <div style="margin-bottom:5px;">
-                        <strong>速度：</strong> ${character.baseStats?.speed || 0}
-                    </div>
-
-                    <div style="margin-bottom:5px;">
                         <strong>经验值：</strong> ${character.exp || 0}/${Character.getExpToNextLevel ? Character.getExpToNextLevel(character.level) : 100}
                     </div>
                 </div>

@@ -5,6 +5,12 @@ class MainCharacterInfo {
 
     render() {
         const character = this.character;
+
+        // 调试信息：输出角色对象结构
+        console.log('角色对象:', character);
+        console.log('角色基础属性:', character.baseStats);
+        console.log('角色当前属性:', character.currentStats);
+
         // 使用 element 或 attribute 属性
         const element = character.element || character.attribute || 'fire';
 
@@ -115,9 +121,13 @@ class MainCharacterInfo {
         console.log(`${element}元素属性加成:`, elementStats);
 
         // 计算预期伤害
-        const baseAttack = character.attack || 0;
+        const baseAttack = character.baseStats?.attack || character.currentStats?.attack || 0;
         const elementMultiplier = 1.5; // 克制属性倍率
         const expectedDamage = Math.floor(baseAttack * elementMultiplier);
+
+        // 调试信息：输出攻击力和预期伤害
+        console.log('基础攻击力:', baseAttack);
+        console.log('预期伤害:', expectedDamage);
 
         return `
             <div class="main-character-info" style="border-color: ${elementColor}">
@@ -149,11 +159,11 @@ class MainCharacterInfo {
                     </div>
                     <div class="stat-row">
                         <span class="stat-label">攻击力</span>
-                        <span class="stat-value">${character.attack || 0}</span>
+                        <span class="stat-value">${character.baseStats?.attack || character.currentStats?.attack || 0}</span>
                     </div>
                     <div class="stat-row">
                         <span class="stat-label">生命值</span>
-                        <span class="stat-value">${character.hp || 0}</span>
+                        <span class="stat-value">${character.baseStats?.hp || character.currentStats?.hp || 0}</span>
                     </div>
                 </div>
 

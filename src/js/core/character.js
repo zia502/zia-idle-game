@@ -811,25 +811,45 @@ const Character = {
         const weaponBoard = Weapon.getWeaponBoard(team.weaponBoardId);
         if (!weaponBoard) return character.currentStats;
 
-        // 开始计算完整状态
-        const fullStats = {...character.currentStats};
+        // 检查角色是否在地下城中
+        const inDungeon = typeof Dungeon !== 'undefined' &&
+                          Dungeon.currentRun &&
+                          character.dungeonOriginalStats;
+
+        // 开始计算完整状态 - 使用baseStats而不是currentStats，避免重复计算
+        // 如果在地下城中，使用dungeonOriginalStats作为基础
+        const baseStats = inDungeon ? character.dungeonOriginalStats : character.baseStats;
+        const fullStats = {...baseStats};
+
+        console.log('计算角色完整属性，基础属性:', baseStats);
 
         // 应用武器盘加成
         const boardStats = Weapon.calculateWeaponBoardStats(team.weaponBoardId);
+        console.log('武器盘加成:', boardStats);
 
-        // 合并基本属性
-        for (const [stat, value] of Object.entries(boardStats.base)) {
-            fullStats[stat] += value;
+        // 确保boardStats和其属性存在
+        if (boardStats && boardStats.base) {
+            // 合并基本属性
+            for (const [stat, value] of Object.entries(boardStats.base)) {
+                if (fullStats[stat] !== undefined) {
+                    fullStats[stat] += value;
+                }
+            }
         }
 
-        // 应用百分比加成
-        for (const [stat, value] of Object.entries(boardStats.percentage)) {
-            fullStats[stat] *= (1 + value);
+        // 确保boardStats和其percentage属性存在
+        if (boardStats && boardStats.percentage) {
+            // 应用百分比加成
+            for (const [stat, value] of Object.entries(boardStats.percentage)) {
+                if (fullStats[stat] !== undefined) {
+                    fullStats[stat] *= (1 + value);
+                }
+            }
         }
 
         // 应用特性效果
-        for (const traitId of character.traits) {
-            const trait = this.traits[traitId];
+        for (const traitId of character.traits || []) {
+            const trait = this.traits ? this.traits[traitId] : null;
             if (trait && trait.effect) {
                 fullStats = trait.effect(character, fullStats, team.members.map(id => this.getCharacter(id)));
             }
@@ -840,6 +860,7 @@ const Character = {
             fullStats[stat] = Math.max(0, Math.floor(fullStats[stat]));
         }
 
+        console.log('计算完成的完整属性:', fullStats);
         return fullStats;
     },
 

@@ -3,7 +3,113 @@
  */
 const Dungeon = {
     // 地下城数据
-    dungeons: {},
+    dungeons: {
+        forest_cave: {
+            id: 'forest_cave',
+            name: '森林洞穴',
+            description: '一个位于森林中的神秘洞穴，有许多低级怪物盘踞。',
+            level: 1,
+            entrance: 'forest_entrance',
+            nextDungeon: 'mountain_path',
+            type: 'normal',
+            miniBossCount: 2,
+            possibleMonsters: ['slime', 'goblin', 'wolf'],
+            possibleMiniBosses: ['goblinChief', 'skeletonKing'],
+            possibleFinalBosses: ['forestGuardian'],
+            rewards: {
+                gold: 5000,
+                exp: 2000
+            },
+            chestDrops: {
+                silver: [
+                    { id: 'wood', type: 'material', rate: 0.4 },
+                    { id: 'stone', type: 'material', rate: 0.3 },
+                    { id: 'herbs', type: 'material', rate: 0.2 },
+                    { id: 'animalHide', type: 'material', rate: 0.1 }
+                ],
+                gold: [
+                    { id: 'forestSword', type: 'weapon', rate: 0.35 },
+                    { id: 'hunterAxe', type: 'weapon', rate: 0.3 },
+                    { id: 'guardianSpear', type: 'weapon', rate: 0.2 },
+                    { id: 'rangerBow', type: 'weapon', rate: 0.15 },
+                    { id: 'magicHerbs', type: 'material', rate: 0.4 },
+                    { id: 'crystal', type: 'material', rate: 0.3 },
+                    { id: 'beastFang', type: 'material', rate: 0.2 },
+                    { id: 'forestEssence', type: 'material', rate: 0.1 }
+                ]
+            }
+        },
+        mountain_path: {
+            id: 'mountain_path',
+            name: '山间小径',
+            description: '通往山脉深处的危险小径，盘踞着更强大的怪物。',
+            level: 2,
+            entrance: 'mountain_entrance',
+            nextDungeon: 'ancient_ruins',
+            type: 'normal',
+            miniBossCount: 2,
+            possibleMonsters: ['mountainGoblin', 'rockGolem', 'iceWolf'],
+            possibleMiniBosses: ['mountainKing', 'iceElemental'],
+            possibleFinalBosses: ['mountainTitan'],
+            rewards: {
+                gold: 10000,
+                exp: 5000
+            },
+            chestDrops: {
+                silver: [
+                    { id: 'ironOre', type: 'material', rate: 0.4 },
+                    { id: 'crystal', type: 'material', rate: 0.3 },
+                    { id: 'iceCrystal', type: 'material', rate: 0.2 },
+                    { id: 'mountainHerbs', type: 'material', rate: 0.1 }
+                ],
+                gold: [
+                    { id: 'mountainSword', type: 'weapon', rate: 0.35 },
+                    { id: 'iceAxe', type: 'weapon', rate: 0.3 },
+                    { id: 'rockSpear', type: 'weapon', rate: 0.2 },
+                    { id: 'windBow', type: 'weapon', rate: 0.15 },
+                    { id: 'mountainCrystal', type: 'material', rate: 0.4 },
+                    { id: 'iceEssence', type: 'material', rate: 0.3 },
+                    { id: 'rockCore', type: 'material', rate: 0.2 },
+                    { id: 'windEssence', type: 'material', rate: 0.1 }
+                ]
+            }
+        },
+        ancient_ruins: {
+            id: 'ancient_ruins',
+            name: '古代遗迹',
+            description: '一座被遗忘的古代遗迹，隐藏着强大的魔法和危险的守护者。',
+            level: 3,
+            entrance: 'ruins_entrance',
+            nextDungeon: null,
+            type: 'normal',
+            miniBossCount: 2,
+            possibleMonsters: ['ancientGuardian', 'ruinWalker', 'magicConstruct'],
+            possibleMiniBosses: ['ruinKeeper', 'magicMaster'],
+            possibleFinalBosses: ['ancientDragon'],
+            rewards: {
+                gold: 20000,
+                exp: 10000
+            },
+            chestDrops: {
+                silver: [
+                    { id: 'ancientStone', type: 'material', rate: 0.4 },
+                    { id: 'magicCrystal', type: 'material', rate: 0.3 },
+                    { id: 'ruinFragment', type: 'material', rate: 0.2 },
+                    { id: 'ancientHerbs', type: 'material', rate: 0.1 }
+                ],
+                gold: [
+                    { id: 'ancientSword', type: 'weapon', rate: 0.35 },
+                    { id: 'magicStaff', type: 'weapon', rate: 0.3 },
+                    { id: 'ruinSpear', type: 'weapon', rate: 0.2 },
+                    { id: 'dragonBow', type: 'weapon', rate: 0.15 },
+                    { id: 'ancientCrystal', type: 'material', rate: 0.4 },
+                    { id: 'magicEssence', type: 'material', rate: 0.3 },
+                    { id: 'dragonScale', type: 'material', rate: 0.2 },
+                    { id: 'ancientEssence', type: 'material', rate: 0.1 }
+                ]
+            }
+        }
+    },
 
     // 地下城模板
     templates: {
@@ -634,18 +740,19 @@ const Dungeon = {
         // 尝试从dungeons获取地下城，如果不存在则从templates获取
         let dungeon = this.getDungeon(dungeonId);
 
-        // 如果在dungeons中找不到，尝试从templates中获取
-        if (!dungeon && this.templates[dungeonId]) {
-            console.log(`在dungeons中找不到地下城 ${dungeonId}，使用模板`);
-            dungeon = this.templates[dungeonId];
+        console.log(`初始化地下城:${dungeonId}`);       
+        // // 如果在dungeons中找不到，尝试从templates中获取
+        // if (!dungeon && this.templates[dungeonId]) {
+        //     console.log(`在dungeons中找不到地下城 ${dungeonId}，使用模板`);
+        //     dungeon = this.templates[dungeonId];
 
-            // 将模板添加到dungeons中
-            this.dungeons[dungeonId] = {
-                ...this.templates[dungeonId],
-                isCompleted: false,
-                isUnlocked: true
-            };
-        }
+        //     // 将模板添加到dungeons中
+        //     this.dungeons[dungeonId] = {
+        //         ...this.templates[dungeonId],
+        //         isCompleted: false,
+        //         isUnlocked: true
+        //     };
+        // }
 
         // 如果仍然找不到地下城，返回失败
         if (!dungeon) {
@@ -749,6 +856,8 @@ const Dungeon = {
             }
         }
 
+        console.log(`生成普通怪物 ${monsters}`);
+
         // 生成小boss
         const miniBosses = [];
         const miniBossCount = dungeon.miniBossCount || 2; // 默认至少2个小boss
@@ -762,9 +871,11 @@ const Dungeon = {
                 miniBosses.push(miniBoss);
             }
         }
+        console.log(`生成小boss ${miniBosses}`);
 
         // 生成大boss（但不立即出现）
         const finalBoss = this.generateBoss(dungeon, 'final');
+        console.log(`生成大boss ${finalBoss}`);
 
         if (finalBoss) {
             console.log(`生成大boss: ${finalBoss.name}`);

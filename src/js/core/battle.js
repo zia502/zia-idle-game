@@ -621,16 +621,36 @@ const Battle = {
      * @param {array} teamMembers - 队伍成员
      */
     processBattleStartTraits(character, teamMembers) {
+        // 检查是否在地下城中
+        const inDungeon = typeof Dungeon !== 'undefined' && Dungeon.currentRun;
+
+        // 初始化已应用的被动技能跟踪
+        if (inDungeon && !character.dungeonAppliedPassives) {
+            character.dungeonAppliedPassives = {};
+        }
+
         // 处理一次性被动技能
         if (character.skills) {
             for (const skillId of character.skills) {
                 const skill = JobSystem.getSkill(skillId);
                 if (skill && skill.passive && skill.oneTime) {
+                    // 在地下城中检查该被动技能是否已经应用过
+                    if (inDungeon && character.dungeonAppliedPassives && character.dungeonAppliedPassives[skillId]) {
+                        this.logBattle(`${character.name} 的一次性被动技能 ${skill.name} 已在地下城中应用过，跳过`);
+                        continue;
+                    }
+
                     // 处理一次性被动技能
                     for (const effect of skill.effects) {
                         if (effect.passive) {
                             // 应用被动效果
                             this.applyPassiveEffect(character, effect, teamMembers);
+
+                            // 在地下城中标记该被动技能已应用
+                            if (inDungeon && character.dungeonAppliedPassives) {
+                                character.dungeonAppliedPassives[skillId] = true;
+                                this.logBattle(`${character.name} 的一次性被动技能 ${skill.name} 已标记为在地下城中应用过`);
+                            }
                         }
                     }
                 }
@@ -643,10 +663,22 @@ const Battle = {
             if (!traitId) continue;
             const trait = Character.traits[traitId];
             if (trait && trait.type === 'passive' && trait.triggerTiming === 'battleStart') {
+                // 在地下城中检查该特性是否已经应用过
+                if (inDungeon && character.dungeonAppliedPassives && character.dungeonAppliedPassives[`trait_${traitId}`]) {
+                    this.logBattle(`${character.name} 的特性 ${trait.name} 已在地下城中应用过，跳过`);
+                    continue;
+                }
+
                 if (trait.effect) {
                     const result = trait.effect(character, character.currentStats, teamMembers);
                     if (result && result.message) {
                         this.logBattle(`${character.name} 的特性 ${trait.name} 触发：${result.message}`);
+
+                        // 在地下城中标记该特性已应用
+                        if (inDungeon && character.dungeonAppliedPassives) {
+                            character.dungeonAppliedPassives[`trait_${traitId}`] = true;
+                            this.logBattle(`${character.name} 的特性 ${trait.name} 已标记为在地下城中应用过`);
+                        }
                     }
                 }
             }
@@ -1086,6 +1118,15 @@ const Battle = {
 
                 // 如果找到了技能，并且是被动技能，且不是一次性被动技能
                 if (skill && (skill.passive || (skill.effects && skill.effects.some(e => e.passive))) && !skill.oneTime) {
+                    // 检查是否在地下城中
+                    const inDungeon = typeof Dungeon !== 'undefined' && Dungeon.currentRun;
+
+                    // 检查在地下城中是否已经应用过这个被动技能
+                    if (inDungeon && character.dungeonAppliedPassives && character.dungeonAppliedPassives[skillId]) {
+                        this.logBattle(`${character.name} 的被动技能 ${skill.name} 已在地下城中应用过，跳过`);
+                        continue;
+                    }
+
                     this.logBattle(`应用被动技能: ${skill.name}`);
 
                     // 应用被动技能效果
@@ -1148,6 +1189,16 @@ const Battle = {
                                 }
                             }
                         }
+                    }
+
+                    // 在地下城中标记该被动技能已应用
+                    if (inDungeon && !character.dungeonAppliedPassives) {
+                        character.dungeonAppliedPassives = {};
+                    }
+
+                    if (inDungeon && character.dungeonAppliedPassives) {
+                        character.dungeonAppliedPassives[skillId] = true;
+                        this.logBattle(`${character.name} 的被动技能 ${skill.name} 已标记为在地下城中应用过`);
                     }
                 }
             }
@@ -1630,6 +1681,20 @@ const Battle = {
 
                     // 如果找到了技能，并且是被动技能
                     if (skill && (skill.passive || (skill.effects && skill.effects.some(e => e.passive)))) {
+                        // 检查是否在地下城中
+                        const inDungeon = typeof Dungeon !== 'undefined' && Dungeon.currentRun;
+
+                        // 初始化已应用的被动技能跟踪
+                        if (inDungeon && !monster.dungeonAppliedPassives) {
+                            monster.dungeonAppliedPassives = {};
+                        }
+
+                        // 检查在地下城中是否已经应用过这个被动技能
+                        if (inDungeon && monster.dungeonAppliedPassives && monster.dungeonAppliedPassives[skillId]) {
+                            this.logBattle(`${monster.name} 的被动技能 ${skill.name} 已在地下城中应用过，跳过`);
+                            continue;
+                        }
+
                         this.logBattle(`应用BOSS被动技能: ${skill.name}`);
 
                         // 应用被动技能效果
@@ -1692,6 +1757,12 @@ const Battle = {
                                     }
                                 }
                             }
+                        }
+
+                        // 在地下城中标记该被动技能已应用
+                        if (inDungeon && monster.dungeonAppliedPassives) {
+                            monster.dungeonAppliedPassives[skillId] = true;
+                            this.logBattle(`${monster.name} 的被动技能 ${skill.name} 已标记为在地下城中应用过`);
                         }
                     }
                 }

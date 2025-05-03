@@ -904,6 +904,12 @@ const DungeonRunner = {
                     // 清除地下城原始属性
                     delete member.dungeonOriginalStats;
 
+                    // 清除地下城已应用的被动技能记录
+                    if (member.dungeonAppliedPassives) {
+                        delete member.dungeonAppliedPassives;
+                        console.log(`清除 ${member.name} 的地下城已应用被动技能记录`);
+                    }
+
                     // 清除所有BUFF
                     if (typeof BuffSystem !== 'undefined') {
                         BuffSystem.clearAllBuffs(member);

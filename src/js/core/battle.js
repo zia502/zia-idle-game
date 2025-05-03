@@ -185,7 +185,7 @@ const Battle = {
             console.log('地下城第一场战斗，保存队伍成员的原始属性');
             for (const member of teamMembers) {
                 // 保存地下城探索开始时的原始属性（整个地下城探索过程中只保存一次）
-                member.dungeonOriginalStats = JSON.parse(JSON.stringify(member.currentStats));
+                member.dungeonOriginalStats = JSON.parse(JSON.stringify(member.baseStats));
                 console.log(`保存 ${member.name} 的地下城原始属性:`, member.dungeonOriginalStats);
             }
         } else {
@@ -198,9 +198,14 @@ const Battle = {
                 member.originalStats = {};
             }
 
-            // 保存当前状态作为战斗原始属性
-            member.originalStats = JSON.parse(JSON.stringify(member.currentStats));
-            console.log(`保存 ${member.name} 的战斗原始属性:`, member.originalStats);
+            if (isFirstBattleInDungeon) {
+                member.originalStats = JSON.parse(JSON.stringify(member.baseStats));
+                console.log('还是第一场战斗,使用basestats');
+            }else{
+                // 保存当前状态作为战斗原始属性
+                member.originalStats = JSON.parse(JSON.stringify(member.currentStats));
+                console.log(`保存 ${member.name} 的战斗原始属性:`, member.originalStats);
+            }
         }
 
         // 只在地下城的第一场战斗时应用武器盘加成

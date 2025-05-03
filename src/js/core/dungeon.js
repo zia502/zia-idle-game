@@ -585,6 +585,37 @@ const Dungeon = {
         // 加载地下城数据
         this.loadDungeons();
 
+        // 尝试加载保存的地下城进度
+        const progressLoaded = this.loadDungeonProgress();
+        if (progressLoaded) {
+            console.log('成功加载地下城进度，继续上次的地下城探索');
+
+            // 检查角色是否有dungeonOriginalStats
+            if (typeof Character !== 'undefined') {
+                const characters = Object.values(Character.characters || {});
+                let needToRestoreStats = false;
+
+                for (const character of characters) {
+                    if (!character.dungeonOriginalStats) {
+                        console.log(`角色 ${character.name} 没有地下城原始属性，需要保存当前属性作为地下城原始属性`);
+                        needToRestoreStats = true;
+                        break;
+                    }
+                }
+
+                if (needToRestoreStats) {
+                    console.log('需要为角色重新保存地下城原始属性');
+                    // 为所有角色保存当前属性作为地下城原始属性
+                    for (const character of characters) {
+                        character.dungeonOriginalStats = JSON.parse(JSON.stringify(character.baseStats));
+                        console.log(`为角色 ${character.name} 保存地下城原始属性:`, character.dungeonOriginalStats);
+                    }
+                }
+            }
+        } else {
+            console.log('没有找到保存的地下城进度或加载失败');
+        }
+
         // 显示初始化消息
         UI.showMessage('地下城系统已初始化');
         console.log('地下城系统初始化完成');
@@ -1157,6 +1188,9 @@ const Dungeon = {
             // 处理奖励
             this.processRewards(monster);
 
+            // 保存地下城进度
+            this.saveDungeonProgress();
+
             // 检查是否所有普通怪物和小boss都已击败，但大boss还未出现
             if (this.currentRun.currentMonsterIndex >= this.currentRun.monsters.length &&
                 this.currentRun.defeatedMiniBosses >= this.currentRun.miniBosses.length &&
@@ -1289,6 +1323,17 @@ const Dungeon = {
             }
         }
 
+        // 清除保存的地下城进度
+        if (typeof Game !== 'undefined' && Game.state) {
+            delete Game.state.currentDungeon;
+
+            // 保存游戏状态
+            if (typeof Game.saveGame === 'function') {
+                Game.saveGame();
+                console.log('已清除保存的地下城进度');
+            }
+        }
+
         // 检查是否击败了大boss
         const finalBossDefeated = this.currentRun.finalBoss && this.currentRun.finalBossAppeared;
 
@@ -1389,24 +1434,110 @@ const Dungeon = {
     },
 
     /**
+     * 保存地下城进度
+     * 将当前地下城运行状态保存到Game.state中
+     */
+    saveDungeonProgress() {
+        if (!this.currentRun || !this.currentRun.dungeonId) {
+            console.log('没有正在进行的地下城，无法保存进度');
+            return;
+        }
+
+        console.log('保存地下城进度:', this.currentRun);
+
+        // 将当前地下城运行状态保存到Game.state中
+        if (typeof Game !== 'undefined' && Game.state) {
+            // 创建一个深拷贝，避免引用问题
+            Game.state.currentDungeon = JSON.parse(JSON.stringify(this.currentRun));
+
+            // 保存游戏状态
+            if (typeof Game.saveGame === 'function') {
+                Game.saveGame();
+                console.log('地下城进度已保存到游戏存档');
+            }
+        }
+    },
+
+    /**
+     * 加载地下城进度
+     * 从Game.state中加载地下城运行状态
+     * @returns {boolean} 是否成功加载进度
+     */
+    loadDungeonProgress() {
+        if (typeof Game === 'undefined' || !Game.state || !Game.state.currentDungeon) {
+            console.log('没有可加载的地下城进度');
+            return false;
+        }
+
+        const savedDungeon = Game.state.currentDungeon;
+        if (!savedDungeon.dungeonId) {
+            console.log('保存的地下城进度无效');
+            return false;
+        }
+
+        console.log('加载地下城进度:', savedDungeon);
+
+        // 恢复地下城运行状态
+        this.currentRun = JSON.parse(JSON.stringify(savedDungeon));
+
+        // 检查地下城是否存在
+        const dungeon = this.getDungeon(this.currentRun.dungeonId);
+        if (!dungeon) {
+            console.error('无法找到地下城:', this.currentRun.dungeonId);
+            this.currentRun = null;
+            return false;
+        }
+
+        console.log('地下城进度加载成功:', this.currentRun);
+        return true;
+    },
+
+    /**
      * 重置地下城系统
      */
     reset() {
+        console.log('重置地下城系统...');
+
         // 重置地下城数据和当前运行
         this.dungeons = {};
-        this.currentRun = {
-            dungeonId: null,
-            progress: 0,
-            monsters: [],
-            miniBosses: [],
-            finalBoss: null,
-            defeatedMiniBosses: 0,
-            currentMonsterIndex: 0,
-            rewards: [],
-            isCompleted: false,
-            finalBossAppeared: false
-        };
 
+        // 完全清除currentRun，而不是设置为空对象
+        this.currentRun = null;
+
+        // 清除保存的地下城进度
+        if (typeof Game !== 'undefined' && Game.state) {
+            delete Game.state.currentDungeon;
+            console.log('已清除保存的地下城进度');
+        }
+
+        // 清除所有角色的dungeonOriginalStats
+        if (typeof Character !== 'undefined' && Character.characters) {
+            for (const characterId in Character.characters) {
+                const character = Character.characters[characterId];
+                if (character.dungeonOriginalStats) {
+                    console.log(`清除角色 ${character.name} 的地下城原始属性`);
+                    delete character.dungeonOriginalStats;
+
+                    // 重置currentStats为baseStats的深拷贝
+                    character.currentStats = JSON.parse(JSON.stringify(character.baseStats));
+
+                    // 清除地下城已应用的被动技能记录
+                    if (character.dungeonAppliedPassives) {
+                        delete character.dungeonAppliedPassives;
+                        console.log(`清除 ${character.name} 的地下城已应用被动技能记录`);
+                    }
+
+                    // 清除所有BUFF
+                    if (typeof BuffSystem !== 'undefined') {
+                        BuffSystem.clearAllBuffs(character);
+                    } else if (character.buffs) {
+                        character.buffs = [];
+                    }
+                }
+            }
+        }
+
+        console.log('地下城系统重置完成');
         this.init();
     }
 };

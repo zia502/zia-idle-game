@@ -63,18 +63,18 @@ const WeaponBoardBonusSystem = {
         console.log('应用基础属性加成:', baseStats);
 
         for (const member of teamMembers) {
-            if (!member || !member.currentStats) continue;
+            if (!member || !member.baseStats) continue;
 
             // 应用攻击力加成
             if (baseStats.attack && baseStats.attack > 0) {
-                member.currentStats.attack += baseStats.attack;
+                member.baseStats.attack += baseStats.attack;
                 console.log(`为 ${member.name} 添加攻击力加成: +${baseStats.attack}`);
             }
 
             // 应用生命值加成
             if (baseStats.hp && baseStats.hp > 0) {
-                member.currentStats.maxHp += baseStats.hp;
-                member.currentStats.hp += baseStats.hp;
+                member.baseStats.maxHp += baseStats.hp;
+                member.baseStats.hp += baseStats.hp;
                 console.log(`为 ${member.name} 添加生命值加成: +${baseStats.hp}`);
             }
 

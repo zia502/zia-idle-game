@@ -816,9 +816,22 @@ const Character = {
                           Dungeon.currentRun &&
                           character.dungeonOriginalStats;
 
-        // 开始计算完整状态 - 使用baseStats而不是currentStats，避免重复计算
-        // 如果在地下城中，使用dungeonOriginalStats作为基础
-        const baseStats = inDungeon ? character.dungeonOriginalStats : character.baseStats;
+        // 开始计算完整状态 - 始终使用baseStats或dungeonOriginalStats作为基础，避免重复计算
+        let baseStats;
+
+        if (inDungeon) {
+            // 在地下城中，使用dungeonOriginalStats作为基础
+            console.log('角色在地下城中，使用dungeonOriginalStats作为基础');
+            baseStats = {...character.dungeonOriginalStats};
+
+            // 添加地下城中的BUFF效果，但不包括武器盘加成
+            // 这里可以添加地下城特有的效果处理，如果有的话
+        } else {
+            // 不在地下城中，使用baseStats作为基础
+            console.log('角色不在地下城中，使用baseStats作为基础');
+            baseStats = {...character.baseStats};
+        }
+
         const fullStats = {...baseStats};
 
         console.log('计算角色完整属性，基础属性:', baseStats);
@@ -844,6 +857,29 @@ const Character = {
                 if (fullStats[stat] !== undefined) {
                     fullStats[stat] *= (1 + value);
                 }
+            }
+        }
+
+        // 应用元素属性加成
+        if (boardStats && boardStats.elementStats) {
+            const characterElement = character.attribute || 'fire'; // 默认为火属性
+            const elementBonus = boardStats.elementStats[characterElement];
+
+            if (elementBonus) {
+                console.log(`应用${characterElement}元素属性加成:`, elementBonus);
+
+                // 应用攻击力百分比加成
+                if (elementBonus.attackPercentage && fullStats.attack !== undefined) {
+                    fullStats.attack *= (1 + elementBonus.attackPercentage);
+                }
+
+                // 应用暴击率加成
+                if (elementBonus.critRate && fullStats.critRate !== undefined) {
+                    fullStats.critRate += elementBonus.critRate;
+                }
+
+                // 应用其他元素特定加成
+                // ...
             }
         }
 

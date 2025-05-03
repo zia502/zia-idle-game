@@ -891,7 +891,9 @@ const Game = {
                         dungeon: false,
                         arena: false
                     }
-                }
+                },
+                // 确保清除地下城进度
+                currentDungeon: null
             };
 
             // 重置游戏统计
@@ -906,6 +908,18 @@ const Game = {
             };
 
             console.log("游戏状态已重置");
+
+            // 重置地下城系统
+            if (typeof Dungeon !== 'undefined' && typeof Dungeon.reset === 'function') {
+                console.log("重置地下城系统...");
+                Dungeon.reset();
+
+                // 确保地下城当前运行被清除
+                if (Dungeon.currentRun) {
+                    console.warn("警告：Dungeon.currentRun仍然存在，强制清除");
+                    Dungeon.currentRun = null;
+                }
+            }
 
             // 重置物品栏系统
             if (typeof Inventory !== 'undefined' && typeof Inventory.reset === 'function') {
@@ -934,6 +948,17 @@ const Game = {
                 if (mainChar) {
                     console.warn("警告：主角未被清除，强制清除");
                     Character.characters = {};
+                }
+
+                // 检查所有角色是否有dungeonOriginalStats
+                if (Character.characters) {
+                    for (const characterId in Character.characters) {
+                        const character = Character.characters[characterId];
+                        if (character.dungeonOriginalStats) {
+                            console.warn(`警告：角色 ${character.name} 仍有dungeonOriginalStats，强制清除`);
+                            delete character.dungeonOriginalStats;
+                        }
+                    }
                 }
             }
 
@@ -1092,6 +1117,20 @@ const Game = {
         const inDungeon = Dungeon.currentRun !== null && Dungeon.currentRun !== undefined;
         console.log(`当前是否在地下城中: ${inDungeon}`);
 
+        // 检查是否有保存的地下城进度
+        const hasSavedDungeon = this.state && this.state.currentDungeon;
+        console.log(`是否有保存的地下城进度: ${hasSavedDungeon}`);
+
+        // 如果有保存的地下城进度但Dungeon.currentRun为null，尝试加载地下城进度
+        if (hasSavedDungeon && !inDungeon && typeof Dungeon.loadDungeonProgress === 'function') {
+            console.log('检测到有保存的地下城进度但不在地下城中，尝试加载地下城进度');
+            const loaded = Dungeon.loadDungeonProgress();
+            if (loaded) {
+                console.log('成功加载地下城进度，现在在地下城中');
+                return; // 成功加载地下城进度，不需要进一步处理
+            }
+        }
+
         // 如果不在地下城中，检查所有角色是否有dungeonOriginalStats
         if (!inDungeon && typeof Character !== 'undefined') {
             console.log('不在地下城中，检查所有角色是否有dungeonOriginalStats');
@@ -1130,6 +1169,12 @@ const Game = {
             if (abnormalStateFound) {
                 console.log('已修复异常的地下城状态');
 
+                // 清除保存的地下城进度
+                if (this.state) {
+                    delete this.state.currentDungeon;
+                    console.log('已清除保存的地下城进度');
+                }
+
                 // 保存游戏状态以确保修复被保存
                 this.saveGame();
 
@@ -1143,6 +1188,31 @@ const Game = {
                 }
             } else {
                 console.log('未检测到异常的地下城状态');
+            }
+        } else if (inDungeon && typeof Character !== 'undefined') {
+            // 在地下城中，检查所有角色是否有dungeonOriginalStats
+            console.log('在地下城中，检查所有角色是否有dungeonOriginalStats');
+
+            const characters = Object.values(Character.characters || {});
+            let needToSaveOriginalStats = false;
+
+            for (const character of characters) {
+                if (!character.dungeonOriginalStats) {
+                    console.log(`检测到角色 ${character.name} 在地下城中但没有dungeonOriginalStats，需要保存原始属性`);
+                    needToSaveOriginalStats = true;
+                    break;
+                }
+            }
+
+            if (needToSaveOriginalStats) {
+                console.log('为所有角色保存地下城原始属性');
+                for (const character of characters) {
+                    character.dungeonOriginalStats = JSON.parse(JSON.stringify(character.baseStats));
+                    console.log(`为角色 ${character.name} 保存地下城原始属性:`, character.dungeonOriginalStats);
+                }
+
+                // 保存游戏状态以确保修复被保存
+                this.saveGame();
             }
         }
     }

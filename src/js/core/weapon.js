@@ -1070,17 +1070,17 @@ const Weapon = {
             const weapon = this.getWeapon(weaponId);
             if (!weapon) continue;
 
-            console.log(`\n槽位 ${slotType}: ${weapon.name}`);
-            console.log(`- 等级: ${weapon.level}`);
-            console.log(`- 属性: ${weapon.element}`);
-            console.log(`- 突破: ${weapon.breakthrough || 0}`);
+            // console.log(`\n槽位 ${slotType}: ${weapon.name}`);
+            // console.log(`- 等级: ${weapon.level}`);
+            // console.log(`- 属性: ${weapon.element}`);
+            // console.log(`- 突破: ${weapon.breakthrough || 0}`);
 
             if (weapon.specialEffects && weapon.specialEffects.length > 0) {
-                console.log('- 技能:');
+                //console.log('- 技能:');
                 weapon.specialEffects.forEach(effect => {
                     const skill = this.skills[effect.type];
                     const isUnlocked = weapon.level >= effect.unlock;
-                    console.log(`  * ${skill.name} Lv.${effect.level} ${isUnlocked ? '(已解锁)' : `(需要${effect.unlock}级)`}`);
+                    //console.log(`  * ${skill.name} Lv.${effect.level} ${isUnlocked ? '(已解锁)' : `(需要${effect.unlock}级)`}`);
                     if (isUnlocked) {
                         const levelData = skill.levels[effect.level];
                         const effectStats = {
@@ -1097,7 +1097,7 @@ const Weapon = {
                             skill_cap: levelData.skill_cap || 0,
                             bonus: levelData.bonus || 0
                         };
-                        console.log(`    效果:`, effectStats);
+                        //console.log(`    效果:`, effectStats);
                     }
                 });
             } else {

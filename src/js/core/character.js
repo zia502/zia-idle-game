@@ -98,6 +98,113 @@ const Character = {
         }
     },
 
+    // 角色特性定义
+    traits: {
+        // 攻击型特性
+        berserker: {
+            name: '狂战士',
+            description: '攻击力提升20%，防御力降低10%',
+            compatibleTypes: ['attack'],
+            type: 'passive',
+            effect: (character, stats) => {
+                stats.attack *= 1.2;
+                stats.defense *= 0.9;
+                return stats;
+            }
+        },
+        criticalSurge: {
+            name: '暴击涌动',
+            description: '暴击时额外造成50%伤害',
+            compatibleTypes: ['attack'],
+            type: 'active',
+            triggerRate: 0.3,
+            effect: (character) => {
+                return {
+                    triggered: true,
+                    message: `${character.name} 触发了暴击涌动！`,
+                    damageMultiplier: 1.5
+                };
+            }
+        },
+        // 防御型特性
+        guardian: {
+            name: '守护者',
+            description: '防御力提升20%，攻击力降低10%',
+            compatibleTypes: ['defense'],
+            type: 'passive',
+            effect: (character, stats) => {
+                stats.defense *= 1.2;
+                stats.attack *= 0.9;
+                return stats;
+            }
+        },
+        counterAttack: {
+            name: '反击',
+            description: '受到攻击时有30%概率进行反击',
+            compatibleTypes: ['defense'],
+            type: 'active',
+            triggerRate: 0.3,
+            effect: (character, attacker) => {
+                return {
+                    triggered: true,
+                    message: `${character.name} 进行了反击！`,
+                    target: attacker,
+                    damage: character.currentStats.attack * 0.8
+                };
+            }
+        },
+        // 特殊型特性
+        elementalMaster: {
+            name: '元素大师',
+            description: '元素伤害提升30%',
+            compatibleTypes: ['special'],
+            type: 'passive',
+            effect: (character, stats) => {
+                stats.elementalDamage *= 1.3;
+                return stats;
+            }
+        },
+        elementalBurst: {
+            name: '元素爆发',
+            description: '攻击时有20%概率触发元素爆发',
+            compatibleTypes: ['special'],
+            type: 'active',
+            triggerRate: 0.2,
+            effect: (character, target, baseDamage) => {
+                return {
+                    triggered: true,
+                    message: `${character.name} 触发了元素爆发！`,
+                    damage: baseDamage * 1.5,
+                    element: character.attribute
+                };
+            }
+        },
+        // 治疗型特性
+        healer: {
+            name: '医者',
+            description: '治疗效果提升30%',
+            compatibleTypes: ['healing'],
+            type: 'passive',
+            effect: (character, healAmount) => {
+                return healAmount * 1.3;
+            }
+        },
+        divineBlessing: {
+            name: '神圣祝福',
+            description: '治疗时有25%概率触发额外治疗',
+            compatibleTypes: ['healing'],
+            type: 'active',
+            triggerRate: 0.25,
+            effect: (character, target, healAmount) => {
+                return {
+                    triggered: true,
+                    message: `${character.name} 触发了神圣祝福！`,
+                    additionalHeal: healAmount * 0.5
+                };
+            }
+        }
+    },
+
     init(){},
     /**
      * 获取角色
@@ -620,17 +727,14 @@ const Character = {
 
         if (hasLegendary && count > 0) {
             // 随机选择一个传说角色
-            const availableLegendaries = this.legendaryCharacters || [];
-            if (availableLegendaries.length > 0) {
-                const randomIndex = Math.floor(Math.random() * availableLegendaries.length);
-                const selected = availableLegendaries[randomIndex];
+            const availableLegendaries = [...this.legendaryCharacters];
+            const randomIndex = Math.floor(Math.random() * availableLegendaries.length);
+            const selected = availableLegendaries[randomIndex];
 
-                // 复制并添加唯一标识
-                const copy = {...selected};
-                copy.id = `legend_${Date.now()}`;
-                result.push(copy);
-                count--; // 减少一个需要生成的角色数量
-            }
+            // 复制并添加唯一标识
+            const copy = {...selected};
+            result.push(copy);
+            count--; // 减少一个需要生成的角色数量
         }
 
         // 生成其余角色
@@ -638,21 +742,43 @@ const Character = {
             // 决定稀有度
             let rarity;
             const roll = Math.random();
-            if (roll < 0.60) { // 60%概率
+            if (roll < 0.75) { // 75%概率
                 rarity = 'rare';
-            } else if (roll < 0.90) { // 30%概率
+            } else if (roll < 0.95) { // 20%概率
                 rarity = 'epic';
-            } else { // 10%概率
+            } else { // 5%概率(保底)，确保一定比例的传说
                 rarity = 'legendary';
+
+                // 如果是传说角色，随机选择一个传说角色模板
+                if (this.legendaryCharacters && this.legendaryCharacters.length > 0) {
+                    const legendIndex = Math.floor(Math.random() * this.legendaryCharacters.length);
+                    const legendTemplate = this.legendaryCharacters[legendIndex];
+
+                    // 复制模板并调整ID
+                    const legendCharacter = {
+                        ...legendTemplate,
+                        id: `generated_legend_${Date.now()}_${i}`
+                    };
+
+                    result.push(legendCharacter);
+                    continue; // 跳过其余的角色创建步骤
+                } else {
+                    // 如果没有传说角色模板，降级为史诗角色
+                    rarity = 'epic';
+                }
             }
 
             // 随机选择角色类型
-            const types = Object.keys(this.types || {attack: {}, defense: {}, special: {}, healing: {}});
+            const types = Object.keys(this.types);
             const randomType = types[Math.floor(Math.random() * types.length)];
+            const typeData = this.types[randomType];
 
             // 随机选择属性
-            const attributes = Object.keys(this.attributes || {fire: {}, water: {}, earth: {}, wind: {}, light: {}, dark: {}});
+            const attributes = Object.keys(this.attributes);
             const randomAttribute = attributes[Math.floor(Math.random() * attributes.length)];
+
+            // 随机选择一个特性
+            const randomTrait = Object.keys(this.traits)[Math.floor(Math.random() * Object.keys(this.traits).length)];
 
             // 随机名称
             const firstNames = ['艾', '布', '克', '德', '埃', '弗', '格', '霍', '伊', '贾', '凯', '莱', '米', '尼', '奥', '佩', '奎', '罗', '萨', '泰'];
@@ -686,8 +812,31 @@ const Character = {
                 name: name,
                 type: randomType,
                 attribute: randomAttribute,
+                traits: [randomTrait],
                 rarity: rarity,
-                description: description
+                description: description,
+                level: 1,
+                exp: 0,
+                nextLevelExp: this.calculateNextLevelExp(1),
+                baseStats: {...typeData.baseStats},
+                currentStats: {...typeData.baseStats},
+                growthRates: {...typeData.growthRates},
+                isRecruited: true,
+                maxLevel: this.rarities[rarity].maxLevel,
+                maxTraits: this.rarities[rarity].maxTraits,
+                nextAttackCritical: false,
+                shield: 0,
+                bonusMultiplier: 0,
+                traitUnlockLevels: {
+                    second: 65,
+                    third: 90
+                },
+                stats: {
+                    totalDamage: 0,
+                    totalHealing: 0,
+                    mvpCount: 0,
+                    battlesParticipated: 0
+                }
             };
 
             result.push(character);
@@ -772,130 +921,6 @@ const Character = {
         console.log('角色系统重置完成，当前角色数量：0');
         this.init();
     },
-
-    /**
-     * 获取与角色类型兼容的特性
-     * @param {string} characterType - 角色类型
-     * @returns {array} 兼容的特性数组
-     */
-    getCompatibleTraits(characterType) {
-        const compatibleTraits = [];
-
-        for (const [traitId, trait] of Object.entries(this.traits)) {
-            if (trait.compatibleTypes && trait.compatibleTypes.includes(characterType)) {
-                compatibleTraits.push(traitId);
-            }
-        }
-
-        return compatibleTraits;
-    },
-
-    /**
-     * 生成随机可招募角色
-     * @param {number} count - 生成数量
-     * @returns {array} 可招募角色数组
-     */
-    generateRandomRecruitables(count = 3) {
-        const result = [];
-
-        // 随机决定是否有传说角色出现（概率较低）
-        const hasLegendary = Math.random() < 0.05; // 5%概率出现传说角色
-
-        if (hasLegendary && count > 0) {
-            // 随机选择一个传说角色
-            const availableLegendaries = [...this.legendaryCharacters];
-            const randomIndex = Math.floor(Math.random() * availableLegendaries.length);
-            const selected = availableLegendaries[randomIndex];
-
-            // 复制并添加唯一标识
-            const copy = {...selected};
-            result.push(copy);
-            count--; // 减少一个需要生成的角色数量
-        }
-
-        // 生成其余角色
-        for (let i = 0; i < count; i++) {
-            // 决定稀有度
-            let rarity;
-            const roll = Math.random();
-            if (roll < 0.75) { // 75%概率
-                rarity = 'rare';
-            } else if (roll < 0.95) { // 20%概率
-                rarity = 'epic';
-            } else { // 5%概率(保底)，确保一定比例的传说
-                rarity = 'legendary';
-
-                // 如果是传说角色，随机选择一个传说角色模板
-                const legendIndex = Math.floor(Math.random() * this.legendaryCharacters.length);
-                const legendTemplate = this.legendaryCharacters[legendIndex];
-
-                // 复制模板并调整ID
-                const legendCharacter = {
-                    ...legendTemplate,
-                    id: `generated_legend_${Date.now()}_${i}`
-                };
-
-                result.push(legendCharacter);
-                continue; // 跳过其余的角色创建步骤
-            }
-
-            // 随机选择角色类型
-            const types = Object.keys(this.types);
-            const randomType = types[Math.floor(Math.random() * types.length)];
-
-            // 随机选择属性
-            const attributes = Object.keys(this.attributes);
-            const randomAttribute = attributes[Math.floor(Math.random() * attributes.length)];
-
-            // 获取与类型兼容的特性
-            const compatibleTraits = this.getCompatibleTraits(randomType);
-
-            // 随机选择一个特性
-            const randomTrait = compatibleTraits[Math.floor(Math.random() * compatibleTraits.length)];
-
-            // 随机名称
-            const firstNames = ['艾', '布', '克', '德', '埃', '弗', '格', '霍', '伊', '贾', '凯', '莱', '米', '尼', '奥', '佩', '奎', '罗', '萨', '泰'];
-            const lastNames = ['尔', '恩', '琳', '克', '德', '斯', '顿', '森', '拉', '特', '维', '纳', '洛', '伯', '恩', '托', '根', '威', '尔', '泽'];
-            const randomFirstName = firstNames[Math.floor(Math.random() * firstNames.length)];
-            const randomLastName = lastNames[Math.floor(Math.random() * lastNames.length)];
-            const name = `${randomFirstName}${randomLastName}`;
-
-            // 根据角色类型生成描述
-            let description;
-            switch (randomType) {
-                case 'attack':
-                    description = '一位技艺高超的战士，在战场上所向披靡。';
-                    break;
-                case 'defense':
-                    description = '坚固的防御者，能够承受巨大的伤害而不退缩。';
-                    break;
-                case 'special':
-                    description = '神秘的施法者，精通各种强大的魔法和特殊能力。';
-                    break;
-                case 'healing':
-                    description = '具有治愈之手的医者，能在危急时刻救助队友。';
-                    break;
-                default:
-                    description = '一位神秘的冒险者，背景不为人知。';
-            }
-
-            // 创建角色
-            const character = {
-                id: `generated_${Date.now()}_${i}`,
-                name: name,
-                type: randomType,
-                attribute: randomAttribute,
-                traits: [randomTrait],
-                rarity: rarity,
-                description: description
-            };
-
-            result.push(character);
-        }
-
-        return result;
-    },
-
 
     /**
      * 计算角色的攻击力

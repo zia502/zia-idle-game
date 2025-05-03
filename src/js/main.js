@@ -139,6 +139,19 @@ document.addEventListener('DOMContentLoaded', function() {
             console.warn('找不到BuffSystem模块，跳过初始化');
         }
 
+        // 初始化地下城系统
+        if (typeof Dungeon !== 'undefined') {
+            console.log('初始化地下城系统...');
+            Dungeon.init();
+            console.log('地下城系统初始化完成');
+            // 更新地下城列表显示
+            if (typeof UI !== 'undefined') {
+                UI.updateDungeonList();
+            }
+        } else {
+            console.warn('找不到Dungeon模块，跳过初始化');
+        }
+
         // 初始化武器盘加成系统
         if (typeof WeaponBoardBonusSystem !== 'undefined') {
             console.log('初始化武器盘加成系统...');

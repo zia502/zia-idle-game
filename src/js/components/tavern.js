@@ -81,18 +81,31 @@
         // 扣除金币
         if (Game.removeGold(cost)) {
             // 生成随机角色
-            generateRandomCharacters(count);
+            if (typeof Character !== 'undefined' && typeof Character.generateRandomRecruitables === 'function') {
+                currentRecruitResults = Character.generateRandomRecruitables(count);
+                
+                // 添加角色到游戏
+                currentRecruitResults.forEach(character => {
+                    if (typeof Character !== 'undefined' && typeof Character.addCharacter === 'function') {
+                        const newCharacterId = Character.addCharacter(character);
+                        console.log(`添加角色: ${character.name} (ID: ${newCharacterId})`);
+                    }
+                });
 
-            // 显示招募结果
-            showRecruitResult();
+                // 显示招募结果
+                showRecruitResult();
 
-            // 更新金币显示
-            updateGoldDisplay();
+                // 更新金币显示
+                updateGoldDisplay();
 
-            // 保存游戏状态
-            if (typeof Game !== 'undefined' && typeof Game.saveGame === 'function') {
-                console.log('保存游戏状态');
-                Game.saveGame();
+                // 保存游戏状态
+                if (typeof Game !== 'undefined' && typeof Game.saveGame === 'function') {
+                    console.log('保存游戏状态');
+                    Game.saveGame();
+                }
+            } else {
+                console.error('Character模块未定义或没有generateRandomRecruitables方法');
+                UI.showMessage('招募系统出现错误，请稍后再试');
             }
         } else {
             UI.showMessage('金币不足，无法招募角色');

@@ -5,6 +5,149 @@ const Dungeon = {
     // 地下城数据
     dungeons: {},
 
+    // 地下城模板
+    templates: {
+        forest_cave: {
+            id: 'forest_cave',
+            name: '森林洞穴',
+            description: '一个位于森林中的神秘洞穴，有许多低级怪物盘踞。',
+            level: 1,
+            requiredLevel: 1,
+            entrance: 'forest_entrance',
+            nextDungeon: 'mountain_path',
+            type: 'normal',
+            miniBossCount: 2,
+            possibleMonsters: ['slime', 'goblin', 'wolf'],
+            possibleMiniBosses: ['goblinChief', 'skeletonKing'],
+            possibleFinalBosses: ['forestGuardian'],
+            rewards: {
+                gold: 5000,
+                exp: 2000
+            },
+            chestDrops: {
+                silver: [
+                    { id: 'wood', type: 'material', rate: 0.4 },
+                    { id: 'stone', type: 'material', rate: 0.3 },
+                    { id: 'herbs', type: 'material', rate: 0.2 },
+                    { id: 'animalHide', type: 'material', rate: 0.1 }
+                ],
+                gold: [
+                    { id: 'forestSword', type: 'weapon', rate: 0.35 },
+                    { id: 'hunterAxe', type: 'weapon', rate: 0.3 },
+                    { id: 'guardianSpear', type: 'weapon', rate: 0.2 },
+                    { id: 'rangerBow', type: 'weapon', rate: 0.15 },
+                    { id: 'magicHerbs', type: 'material', rate: 0.4 },
+                    { id: 'crystal', type: 'material', rate: 0.3 },
+                    { id: 'beastFang', type: 'material', rate: 0.2 },
+                    { id: 'forestEssence', type: 'material', rate: 0.1 }
+                ]
+            }
+        },
+        mountain_path: {
+            id: 'mountain_path',
+            name: '山间小径',
+            description: '通往山脉深处的危险小径，盘踞着更强大的怪物。',
+            level: 2,
+            requiredLevel: 5,
+            entrance: 'mountain_entrance',
+            nextDungeon: 'ancient_ruins',
+            type: 'normal',
+            miniBossCount: 2,
+            possibleMonsters: ['mountainGoblin', 'rockGolem', 'iceWolf'],
+            possibleMiniBosses: ['mountainKing', 'iceElemental'],
+            possibleFinalBosses: ['mountainTitan'],
+            rewards: {
+                gold: 10000,
+                exp: 5000
+            },
+            chestDrops: {
+                silver: [
+                    { id: 'ironOre', type: 'material', rate: 0.4 },
+                    { id: 'crystal', type: 'material', rate: 0.3 },
+                    { id: 'iceCrystal', type: 'material', rate: 0.2 },
+                    { id: 'mountainHerbs', type: 'material', rate: 0.1 }
+                ],
+                gold: [
+                    { id: 'mountainSword', type: 'weapon', rate: 0.35 },
+                    { id: 'iceAxe', type: 'weapon', rate: 0.3 },
+                    { id: 'rockSpear', type: 'weapon', rate: 0.2 },
+                    { id: 'windBow', type: 'weapon', rate: 0.15 },
+                    { id: 'mountainCrystal', type: 'material', rate: 0.4 },
+                    { id: 'iceEssence', type: 'material', rate: 0.3 },
+                    { id: 'rockCore', type: 'material', rate: 0.2 },
+                    { id: 'windEssence', type: 'material', rate: 0.1 }
+                ]
+            }
+        },
+        ancient_ruins: {
+            id: 'ancient_ruins',
+            name: '古代遗迹',
+            description: '一座被遗忘的古代遗迹，隐藏着强大的魔法和危险的守护者。',
+            level: 3,
+            requiredLevel: 10,
+            entrance: 'ruins_entrance',
+            nextDungeon: null,
+            type: 'normal',
+            miniBossCount: 2,
+            possibleMonsters: ['ancientGuardian', 'ruinWalker', 'magicConstruct'],
+            possibleMiniBosses: ['ruinKeeper', 'magicMaster'],
+            possibleFinalBosses: ['ancientDragon'],
+            rewards: {
+                gold: 20000,
+                exp: 10000
+            },
+            chestDrops: {
+                silver: [
+                    { id: 'ancientStone', type: 'material', rate: 0.4 },
+                    { id: 'magicCrystal', type: 'material', rate: 0.3 },
+                    { id: 'ruinFragment', type: 'material', rate: 0.2 },
+                    { id: 'ancientHerbs', type: 'material', rate: 0.1 }
+                ],
+                gold: [
+                    { id: 'ancientSword', type: 'weapon', rate: 0.35 },
+                    { id: 'magicStaff', type: 'weapon', rate: 0.3 },
+                    { id: 'ruinSpear', type: 'weapon', rate: 0.2 },
+                    { id: 'dragonBow', type: 'weapon', rate: 0.15 },
+                    { id: 'ancientCrystal', type: 'material', rate: 0.4 },
+                    { id: 'magicEssence', type: 'material', rate: 0.3 },
+                    { id: 'dragonScale', type: 'material', rate: 0.2 },
+                    { id: 'ancientEssence', type: 'material', rate: 0.1 }
+                ]
+            }
+        }
+    },
+
+    // 地下城入口
+    entrances: {
+        forest_entrance: {
+            id: 'forest_entrance',
+            name: '森林入口',
+            description: '通往森林洞穴的入口，周围环绕着茂密的树木。',
+            dungeonId: 'forest_cave',
+            position: { x: 100, y: 200 }
+        },
+        mountain_entrance: {
+            id: 'mountain_entrance',
+            name: '山脉入口',
+            description: '通往山间小径的入口，位于陡峭的山脚下。',
+            dungeonId: 'mountain_path',
+            position: { x: 300, y: 400 }
+        },
+        ruins_entrance: {
+            id: 'ruins_entrance',
+            name: '遗迹入口',
+            description: '通往古代遗迹的入口，被神秘的符文环绕。',
+            dungeonId: 'ancient_ruins',
+            position: { x: 500, y: 600 }
+        }
+    },
+
+    // 已解锁的地下城
+    unlockedDungeons: ['forest_cave'],
+
+    // 已完成的地下城
+    completedDungeons: [],
+
     // 当前运行的地下城数据
     currentRun: {
         dungeonId: null,
@@ -80,184 +223,17 @@ const Dungeon = {
         }
     },
 
-    // 地下城定义
-    definitions: {
-        dungeon1: {
-            id: 'dungeon1',
-            name: '森林洞穴',
-            description: '一个位于森林中的神秘洞穴，有许多低级怪物盘踞。',
-            type: 'normal',
-            miniBossCount: 2,
-            possibleMonsters: ['剧毒史莱姆', '暗影哥布林', '月影狼王', '岩石巨像', '深渊食人魔'],
-            possibleMiniBosses: ['森林守护者', '山岳之王'],
-            possibleFinalBosses: ['大地泰坦'],
-            rewards: {
-                gold: 5000,
-                exp: 2000
-            },
-            chestDrops: {
-                silver: [
-                    { id: 'wood', type: 'material', rate: 0.4 },
-                    { id: 'stone', type: 'material', rate: 0.3 },
-                    { id: 'herbs', type: 'material', rate: 0.2 },
-                    { id: 'animalHide', type: 'material', rate: 0.1 }
-                ],
-                gold: [
-                    { id: 'forestSword', type: 'weapon', rate: 0.35 },
-                    { id: 'hunterAxe', type: 'weapon', rate: 0.3 },
-                    { id: 'guardianSpear', type: 'weapon', rate: 0.2 },
-                    { id: 'rangerBow', type: 'weapon', rate: 0.15 },
-                    { id: 'magicHerbs', type: 'material', rate: 0.4 },
-                    { id: 'crystal', type: 'material', rate: 0.3 },
-                    { id: 'beastFang', type: 'material', rate: 0.2 },
-                    { id: 'forestEssence', type: 'material', rate: 0.1 }
-                ],
-                red: [
-                    { id: 'natureSword', type: 'weapon', rate: 0.4 },
-                    { id: 'earthAxe', type: 'weapon', rate: 0.3 },
-                    { id: 'forestSpear', type: 'weapon', rate: 0.2 },
-                    { id: 'wildBow', type: 'weapon', rate: 0.1 },
-                    { id: 'natureCrystal', type: 'material', rate: 0.35 },
-                    { id: 'earthEssence', type: 'material', rate: 0.3 },
-                    { id: 'forestCore', type: 'material', rate: 0.2 },
-                    { id: 'wildSpirit', type: 'material', rate: 0.15 }
-                ],
-                rainbow: [
-                    { id: 'ancientSword', type: 'weapon', rate: 0.4 },
-                    { id: 'guardianAxe', type: 'weapon', rate: 0.3 },
-                    { id: 'druidSpear', type: 'weapon', rate: 0.2 },
-                    { id: 'elvenBow', type: 'weapon', rate: 0.1 },
-                    { id: 'ancientCrystal', type: 'material', rate: 0.35 },
-                    { id: 'guardianEssence', type: 'material', rate: 0.3 },
-                    { id: 'druidCore', type: 'material', rate: 0.2 },
-                    { id: 'elvenSpirit', type: 'material', rate: 0.15 }
-                ]
-            }
-        },
-        dungeon2: {
-            id: 'dungeon2',
-            name: '废弃矿井',
-            description: '一个废弃的矿井，现在被各种怪物占据。',
-            type: 'normal',
-            miniBossCount: 3,
-            possibleMonsters: ['暗影哥布林', '岩石巨像', '深渊食人魔', '熔岩巨魔', '冰霜巨魔'],
-            possibleMiniBosses: ['晶石巨像', '沙海巨虫'],
-            possibleFinalBosses: ['岩龙'],
-            rewards: {
-                gold: 5000,
-                exp: 5000
-            },
-            chestDrops: {
-                silver: [
-                    { id: 'ironOre', type: 'material', rate: 0.4 },
-                    { id: 'copperOre', type: 'material', rate: 0.3 },
-                    { id: 'coal', type: 'material', rate: 0.2 },
-                    { id: 'crystalShard', type: 'material', rate: 0.1 }
-                ],
-                gold: [
-                    { id: 'steelPickaxe', type: 'weapon', rate: 0.35 },
-                    { id: 'crystalAxe', type: 'weapon', rate: 0.3 },
-                    { id: 'gemSpear', type: 'weapon', rate: 0.2 },
-                    { id: 'caveBow', type: 'weapon', rate: 0.15 },
-                    { id: 'steelOre', type: 'material', rate: 0.4 },
-                    { id: 'crystal', type: 'material', rate: 0.3 },
-                    { id: 'gem', type: 'material', rate: 0.2 },
-                    { id: 'magicStone', type: 'material', rate: 0.1 }
-                ],
-                red: [
-                    { id: 'mithrilPickaxe', type: 'weapon', rate: 0.4 },
-                    { id: 'diamondAxe', type: 'weapon', rate: 0.3 },
-                    { id: 'crystalSpear', type: 'weapon', rate: 0.2 },
-                    { id: 'gemBow', type: 'weapon', rate: 0.1 },
-                    { id: 'mithrilOre', type: 'material', rate: 0.35 },
-                    { id: 'diamond', type: 'material', rate: 0.3 },
-                    { id: 'crystalCore', type: 'material', rate: 0.2 },
-                    { id: 'magicGem', type: 'material', rate: 0.15 }
-                ],
-                rainbow: [
-                    { id: 'dragonPickaxe', type: 'weapon', rate: 0.4 },
-                    { id: 'legendaryAxe', type: 'weapon', rate: 0.3 },
-                    { id: 'crystalSpear', type: 'weapon', rate: 0.2 },
-                    { id: 'diamondBow', type: 'weapon', rate: 0.1 },
-                    { id: 'dragonOre', type: 'material', rate: 0.35 },
-                    { id: 'legendaryGem', type: 'material', rate: 0.3 },
-                    { id: 'crystalHeart', type: 'material', rate: 0.2 },
-                    { id: 'diamondCore', type: 'material', rate: 0.15 }
-                ]
-            }
-        },
-        dungeon3: {
-            id: 'dungeon3',
-            name: '古代遗迹',
-            description: '一座古老文明的遗迹，有强大的守卫和珍贵的宝藏。',
-            type: 'elite',
-            miniBossCount: 4,
-            possibleMonsters: ['岩石巨像', '深渊食人魔', '熔岩巨魔', '冰霜巨魔', '风暴巨魔'],
-            possibleMiniBosses: ['暗影幻影', '死亡骑士'],
-            possibleFinalBosses: ['暗影魔龙'],
-            rewards: {
-                gold: 10000,
-                exp: 10000
-            },
-            chestDrops: {
-                silver: [
-                    { id: 'ancientStone', type: 'material', rate: 0.4 },
-                    { id: 'ruinCrystal', type: 'material', rate: 0.3 },
-                    { id: 'templeRelic', type: 'material', rate: 0.2 },
-                    { id: 'ancientScroll', type: 'material', rate: 0.1 }
-                ],
-                gold: [
-                    { id: 'templeSword', type: 'weapon', rate: 0.35 },
-                    { id: 'guardianAxe', type: 'weapon', rate: 0.3 },
-                    { id: 'holySpear', type: 'weapon', rate: 0.2 },
-                    { id: 'sacredBow', type: 'weapon', rate: 0.15 },
-                    { id: 'templeCrystal', type: 'material', rate: 0.4 },
-                    { id: 'guardianRelic', type: 'material', rate: 0.3 },
-                    { id: 'holyScroll', type: 'material', rate: 0.2 },
-                    { id: 'sacredStone', type: 'material', rate: 0.1 }
-                ],
-                red: [
-                    { id: 'holySword', type: 'weapon', rate: 0.4 },
-                    { id: 'divineAxe', type: 'weapon', rate: 0.3 },
-                    { id: 'sacredSpear', type: 'weapon', rate: 0.2 },
-                    { id: 'celestialBow', type: 'weapon', rate: 0.1 },
-                    { id: 'holyCrystal', type: 'material', rate: 0.35 },
-                    { id: 'divineRelic', type: 'material', rate: 0.3 },
-                    { id: 'sacredScroll', type: 'material', rate: 0.2 },
-                    { id: 'celestialStone', type: 'material', rate: 0.15 }
-                ],
-                rainbow: [
-                    { id: 'divineSword', type: 'weapon', rate: 0.4 },
-                    { id: 'celestialAxe', type: 'weapon', rate: 0.3 },
-                    { id: 'holySpear', type: 'weapon', rate: 0.2 },
-                    { id: 'sacredBow', type: 'weapon', rate: 0.1 },
-                    { id: 'divineCrystal', type: 'material', rate: 0.35 },
-                    { id: 'celestialRelic', type: 'material', rate: 0.3 },
-                    { id: 'holyScroll', type: 'material', rate: 0.2 },
-                    { id: 'sacredStone', type: 'material', rate: 0.15 }
-                ]
-            }
-        }
-    },
-
-    /**
-     * 加载怪物和Boss模板数据
-     */
+    // 加载怪物和Boss模板数据
     loadTemplates() {
-        console.log('开始加载怪物和Boss模板数据...');
-        console.log('当前monsters状态:', this.monsters);
-        console.log('当前bosses状态:', this.bosses);
-
-        // 从Python服务器获取JSON数据
-        const serverUrl = 'http://localhost:8000';
-        const monstersPath = '/src/data/monsters.json';
-        const bossesPath = '/src/data/bosses.json';
-
-        console.log(`尝试从服务器加载怪物JSON: ${serverUrl}${monstersPath}`);
-        console.log(`尝试从服务器加载Boss JSON: ${serverUrl}${bossesPath}`);
+        console.log('开始加载地下城模板数据...');
+        
+        // 使用本地定义的地下城模板
+        this.templates = this.templates || {};
+        console.log('地下城模板加载完成:', this.templates);
 
         // 加载怪物模板
-        fetch(`${serverUrl}${monstersPath}`)
+        const monstersPath = '/src/data/monsters.json';
+        fetch(monstersPath)
             .then(response => {
                 console.log('怪物服务器响应状态:', response.status);
                 if (!response.ok) {
@@ -266,9 +242,8 @@ const Dungeon = {
                 return response.json();
             })
             .then(data => {
-                console.log('成功从服务器获取怪物数据:', data);
-                this.monsters = data.monsters;
-                console.log('怪物模板数据加载成功');
+                console.log('成功加载怪物模板数据:', data);
+                this.monsterTemplates = data;
             })
             .catch(error => {
                 console.error('从服务器加载怪物模板数据失败:', error);
@@ -276,7 +251,8 @@ const Dungeon = {
             });
 
         // 加载Boss模板
-        fetch(`${serverUrl}${bossesPath}`)
+        const bossesPath = '/src/data/bosses.json';
+        fetch(bossesPath)
             .then(response => {
                 console.log('Boss服务器响应状态:', response.status);
                 if (!response.ok) {
@@ -285,9 +261,8 @@ const Dungeon = {
                 return response.json();
             })
             .then(data => {
-                console.log('成功从服务器获取Boss数据:', data);
-                this.bosses = data.bosses;
-                console.log('Boss模板数据加载成功');
+                console.log('成功加载Boss模板数据:', data);
+                this.bossTemplates = data;
             })
             .catch(error => {
                 console.error('从服务器加载Boss模板数据失败:', error);
@@ -305,18 +280,179 @@ const Dungeon = {
     },
 
     /**
+     * 加载地下城模板数据失败时的备用方案
+     */
+    loadDungeonsFallback() {
+        console.log('尝试使用备用方案加载地下城数据...');
+        
+        // 初始化地下城数据
+        this.unlockedDungeons = ['forest_cave'];
+        this.completedDungeons = [];
+        
+        // 初始化地下城模板
+        this.templates = {
+        };
+
+        // 初始化地下城数据
+        for (const [id, template] of Object.entries(this.templates)) {
+            this.dungeons[id] = {
+                ...template,
+                isCompleted: false,
+                isUnlocked: id === 'forest_cave' // 第一个地下城默认解锁
+            };
+        }
+
+        console.log('地下城模板数据加载完成:', this.templates);
+        console.log('地下城数据初始化完成:', this.dungeons);
+
+        // 更新UI显示
+        if (typeof UI !== 'undefined' && typeof UI.updateDungeonList === 'function') {
+            UI.updateDungeonList();
+        } else {
+            console.warn('UI.updateDungeonList 函数未定义');
+        }
+    },
+
+    /**
      * 初始化地下城系统
      */
     init() {
+        console.log('初始化地下城系统...');
+        
+        // 初始化地下城数据
+        this.unlockedDungeons = ['forest_cave']; // 默认解锁第一个地下城
+        this.completedDungeons = [];
+        this.entrances = {
+            'forest_entrance': {
+                id: 'forest_entrance',
+                name: '森林入口'
+            },
+            'mountain_entrance': {
+                id: 'mountain_entrance',
+                name: '山道入口'
+            }
+        };
+        
         // 加载模板
         this.loadTemplates();
+        
+        // 加载地下城数据
+        this.loadDungeons();
+        
+        // 显示初始化消息
+        UI.showMessage('地下城系统已初始化');
+        console.log('地下城系统初始化完成');
+    },
 
-        // 复制地下城定义到地下城数据
-        for (const [id, definition] of Object.entries(this.definitions)) {
-            this.dungeons[id] = {...definition};
+    /**
+     * 加载地下城数据
+     */
+    loadDungeons() {
+        try {
+            // 尝试从本地存储加载地下城数据
+            const savedData = localStorage.getItem('dungeonData');
+            if (savedData) {
+                const data = JSON.parse(savedData);
+                this.unlockedDungeons = data.unlockedDungeons || ['forest_cave'];
+                this.completedDungeons = data.completedDungeons || [];
+                console.log('从本地存储加载地下城数据成功');
+            } else {
+                // 如果没有保存的数据，使用默认值
+                this.unlockedDungeons = ['forest_cave'];
+                this.completedDungeons = [];
+                console.log('使用默认地下城数据');
+            }
+            
+            // 更新UI显示
+            if (typeof UI !== 'undefined') {
+                UI.updateDungeonList();
+            }
+        } catch (error) {
+            console.error('加载地下城数据失败:', error);
+            this.loadDungeonsFallback();
         }
+    },
 
-        console.log('地下城系统已初始化');
+    /**
+     * 保存地下城数据
+     */
+    saveDungeons() {
+        const data = {
+            unlockedDungeons: this.unlockedDungeons,
+            completedDungeons: this.completedDungeons
+        };
+        localStorage.setItem('dungeonData', JSON.stringify(data));
+    },
+
+    /**
+     * 获取可探索的地下城列表
+     * @returns {Array} 可探索的地下城列表
+     */
+    getAvailableDungeons() {
+        return this.unlockedDungeons.map(dungeonId => {
+            const template = this.templates[dungeonId];
+            const entrance = this.entrances[template.entrance];
+            return {
+                ...template,
+                entrance: entrance,
+                isCompleted: this.completedDungeons.includes(dungeonId)
+            };
+        });
+    },
+
+    /**
+     * 检查是否可以进入地下城
+     * @param {string} dungeonId - 地下城ID
+     * @returns {boolean} 是否可以进入
+     */
+    canEnterDungeon(dungeonId) {
+        const template = this.templates[dungeonId];
+        if (!template) return false;
+
+        // 检查是否已解锁
+        if (!this.unlockedDungeons.includes(dungeonId)) return false;
+
+        // 检查等级要求
+        if (Game.state.playerLevel < template.requiredLevel) return false;
+
+        return true;
+    },
+
+    /**
+     * 完成地下城
+     * @param {string} dungeonId - 地下城ID
+     */
+    completeDungeon(dungeonId) {
+        if (!this.completedDungeons.includes(dungeonId)) {
+            this.completedDungeons.push(dungeonId);
+            
+            // 解锁下一个地下城
+            const template = this.templates[dungeonId];
+            if (template.nextDungeon && !this.unlockedDungeons.includes(template.nextDungeon)) {
+                this.unlockedDungeons.push(template.nextDungeon);
+                UI.showMessage(`已解锁新的地下城：${this.templates[template.nextDungeon].name}`);
+            }
+
+            this.saveDungeons();
+        }
+    },
+
+    /**
+     * 获取地下城入口
+     * @param {string} entranceId - 入口ID
+     * @returns {Object} 入口信息
+     */
+    getEntrance(entranceId) {
+        return this.entrances[entranceId];
+    },
+
+    /**
+     * 获取地下城模板
+     * @param {string} dungeonId - 地下城ID
+     * @returns {Object} 地下城模板
+     */
+    getTemplate(dungeonId) {
+        return this.templates[dungeonId];
     },
 
     /**
@@ -334,20 +470,6 @@ const Dungeon = {
      */
     getAllDungeons() {
         return this.dungeons;
-    },
-
-    /**
-     * 获取可用地下城
-     * @returns {array} 可用地下城数组
-     */
-    getAvailableDungeons() {
-        const playerLevel = Game.state.playerLevel;
-        const unlockedDungeons = Game.state.progress.unlockedDungeons;
-
-        return Object.values(this.dungeons).filter(dungeon => {
-            return unlockedDungeons.includes(dungeon.id) &&
-                   playerLevel >= dungeon.minLevel;
-        });
     },
 
     /**
@@ -419,7 +541,7 @@ const Dungeon = {
 
         // 随机选择怪物类型
         const monsterType = monsterPool[Math.floor(Math.random() * monsterPool.length)];
-        const monsterTemplate = this.monsters[monsterType];
+        const monsterTemplate = this.monsterTemplates[monsterType];
         if (!monsterTemplate) return null;
 
         // 获取地下城类型
@@ -460,7 +582,7 @@ const Dungeon = {
 
         // 随机选择Boss类型
         const bossMonsterType = bossPool[Math.floor(Math.random() * bossPool.length)];
-        const bossTemplate = this.monsters[bossMonsterType];
+        const bossTemplate = this.bossTemplates[bossMonsterType];
         if (!bossTemplate) return null;
 
         // 获取地下城类型
@@ -738,23 +860,23 @@ const Dungeon = {
         const completedDungeons = Game.state.progress.completedDungeons;
 
         // 例如：完成dungeon1并且等级达到5级时解锁dungeon2
-        if (completedDungeons.includes('dungeon1') && playerLevel >= 5 &&
-            !Game.state.progress.unlockedDungeons.includes('dungeon2')) {
+        if (completedDungeons.includes('forest_cave') && playerLevel >= 5 &&
+            !Game.state.progress.unlockedDungeons.includes('mountain_path')) {
 
-            Game.state.progress.unlockedDungeons.push('dungeon2');
-            UI.showNotification('新地下城已解锁：废弃矿井');
+            Game.state.progress.unlockedDungeons.push('mountain_path');
+            UI.showNotification('新地下城已解锁：山间小径');
         }
 
         // 例如：完成dungeon2并且等级达到10级时解锁dungeon3
-        if (completedDungeons.includes('dungeon2') && playerLevel >= 10 &&
-            !Game.state.progress.unlockedDungeons.includes('dungeon3')) {
+        if (completedDungeons.includes('mountain_path') && playerLevel >= 10 &&
+            !Game.state.progress.unlockedDungeons.includes('ancient_ruins')) {
 
-            Game.state.progress.unlockedDungeons.push('dungeon3');
+            Game.state.progress.unlockedDungeons.push('ancient_ruins');
             UI.showNotification('新地下城已解锁：古代遗迹');
         }
 
         // 例如：完成dungeon3并且等级达到20级时解锁bossRaid1
-        if (completedDungeons.includes('dungeon3') && playerLevel >= 20 &&
+        if (completedDungeons.includes('ancient_ruins') && playerLevel >= 20 &&
             !Game.state.progress.unlockedDungeons.includes('bossRaid1')) {
 
             Game.state.progress.unlockedDungeons.push('bossRaid1');

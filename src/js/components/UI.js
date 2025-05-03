@@ -3002,5 +3002,68 @@ const UI = {
             console.error('显示武器选择对话框时出错:', error);
             this.showNotification('显示武器选择对话框时出错', 'error');
         }
+    },
+
+    /**
+     * 更新地下城列表显示
+     */
+    updateDungeonList() {
+        const dungeonList = document.getElementById('dungeon-list');
+        if (!dungeonList) {
+            console.warn('找不到地下城列表容器');
+            return;
+        }
+
+        const availableDungeons = Dungeon.getAvailableDungeons();
+        if (!availableDungeons || availableDungeons.length === 0) {
+            dungeonList.innerHTML = '<div class="empty-message">暂无可用地下城</div>';
+            return;
+        }
+
+        let html = '';
+        availableDungeons.forEach(dungeon => {
+            const canEnter = Dungeon.canEnterDungeon(dungeon.id);
+            const isCompleted = dungeon.isCompleted;
+            
+            html += `
+                <div class="dungeon-item ${canEnter ? 'available' : 'locked'} ${isCompleted ? 'completed' : ''}">
+                    <div class="dungeon-header">
+                        <h4>${dungeon.name}</h4>
+                        ${isCompleted ? '<span class="completed-badge">已完成</span>' : ''}
+                    </div>
+                    <div class="dungeon-info">
+                        <p>${dungeon.description}</p>
+                        <div class="dungeon-requirements">
+                            <span>等级要求: ${dungeon.requiredLevel}</span>
+                            <span>入口: ${dungeon.entrance.name}</span>
+                        </div>
+                        <div class="dungeon-rewards">
+                            <span>金币: ${dungeon.rewards.gold.min}-${dungeon.rewards.gold.max}</span>
+                            <span>经验: ${dungeon.rewards.exp}</span>
+                        </div>
+                    </div>
+                    <div class="dungeon-actions">
+                        ${canEnter ? 
+                            `<button class="btn btn-primary enter-dungeon" data-dungeon-id="${dungeon.id}">进入地下城</button>` :
+                            `<button class="btn btn-disabled" disabled>需要等级 ${dungeon.requiredLevel}</button>`
+                        }
+                    </div>
+                </div>
+            `;
+        });
+
+        dungeonList.innerHTML = html;
+
+        // 添加事件监听器
+        const enterButtons = dungeonList.querySelectorAll('.enter-dungeon');
+        enterButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const dungeonId = button.dataset.dungeonId;
+                if (Dungeon.canEnterDungeon(dungeonId)) {
+                    Dungeon.initDungeonRun(dungeonId);
+                    this.switchScreen('battle-screen');
+                }
+            });
+        });
     }
 };

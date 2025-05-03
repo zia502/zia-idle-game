@@ -12,7 +12,7 @@ const Game = {
         tickRate: 1000, // 游戏更新频率（毫秒）
         version: '0.1.0',
         playerLevel: 1,
-        gold: 10000,
+        gold: 100000,
         gems: 0,
         energy: 100,
         maxEnergy: 100,
@@ -669,7 +669,7 @@ const Game = {
                 if (!saveData) {
                     console.log("没有找到保存的游戏数据");
                     // 确保初始金币为10000
-                    this.state.gold = 10000;
+                    this.state.gold = 100000;
 
                     // 更新UI显示
                     const goldElement = document.getElementById('gold-display');
@@ -849,7 +849,7 @@ const Game = {
                 tickRate: 1000,
                 version: this.state.version,
                 playerLevel: 1,
-                gold: 10000,
+                gold: 100000,
                 gems: 0,
                 energy: 100,
                 maxEnergy: 100,

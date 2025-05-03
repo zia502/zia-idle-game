@@ -3,95 +3,431 @@
         "goblinRage": {
             "name": "哥布林之怒",
             "description": "哥布林酋长进入狂暴状态，攻击力提升50%",
-            "type": "buff",
-            "effect": {
-                "atkMultiplier": 1.5,
-                "duration": 3
-            }
+            "cooldown": 5,
+            "effectType": "buff",
+            "targetType": "self",
+            "duration": 3,
+            "effects": [
+                {
+                    "type": "attackUp",
+                    "value": 0.5,
+                    "duration": 3,
+                    "stackable": true,
+                    "dispellable": true
+                }
+            ]
         },
         "tribeCall": {
             "name": "部落召唤",
             "description": "召唤2-3个哥布林战士",
-            "type": "summon",
-            "effect": {
-                "minSummons": 2,
-                "maxSummons": 3,
-                "summonType": "goblin"
-            }
+            "cooldown": 6,
+            "effectType": "damage_and_buff",
+            "targetType": "all_enemies",
+            "duration": 2,
+            "effects": [
+                {
+                    "type": "damage",
+                    "multiplier": 1.5
+                },
+                {
+                    "type": "attackUp",
+                    "value": 0.3,
+                    "duration": 2,
+                    "stackable": true,
+                    "dispellable": true
+                }
+            ]
         },
         "boneStorm": {
             "name": "骨之风暴",
             "description": "召唤骨刺风暴，对全体敌人造成伤害",
-            "type": "aoe",
-            "effect": {
-                "damage": 30,
-                "hits": 3
-            }
+            "cooldown": 5,
+            "effectType": "damage",
+            "targetType": "all_enemies",
+            "effects": [
+                {
+                    "type": "damage",
+                    "multiplier": 1.5
+                }
+            ]
         },
         "darkAura": {
             "name": "黑暗光环",
             "description": "降低所有敌人的防御力",
-            "type": "debuff",
-            "effect": {
-                "defReduction": 0.3,
-                "duration": 2
-            }
+            "cooldown": 4,
+            "effectType": "debuff",
+            "targetType": "all_enemies",
+            "duration": 3,
+            "effects": [
+                {
+                    "type": "defenseDown",
+                    "value": 30,
+                    "duration": 3,
+                    "stackable": true,
+                    "dispellable": true
+                }
+            ]
         },
         "dragonBreath": {
             "name": "龙息",
             "description": "喷吐火焰，对前方敌人造成大量伤害",
-            "type": "direct",
-            "effect": {
-                "damage": 100,
-                "burnChance": 0.5
-            }
+            "cooldown": 5,
+            "effectType": "damage",
+            "targetType": "all_enemies",
+            "effects": [
+                {
+                    "type": "damage",
+                    "multiplier": 2.0
+                }
+            ]
         },
         "flameStorm": {
             "name": "火焰风暴",
             "description": "召唤火焰风暴，对全体敌人造成持续伤害",
-            "type": "aoe",
-            "effect": {
-                "damage": 40,
-                "duration": 3
-            }
+            "cooldown": 6,
+            "effectType": "damage",
+            "targetType": "all_enemies",
+            "effects": [
+                {
+                    "type": "damage",
+                    "multiplier": 1.8
+                }
+            ]
         },
         "dragonRage": {
             "name": "龙之怒",
             "description": "龙王进入愤怒状态，所有属性提升",
-            "type": "buff",
-            "effect": {
-                "atkMultiplier": 1.3,
-                "defMultiplier": 1.3,
-                "duration": 2
-            }
+            "cooldown": 8,
+            "effectType": "buff",
+            "targetType": "self",
+            "duration": 3,
+            "effects": [
+                {
+                    "type": "attackUp",
+                    "value": 0.3,
+                    "duration": 3,
+                    "stackable": true,
+                    "dispellable": true
+                },
+                {
+                    "type": "defenseUp",
+                    "value": 30,
+                    "duration": 3,
+                    "stackable": true,
+                    "dispellable": true
+                }
+            ]
         },
         "curseOfThePharaoh": {
             "name": "法老诅咒",
             "description": "诅咒所有敌人，降低其攻击力",
-            "type": "debuff",
-            "effect": {
-                "atkReduction": 0.4,
-                "duration": 3
-            }
+            "cooldown": 5,
+            "effectType": "debuff",
+            "targetType": "all_enemies",
+            "duration": 3,
+            "effects": [
+                {
+                    "type": "attackDown",
+                    "value": 0.4,
+                    "duration": 3,
+                    "stackable": true,
+                    "dispellable": true
+                }
+            ]
         },
         "sandStorm": {
             "name": "沙尘暴",
             "description": "召唤沙尘暴，降低敌人命中率",
-            "type": "debuff",
-            "effect": {
-                "accuracyReduction": 0.5,
-                "duration": 2
-            }
+            "cooldown": 4,
+            "effectType": "debuff",
+            "targetType": "all_enemies",
+            "duration": 2,
+            "effects": [
+                {
+                    "type": "missRate",
+                    "value": 0.5,
+                    "duration": 2,
+                    "stackable": true,
+                    "dispellable": true
+                }
+            ]
         },
         "mummyArmy": {
             "name": "木乃伊军团",
             "description": "召唤3-4个木乃伊战士",
-            "type": "summon",
-            "effect": {
-                "minSummons": 3,
-                "maxSummons": 4,
-                "summonType": "mummy"
-            }
+            "cooldown": 7,
+            "effectType": "damage_and_debuff",
+            "targetType": "all_enemies",
+            "duration": 2,
+            "effects": [
+                {
+                    "type": "damage",
+                    "multiplier": 1.2
+                },
+                {
+                    "type": "defenseDown",
+                    "value": 20,
+                    "duration": 2,
+                    "stackable": true,
+                    "dispellable": true
+                }
+            ]
+        },
+        "earthquake": {
+            "name": "地震",
+            "description": "引发地震，对全体敌人造成伤害并降低防御力",
+            "cooldown": 6,
+            "effectType": "damage_and_debuff",
+            "targetType": "all_enemies",
+            "duration": 2,
+            "effects": [
+                {
+                    "type": "damage",
+                    "multiplier": 1.5
+                },
+                {
+                    "type": "defenseDown",
+                    "value": 20,
+                    "duration": 2,
+                    "stackable": true,
+                    "dispellable": true
+                }
+            ]
+        },
+        "mountainCrush": {
+            "name": "山崩",
+            "description": "召唤山崩，对单体敌人造成巨大伤害",
+            "cooldown": 5,
+            "effectType": "damage",
+            "targetType": "enemy",
+            "effects": [
+                {
+                    "type": "damage",
+                    "multiplier": 3.0
+                }
+            ]
+        },
+        "stoneArmor": {
+            "name": "石甲",
+            "description": "获得防御力提升",
+            "cooldown": 4,
+            "effectType": "buff",
+            "targetType": "self",
+            "duration": 2,
+            "effects": [
+                {
+                    "type": "defenseUp",
+                    "value": 200,
+                    "duration": 2,
+                    "stackable": true,
+                    "dispellable": true
+                }
+            ]
+        },
+        "natureWrath": {
+            "name": "自然之怒",
+            "description": "召唤自然之力，对全体敌人造成伤害并施加中毒效果",
+            "cooldown": 7,
+            "effectType": "damage_and_debuff",
+            "targetType": "all_enemies",
+            "duration": 3,
+            "effects": [
+                {
+                    "type": "damage",
+                    "multiplier": 1.2
+                },
+                {
+                    "type": "attackDown",
+                    "value": 0.2,
+                    "duration": 3,
+                    "stackable": true,
+                    "dispellable": true
+                }
+            ]
+        },
+        "rootBind": {
+            "name": "根须缠绕",
+            "description": "缠绕敌人，降低其行动速度",
+            "cooldown": 5,
+            "effectType": "debuff",
+            "targetType": "all_enemies",
+            "duration": 2,
+            "effects": [
+                {
+                    "type": "attackDown",
+                    "value": 0.3,
+                    "duration": 2,
+                    "stackable": true,
+                    "dispellable": true
+                }
+            ]
+        },
+        "healingBloom": {
+            "name": "治愈之花",
+            "description": "恢复自身生命值",
+            "cooldown": 4,
+            "effectType": "heal",
+            "targetType": "self",
+            "effects": [
+                {
+                    "type": "heal",
+                    "value": 2000
+                }
+            ]
+        },
+        "rockFall": {
+            "name": "落石",
+            "description": "召唤落石，对随机敌人造成伤害",
+            "cooldown": 4,
+            "effectType": "damage",
+            "targetType": "all_enemies",
+            "effects": [
+                {
+                    "type": "damage",
+                    "multiplier": 1.8
+                }
+            ]
+        },
+        "mountainStrike": {
+            "name": "山岳打击",
+            "description": "对单体敌人造成巨大伤害并击退",
+            "cooldown": 6,
+            "effectType": "damage",
+            "targetType": "enemy",
+            "effects": [
+                {
+                    "type": "damage",
+                    "multiplier": 2.5
+                }
+            ]
+        },
+        "earthShield": {
+            "name": "大地护盾",
+            "description": "获得伤害减免",
+            "cooldown": 5,
+            "effectType": "buff",
+            "targetType": "self",
+            "duration": 2,
+            "effects": [
+                {
+                    "type": "defenseUp",
+                    "value": 300,
+                    "duration": 2,
+                    "stackable": true,
+                    "dispellable": true
+                }
+            ]
+        },
+        "crystalShard": {
+            "name": "水晶碎片",
+            "description": "发射水晶碎片，对全体敌人造成伤害",
+            "cooldown": 5,
+            "effectType": "damage",
+            "targetType": "all_enemies",
+            "effects": [
+                {
+                    "type": "damage",
+                    "multiplier": 1.6
+                }
+            ]
+        },
+        "gemArmor": {
+            "name": "宝石护甲",
+            "description": "提高自身防御力",
+            "cooldown": 4,
+            "effectType": "buff",
+            "targetType": "self",
+            "duration": 3,
+            "effects": [
+                {
+                    "type": "defenseUp",
+                    "value": 20,
+                    "duration": 3,
+                    "stackable": true,
+                    "dispellable": true
+                }
+            ]
+        },
+        "earthPulse": {
+            "name": "大地脉动",
+            "description": "对周围敌人造成伤害",
+            "cooldown": 3,
+            "effectType": "damage",
+            "targetType": "all_enemies",
+            "effects": [
+                {
+                    "type": "damage",
+                    "multiplier": 0.5
+                }
+            ]
+        },
+        "undergroundStrike": {
+            "name": "地下突袭",
+            "description": "从地下突袭敌人，造成伤害并眩晕",
+            "cooldown": 6,
+            "effectType": "damage_and_debuff",
+            "targetType": "enemy",
+            "duration": 1,
+            "effects": [
+                {
+                    "type": "damage",
+                    "multiplier": 2.0
+                },
+                {
+                    "type": "attackDown",
+                    "value": 0.5,
+                    "duration": 1,
+                    "stackable": true,
+                    "dispellable": true
+                }
+            ]
+        },
+        "desertRage": {
+            "name": "沙漠之怒",
+            "description": "生命值低于30%时，攻击力提升50%",
+            "cooldown": 8,
+            "effectType": "buff",
+            "targetType": "self",
+            "duration": 3,
+            "effects": [
+                {
+                    "type": "attackUp",
+                    "value": 0.5,
+                    "duration": 3,
+                    "stackable": true,
+                    "dispellable": true
+                }
+            ]
+        },
+        "stoneBreath": {
+            "name": "岩石吐息",
+            "description": "喷吐岩石碎片，对前方敌人造成伤害",
+            "cooldown": 5,
+            "effectType": "damage",
+            "targetType": "all_enemies",
+            "effects": [
+                {
+                    "type": "damage",
+                    "multiplier": 2.2
+                }
+            ]
+        },
+        "rockWings": {
+            "name": "岩石之翼",
+            "description": "提高自身防御力",
+            "cooldown": 4,
+            "effectType": "buff",
+            "targetType": "self",
+            "duration": 2,
+            "effects": [
+                {
+                    "type": "defenseUp",
+                    "value": 200,
+                    "duration": 2,
+                    "stackable": true,
+                    "dispellable": true
+                }
+            ]
         }
     }
 } 

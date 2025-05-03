@@ -31,6 +31,294 @@
             "atk": 35,
             "def": 25,
             "skills": ["curseOfThePharaoh", "sandStorm", "mummyArmy"]
+        },
+        "earthTitan": {
+            "name": "大地泰坦",
+            "attribute": "earth",
+            "hp": 1500000,
+            "atk": 5000,
+            "def": 45,
+            "skills": ["earthquake", "mountainCrush", "stoneArmor"]
+        },
+        "forestGuardian": {
+            "name": "森林守护者",
+            "attribute": "earth",
+            "hp": 800000,
+            "atk": 3500,
+            "def": 35,
+            "skills": ["natureWrath", "rootBind", "healingBloom"]
+        },
+        "mountainKing": {
+            "name": "山岳之王",
+            "attribute": "earth",
+            "hp": 1200000,
+            "atk": 4500,
+            "def": 40,
+            "skills": ["rockFall", "mountainStrike", "earthShield"]
+        },
+        "crystalGolem": {
+            "name": "晶石巨像",
+            "attribute": "earth",
+            "hp": 1000000,
+            "atk": 4000,
+            "def": 50,
+            "skills": ["crystalShard", "gemArmor", "earthPulse"]
+        },
+        "sandWorm": {
+            "name": "沙海巨虫",
+            "attribute": "earth",
+            "hp": 900000,
+            "atk": 3800,
+            "def": 30,
+            "skills": ["sandStorm", "undergroundStrike", "desertRage"]
+        },
+        "stoneDragon": {
+            "name": "岩龙",
+            "attribute": "earth",
+            "hp": 1100000,
+            "atk": 4200,
+            "def": 38,
+            "skills": ["stoneBreath", "rockWings", "earthquake"]
+        },
+        "darkPhantom": {
+            "name": "暗影幻影",
+            "attribute": "dark",
+            "hp": 1300000,
+            "atk": 5500,
+            "def": 25,
+            "skills": ["shadowStrike", "darkMist", "soulSteal"]
+        },
+        "nightmareQueen": {
+            "name": "噩梦女王",
+            "attribute": "dark",
+            "hp": 950000,
+            "atk": 4800,
+            "def": 20,
+            "skills": ["nightmareCurse", "darkTentacles", "soulDrain"]
+        },
+        "voidWalker": {
+            "name": "虚空行者",
+            "attribute": "dark",
+            "hp": 1400000,
+            "atk": 6000,
+            "def": 15,
+            "skills": ["voidRift", "darkPortal", "soulRend"]
+        },
+        "deathKnight": {
+            "name": "死亡骑士",
+            "attribute": "dark",
+            "hp": 1100000,
+            "atk": 5200,
+            "def": 40,
+            "skills": ["deathStrike", "darkArmor", "soulHarvest"]
+        },
+        "shadowDragon": {
+            "name": "暗影魔龙",
+            "attribute": "dark",
+            "hp": 1600000,
+            "atk": 6500,
+            "def": 35,
+            "skills": ["shadowBreath", "darkWings", "soulBurn"]
+        },
+        "necromancer": {
+            "name": "亡灵法师",
+            "attribute": "dark",
+            "hp": 850000,
+            "atk": 4500,
+            "def": 18,
+            "skills": ["raiseDead", "darkMagic", "soulCurse"]
+        },
+        "flameTitan": {
+            "name": "烈焰泰坦",
+            "attribute": "fire",
+            "hp": 1700000,
+            "atk": 6800,
+            "def": 42,
+            "skills": ["flameStrike", "fireStorm", "heatWave"]
+        },
+        "phoenixKing": {
+            "name": "凤凰之王",
+            "attribute": "fire",
+            "hp": 1200000,
+            "atk": 5800,
+            "def": 30,
+            "skills": ["phoenixFlame", "rebirth", "fireWings"]
+        },
+        "lavaGiant": {
+            "name": "熔岩巨人",
+            "attribute": "fire",
+            "hp": 1500000,
+            "atk": 6200,
+            "def": 45,
+            "skills": ["lavaBurst", "magmaArmor", "heatBlast"]
+        },
+        "fireDragon": {
+            "name": "炎龙",
+            "attribute": "fire",
+            "hp": 1800000,
+            "atk": 7000,
+            "def": 38,
+            "skills": ["dragonFlame", "fireStorm", "heatBreath"]
+        },
+        "volcanoLord": {
+            "name": "火山领主",
+            "attribute": "fire",
+            "hp": 1400000,
+            "atk": 6000,
+            "def": 40,
+            "skills": ["volcanicEruption", "lavaFlow", "heatShield"]
+        },
+        "salamanderKing": {
+            "name": "火蜥蜴王",
+            "attribute": "fire",
+            "hp": 1000000,
+            "atk": 5200,
+            "def": 35,
+            "skills": ["fireTongue", "heatWave", "lavaArmor"]
+        },
+        "iceTitan": {
+            "name": "寒冰泰坦",
+            "attribute": "ice",
+            "hp": 1600000,
+            "atk": 5500,
+            "def": 48,
+            "skills": ["iceCrush", "frostStorm", "iceArmor"]
+        },
+        "frostQueen": {
+            "name": "霜雪女王",
+            "attribute": "ice",
+            "hp": 1100000,
+            "atk": 4800,
+            "def": 32,
+            "skills": ["frostCurse", "iceShard", "snowStorm"]
+        },
+        "iceDragon": {
+            "name": "冰霜巨龙",
+            "attribute": "ice",
+            "hp": 1900000,
+            "atk": 6500,
+            "def": 42,
+            "skills": ["frostBreath", "iceStorm", "coldWings"]
+        },
+        "snowGiant": {
+            "name": "雪域巨人",
+            "attribute": "ice",
+            "hp": 1300000,
+            "atk": 5200,
+            "def": 45,
+            "skills": ["snowCrush", "iceArmor", "blizzard"]
+        },
+        "frostWitch": {
+            "name": "寒冰女巫",
+            "attribute": "ice",
+            "hp": 900000,
+            "atk": 4500,
+            "def": 25,
+            "skills": ["frostMagic", "iceShield", "snowCurse"]
+        },
+        "glacierLord": {
+            "name": "冰川领主",
+            "attribute": "ice",
+            "hp": 1500000,
+            "atk": 5800,
+            "def": 40,
+            "skills": ["glacierStrike", "iceWave", "frostArmor"]
+        },
+        "stormTitan": {
+            "name": "风暴泰坦",
+            "attribute": "wind",
+            "hp": 1400000,
+            "atk": 6000,
+            "def": 35,
+            "skills": ["thunderStrike", "windStorm", "lightningArmor"]
+        },
+        "thunderDragon": {
+            "name": "雷霆巨龙",
+            "attribute": "wind",
+            "hp": 1700000,
+            "atk": 6800,
+            "def": 38,
+            "skills": ["thunderBreath", "stormWings", "lightningStorm"]
+        },
+        "windSpirit": {
+            "name": "风之精灵",
+            "attribute": "wind",
+            "hp": 950000,
+            "atk": 5000,
+            "def": 22,
+            "skills": ["windBlade", "stormDance", "airShield"]
+        },
+        "hurricaneKing": {
+            "name": "飓风之王",
+            "attribute": "wind",
+            "hp": 1300000,
+            "atk": 5800,
+            "def": 30,
+            "skills": ["hurricane", "windStrike", "stormArmor"]
+        },
+        "lightningLord": {
+            "name": "闪电领主",
+            "attribute": "wind",
+            "hp": 1200000,
+            "atk": 5500,
+            "def": 32,
+            "skills": ["lightningStrike", "thunderStorm", "stormShield"]
+        },
+        "stormWitch": {
+            "name": "风暴女巫",
+            "attribute": "wind",
+            "hp": 1000000,
+            "atk": 4800,
+            "def": 25,
+            "skills": ["stormMagic", "windCurse", "lightningShield"]
+        },
+        "waterTitan": {
+            "name": "海洋泰坦",
+            "attribute": "water",
+            "hp": 1500000,
+            "atk": 5500,
+            "def": 42,
+            "skills": ["tidalWave", "waterStorm", "oceanArmor"]
+        },
+        "seaDragon": {
+            "name": "海龙",
+            "attribute": "water",
+            "hp": 1800000,
+            "atk": 6500,
+            "def": 38,
+            "skills": ["waterBreath", "tidalWings", "oceanStorm"]
+        },
+        "tideLord": {
+            "name": "潮汐领主",
+            "attribute": "water",
+            "hp": 1300000,
+            "atk": 5200,
+            "def": 35,
+            "skills": ["tideStrike", "waterWave", "oceanShield"]
+        },
+        "waterSpirit": {
+            "name": "水之精灵",
+            "attribute": "water",
+            "hp": 950000,
+            "atk": 4500,
+            "def": 25,
+            "skills": ["waterBlade", "tideDance", "oceanCurse"]
+        },
+        "abyssKing": {
+            "name": "深渊之王",
+            "attribute": "water",
+            "hp": 1600000,
+            "atk": 6000,
+            "def": 40,
+            "skills": ["abyssStrike", "waterStorm", "oceanArmor"]
+        },
+        "tidalWitch": {
+            "name": "潮汐女巫",
+            "attribute": "water",
+            "hp": 1100000,
+            "atk": 4800,
+            "def": 28,
+            "skills": ["tideMagic", "waterCurse", "oceanShield"]
         }
     }
 } 

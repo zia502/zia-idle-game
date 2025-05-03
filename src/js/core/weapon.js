@@ -481,8 +481,8 @@ const Weapon = {
      * @returns {string} 武器ID
      */
     createWeapon(data) {
-        console.log('开始创建武器...');
-        console.log('武器数据:', data);
+        //console.log('开始创建武器...');
+        //console.log('武器数据:', data);
 
         const weaponId = data.id || `weapon_${Date.now()}`;
         const type = this.types[data.type] || this.types.sword;
@@ -503,8 +503,8 @@ const Weapon = {
                 rarityName = 'common';
         }
 
-        console.log('武器类型:', type);
-        console.log('武器稀有度:', rarityName);
+        //console.log('武器类型:', type);
+        //console.log('武器稀有度:', rarityName);
 
         // 创建武器对象
         this.weapons[weaponId] = {
@@ -521,8 +521,8 @@ const Weapon = {
             isEquipped: false
         };
 
-        console.log(`创建武器成功: ${this.weapons[weaponId].name}`);
-        console.log('武器详情:', this.weapons[weaponId]);
+        //console.log(`创建武器成功: ${this.weapons[weaponId].name}`);
+        //console.log('武器详情:', this.weapons[weaponId]);
         Game.stats.weaponsCollected++;
 
         return weaponId;

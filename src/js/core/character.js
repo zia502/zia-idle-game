@@ -156,18 +156,19 @@ const Character = {
 
         const characterId = data.id || `char_${Date.now()}`;
 
-        const baseStats = {...typeData.baseStats};
+        // 使用传入的baseStats或创建一个默认的基础属性对象
+        const baseStats = data.baseStats;
         const rarity = data.rarity || 'rare'; // 默认稀有度为rare
         const rarityData = this.rarities[rarity] || this.rarities.rare;
 
-        // 初始特性，根据稀有度限制特性数量
-        let traits = (data.traits || []).slice(0, rarityData.maxTraits);
-
-        // 对于主角，可以有特殊处理
+        // 对于主角，特性系统已被技能系统取代
         const isMainCharacter = data.isMainCharacter || false;
-        if (isMainCharacter) {
-            // 主角可以拥有4个特性，但第4个必须来自不同的职业系统
-            traits = (data.traits || []).slice(0, 4);
+        // 初始特性数组
+        let traits = [];
+
+        // 对于非主角，仍然使用特性系统
+        if (!isMainCharacter && data.traits) {
+            traits = data.traits.slice(0, rarityData.maxTraits);
         }
 
         // 创建角色对象
@@ -179,9 +180,7 @@ const Character = {
             level: data.level || 1,
             exp: data.exp || 0,
             nextLevelExp: this.calculateNextLevelExp(data.level || 1),
-            traits: traits,
-            availableTraits: data.availableTraits || [], // 可供选择的特性池
-            unlockedTraits: data.unlockedTraits || [], // 已解锁但未装备的特性
+            traits: traits, // 对于主角，这将是空数组
             skills: data.skills || [],
             baseStats: baseStats,
             currentStats: {...baseStats},
@@ -190,17 +189,11 @@ const Character = {
             isRecruited: data.isRecruited || false,
             rarity: rarity,
             maxLevel: rarityData.maxLevel, // 设置角色等级上限
-            maxTraits: isMainCharacter ? 4 : rarityData.maxTraits, // 主角特殊处理
             // 战斗相关的临时状态
             nextAttackCritical: false, // 是否必定暴击
             shield: 0, // 护盾值
             // 传说角色的属性加成
             bonusMultiplier: data.bonusMultiplier || 0,
-            // 记录第一个特性和第二个特性的解锁等级
-            traitUnlockLevels: {
-                second: 65, // 65级解锁第二个特性
-                third: 90   // 90级解锁第三个特性
-            },
             // 记录战斗表现
             stats: {
                 totalDamage: 0,
@@ -213,7 +206,6 @@ const Character = {
                 current: 'novice',  // 当前职业
                 level: 1,           // 职业等级
                 history: ['novice'], // 历史职业
-                jobTraits: {}       // 各职业学到的特性
             }) : null
         };
 
@@ -414,17 +406,11 @@ const Character = {
             return false;
         }
 
-        // 对于主角的特殊限制：第4个特性必须来自不同的职业系统
-        if (character.isMainCharacter && slotIndex === 3) {
-            // 这里需要根据职业系统设计具体实现
-            // 检查该特性是否来自非当前职业体系
-            const currentJobSystem = character.job.current.split('_')[0]; // 假设职业名称格式为"system_jobname"
-            const traitJobSystem = traitId.split('_')[0]; // 假设特性ID格式类似
-
-            if (currentJobSystem === traitJobSystem) {
-                UI.showMessage(`第4个特性槽位必须装备来自不同职业系统的特性。`);
-                return false;
-            }
+        // 注意：特性系统已被技能系统取代，这段代码保留但不再使用
+        // 主角的技能由职业决定，不再需要手动装备特性
+        if (character.isMainCharacter) {
+            console.log('主角不再使用特性系统，技能由职业决定');
+            return false;
         }
 
         // 检查角色的特性解锁状态

@@ -75,7 +75,7 @@ const Battle = {
 
                 // 初始化DA和TA概率
                 if (!character.currentStats.daRate) {
-                    character.currentStats.daRate = 0.15; // 默认15%双重攻击率
+                    character.currentStats.daRate = 0.1; // 默认10%双重攻击率
                 }
 
                 if (!character.currentStats.taRate) {
@@ -93,6 +93,7 @@ const Battle = {
 
         // 合并前排和后排，前排成员先上场
         const teamMembers = [...frontLineMembers];
+        console.log('前排成员:', frontLineMembers.map(member => member.name).join(', '));
 
         // 记录备用队员信息，供后续使用
         this.backLineMembers = backLineMembers;
@@ -140,7 +141,28 @@ const Battle = {
         }
 
         // 记录战斗开始
-        this.logBattle(`遇到了 ${monster.name}${monster.isBoss ? (monster.isMiniBoss ? '(小BOSS)' : '(大BOSS)') : ''}`);
+        let monsterTypeText = '';
+        if (monsterCharacter.isBoss) {
+            if (monsterCharacter.isMiniBoss) {
+                monsterTypeText = '(小BOSS)';
+            } else if (monsterCharacter.isFinalBoss) {
+                monsterTypeText = '(大BOSS)';
+            } else {
+                monsterTypeText = '(BOSS)';
+            }
+        }
+        this.logBattle(`遇到了 ${monster.name}${monsterTypeText}`);
+
+        // 保存队伍成员的原始属性
+        for (const member of teamMembers) {
+            if (!member.originalStats) {
+                member.originalStats = {};
+            }
+
+            // 深拷贝当前属性作为原始属性
+            member.originalStats = JSON.parse(JSON.stringify(member.currentStats));
+            console.log(`保存 ${member.name} 的原始属性:`, member.originalStats);
+        }
 
         // 应用武器盘加成
         if (typeof WeaponBoardBonusSystem !== 'undefined') {
@@ -157,6 +179,19 @@ const Battle = {
 
         // 战斗循环
         let battleResult = this.processBattle(teamMembers, monsterCharacter);
+
+        // 恢复队伍成员的原始属性
+        for (const member of teamMembers) {
+            if (member.originalStats) {
+                console.log(`恢复 ${member.name} 的原始属性`);
+                member.currentStats = JSON.parse(JSON.stringify(member.originalStats));
+
+                // 保持当前HP不变，除非HP大于maxHP
+                if (member.currentStats.hp > member.currentStats.maxHp) {
+                    member.currentStats.hp = member.currentStats.maxHp;
+                }
+            }
+        }
 
         // 计算MVP
         let mvp = { mvpId: null, score: 0 };
@@ -572,12 +607,12 @@ const Battle = {
         switch (effect.type) {
             case 'daBoost':
                 // 提升DA（连击）概率
-                character.currentStats.daBoost = (character.currentStats.daBoost || 0) + effect.value;
+                character.currentStats.daRate = (character.currentStats.daRate || 0) + effect.value;
                 this.logBattle(`${character.name} 的被动技能提升了 ${effect.value * 100}% 的连击概率！`);
                 break;
             case 'taBoost':
                 // 提升TA（三连击）概率
-                character.currentStats.taBoost = (character.currentStats.taBoost || 0) + effect.value;
+                character.currentStats.taRate = (character.currentStats.taRate || 0) + effect.value;
                 this.logBattle(`${character.name} 的被动技能提升了 ${effect.value * 100}% 的三连击概率！`);
                 break;
             case 'attackUp':
@@ -589,11 +624,6 @@ const Battle = {
                 // 提升防御力
                 character.currentStats.defense = Math.floor(character.currentStats.defense * (1 + effect.value));
                 this.logBattle(`${character.name} 的被动技能提升了 ${effect.value * 100}% 的防御力！`);
-                break;
-            case 'speedUp':
-                // 提升速度
-                character.currentStats.speed = Math.floor(character.currentStats.speed * (1 + effect.value));
-                this.logBattle(`${character.name} 的被动技能提升了 ${effect.value * 100}% 的速度！`);
                 break;
             // 可以添加其他类型的被动效果
         }
@@ -965,7 +995,7 @@ const Battle = {
         }
 
         // 计算DA和TA率
-        let daRate = character.currentStats.daRate || 0.15; // 基础DA率15%
+        let daRate = character.currentStats.daRate || 0.10; // 基础DA率15%
         let taRate = character.currentStats.taRate || 0.05; // 基础TA率5%
 
         // 应用BUFF效果

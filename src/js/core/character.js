@@ -120,6 +120,35 @@ const Character = {
             if (typeof window !== 'undefined' && window.log) {
                 window.log(`成功获取角色: ${character.name} (ID: ${characterId})`);
             }
+
+            // 检查是否存在异常状态：有dungeonOriginalStats但不在地下城中
+            const abnormalState = character.dungeonOriginalStats &&
+                                 (!Dungeon || !Dungeon.currentRun);
+
+            if (abnormalState) {
+                console.log(`检测到角色 ${character.name} 存在异常状态：有dungeonOriginalStats但不在地下城中，清除它`);
+
+                // 重置currentStats为baseStats的深拷贝
+                character.currentStats = JSON.parse(JSON.stringify(character.baseStats));
+
+                // 清除地下城原始属性
+                delete character.dungeonOriginalStats;
+
+                // 清除地下城已应用的被动技能记录
+                if (character.dungeonAppliedPassives) {
+                    delete character.dungeonAppliedPassives;
+                    console.log(`清除 ${character.name} 的地下城已应用被动技能记录`);
+                }
+
+                // 清除所有BUFF
+                if (typeof BuffSystem !== 'undefined') {
+                    BuffSystem.clearAllBuffs(character);
+                    console.log(`清除 ${character.name} 的所有BUFF`);
+                } else if (character.buffs) {
+                    character.buffs = [];
+                    console.log(`清除 ${character.name} 的所有BUFF（直接清除buffs数组）`);
+                }
+            }
         }
 
         return character;
@@ -147,6 +176,10 @@ const Character = {
                               Dungeon.currentRun &&
                               mainCharacter.dungeonOriginalStats;
 
+            // 检查是否存在异常状态：有dungeonOriginalStats但不在地下城中
+            const abnormalState = mainCharacter.dungeonOriginalStats &&
+                                 (!Dungeon || !Dungeon.currentRun);
+
             if (inDungeon) {
                 // 在地下城中，保留当前状态
                 console.log('主角在地下城中，保留当前状态');
@@ -156,9 +189,24 @@ const Character = {
                 mainCharacter.currentStats = JSON.parse(JSON.stringify(mainCharacter.baseStats));
 
                 // 如果有dungeonOriginalStats但不在地下城中，清除它
-                if (mainCharacter.dungeonOriginalStats && (!Dungeon || !Dungeon.currentRun)) {
+                if (abnormalState) {
                     console.log('检测到异常状态：有dungeonOriginalStats但不在地下城中，清除它');
                     delete mainCharacter.dungeonOriginalStats;
+
+                    // 清除地下城已应用的被动技能记录
+                    if (mainCharacter.dungeonAppliedPassives) {
+                        delete mainCharacter.dungeonAppliedPassives;
+                        console.log(`清除 ${mainCharacter.name} 的地下城已应用被动技能记录`);
+                    }
+
+                    // 清除所有BUFF
+                    if (typeof BuffSystem !== 'undefined') {
+                        BuffSystem.clearAllBuffs(mainCharacter);
+                        console.log(`清除 ${mainCharacter.name} 的所有BUFF`);
+                    } else if (mainCharacter.buffs) {
+                        mainCharacter.buffs = [];
+                        console.log(`清除 ${mainCharacter.name} 的所有BUFF（直接清除buffs数组）`);
+                    }
                 }
             }
         }

@@ -708,6 +708,9 @@ const Game = {
             if (typeof Character !== 'undefined' && saveData.character && typeof Character.loadSaveData === 'function') {
                 console.log('加载角色数据');
                 Character.loadSaveData(saveData.character);
+
+                // 检查是否有异常的地下城状态
+                this.checkAbnormalDungeonState();
             }
 
             // 加载物品栏数据
@@ -1070,6 +1073,78 @@ const Game = {
         }
 
         return null;
+    },
+
+    /**
+     * 检查并修复异常的地下城状态
+     * 当页面刷新或异常退出地下城时，可能会导致角色保留dungeonOriginalStats但Dungeon.currentRun为null
+     */
+    checkAbnormalDungeonState() {
+        console.log('检查异常的地下城状态...');
+
+        // 检查Dungeon模块是否存在
+        if (typeof Dungeon === 'undefined') {
+            console.log('Dungeon模块未定义，跳过检查');
+            return;
+        }
+
+        // 检查是否有当前地下城运行
+        const inDungeon = Dungeon.currentRun !== null && Dungeon.currentRun !== undefined;
+        console.log(`当前是否在地下城中: ${inDungeon}`);
+
+        // 如果不在地下城中，检查所有角色是否有dungeonOriginalStats
+        if (!inDungeon && typeof Character !== 'undefined') {
+            console.log('不在地下城中，检查所有角色是否有dungeonOriginalStats');
+
+            const characters = Object.values(Character.characters || {});
+            let abnormalStateFound = false;
+
+            for (const character of characters) {
+                if (character.dungeonOriginalStats) {
+                    console.log(`检测到角色 ${character.name} 存在异常状态：有dungeonOriginalStats但不在地下城中`);
+                    abnormalStateFound = true;
+
+                    // 重置currentStats为baseStats的深拷贝
+                    character.currentStats = JSON.parse(JSON.stringify(character.baseStats));
+
+                    // 清除地下城原始属性
+                    delete character.dungeonOriginalStats;
+
+                    // 清除地下城已应用的被动技能记录
+                    if (character.dungeonAppliedPassives) {
+                        delete character.dungeonAppliedPassives;
+                        console.log(`清除 ${character.name} 的地下城已应用被动技能记录`);
+                    }
+
+                    // 清除所有BUFF
+                    if (typeof BuffSystem !== 'undefined') {
+                        BuffSystem.clearAllBuffs(character);
+                        console.log(`清除 ${character.name} 的所有BUFF`);
+                    } else if (character.buffs) {
+                        character.buffs = [];
+                        console.log(`清除 ${character.name} 的所有BUFF（直接清除buffs数组）`);
+                    }
+                }
+            }
+
+            if (abnormalStateFound) {
+                console.log('已修复异常的地下城状态');
+
+                // 保存游戏状态以确保修复被保存
+                this.saveGame();
+
+                // 更新UI显示
+                if (typeof UI !== 'undefined' && typeof UI.renderMainCharacter === 'function') {
+                    UI.renderMainCharacter();
+                }
+
+                if (typeof UI !== 'undefined' && typeof UI.renderTeam === 'function') {
+                    UI.renderTeam();
+                }
+            } else {
+                console.log('未检测到异常的地下城状态');
+            }
+        }
     }
 };
 

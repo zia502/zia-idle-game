@@ -1,6 +1,15 @@
 class MainCharacterInfo {
     constructor(character) {
         this.character = character;
+
+        // 添加事件监听器，在武器盘更新时重新计算属性
+        if (typeof Events !== 'undefined' && typeof Events.on === 'function') {
+            Events.on('weapon:updated', () => {
+                console.log('MainCharacterInfo: 收到武器盘更新事件，重新计算属性');
+                // 这里不需要做任何事情，因为每次渲染时都会重新计算属性
+                // 只需确保UI.renderMainCharacter()被调用即可
+            });
+        }
     }
 
     render() {
@@ -130,26 +139,26 @@ class MainCharacterInfo {
             totalAttack = (character.currentStats?.attack || 0) + (weaponBoardStats.base?.attack || 0);
             totalHp = (character.currentStats?.hp || 0) + (weaponBoardStats.base?.hp || 0);
 
-            // // 然后尝试使用getCharacterFullStats方法获取更准确的值
-            // if (typeof Character !== 'undefined' && typeof Character.getCharacterFullStats === 'function' &&
-            //     typeof Game !== 'undefined' && Game.state && Game.state.activeTeamId) {
+            // 然后尝试使用getCharacterFullStats方法获取更准确的值
+            if (typeof Character !== 'undefined' && typeof Character.getCharacterFullStats === 'function' &&
+                typeof Game !== 'undefined' && Game.state && Game.state.activeTeamId) {
 
-            //     const teamId = Game.state.activeTeamId;
+                const teamId = Game.state.activeTeamId;
 
-            //     // 确保所有必要的对象都存在
-            //     if (character && character.id && teamId &&
-            //         typeof Team !== 'undefined' && Team.getTeam && Team.getTeam(teamId) &&
-            //         typeof Weapon !== 'undefined' && Weapon.getWeaponBoard) {
+                // 确保所有必要的对象都存在
+                if (character && character.id && teamId &&
+                    typeof Team !== 'undefined' && Team.getTeam && Team.getTeam(teamId) &&
+                    typeof Weapon !== 'undefined' && Weapon.getWeaponBoard) {
 
-            //         const completeStats = Character.getCharacterFullStats(character.id, teamId);
+                    const completeStats = Character.getCharacterFullStats(character.id, teamId);
 
-            //         if (completeStats) {
-            //             console.log('获取到完整属性:', completeStats);
-            //             totalAttack = completeStats.attack || totalAttack;
-            //             totalHp = completeStats.hp || totalHp;
-            //         }
-            //     }
-            // }
+                    if (completeStats) {
+                        console.log('获取到完整属性:', completeStats);
+                        totalAttack = completeStats.attack || totalAttack;
+                        totalHp = completeStats.hp || totalHp;
+                    }
+                }
+            }
         } catch (error) {
             console.error('获取完整属性时出错:', error);
             // 已经在try块开始时设置了备用值，所以这里不需要再次设置

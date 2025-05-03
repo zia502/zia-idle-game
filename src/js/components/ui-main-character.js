@@ -232,6 +232,13 @@
             }
         });
 
+        // 在武器更新时重新渲染主角信息
+        Events.on('weapon:updated', (data) => {
+            console.log('武器更新事件触发，重新渲染主角信息', data);
+            // 武器盘更新时，主角的属性可能会受到影响，所以需要重新渲染
+            UI.renderMainCharacter();
+        });
+
         // 在切换到角色界面时也渲染主角信息
         Events.on('ui:screenChanged', (data) => {
             if (data.screen === 'character-screen') {

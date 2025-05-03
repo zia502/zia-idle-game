@@ -226,7 +226,12 @@ const Dungeon = {
 
         // 使用本地定义的地下城模板
         this.templates = this.templates || {};
+
         console.log('地下城模板加载完成:', this.templates);
+
+        // 先设置默认的怪物和Boss模板，以防异步加载失败
+        this.loadTemplatesFallback('monsters');
+        this.loadTemplatesFallback('bosses');
 
         // 加载怪物模板
         const monstersPath = '/src/data/monsters.json';
@@ -244,7 +249,7 @@ const Dungeon = {
             })
             .catch(error => {
                 console.error('从服务器加载怪物模板数据失败:', error);
-                this.loadTemplatesFallback('monsters');
+                // 已经在前面设置了默认模板，这里不需要再调用
             });
 
         // 加载Boss模板
@@ -263,7 +268,7 @@ const Dungeon = {
             })
             .catch(error => {
                 console.error('从服务器加载Boss模板数据失败:', error);
-                this.loadTemplatesFallback('bosses');
+                // 已经在前面设置了默认模板，这里不需要再调用
             });
     },
 
@@ -273,7 +278,75 @@ const Dungeon = {
      */
     loadTemplatesFallback(type) {
         console.log(`尝试使用备用方案加载${type}模板数据...`);
-        // 这里可以添加从本地文件或其他来源加载数据的逻辑
+
+        if (type === 'monsters') {
+            // 使用默认怪物模板
+            this.monsterTemplates = {
+                slime: {
+                    id: 'slime',
+                    name: '史莱姆',
+                    hp: 100,
+                    atk: 10,
+                    def: 5,
+                    attribute: 'water',
+                    xpReward: 50
+                },
+                goblin: {
+                    id: 'goblin',
+                    name: '哥布林',
+                    hp: 150,
+                    atk: 15,
+                    def: 8,
+                    attribute: 'earth',
+                    xpReward: 80
+                },
+                wolf: {
+                    id: 'wolf',
+                    name: '狼',
+                    hp: 120,
+                    atk: 20,
+                    def: 3,
+                    attribute: 'wind',
+                    xpReward: 70
+                }
+            };
+            console.log('已加载默认怪物模板:', this.monsterTemplates);
+        } else if (type === 'bosses') {
+            // 使用默认Boss模板
+            this.bossTemplates = {
+                goblinChief: {
+                    id: 'goblinChief',
+                    name: '哥布林酋长',
+                    hp: 500,
+                    atk: 30,
+                    def: 15,
+                    attribute: 'earth',
+                    xpReward: 300,
+                    skills: []
+                },
+                skeletonKing: {
+                    id: 'skeletonKing',
+                    name: '骷髅王',
+                    hp: 600,
+                    atk: 35,
+                    def: 10,
+                    attribute: 'dark',
+                    xpReward: 350,
+                    skills: []
+                },
+                forestGuardian: {
+                    id: 'forestGuardian',
+                    name: '森林守护者',
+                    hp: 1000,
+                    atk: 50,
+                    def: 20,
+                    attribute: 'earth',
+                    xpReward: 800,
+                    skills: []
+                }
+            };
+            console.log('已加载默认Boss模板:', this.bossTemplates);
+        }
     },
 
     /**
@@ -736,18 +809,27 @@ const Dungeon = {
         const multiplier = dungeonType.monsterMultiplier;
 
         // 计算怪物属性
-        const stats = {
-            hp: Math.floor(monsterTemplate.hp * multiplier.hp),
-            atk: Math.floor(monsterTemplate.atk * multiplier.atk),
-            def: Math.floor(monsterTemplate.def * multiplier.def)
-        };
+        const hp = Math.floor(monsterTemplate.hp * multiplier.hp);
+        const attack = Math.floor(monsterTemplate.atk * multiplier.atk);
+        const defense = Math.floor(monsterTemplate.def * multiplier.def);
 
         // 创建怪物实例
         const monster = {
             id: `${monsterType}_${Date.now()}`,
             name: monsterTemplate.name,
             attribute: monsterTemplate.attribute,
-            stats: stats,
+            baseStats: {
+                hp: hp,
+                attack: attack,
+                defense: defense,
+                maxHp: hp
+            },
+            currentStats: {
+                hp: hp,
+                attack: attack,
+                defense: defense,
+                maxHp: hp
+            },
             isBoss: false,
             isMiniBoss: false,
             isFinalBoss: false,
@@ -777,18 +859,27 @@ const Dungeon = {
         const multiplier = dungeonType.monsterMultiplier;
 
         // 计算Boss属性
-        const stats = {
-            hp: Math.floor(bossTemplate.hp * multiplier.hp),
-            atk: Math.floor(bossTemplate.atk * multiplier.atk),
-            def: Math.floor(bossTemplate.def * multiplier.def)
-        };
+        const hp = Math.floor(bossTemplate.hp * multiplier.hp);
+        const attack = Math.floor(bossTemplate.atk * multiplier.atk);
+        const defense = Math.floor(bossTemplate.def * multiplier.def);
 
         // 创建Boss实例
         const boss = {
             id: `${bossMonsterType}_${Date.now()}`,
             name: bossTemplate.name,
             attribute: bossTemplate.attribute,
-            stats: stats,
+            baseStats: {
+                hp: hp,
+                attack: attack,
+                defense: defense,
+                maxHp: hp
+            },
+            currentStats: {
+                hp: hp,
+                attack: attack,
+                defense: defense,
+                maxHp: hp
+            },
             skills: bossTemplate.skills,
             isBoss: true,
             isMiniBoss: bossType === 'mini',

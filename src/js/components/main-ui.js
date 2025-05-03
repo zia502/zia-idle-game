@@ -982,40 +982,17 @@ const MainUI = {
                             <span class="stat-value">${Dungeon.currentRun.finalBossAppeared ? (Dungeon.currentRun.isCompleted ? '已击败' : '战斗中') : '未出现'}</span>
                         </div>
                     </div>
+                    <div class="dungeon-controls">
+                        <button id="dungeon-pause-btn" class="dungeon-btn pause-btn">暂停</button>
+                        <button id="dungeon-exit-btn" class="dungeon-btn exit-btn">退出</button>
+                    </div>
                 </div>
             `;
 
             dungeonContainer.innerHTML = html;
 
-            // 添加控制按钮
-            if (typeof DungeonRunner !== 'undefined') {
-                const controlPanel = document.createElement('div');
-                controlPanel.className = 'dungeon-control-panel';
-                controlPanel.innerHTML = `
-                    <div class="speed-control">
-                        <label>战斗速度:</label>
-                        <select id="battle-speed-selector">
-                            <option value="500">极快</option>
-                            <option value="1000" selected>正常</option>
-                            <option value="2000">慢速</option>
-                            <option value="3000">非常慢</option>
-                        </select>
-                    </div>
-                `;
-
-                dungeonContainer.appendChild(controlPanel);
-
-                // 添加速度选择器事件
-                const speedSelector = document.getElementById('battle-speed-selector');
-                if (speedSelector) {
-                    speedSelector.addEventListener('change', () => {
-                        const speed = parseInt(speedSelector.value);
-                        if (!isNaN(speed) && typeof DungeonRunner.setLogDisplaySpeed === 'function') {
-                            DungeonRunner.setLogDisplaySpeed(speed);
-                        }
-                    });
-                }
-            }
+            // 添加暂停和退出按钮事件
+            this.bindDungeonControlEvents();
         } catch (error) {
             console.error('更新地下城信息时出错:', error);
             const dungeonContainer = document.getElementById('main-current-dungeon');
@@ -1129,6 +1106,49 @@ const MainUI = {
             'dark': '暗'
         };
         return elementMap[element] || element;
+    },
+
+    /**
+     * 绑定地下城控制按钮事件
+     */
+    bindDungeonControlEvents() {
+        const pauseBtn = document.getElementById('dungeon-pause-btn');
+        const exitBtn = document.getElementById('dungeon-exit-btn');
+
+        if (pauseBtn) {
+            pauseBtn.addEventListener('click', () => {
+                if (typeof DungeonRunner === 'undefined') {
+                    console.warn('DungeonRunner模块未定义');
+                    return;
+                }
+
+                if (DungeonRunner.isRunning) {
+                    // 暂停地下城探索
+                    DungeonRunner.pauseExploration();
+                    pauseBtn.textContent = '继续';
+                    pauseBtn.classList.add('paused');
+                } else {
+                    // 继续地下城探索
+                    DungeonRunner.resumeExploration();
+                    pauseBtn.textContent = '暂停';
+                    pauseBtn.classList.remove('paused');
+                }
+            });
+        }
+
+        if (exitBtn) {
+            exitBtn.addEventListener('click', () => {
+                if (typeof DungeonRunner === 'undefined') {
+                    console.warn('DungeonRunner模块未定义');
+                    return;
+                }
+
+                // 确认是否退出
+                if (confirm('确定要退出地下城探索吗？')) {
+                    DungeonRunner.exitDungeon();
+                }
+            });
+        }
     },
 
     /**

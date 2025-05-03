@@ -10,25 +10,21 @@ const Character = {
         attack: {
             name: '攻击',
             description: '专注于造成高伤害',
-            baseStats: { hp: 80, attack: 15, defense: 5, speed: 8 },
             growthRates: { hp: 10, attack: 3, defense: 0.5, speed: 1 }
         },
         defense: {
             name: '防御',
             description: '专注于提高生存能力',
-            baseStats: { hp: 120, attack: 8, defense: 12, speed: 4 },
             growthRates: { hp: 15, attack: 1, defense: 2, speed: 0.5 }
         },
         special: {
             name: '特殊',
             description: '擅长特殊技能和属性效果',
-            baseStats: { hp: 90, attack: 12, defense: 6, speed: 10 },
             growthRates: { hp: 12, attack: 2, defense: 1, speed: 1.5 }
         },
         healing: {
             name: '治疗',
             description: '擅长恢复队友生命和提供增益',
-            baseStats: { hp: 70, attack: 6, defense: 8, speed: 12 },
             growthRates: { hp: 8, attack: 0.8, defense: 1.2, speed: 2 }
         }
     },
@@ -98,112 +94,6 @@ const Character = {
         }
     },
 
-    // 角色特性定义
-    traits: {
-        // 攻击型特性
-        berserker: {
-            name: '狂战士',
-            description: '攻击力提升20%，防御力降低10%',
-            compatibleTypes: ['attack'],
-            type: 'passive',
-            effect: (character, stats) => {
-                stats.attack *= 1.2;
-                stats.defense *= 0.9;
-                return stats;
-            }
-        },
-        criticalSurge: {
-            name: '暴击涌动',
-            description: '暴击时额外造成50%伤害',
-            compatibleTypes: ['attack'],
-            type: 'active',
-            triggerRate: 0.3,
-            effect: (character) => {
-                return {
-                    triggered: true,
-                    message: `${character.name} 触发了暴击涌动！`,
-                    damageMultiplier: 1.5
-                };
-            }
-        },
-        // 防御型特性
-        guardian: {
-            name: '守护者',
-            description: '防御力提升20%，攻击力降低10%',
-            compatibleTypes: ['defense'],
-            type: 'passive',
-            effect: (character, stats) => {
-                stats.defense *= 1.2;
-                stats.attack *= 0.9;
-                return stats;
-            }
-        },
-        counterAttack: {
-            name: '反击',
-            description: '受到攻击时有30%概率进行反击',
-            compatibleTypes: ['defense'],
-            type: 'active',
-            triggerRate: 0.3,
-            effect: (character, attacker) => {
-                return {
-                    triggered: true,
-                    message: `${character.name} 进行了反击！`,
-                    target: attacker,
-                    damage: character.currentStats.attack * 0.8
-                };
-            }
-        },
-        // 特殊型特性
-        elementalMaster: {
-            name: '元素大师',
-            description: '元素伤害提升30%',
-            compatibleTypes: ['special'],
-            type: 'passive',
-            effect: (character, stats) => {
-                stats.elementalDamage *= 1.3;
-                return stats;
-            }
-        },
-        elementalBurst: {
-            name: '元素爆发',
-            description: '攻击时有20%概率触发元素爆发',
-            compatibleTypes: ['special'],
-            type: 'active',
-            triggerRate: 0.2,
-            effect: (character, target, baseDamage) => {
-                return {
-                    triggered: true,
-                    message: `${character.name} 触发了元素爆发！`,
-                    damage: baseDamage * 1.5,
-                    element: character.attribute
-                };
-            }
-        },
-        // 治疗型特性
-        healer: {
-            name: '医者',
-            description: '治疗效果提升30%',
-            compatibleTypes: ['healing'],
-            type: 'passive',
-            effect: (character, healAmount) => {
-                return healAmount * 1.3;
-            }
-        },
-        divineBlessing: {
-            name: '神圣祝福',
-            description: '治疗时有25%概率触发额外治疗',
-            compatibleTypes: ['healing'],
-            type: 'active',
-            triggerRate: 0.25,
-            effect: (character, target, healAmount) => {
-                return {
-                    triggered: true,
-                    message: `${character.name} 触发了神圣祝福！`,
-                    additionalHeal: healAmount * 0.5
-                };
-            }
-        }
-    },
 
     init(){},
     /**

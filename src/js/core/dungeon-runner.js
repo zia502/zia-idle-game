@@ -8,9 +8,14 @@ const DungeonRunner = {
     isRunning: false,
 
     /**
-     * 战斗日志显示速度（毫秒）
+     * 暂停状态
      */
-    logDisplaySpeed: 1000,
+    isPaused: false,
+
+    /**
+     * 战斗日志显示速度（毫秒）- 固定值
+     */
+    logDisplaySpeed: 800,
 
     /**
      * 初始化地下城运行器
@@ -149,7 +154,18 @@ const DungeonRunner = {
                         id: 'default_monster_1',
                         name: '史莱姆',
                         attribute: 'water',
-                        stats: { hp: 100, atk: 10, def: 5 },
+                        baseStats: {
+                            hp: 100,
+                            attack: 10,
+                            defense: 5,
+                            maxHp: 100
+                        },
+                        currentStats: {
+                            hp: 100,
+                            attack: 10,
+                            defense: 5,
+                            maxHp: 100
+                        },
                         isBoss: false,
                         isMiniBoss: false,
                         isFinalBoss: false,
@@ -159,7 +175,18 @@ const DungeonRunner = {
                         id: 'default_monster_2',
                         name: '哥布林',
                         attribute: 'earth',
-                        stats: { hp: 150, atk: 15, def: 8 },
+                        baseStats: {
+                            hp: 150,
+                            attack: 15,
+                            defense: 8,
+                            maxHp: 150
+                        },
+                        currentStats: {
+                            hp: 150,
+                            attack: 15,
+                            defense: 8,
+                            maxHp: 150
+                        },
                         isBoss: false,
                         isMiniBoss: false,
                         isFinalBoss: false,
@@ -178,7 +205,18 @@ const DungeonRunner = {
                         id: 'default_miniboss',
                         name: '哥布林酋长',
                         attribute: 'earth',
-                        stats: { hp: 500, atk: 30, def: 15 },
+                        baseStats: {
+                            hp: 500,
+                            attack: 30,
+                            defense: 15,
+                            maxHp: 500
+                        },
+                        currentStats: {
+                            hp: 500,
+                            attack: 30,
+                            defense: 15,
+                            maxHp: 500
+                        },
                         isBoss: true,
                         isMiniBoss: true,
                         isFinalBoss: false,
@@ -197,7 +235,18 @@ const DungeonRunner = {
                     id: 'default_finalboss',
                     name: '森林守护者',
                     attribute: 'earth',
-                    stats: { hp: 1000, atk: 50, def: 20 },
+                    baseStats: {
+                        hp: 1000,
+                        attack: 50,
+                        defense: 20,
+                        maxHp: 1000
+                    },
+                    currentStats: {
+                        hp: 1000,
+                        attack: 50,
+                        defense: 20,
+                        maxHp: 1000
+                    },
                     isBoss: true,
                     isMiniBoss: false,
                     isFinalBoss: true,
@@ -272,7 +321,18 @@ const DungeonRunner = {
                         id: 'default_miniboss',
                         name: '哥布林酋长',
                         attribute: 'earth',
-                        stats: { hp: 500, atk: 30, def: 15 },
+                        baseStats: {
+                            hp: 500,
+                            attack: 30,
+                            defense: 15,
+                            maxHp: 500
+                        },
+                        currentStats: {
+                            hp: 500,
+                            attack: 30,
+                            defense: 15,
+                            maxHp: 500
+                        },
                         isBoss: true,
                         isMiniBoss: true,
                         isFinalBoss: false,
@@ -342,7 +402,18 @@ const DungeonRunner = {
                     id: 'default_finalboss',
                     name: '森林守护者',
                     attribute: 'earth',
-                    stats: { hp: 1000, atk: 50, def: 20 },
+                    baseStats: {
+                        hp: 1000,
+                        attack: 50,
+                        defense: 20,
+                        maxHp: 1000
+                    },
+                    currentStats: {
+                        hp: 1000,
+                        attack: 50,
+                        defense: 20,
+                        maxHp: 1000
+                    },
                     isBoss: true,
                     isMiniBoss: false,
                     isFinalBoss: true,
@@ -729,11 +800,90 @@ const DungeonRunner = {
     },
 
     /**
-     * 设置日志显示速度
-     * @param {number} speed - 速度（毫秒）
+     * 暂停地下城探索
      */
-    setLogDisplaySpeed(speed) {
-        this.logDisplaySpeed = Math.max(100, Math.min(5000, speed));
-        console.log(`设置日志显示速度为 ${this.logDisplaySpeed} 毫秒`);
+    pauseExploration() {
+        if (!this.isRunning) {
+            console.warn('地下城探索已经暂停');
+            return;
+        }
+
+        this.isRunning = false;
+        this.isPaused = true;
+
+        this.addBattleLog('地下城探索已暂停', 'info');
+
+        // 发出事件
+        if (typeof Events !== 'undefined') {
+            Events.emit('dungeon:paused');
+        }
+
+        // 更新地下城信息显示
+        if (typeof MainUI !== 'undefined') {
+            MainUI.updateCurrentDungeon();
+        }
+    },
+
+    /**
+     * 继续地下城探索
+     */
+    resumeExploration() {
+        if (this.isRunning) {
+            console.warn('地下城探索已在运行中');
+            return;
+        }
+
+        if (!this.isPaused) {
+            console.warn('地下城探索未暂停，无法继续');
+            return;
+        }
+
+        this.isRunning = true;
+        this.isPaused = false;
+
+        this.addBattleLog('地下城探索继续进行', 'info');
+
+        // 发出事件
+        if (typeof Events !== 'undefined') {
+            Events.emit('dungeon:resumed');
+        }
+
+        // 更新地下城信息显示
+        if (typeof MainUI !== 'undefined') {
+            MainUI.updateCurrentDungeon();
+        }
+
+        // 继续处理下一个怪物
+        setTimeout(() => {
+            this.processNextMonster();
+        }, this.logDisplaySpeed);
+    },
+
+    /**
+     * 退出地下城
+     */
+    exitDungeon() {
+        if (!Dungeon.currentRun) {
+            console.warn('没有正在进行的地下城探索');
+            return;
+        }
+
+        this.isRunning = false;
+        this.isPaused = false;
+
+        this.addBattleLog('退出地下城探索', 'warning');
+
+        // 重置地下城运行
+        Dungeon.currentRun = null;
+
+        // 发出事件
+        if (typeof Events !== 'undefined') {
+            Events.emit('dungeon:exited');
+        }
+
+        // 更新地下城信息显示
+        if (typeof MainUI !== 'undefined') {
+            MainUI.updateCurrentDungeon();
+        }
     }
 };

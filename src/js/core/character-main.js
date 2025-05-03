@@ -15,29 +15,26 @@ Character.createMainCharacter = function(data) {
         isMainCharacter: true,
         level: 1,
         exp: 0,
-        // 默认主角特性
-        traits: data.traits || ['quickLearner'],
         // 默认主角职业
         job: {
             current: data.job?.current || 'warrior',
             level: data.job?.level || 1,
             history: data.job?.history || ['warrior'],
             jobLevels: data.job?.jobLevels || { 'warrior': 1 },
-            unlockedJobs: data.job?.unlockedJobs || [],
-            jobTraits: data.job?.jobTraits || {}
+            unlockedJobs: data.job?.unlockedJobs || []
         },
         // 默认属性
         baseStats: {
-            hp: 100,
-            attack: 10,
-            defense: 5,
+            hp: 120,
+            attack: 12,
+            defense: 8,
             speed: 5
         },
         // 当前属性初始化为与基础属性相同
         currentStats: {
-            hp: 100,
-            attack: 10,
-            defense: 5,
+            hp: 120,
+            attack: 12,
+            defense: 8,
             speed: 5
         },
         // 装备
@@ -62,10 +59,6 @@ Character.createMainCharacter = function(data) {
                 };
                 // 完全复制基础属性到当前属性
                 characterData.currentStats = { ...characterData.baseStats };
-                // 强制确保 currentStats 与 baseStats 一致
-                characterData.currentStats.attack = characterData.baseStats.attack;
-                characterData.currentStats.defense = characterData.baseStats.defense;
-                characterData.currentStats.hp = characterData.baseStats.hp;
             }
 
             // 应用职业技能
@@ -86,7 +79,7 @@ Character.createMainCharacter = function(data) {
             Game.state.playerLevel = 1;
         }
     }
-
+    console.log(characterData);
     return characterId;
 };
 

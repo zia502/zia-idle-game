@@ -159,8 +159,18 @@ const Battle = {
                 member.originalStats = {};
             }
 
-            // 深拷贝当前属性作为原始属性
+            // 先将currentStats重置为baseStats的深拷贝
+            member.currentStats = JSON.parse(JSON.stringify(member.baseStats));
+
+            // 保存当前HP值
+            const currentHp = member.currentStats.hp;
+
+            // 然后保存重置后的currentStats作为原始属性
             member.originalStats = JSON.parse(JSON.stringify(member.currentStats));
+
+            // 恢复当前HP值
+            member.currentStats.hp = currentHp;
+
             console.log(`保存 ${member.name} 的原始属性:`, member.originalStats);
         }
 
@@ -603,7 +613,7 @@ const Battle = {
      * @param {object} effect - 效果对象
      * @param {array} teamMembers - 队伍成员
      */
-    applyPassiveEffect(character, effect, teamMembers) {
+    applyPassiveEffect(character, effect, _teamMembers) {
         switch (effect.type) {
             case 'daBoost':
                 // 提升DA（连击）概率
@@ -1801,7 +1811,7 @@ const Battle = {
      * @param {object} target - 攻击目标
      * @param {object} battleStats - 战斗统计
      */
-    processAttackProcEffects(source, target, battleStats) {
+    processAttackProcEffects(source, target, _battleStats) {
         if (!source || !source.skills) return;
 
         // 遍历角色的所有技能

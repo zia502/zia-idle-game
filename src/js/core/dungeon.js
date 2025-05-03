@@ -24,20 +24,59 @@ const Dungeon = {
         normal: {
             name: '普通',
             description: '普通的地下城，有小boss和大boss',
-            monsterCount: { min: 3, max: 5 },
+            monsterCount: { min: 10, max: 20 },
+            monsterMultiplier: {
+                hp: 1.0,
+                atk: 1.0,
+                def: 1.0
+            },
             rewardMultiplier: 1.0
         },
         elite: {
             name: '精英',
             description: '较难的地下城，有更好的奖励',
-            monsterCount: { min: 5, max: 8 },
+            monsterCount: { min: 30, max: 50},
+            monsterMultiplier: {
+                hp: 2.0,
+                atk: 2.0,
+                def: 2.0
+            },
             rewardMultiplier: 1.5
         },
         boss: {
-            name: 'Boss',
+            name: '噩梦',
             description: '挑战强大的Boss，获得丰厚奖励',
-            monsterCount: { min: 1, max: 3 },
+            monsterCount: { min: 1, max: 1 },
+            monsterMultiplier: {
+                hp: 3.0,
+                atk: 3.0,
+                def: 3.0
+            },
             rewardMultiplier: 2.0
+        }
+    },
+
+    // 宝箱类型定义
+    chestTypes: {
+        silver: {
+            name: '银宝箱',
+            description: '普通宝箱，可能包含基础装备和材料',
+            dropRate: 1.0
+        },
+        gold: {
+            name: '金宝箱',
+            description: '高级宝箱，可能包含稀有装备和材料',
+            dropRate: 1.0
+        },
+        red: {
+            name: '红宝箱',
+            description: '史诗宝箱，可能包含传说装备和材料',
+            dropRate: 1.0
+        },
+        rainbow: {
+            name: '彩虹宝箱',
+            description: '稀有宝箱，必定包含传说装备和材料',
+            dropRate: 0.0005 // 0.05% for miniBoss, 0.02 for finalBoss
         }
     },
 
@@ -48,20 +87,14 @@ const Dungeon = {
             name: '森林洞穴',
             description: '一个位于森林中的神秘洞穴，有许多低级怪物盘踞。',
             type: 'normal',
-            minLevel: 1,
-            maxLevel: 10,
-            miniBossCount: 2,  // 小boss数量
-            possibleMonsters: ['slime', 'wolf', 'goblin'],
-            possibleMiniBosses: ['goblinChief'],  // 小boss池
-            possibleFinalBosses: ['skeletonKing'],  // 大boss池
+            miniBossCount: 2,
+            possibleMonsters: ['剧毒史莱姆', '暗影哥布林', '月影狼王', '岩石巨像', '深渊食人魔'],
+            possibleMiniBosses: ['森林守护者', '山岳之王'],
+            possibleFinalBosses: ['大地泰坦'],
             rewards: {
-                gold: { min: 50, max: 100 },
-                exp: { min: 20, max: 40 },
-                items: [
-                    { id: 'smallPotion', chance: 0.7 },
-                    { id: 'woodMaterial', chance: 0.5 }
-                ],
-                weapons: { chance: 0.3, rarities: ['common', 'uncommon'] }
+                gold: 5000,
+                exp: 2000,
+                weapons: ['surturFlame', 'surturSword']
             }
         },
         dungeon2: {
@@ -69,21 +102,14 @@ const Dungeon = {
             name: '废弃矿井',
             description: '一个废弃的矿井，现在被各种怪物占据。',
             type: 'normal',
-            minLevel: 5,
-            maxLevel: 15,
-            miniBossCount: 3,  // 小boss数量
-            possibleMonsters: ['goblin', 'skeleton', 'bat'],
-            possibleMiniBosses: ['goblinChief', 'miner'],  // 小boss池
-            possibleFinalBosses: ['skeletonKing'],  // 大boss池
+            miniBossCount: 3,
+            possibleMonsters: ['暗影哥布林', '岩石巨像', '深渊食人魔', '熔岩巨魔', '冰霜巨魔'],
+            possibleMiniBosses: ['晶石巨像', '沙海巨虫'],
+            possibleFinalBosses: ['岩龙'],
             rewards: {
-                gold: { min: 100, max: 200 },
-                exp: { min: 40, max: 80 },
-                items: [
-                    { id: 'potion', chance: 0.6 },
-                    { id: 'stoneMaterial', chance: 0.5 },
-                    { id: 'ironOre', chance: 0.4 }
-                ],
-                weapons: { chance: 0.4, rarities: ['common', 'uncommon', 'rare'] }
+                gold: 5000,
+                exp: 5000,
+                weapons: ['gonggongTouch', 'gonggongPillar']
             }
         },
         dungeon3: {
@@ -91,203 +117,24 @@ const Dungeon = {
             name: '古代遗迹',
             description: '一座古老文明的遗迹，有强大的守卫和珍贵的宝藏。',
             type: 'elite',
-            minLevel: 10,
-            maxLevel: 25,
-            miniBossCount: 4,  // 小boss数量
-            possibleMonsters: ['skeleton', 'mummy', 'ghost'],
-            possibleMiniBosses: ['ancientGuardian', 'miner'],  // 小boss池
-            possibleFinalBosses: ['pharaoh'],  // 大boss池
+            miniBossCount: 4,
+            possibleMonsters: ['岩石巨像', '深渊食人魔', '熔岩巨魔', '冰霜巨魔', '风暴巨魔'],
+            possibleMiniBosses: ['暗影幻影', '死亡骑士'],
+            possibleFinalBosses: ['暗影魔龙'],
             rewards: {
-                gold: { min: 200, max: 400 },
-                exp: { min: 80, max: 150 },
-                items: [
-                    { id: 'greatPotion', chance: 0.5 },
-                    { id: 'ancientRelic', chance: 0.4 },
-                    { id: 'magicDust', chance: 0.3 }
-                ],
-                weapons: { chance: 0.5, rarities: ['uncommon', 'rare', 'epic'] }
-            }
-        },
-        bossRaid1: {
-            id: 'bossRaid1',
-            name: '龙之巢穴',
-            description: '一个强大的龙盘踞的洞穴，击败它获得丰厚奖励。',
-            type: 'boss',
-            minLevel: 20,
-            maxLevel: 30,
-            miniBossCount: 5,  // 小boss数量
-            possibleMonsters: ['dragonling', 'dragonServant'],
-            possibleMiniBosses: ['ancientGuardian', 'pharaoh'],  // 小boss池
-            possibleFinalBosses: ['dragonLord'],  // 大boss池
-            rewards: {
-                gold: { min: 500, max: 1000 },
-                exp: { min: 200, max: 300 },
-                items: [
-                    { id: 'dragonScale', chance: 0.8 },
-                    { id: 'dragonBlood', chance: 0.6 },
-                    { id: 'legendaryCore', chance: 0.3 }
-                ],
-                weapons: { chance: 0.7, rarities: ['rare', 'epic', 'legendary'] }
+                gold: 10000,
+                exp: 10000,
+                weapons: ['dagdaBreath', 'dagdaHorn']
             }
         }
     },
 
     // 怪物定义
     monsters: {
-        // 普通怪物
-        slime: {
-            name: '史莱姆',
-            type: 'normal',
-            baseStats: { hp: 30, attack: 5, defense: 2, speed: 3 },
-            attribute: 'water',
-            xpReward: 10,
-            goldReward: { min: 5, max: 10 }
-        },
-        goblin: {
-            name: '哥布林',
-            type: 'normal',
-            baseStats: { hp: 45, attack: 8, defense: 3, speed: 6 },
-            attribute: 'earth',
-            xpReward: 15,
-            goldReward: { min: 8, max: 15 }
-        },
-        wolf: {
-            name: '狼',
-            type: 'normal',
-            baseStats: { hp: 40, attack: 10, defense: 2, speed: 8 },
-            attribute: 'wind',
-            xpReward: 12,
-            goldReward: { min: 7, max: 12 }
-        },
-        skeleton: {
-            name: '骷髅',
-            type: 'normal',
-            baseStats: { hp: 55, attack: 12, defense: 5, speed: 4 },
-            attribute: 'dark',
-            xpReward: 18,
-            goldReward: { min: 10, max: 18 }
-        },
-        bat: {
-            name: '蝙蝠',
-            type: 'normal',
-            baseStats: { hp: 35, attack: 7, defense: 2, speed: 10 },
-            attribute: 'wind',
-            xpReward: 13,
-            goldReward: { min: 6, max: 12 }
-        },
-        mummy: {
-            name: '木乃伊',
-            type: 'normal',
-            baseStats: { hp: 70, attack: 14, defense: 8, speed: 3 },
-            attribute: 'earth',
-            xpReward: 22,
-            goldReward: { min: 12, max: 20 }
-        },
-        ghost: {
-            name: '幽灵',
-            type: 'normal',
-            baseStats: { hp: 50, attack: 15, defense: 4, speed: 7 },
-            attribute: 'dark',
-            xpReward: 20,
-            goldReward: { min: 10, max: 18 }
-        },
-        dragonling: {
-            name: '小龙',
-            type: 'normal',
-            baseStats: { hp: 80, attack: 18, defense: 10, speed: 8 },
-            attribute: 'fire',
-            xpReward: 30,
-            goldReward: { min: 15, max: 25 }
-        },
-        dragonServant: {
-            name: '龙仆',
-            type: 'normal',
-            baseStats: { hp: 100, attack: 22, defense: 12, speed: 6 },
-            attribute: 'dark',
-            xpReward: 35,
-            goldReward: { min: 18, max: 30 }
-        },
+    },
 
-        // Boss怪物
-        goblinChief: {
-            name: '哥布林酋长',
-            type: 'boss',
-            baseStats: { hp: 120, attack: 15, defense: 8, speed: 7 },
-            attribute: 'earth',
-            xpReward: 50,
-            goldReward: { min: 30, max: 50 },
-            dropItems: [
-                { id: 'goblinTooth', chance: 0.5 },
-                { id: 'leatherScraps', chance: 0.7 }
-            ],
-            dropWeapons: { chance: 0.4, rarities: ['common', 'uncommon'] }
-        },
-        skeletonKing: {
-            name: '骷髅王',
-            type: 'boss',
-            baseStats: { hp: 180, attack: 22, defense: 12, speed: 5 },
-            attribute: 'dark',
-            xpReward: 70,
-            goldReward: { min: 40, max: 70 },
-            dropItems: [
-                { id: 'skeletonBone', chance: 0.6 },
-                { id: 'darkEssence', chance: 0.4 }
-            ],
-            dropWeapons: { chance: 0.5, rarities: ['uncommon', 'rare'] }
-        },
-        miner: {
-            name: '疯狂矿工',
-            type: 'boss',
-            baseStats: { hp: 150, attack: 18, defense: 15, speed: 4 },
-            attribute: 'earth',
-            xpReward: 60,
-            goldReward: { min: 35, max: 60 },
-            dropItems: [
-                { id: 'miningPick', chance: 0.5 },
-                { id: 'gemstone', chance: 0.4 }
-            ],
-            dropWeapons: { chance: 0.45, rarities: ['uncommon', 'rare'] }
-        },
-        ancientGuardian: {
-            name: '远古守卫',
-            type: 'boss',
-            baseStats: { hp: 250, attack: 28, defense: 20, speed: 6 },
-            attribute: 'light',
-            xpReward: 100,
-            goldReward: { min: 60, max: 100 },
-            dropItems: [
-                { id: 'guardianCore', chance: 0.5 },
-                { id: 'ancientStone', chance: 0.6 }
-            ],
-            dropWeapons: { chance: 0.6, rarities: ['rare', 'epic'] }
-        },
-        pharaoh: {
-            name: '法老',
-            type: 'boss',
-            baseStats: { hp: 300, attack: 35, defense: 25, speed: 7 },
-            attribute: 'dark',
-            xpReward: 120,
-            goldReward: { min: 80, max: 150 },
-            dropItems: [
-                { id: 'pharaohMask', chance: 0.4 },
-                { id: 'cursedGem', chance: 0.5 }
-            ],
-            dropWeapons: { chance: 0.7, rarities: ['rare', 'epic'] }
-        },
-        dragonLord: {
-            name: '龙王',
-            type: 'boss',
-            baseStats: { hp: 500, attack: 50, defense: 40, speed: 8 },
-            attribute: 'fire',
-            xpReward: 200,
-            goldReward: { min: 150, max: 300 },
-            dropItems: [
-                { id: 'dragonHeart', chance: 0.6 },
-                { id: 'dragonScales', chance: 0.8 },
-                { id: 'legendaryCore', chance: 0.3 }
-            ],
-            dropWeapons: { chance: 0.8, rarities: ['epic', 'legendary'] }
-        }
+    bosses:{
+
     },
 
     /**
@@ -405,36 +252,27 @@ const Dungeon = {
         const monsterTemplate = this.monsters[monsterType];
         if (!monsterTemplate) return null;
 
-        // 计算怪物等级
-        const levelRange = dungeon.maxLevel - dungeon.minLevel;
-        const level = dungeon.minLevel + Math.floor(Math.random() * (levelRange + 1));
+        // 获取地下城类型
+        const dungeonType = this.types[dungeon.type] || this.types.normal;
+        const multiplier = dungeonType.monsterMultiplier;
 
         // 计算怪物属性
-        const stats = {};
-        for (const [stat, value] of Object.entries(monsterTemplate.baseStats)) {
-            // 基础值 * (1 + 等级系数)
-            stats[stat] = Math.floor(value * (1 + (level - 1) * 0.1));
-        }
+        const stats = {
+            hp: Math.floor(monsterTemplate.hp * multiplier.hp),
+            atk: Math.floor(monsterTemplate.atk * multiplier.atk),
+            def: Math.floor(monsterTemplate.def * multiplier.def)
+        };
 
         // 创建怪物实例
         const monster = {
             id: `${monsterType}_${Date.now()}`,
             name: monsterTemplate.name,
-            type: monsterTemplate.type,
             attribute: monsterTemplate.attribute,
-            level: level,
-            baseStats: {...monsterTemplate.baseStats},
-            currentStats: {...stats},
+            stats: stats,
             isBoss: false,
             isMiniBoss: false,
             isFinalBoss: false,
-            xpReward: Math.floor(monsterTemplate.xpReward * (1 + (level - 1) * 0.1)),
-            goldReward: {
-                min: Math.floor(monsterTemplate.goldReward.min * (1 + (level - 1) * 0.1)),
-                max: Math.floor(monsterTemplate.goldReward.max * (1 + (level - 1) * 0.1))
-            },
-            dropItems: monsterTemplate.dropItems,
-            dropWeapons: monsterTemplate.dropWeapons
+            xpReward: Math.floor(monsterTemplate.xpReward * dungeonType.rewardMultiplier)
         };
 
         return monster;
@@ -455,38 +293,28 @@ const Dungeon = {
         const bossTemplate = this.monsters[bossMonsterType];
         if (!bossTemplate) return null;
 
-        // 计算Boss等级，大boss比小boss高几级
-        const levelRange = dungeon.maxLevel - dungeon.minLevel;
-        const levelBonus = bossType === 'final' ? 5 : 2;
-        const level = dungeon.minLevel + Math.floor(Math.random() * (levelRange + 1)) + levelBonus;
+        // 获取地下城类型
+        const dungeonType = this.types[dungeon.type] || this.types.normal;
+        const multiplier = dungeonType.monsterMultiplier;
 
         // 计算Boss属性
-        const stats = {};
-        for (const [stat, value] of Object.entries(bossTemplate.baseStats)) {
-            // 基础值 * (1 + 等级系数) * boss加成
-            const bossMultiplier = bossType === 'final' ? 1.5 : 1.2;
-            stats[stat] = Math.floor(value * (1 + (level - 1) * 0.1) * bossMultiplier);
-        }
+        const stats = {
+            hp: Math.floor(bossTemplate.hp * multiplier.hp),
+            atk: Math.floor(bossTemplate.atk * multiplier.atk),
+            def: Math.floor(bossTemplate.def * multiplier.def)
+        };
 
         // 创建Boss实例
         const boss = {
             id: `${bossMonsterType}_${Date.now()}`,
             name: bossTemplate.name,
-            type: bossTemplate.type,
             attribute: bossTemplate.attribute,
-            level: level,
-            baseStats: {...bossTemplate.baseStats},
-            currentStats: {...stats},
+            stats: stats,
+            skills: bossTemplate.skills,
             isBoss: true,
             isMiniBoss: bossType === 'mini',
             isFinalBoss: bossType === 'final',
-            xpReward: Math.floor(bossTemplate.xpReward * (1 + (level - 1) * 0.1) * (bossType === 'final' ? 2.0 : 1.5)),
-            goldReward: {
-                min: Math.floor(bossTemplate.goldReward.min * (1 + (level - 1) * 0.1) * (bossType === 'final' ? 2.0 : 1.5)),
-                max: Math.floor(bossTemplate.goldReward.max * (1 + (level - 1) * 0.1) * (bossType === 'final' ? 2.0 : 1.5))
-            },
-            dropItems: bossTemplate.dropItems,
-            dropWeapons: bossTemplate.dropWeapons
+            xpReward: Math.floor(bossTemplate.xpReward * dungeonType.rewardMultiplier)
         };
 
         return boss;
@@ -599,14 +427,6 @@ const Dungeon = {
      * @param {object} monster - 怪物对象
      */
     processRewards(monster) {
-        // 计算金币奖励
-        const goldReward = Math.floor(Math.random() *
-            (monster.goldReward.max - monster.goldReward.min + 1)) +
-            monster.goldReward.min;
-
-        // 添加金币
-        Game.addGold(goldReward);
-
         // 添加经验值
         Game.addPlayerExp(monster.xpReward);
 
@@ -623,26 +443,53 @@ const Dungeon = {
             });
         }
 
-        // 处理掉落物品
-        if (monster.isBoss && monster.dropItems) {
-            monster.dropItems.forEach(item => {
-                if (Math.random() < item.chance) {
-                    Inventory.addItem(item.id, 1);
-                    this.currentRun.rewards.push({ type: 'item', id: item.id, count: 1 });
+        // 处理宝箱掉落
+        if (monster.isBoss) {
+            if (monster.isMiniBoss) {
+                // 小boss掉落
+                const silverCount = Math.floor(Math.random() * 3) + 1;
+                const goldCount = Math.floor(Math.random() * 3) + 1;
+                
+                // 掉落银宝箱
+                for (let i = 0; i < silverCount; i++) {
+                    this.currentRun.rewards.push({ type: 'chest', id: 'silver' });
                 }
-            });
+                
+                // 掉落金宝箱
+                for (let i = 0; i < goldCount; i++) {
+                    this.currentRun.rewards.push({ type: 'chest', id: 'gold' });
+                }
+                
+                // 0.05%概率掉落彩虹宝箱
+                if (Math.random() < 0.0005) {
+                    this.currentRun.rewards.push({ type: 'chest', id: 'rainbow' });
+                }
+            } else if (monster.isFinalBoss) {
+                // 最终boss掉落
+                const goldCount = Math.floor(Math.random() * 3) + 1;
+                const redCount = Math.floor(Math.random() * 3) + 1;
+                
+                // 掉落金宝箱
+                for (let i = 0; i < goldCount; i++) {
+                    this.currentRun.rewards.push({ type: 'chest', id: 'gold' });
+                }
+                
+                // 掉落红宝箱
+                for (let i = 0; i < redCount; i++) {
+                    this.currentRun.rewards.push({ type: 'chest', id: 'red' });
+                }
+                
+                // 2%概率掉落彩虹宝箱
+                if (Math.random() < 0.02) {
+                    this.currentRun.rewards.push({ type: 'chest', id: 'rainbow' });
+                }
+            }
+        } else {
+            // 普通怪物掉落一个银宝箱
+            this.currentRun.rewards.push({ type: 'chest', id: 'silver' });
         }
 
-        // 处理武器掉落
-        if (monster.isBoss && monster.dropWeapons && Math.random() < monster.dropWeapons.chance) {
-            const rarities = monster.dropWeapons.rarities;
-            const rarity = rarities[Math.floor(Math.random() * rarities.length)];
-
-            const weaponId = Weapon.generateRandomWeapon(rarity);
-            this.currentRun.rewards.push({ type: 'weapon', id: weaponId });
-        }
-
-        console.log(`处理怪物奖励: 金币 ${goldReward}, 经验 ${monster.xpReward}`);
+        console.log(`处理怪物奖励: 经验 ${monster.xpReward}`);
     },
 
     /**
@@ -662,6 +509,14 @@ const Dungeon = {
         if (finalBossDefeated) {
             // 标记为已完成
             this.currentRun.isCompleted = true;
+
+            // 检查是否是第一次完成
+            const isFirstCompletion = !Game.state.progress.completedDungeons.includes(dungeonId);
+            
+            // 如果是第一次完成，给予金币奖励
+            if (isFirstCompletion) {
+                Game.addGold(dungeon.rewards.gold);
+            }
 
             // 添加到已完成地下城列表
             if (!Game.state.progress.completedDungeons.includes(dungeonId)) {
@@ -687,7 +542,8 @@ const Dungeon = {
                 victory: true,
                 message: `恭喜！您已击败大boss并完成地下城 ${dungeon.name}`,
                 rewards: rewards,
-                dungeonCompleted: true
+                dungeonCompleted: true,
+                isFirstCompletion: isFirstCompletion
             };
         } else {
             // 如果没有击败大boss，但没有更多怪物可战斗

@@ -6,7 +6,8 @@
             "hp": 120,
             "atk": 15,
             "def": 8,
-            "skills": ["goblinRage", "tribeCall"]
+            "skills": ["goblinRage", "tribeCall"],
+            "xpReward": 1000
         },
         "skeletonKing": {
             "name": "骷髅王",
@@ -14,7 +15,8 @@
             "hp": 180,
             "atk": 22,
             "def": 12,
-            "skills": ["boneStorm", "darkAura"]
+            "skills": ["boneStorm", "darkAura"],
+            "xpReward": 1500
         },
         "dragonLord": {
             "name": "龙王",
@@ -22,7 +24,8 @@
             "hp": 500,
             "atk": 50,
             "def": 40,
-            "skills": ["dragonBreath", "flameStorm", "dragonRage"]
+            "skills": ["dragonBreath", "flameStorm", "dragonRage"],
+            "xpReward": 5000
         },
         "pharaoh": {
             "name": "法老",
@@ -30,7 +33,8 @@
             "hp": 300,
             "atk": 35,
             "def": 25,
-            "skills": ["curseOfThePharaoh", "sandStorm", "mummyArmy"]
+            "skills": ["curseOfThePharaoh", "sandStorm", "mummyArmy"],
+            "xpReward": 3000
         },
         "earthTitan": {
             "name": "大地泰坦",
@@ -38,7 +42,8 @@
             "hp": 1500000,
             "atk": 5000,
             "def": 45,
-            "skills": ["earthquake", "mountainCrush", "stoneArmor"]
+            "skills": ["earthquake", "mountainCrush", "stoneArmor"],
+            "xpReward": 40000
         },
         "forestGuardian": {
             "name": "森林守护者",
@@ -46,7 +51,8 @@
             "hp": 800000,
             "atk": 3500,
             "def": 35,
-            "skills": ["natureWrath", "rootBind", "healingBloom"]
+            "skills": ["natureWrath", "rootBind", "healingBloom"],
+            "xpReward": 25000
         },
         "mountainKing": {
             "name": "山岳之王",
@@ -54,7 +60,8 @@
             "hp": 1200000,
             "atk": 4500,
             "def": 40,
-            "skills": ["rockFall", "mountainStrike", "earthShield"]
+            "skills": ["rockFall", "mountainStrike", "earthShield"],
+            "xpReward": 35000
         },
         "crystalGolem": {
             "name": "晶石巨像",
@@ -62,7 +69,8 @@
             "hp": 1000000,
             "atk": 4000,
             "def": 50,
-            "skills": ["crystalShard", "gemArmor", "earthPulse"]
+            "skills": ["crystalShard", "gemArmor", "earthPulse"],
+            "xpReward": 30000
         },
         "sandWorm": {
             "name": "沙海巨虫",
@@ -70,7 +78,8 @@
             "hp": 900000,
             "atk": 3800,
             "def": 30,
-            "skills": ["sandStorm", "undergroundStrike", "desertRage"]
+            "skills": ["sandStorm", "undergroundStrike", "desertRage"],
+            "xpReward": 28000
         },
         "stoneDragon": {
             "name": "岩龙",
@@ -78,7 +87,8 @@
             "hp": 1100000,
             "atk": 4200,
             "def": 38,
-            "skills": ["stoneBreath", "rockWings", "earthquake"]
+            "skills": ["stoneBreath", "rockWings", "earthquake"],
+            "xpReward": 32000
         },
         "darkPhantom": {
             "name": "暗影幻影",
@@ -86,7 +96,8 @@
             "hp": 1300000,
             "atk": 5500,
             "def": 25,
-            "skills": ["shadowStrike", "darkMist", "soulSteal"]
+            "skills": ["shadowStrike", "darkMist", "soulSteal"],
+            "xpReward": 38000
         },
         "nightmareQueen": {
             "name": "噩梦女王",
@@ -94,7 +105,8 @@
             "hp": 950000,
             "atk": 4800,
             "def": 20,
-            "skills": ["nightmareCurse", "darkTentacles", "soulDrain"]
+            "skills": ["nightmareCurse", "darkTentacles", "soulDrain"],
+            "xpReward": 30000
         },
         "voidWalker": {
             "name": "虚空行者",
@@ -102,7 +114,8 @@
             "hp": 1400000,
             "atk": 6000,
             "def": 15,
-            "skills": ["voidRift", "darkPortal", "soulRend"]
+            "skills": ["voidRift", "darkPortal", "soulRend"],
+            "xpReward": 42000
         },
         "deathKnight": {
             "name": "死亡骑士",
@@ -110,7 +123,8 @@
             "hp": 1100000,
             "atk": 5200,
             "def": 40,
-            "skills": ["deathStrike", "darkArmor", "soulHarvest"]
+            "skills": ["deathStrike", "darkArmor", "soulHarvest"],
+            "xpReward": 35000
         },
         "shadowDragon": {
             "name": "暗影魔龙",
@@ -118,7 +132,8 @@
             "hp": 1600000,
             "atk": 6500,
             "def": 35,
-            "skills": ["shadowBreath", "darkWings", "soulBurn"]
+            "skills": ["shadowBreath", "darkWings", "soulBurn"],
+            "xpReward": 45000
         },
         "necromancer": {
             "name": "亡灵法师",
@@ -126,7 +141,8 @@
             "hp": 850000,
             "atk": 4500,
             "def": 18,
-            "skills": ["raiseDead", "darkMagic", "soulCurse"]
+            "skills": ["raiseDead", "darkMagic", "soulCurse"],
+            "xpReward": 28000
         },
         "flameTitan": {
             "name": "烈焰泰坦",
@@ -134,7 +150,8 @@
             "hp": 1700000,
             "atk": 6800,
             "def": 42,
-            "skills": ["flameStrike", "fireStorm", "heatWave"]
+            "skills": ["flameStrike", "fireStorm", "heatWave"],
+            "xpReward": 48000
         },
         "phoenixKing": {
             "name": "凤凰之王",
@@ -142,7 +159,8 @@
             "hp": 1200000,
             "atk": 5800,
             "def": 30,
-            "skills": ["phoenixFlame", "rebirth", "fireWings"]
+            "skills": ["phoenixFlame", "rebirth", "fireWings"],
+            "xpReward": 38000
         },
         "lavaGiant": {
             "name": "熔岩巨人",
@@ -150,7 +168,8 @@
             "hp": 1500000,
             "atk": 6200,
             "def": 45,
-            "skills": ["lavaBurst", "magmaArmor", "heatBlast"]
+            "skills": ["lavaBurst", "magmaArmor", "heatBlast"],
+            "xpReward": 42000
         },
         "fireDragon": {
             "name": "炎龙",
@@ -158,7 +177,8 @@
             "hp": 1800000,
             "atk": 7000,
             "def": 38,
-            "skills": ["dragonFlame", "fireStorm", "heatBreath"]
+            "skills": ["dragonFlame", "fireStorm", "heatBreath"],
+            "xpReward": 50000
         },
         "volcanoLord": {
             "name": "火山领主",
@@ -166,7 +186,8 @@
             "hp": 1400000,
             "atk": 6000,
             "def": 40,
-            "skills": ["volcanicEruption", "lavaFlow", "heatShield"]
+            "skills": ["volcanicEruption", "lavaFlow", "heatShield"],
+            "xpReward": 40000
         },
         "salamanderKing": {
             "name": "火蜥蜴王",
@@ -174,7 +195,8 @@
             "hp": 1000000,
             "atk": 5200,
             "def": 35,
-            "skills": ["fireTongue", "heatWave", "lavaArmor"]
+            "skills": ["fireTongue", "heatWave", "lavaArmor"],
+            "xpReward": 32000
         },
         "iceTitan": {
             "name": "寒冰泰坦",
@@ -182,7 +204,8 @@
             "hp": 1600000,
             "atk": 5500,
             "def": 48,
-            "skills": ["iceCrush", "frostStorm", "iceArmor"]
+            "skills": ["iceCrush", "frostStorm", "iceArmor"],
+            "xpReward": 45000
         },
         "frostQueen": {
             "name": "霜雪女王",
@@ -190,7 +213,8 @@
             "hp": 1100000,
             "atk": 4800,
             "def": 32,
-            "skills": ["frostCurse", "iceShard", "snowStorm"]
+            "skills": ["frostCurse", "iceShard", "snowStorm"],
+            "xpReward": 35000
         },
         "iceDragon": {
             "name": "冰霜巨龙",
@@ -198,7 +222,8 @@
             "hp": 1900000,
             "atk": 6500,
             "def": 42,
-            "skills": ["frostBreath", "iceStorm", "coldWings"]
+            "skills": ["frostBreath", "iceStorm", "coldWings"],
+            "xpReward": 50000
         },
         "snowGiant": {
             "name": "雪域巨人",
@@ -206,7 +231,8 @@
             "hp": 1300000,
             "atk": 5200,
             "def": 45,
-            "skills": ["snowCrush", "iceArmor", "blizzard"]
+            "skills": ["snowCrush", "iceArmor", "blizzard"],
+            "xpReward": 38000
         },
         "frostWitch": {
             "name": "寒冰女巫",
@@ -214,7 +240,8 @@
             "hp": 900000,
             "atk": 4500,
             "def": 25,
-            "skills": ["frostMagic", "iceShield", "snowCurse"]
+            "skills": ["frostMagic", "iceShield", "snowCurse"],
+            "xpReward": 28000
         },
         "glacierLord": {
             "name": "冰川领主",
@@ -222,7 +249,8 @@
             "hp": 1500000,
             "atk": 5800,
             "def": 40,
-            "skills": ["glacierStrike", "iceWave", "frostArmor"]
+            "skills": ["glacierStrike", "iceWave", "frostArmor"],
+            "xpReward": 42000
         },
         "stormTitan": {
             "name": "风暴泰坦",
@@ -230,7 +258,8 @@
             "hp": 1400000,
             "atk": 6000,
             "def": 35,
-            "skills": ["thunderStrike", "windStorm", "lightningArmor"]
+            "skills": ["thunderStrike", "windStorm", "lightningArmor"],
+            "xpReward": 40000
         },
         "thunderDragon": {
             "name": "雷霆巨龙",
@@ -238,7 +267,8 @@
             "hp": 1700000,
             "atk": 6800,
             "def": 38,
-            "skills": ["thunderBreath", "stormWings", "lightningStorm"]
+            "skills": ["thunderBreath", "stormWings", "lightningStorm"],
+            "xpReward": 48000
         },
         "windSpirit": {
             "name": "风之精灵",
@@ -246,7 +276,8 @@
             "hp": 950000,
             "atk": 5000,
             "def": 22,
-            "skills": ["windBlade", "stormDance", "airShield"]
+            "skills": ["windBlade", "stormDance", "airShield"],
+            "xpReward": 30000
         },
         "hurricaneKing": {
             "name": "飓风之王",
@@ -254,7 +285,8 @@
             "hp": 1300000,
             "atk": 5800,
             "def": 30,
-            "skills": ["hurricane", "windStrike", "stormArmor"]
+            "skills": ["hurricane", "windStrike", "stormArmor"],
+            "xpReward": 38000
         },
         "lightningLord": {
             "name": "闪电领主",
@@ -262,7 +294,8 @@
             "hp": 1200000,
             "atk": 5500,
             "def": 32,
-            "skills": ["lightningStrike", "thunderStorm", "stormShield"]
+            "skills": ["lightningStrike", "thunderStorm", "stormShield"],
+            "xpReward": 35000
         },
         "stormWitch": {
             "name": "风暴女巫",
@@ -270,7 +303,8 @@
             "hp": 1000000,
             "atk": 4800,
             "def": 25,
-            "skills": ["stormMagic", "windCurse", "lightningShield"]
+            "skills": ["stormMagic", "windCurse", "lightningShield"],
+            "xpReward": 30000
         },
         "waterTitan": {
             "name": "海洋泰坦",
@@ -278,7 +312,8 @@
             "hp": 1500000,
             "atk": 5500,
             "def": 42,
-            "skills": ["tidalWave", "waterStorm", "oceanArmor"]
+            "skills": ["tidalWave", "waterStorm", "oceanArmor"],
+            "xpReward": 42000
         },
         "seaDragon": {
             "name": "海龙",
@@ -286,7 +321,8 @@
             "hp": 1800000,
             "atk": 6500,
             "def": 38,
-            "skills": ["waterBreath", "tidalWings", "oceanStorm"]
+            "skills": ["waterBreath", "tidalWings", "oceanStorm"],
+            "xpReward": 50000
         },
         "tideLord": {
             "name": "潮汐领主",
@@ -294,7 +330,8 @@
             "hp": 1300000,
             "atk": 5200,
             "def": 35,
-            "skills": ["tideStrike", "waterWave", "oceanShield"]
+            "skills": ["tideStrike", "waterWave", "oceanShield"],
+            "xpReward": 38000
         },
         "waterSpirit": {
             "name": "水之精灵",
@@ -302,7 +339,8 @@
             "hp": 950000,
             "atk": 4500,
             "def": 25,
-            "skills": ["waterBlade", "tideDance", "oceanCurse"]
+            "skills": ["waterBlade", "tideDance", "oceanCurse"],
+            "xpReward": 30000
         },
         "abyssKing": {
             "name": "深渊之王",
@@ -310,7 +348,8 @@
             "hp": 1600000,
             "atk": 6000,
             "def": 40,
-            "skills": ["abyssStrike", "waterStorm", "oceanArmor"]
+            "skills": ["abyssStrike", "waterStorm", "oceanArmor"],
+            "xpReward": 45000
         },
         "tidalWitch": {
             "name": "潮汐女巫",
@@ -318,7 +357,8 @@
             "hp": 1100000,
             "atk": 4800,
             "def": 28,
-            "skills": ["tideMagic", "waterCurse", "oceanShield"]
+            "skills": ["tideMagic", "waterCurse", "oceanShield"],
+            "xpReward": 35000
         }
     }
 } 

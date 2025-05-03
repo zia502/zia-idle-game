@@ -351,7 +351,14 @@ const Dungeon = {
             })
             .then(data => {
                 console.log('成功加载怪物模板数据:', data);
-                this.monsterTemplates = data;
+                // 检查数据结构，如果有monsters键，则使用其中的数据
+                if (data.monsters) {
+                    console.log('检测到嵌套的monsters数据结构，使用monsters中的数据');
+                    this.monsterTemplates = data.monsters;
+                } else {
+                    this.monsterTemplates = data;
+                }
+                console.log('处理后的怪物模板数据:', this.monsterTemplates);
             })
             .catch(error => {
                 console.error('从服务器加载怪物模板数据失败:', error);
@@ -370,7 +377,14 @@ const Dungeon = {
             })
             .then(data => {
                 console.log('成功加载Boss模板数据:', data);
-                this.bossTemplates = data;
+                // 检查数据结构，如果有bosses键，则使用其中的数据
+                if (data.bosses) {
+                    console.log('检测到嵌套的bosses数据结构，使用bosses中的数据');
+                    this.bossTemplates = data.bosses;
+                } else {
+                    this.bossTemplates = data;
+                }
+                console.log('处理后的Boss模板数据:', this.bossTemplates);
             })
             .catch(error => {
                 console.error('从服务器加载Boss模板数据失败:', error);
@@ -452,6 +466,34 @@ const Dungeon = {
                 }
             };
             console.log('已加载默认Boss模板:', this.bossTemplates);
+        }
+
+        // 确保模板中的每个对象都有id属性和属性
+        if (type === 'monsters' && this.monsterTemplates) {
+            for (const [id, monster] of Object.entries(this.monsterTemplates)) {
+                if (!monster.id) {
+                    monster.id = id;
+                }
+                if (!monster.attribute) {
+                    // 随机分配一个元素属性
+                    monster.attribute = this.getRandomAttribute();
+                    console.log(`为怪物 ${monster.name || id} 随机分配属性: ${monster.attribute}`);
+                }
+            }
+        } else if (type === 'bosses' && this.bossTemplates) {
+            for (const [id, boss] of Object.entries(this.bossTemplates)) {
+                if (!boss.id) {
+                    boss.id = id;
+                }
+                if (!boss.attribute) {
+                    // 随机分配一个元素属性
+                    boss.attribute = this.getRandomAttribute();
+                    console.log(`为Boss ${boss.name || id} 随机分配属性: ${boss.attribute}`);
+                }
+                if (!boss.skills) {
+                    boss.skills = [];
+                }
+            }
         }
     },
 
@@ -740,7 +782,7 @@ const Dungeon = {
         // 尝试从dungeons获取地下城，如果不存在则从templates获取
         let dungeon = this.getDungeon(dungeonId);
 
-        console.log(`初始化地下城:${dungeonId}`);       
+        console.log(`初始化地下城:${dungeonId}`);
         // // 如果在dungeons中找不到，尝试从templates中获取
         // if (!dungeon && this.templates[dungeonId]) {
         //     console.log(`在dungeons中找不到地下城 ${dungeonId}，使用模板`);
@@ -924,11 +966,18 @@ const Dungeon = {
         const attack = Math.floor(monsterTemplate.atk * multiplier.atk);
         const defense = Math.floor(monsterTemplate.def * multiplier.def);
 
+        // 确保怪物有属性
+        let attribute = monsterTemplate.attribute;
+        if (!attribute) {
+            attribute = this.getRandomAttribute();
+            console.log(`为怪物 ${monsterTemplate.name} 随机分配属性: ${attribute}`);
+        }
+
         // 创建怪物实例
         const monster = {
             id: `${monsterType}_${Date.now()}`,
             name: monsterTemplate.name,
-            attribute: monsterTemplate.attribute,
+            attribute: attribute,
             baseStats: {
                 hp: hp,
                 attack: attack,
@@ -958,12 +1007,30 @@ const Dungeon = {
      */
     generateBoss(dungeon, bossType = 'mini') {
         const bossPool = bossType === 'mini' ? dungeon.possibleMiniBosses : dungeon.possibleFinalBosses;
-        if (!bossPool || bossPool.length === 0) return null;
+        if (!bossPool || bossPool.length === 0) {
+            console.warn(`无法生成${bossType === 'mini' ? '小' : '大'}boss: 没有可用的boss池`);
+            return null;
+        }
+
+        console.log(`可用的${bossType === 'mini' ? '小' : '大'}boss池:`, bossPool);
 
         // 随机选择Boss类型
         const bossMonsterType = bossPool[Math.floor(Math.random() * bossPool.length)];
+        console.log(`选择的${bossType === 'mini' ? '小' : '大'}boss类型:`, bossMonsterType);
+
+        // 检查bossTemplates是否存在
+        if (!this.bossTemplates) {
+            console.error('bossTemplates未定义，无法生成boss');
+            return null;
+        }
+
         const bossTemplate = this.bossTemplates[bossMonsterType];
-        if (!bossTemplate) return null;
+        if (!bossTemplate) {
+            console.error(`无法找到boss模板: ${bossMonsterType}，可用的boss模板:`, Object.keys(this.bossTemplates));
+            return null;
+        }
+
+        console.log(`找到${bossType === 'mini' ? '小' : '大'}boss模板:`, bossTemplate);
 
         // 获取地下城类型
         const dungeonType = this.types[dungeon.type] || this.types.normal;
@@ -974,11 +1041,21 @@ const Dungeon = {
         const attack = Math.floor(bossTemplate.atk * multiplier.atk);
         const defense = Math.floor(bossTemplate.def * multiplier.def);
 
+        // 确保Boss有属性
+        let attribute = bossTemplate.attribute;
+        if (!attribute) {
+            attribute = this.getRandomAttribute();
+            console.log(`为Boss ${bossTemplate.name} 随机分配属性: ${attribute}`);
+        }
+
+        // 确保Boss有技能
+        const skills = bossTemplate.skills || [];
+
         // 创建Boss实例
         const boss = {
             id: `${bossMonsterType}_${Date.now()}`,
             name: bossTemplate.name,
-            attribute: bossTemplate.attribute,
+            attribute: attribute,
             baseStats: {
                 hp: hp,
                 attack: attack,
@@ -991,7 +1068,7 @@ const Dungeon = {
                 defense: defense,
                 maxHp: hp
             },
-            skills: bossTemplate.skills,
+            skills: skills,
             isBoss: true,
             isMiniBoss: bossType === 'mini',
             isFinalBoss: bossType === 'final',
@@ -1300,6 +1377,15 @@ const Dungeon = {
             Game.state.progress.unlockedDungeons.push('bossRaid1');
             UI.showNotification('新地下城已解锁：龙之巢穴');
         }
+    },
+
+    /**
+     * 获取随机元素属性
+     * @returns {string} 随机元素属性
+     */
+    getRandomAttribute() {
+        const attributes = ['fire', 'water', 'earth', 'wind', 'light', 'dark', 'ice'];
+        return attributes[Math.floor(Math.random() * attributes.length)];
     },
 
     /**

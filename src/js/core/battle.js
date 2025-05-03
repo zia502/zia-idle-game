@@ -23,6 +23,22 @@ const Battle = {
     startBattle(team, monster) {
         // 重置战斗状态
         this.isFirstTurn = true;
+
+        // 检查是否在地下城中，如果是，则累加回合数
+        if (typeof Dungeon !== 'undefined' && Dungeon.currentRun) {
+            // 如果没有dungeonTurn属性，初始化为0
+            if (typeof this.dungeonTurn === 'undefined') {
+                this.dungeonTurn = 0;
+            }
+
+            // 记录当前地下城回合
+            console.log(`地下城当前回合: ${this.dungeonTurn}`);
+        } else {
+            // 不在地下城中，重置回合数
+            this.dungeonTurn = 0;
+        }
+
+        // 重置当前战斗的回合数
         this.currentTurn = 0;
         this.battleLog = [];
 
@@ -153,36 +169,52 @@ const Battle = {
         }
         this.logBattle(`遇到了 ${monster.name}${monsterTypeText}`);
 
-        // 保存队伍成员的原始属性
+        // 检查是否是地下城中的第一场战斗
+        // 如果有任何队员有dungeonOriginalStats属性，则不是第一场战斗
+        const isFirstBattleInDungeon = !teamMembers.some(member => member.dungeonOriginalStats);
+        console.log(`是否是地下城中的第一场战斗: ${isFirstBattleInDungeon}`);
+
+        // 额外检查：如果在地下城中但没有任何角色有dungeonOriginalStats，强制设为第一场战斗
+        const inDungeon = typeof Dungeon !== 'undefined' && Dungeon.currentRun;
+        if (inDungeon && isFirstBattleInDungeon) {
+            console.log('检测到在地下城中且是第一场战斗');
+        }
+
+        // 只在地下城的第一场战斗时保存原始属性
+        if (isFirstBattleInDungeon) {
+            console.log('地下城第一场战斗，保存队伍成员的原始属性');
+            for (const member of teamMembers) {
+                // 保存地下城探索开始时的原始属性（整个地下城探索过程中只保存一次）
+                member.dungeonOriginalStats = JSON.parse(JSON.stringify(member.currentStats));
+                console.log(`保存 ${member.name} 的地下城原始属性:`, member.dungeonOriginalStats);
+            }
+        } else {
+            console.log('地下城后续战斗，保持队伍成员当前状态');
+        }
+
+        // 每场战斗开始时仍然保存当前状态，用于战斗失败时恢复
         for (const member of teamMembers) {
             if (!member.originalStats) {
                 member.originalStats = {};
             }
 
-            // 先将currentStats重置为baseStats的深拷贝
-            member.currentStats = JSON.parse(JSON.stringify(member.baseStats));
-
-            // 保存当前HP值
-            const currentHp = member.currentStats.hp;
-
-            // 然后保存重置后的currentStats作为原始属性
+            // 保存当前状态作为战斗原始属性
             member.originalStats = JSON.parse(JSON.stringify(member.currentStats));
-
-            // 恢复当前HP值
-            member.currentStats.hp = currentHp;
-
-            console.log(`保存 ${member.name} 的原始属性:`, member.originalStats);
+            console.log(`保存 ${member.name} 的战斗原始属性:`, member.originalStats);
         }
 
-        // 应用武器盘加成
-        if (typeof WeaponBoardBonusSystem !== 'undefined') {
-            this.logBattle('应用武器盘加成...');
+        // 只在地下城的第一场战斗时应用武器盘加成
+        if (isFirstBattleInDungeon && typeof WeaponBoardBonusSystem !== 'undefined') {
+            this.logBattle('首次进入地下城，应用武器盘加成...');
             const bonusApplied = WeaponBoardBonusSystem.applyWeaponBoardBonuses(team, teamMembers);
             if (bonusApplied) {
                 this.logBattle('武器盘加成已应用到队伍成员');
             } else {
                 this.logBattle('无法应用武器盘加成');
             }
+        } else if (!isFirstBattleInDungeon) {
+            this.logBattle('地下城后续战斗，不重复应用武器盘加成');
+            console.log('地下城后续战斗，跳过武器盘加成应用');
         } else {
             console.warn('WeaponBoardBonusSystem未定义，无法应用武器盘加成');
         }
@@ -190,17 +222,22 @@ const Battle = {
         // 战斗循环
         let battleResult = this.processBattle(teamMembers, monsterCharacter);
 
-        // 恢复队伍成员的原始属性
-        for (const member of teamMembers) {
-            if (member.originalStats) {
-                console.log(`恢复 ${member.name} 的原始属性`);
-                member.currentStats = JSON.parse(JSON.stringify(member.originalStats));
+        // 战斗失败时恢复队伍成员的战斗前状态
+        if (!battleResult.victory) {
+            for (const member of teamMembers) {
+                if (member.originalStats) {
+                    console.log(`战斗失败，恢复 ${member.name} 的战斗前状态`);
+                    member.currentStats = JSON.parse(JSON.stringify(member.originalStats));
 
-                // 保持当前HP不变，除非HP大于maxHP
-                if (member.currentStats.hp > member.currentStats.maxHp) {
-                    member.currentStats.hp = member.currentStats.maxHp;
+                    // 保持当前HP不变，除非HP大于maxHP
+                    if (member.currentStats.hp > member.currentStats.maxHp) {
+                        member.currentStats.hp = member.currentStats.maxHp;
+                    }
                 }
             }
+        } else {
+            // 战斗胜利时，保持当前状态，不恢复
+            console.log('战斗胜利，保持队伍成员当前状态');
         }
 
         // 计算MVP
@@ -335,7 +372,14 @@ const Battle = {
         // 战斗循环
         while (this.currentTurn < MAX_TURNS) {
             this.currentTurn++;
-            this.logBattle(`##### 回合 ${this.currentTurn} #####`);
+
+            // 如果在地下城中，增加地下城总回合数
+            if (typeof Dungeon !== 'undefined' && Dungeon.currentRun) {
+                this.dungeonTurn++;
+                this.logBattle(`##### 地下城回合 ${this.dungeonTurn} (战斗回合 ${this.currentTurn}) #####`);
+            } else {
+                this.logBattle(`##### 回合 ${this.currentTurn} #####`);
+            }
 
             // 处理回合开始时的BUFF效果
             this.processTurnStartBuffs(teamMembers, monster);
@@ -518,25 +562,20 @@ const Battle = {
                 this.logBattle(`获得 ${exp} 经验值！`);
             }
 
-            // 战斗结束后恢复25%HP
-            for (const member of teamMembers) {
-                if (member.currentStats.hp > 0) {
-                    const healAmount = Math.floor(member.currentStats.maxHp * 0.25);
-                    member.currentStats.hp = Math.min(
-                        member.currentStats.hp + healAmount,
-                        member.currentStats.maxHp
-                    );
-                    this.logBattle(`${member.name} 恢复了 ${healAmount} 点生命值！`);
+            // 在地下城中不清除BUFF，只在非地下城战斗中清除
+            const inDungeon = typeof Dungeon !== 'undefined' && Dungeon.currentRun;
+            if (!inDungeon) {
+                // 非地下城战斗，清除所有BUFF
+                this.logBattle(`非地下城战斗，清除所有BUFF`);
+                for (const member of teamMembers) {
+                    if (typeof BuffSystem !== 'undefined') {
+                        BuffSystem.clearAllBuffs(member);
+                    } else {
+                        member.buffs = [];
+                    }
                 }
-            }
-
-            // 清除所有BUFF
-            for (const member of teamMembers) {
-                if (typeof BuffSystem !== 'undefined') {
-                    BuffSystem.clearAllBuffs(member);
-                } else {
-                    member.buffs = [];
-                }
+            } else {
+                this.logBattle(`地下城战斗，保留BUFF状态`);
             }
 
             return {
@@ -551,13 +590,20 @@ const Battle = {
             // 队伍失败
             this.logBattle(`===== 战斗失败！=====`);
 
-            // 清除所有BUFF
-            for (const member of teamMembers) {
-                if (typeof BuffSystem !== 'undefined') {
-                    BuffSystem.clearAllBuffs(member);
-                } else {
-                    member.buffs = [];
+            // 在地下城中不清除BUFF，只在非地下城战斗中清除
+            const inDungeon = typeof Dungeon !== 'undefined' && Dungeon.currentRun;
+            if (!inDungeon) {
+                // 非地下城战斗，清除所有BUFF
+                this.logBattle(`非地下城战斗，清除所有BUFF`);
+                for (const member of teamMembers) {
+                    if (typeof BuffSystem !== 'undefined') {
+                        BuffSystem.clearAllBuffs(member);
+                    } else {
+                        member.buffs = [];
+                    }
                 }
+            } else {
+                this.logBattle(`地下城战斗，保留BUFF状态`);
             }
 
             return {

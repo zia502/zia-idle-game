@@ -117,9 +117,27 @@ const DungeonRunner = {
         // 设置运行状态
         this.isRunning = true;
 
-        // 清空战斗日志
+        // 清空战斗日志和重置地下城状态
         if (typeof Battle !== 'undefined') {
             Battle.battleLog = [];
+            // 重置地下城回合数
+            Battle.dungeonTurn = 0;
+
+            // 清除所有角色的dungeonOriginalStats，确保被识别为新的地下城探索
+            if (typeof Game !== 'undefined' && typeof Game.getActiveTeam === 'function' &&
+                typeof Character !== 'undefined' && typeof Character.getCharacter === 'function') {
+                const team = Game.getActiveTeam();
+                if (team && team.members) {
+                    console.log('清除队伍成员的地下城原始属性，确保被识别为新的地下城探索');
+                    for (const memberId of team.members) {
+                        const member = Character.getCharacter(memberId);
+                        if (member && member.dungeonOriginalStats) {
+                            delete member.dungeonOriginalStats;
+                            console.log(`已清除 ${member.name} 的地下城原始属性`);
+                        }
+                    }
+                }
+            }
         }
 
         // 添加地下城开始日志
@@ -872,6 +890,29 @@ const DungeonRunner = {
         this.isPaused = false;
 
         this.addBattleLog('退出地下城探索', 'warning');
+
+        // 恢复队伍成员的地下城原始属性
+        const team = Game.getActiveTeam();
+        if (team && team.members) {
+            const teamMembers = team.members.map(id => Character.getCharacter(id)).filter(char => char);
+
+            for (const member of teamMembers) {
+                if (member.dungeonOriginalStats) {
+                    console.log(`退出地下城，恢复 ${member.name} 的地下城原始属性`);
+                    member.currentStats = JSON.parse(JSON.stringify(member.dungeonOriginalStats));
+
+                    // 清除地下城原始属性
+                    delete member.dungeonOriginalStats;
+
+                    // 清除所有BUFF
+                    if (typeof BuffSystem !== 'undefined') {
+                        BuffSystem.clearAllBuffs(member);
+                    } else {
+                        member.buffs = [];
+                    }
+                }
+            }
+        }
 
         // 重置地下城运行
         Dungeon.currentRun = null;

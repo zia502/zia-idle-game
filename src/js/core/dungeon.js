@@ -1072,6 +1072,29 @@ const Dungeon = {
 
         if (!dungeon) return { success: false, message: '地下城不存在' };
 
+        // 恢复队伍成员的地下城原始属性
+        const team = Game.getActiveTeam();
+        if (team && team.members) {
+            const teamMembers = team.members.map(id => Character.getCharacter(id)).filter(char => char);
+
+            for (const member of teamMembers) {
+                if (member.dungeonOriginalStats) {
+                    console.log(`完成地下城，恢复 ${member.name} 的地下城原始属性`);
+                    member.currentStats = JSON.parse(JSON.stringify(member.dungeonOriginalStats));
+
+                    // 清除地下城原始属性
+                    delete member.dungeonOriginalStats;
+
+                    // 清除所有BUFF
+                    if (typeof BuffSystem !== 'undefined') {
+                        BuffSystem.clearAllBuffs(member);
+                    } else {
+                        member.buffs = [];
+                    }
+                }
+            }
+        }
+
         // 检查是否击败了大boss
         const finalBossDefeated = this.currentRun.finalBoss && this.currentRun.finalBossAppeared;
 

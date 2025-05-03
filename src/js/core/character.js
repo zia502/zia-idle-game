@@ -138,7 +138,32 @@ const Character = {
      * @returns {object|null} 主角对象
      */
     getMainCharacter() {
-        return Object.values(this.characters).find(character => character.isMainCharacter) || null;
+        const mainCharacter = Object.values(this.characters).find(character => character.isMainCharacter) || null;
+
+        // 如果找到主角，确保currentStats是最新的
+        if (mainCharacter) {
+            // 判断是否在地下城中 - 更准确的判断方法
+            const inDungeon = typeof Dungeon !== 'undefined' &&
+                              Dungeon.currentRun &&
+                              mainCharacter.dungeonOriginalStats;
+
+            if (inDungeon) {
+                // 在地下城中，保留当前状态
+                console.log('主角在地下城中，保留当前状态');
+                return mainCharacter;
+            } else {
+                // 不在地下城中，重置currentStats为baseStats的深拷贝
+                mainCharacter.currentStats = JSON.parse(JSON.stringify(mainCharacter.baseStats));
+
+                // 如果有dungeonOriginalStats但不在地下城中，清除它
+                if (mainCharacter.dungeonOriginalStats && (!Dungeon || !Dungeon.currentRun)) {
+                    console.log('检测到异常状态：有dungeonOriginalStats但不在地下城中，清除它');
+                    delete mainCharacter.dungeonOriginalStats;
+                }
+            }
+        }
+
+        return mainCharacter;
     },
 
     /**

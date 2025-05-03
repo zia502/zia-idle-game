@@ -12,7 +12,6 @@ const Dungeon = {
             name: '森林洞穴',
             description: '一个位于森林中的神秘洞穴，有许多低级怪物盘踞。',
             level: 1,
-            requiredLevel: 1,
             entrance: 'forest_entrance',
             nextDungeon: 'mountain_path',
             type: 'normal',
@@ -48,7 +47,6 @@ const Dungeon = {
             name: '山间小径',
             description: '通往山脉深处的危险小径，盘踞着更强大的怪物。',
             level: 2,
-            requiredLevel: 5,
             entrance: 'mountain_entrance',
             nextDungeon: 'ancient_ruins',
             type: 'normal',
@@ -84,7 +82,6 @@ const Dungeon = {
             name: '古代遗迹',
             description: '一座被遗忘的古代遗迹，隐藏着强大的魔法和危险的守护者。',
             level: 3,
-            requiredLevel: 10,
             entrance: 'ruins_entrance',
             nextDungeon: null,
             type: 'normal',
@@ -412,8 +409,6 @@ const Dungeon = {
         // 检查是否已解锁
         if (!this.unlockedDungeons.includes(dungeonId)) return false;
 
-        // 检查等级要求
-        if (Game.state.playerLevel < template.requiredLevel) return false;
 
         return true;
     },

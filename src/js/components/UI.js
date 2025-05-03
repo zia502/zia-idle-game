@@ -3034,18 +3034,17 @@ const UI = {
                     <div class="dungeon-info">
                         <p>${dungeon.description}</p>
                         <div class="dungeon-requirements">
-                            <span>等级要求: ${dungeon.requiredLevel}</span>
                             <span>入口: ${dungeon.entrance.name}</span>
                         </div>
                         <div class="dungeon-rewards">
-                            <span>金币: ${dungeon.rewards.gold.min}-${dungeon.rewards.gold.max}</span>
+                            <span>金币: ${dungeon.rewards.gold}</span>
                             <span>经验: ${dungeon.rewards.exp}</span>
                         </div>
                     </div>
                     <div class="dungeon-actions">
                         ${canEnter ? 
                             `<button class="btn btn-primary enter-dungeon" data-dungeon-id="${dungeon.id}">进入地下城</button>` :
-                            `<button class="btn btn-disabled" disabled>需要等级 ${dungeon.requiredLevel}</button>`
+                            ``
                         }
                     </div>
                 </div>

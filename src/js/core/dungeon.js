@@ -240,18 +240,77 @@ const Dungeon = {
         }
     },
 
-    // 怪物定义
-    monsters: {
+    /**
+     * 加载怪物和Boss模板数据
+     */
+    loadTemplates() {
+        console.log('开始加载怪物和Boss模板数据...');
+        console.log('当前monsters状态:', this.monsters);
+        console.log('当前bosses状态:', this.bosses);
+
+        // 从Python服务器获取JSON数据
+        const serverUrl = 'http://localhost:8000';
+        const monstersPath = '/src/data/monsters.json';
+        const bossesPath = '/src/data/bosses.json';
+
+        console.log(`尝试从服务器加载怪物JSON: ${serverUrl}${monstersPath}`);
+        console.log(`尝试从服务器加载Boss JSON: ${serverUrl}${bossesPath}`);
+
+        // 加载怪物模板
+        fetch(`${serverUrl}${monstersPath}`)
+            .then(response => {
+                console.log('怪物服务器响应状态:', response.status);
+                if (!response.ok) {
+                    throw new Error(`HTTP错误! 状态: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('成功从服务器获取怪物数据:', data);
+                this.monsters = data.monsters;
+                console.log('怪物模板数据加载成功');
+            })
+            .catch(error => {
+                console.error('从服务器加载怪物模板数据失败:', error);
+                this.loadTemplatesFallback('monsters');
+            });
+
+        // 加载Boss模板
+        fetch(`${serverUrl}${bossesPath}`)
+            .then(response => {
+                console.log('Boss服务器响应状态:', response.status);
+                if (!response.ok) {
+                    throw new Error(`HTTP错误! 状态: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('成功从服务器获取Boss数据:', data);
+                this.bosses = data.bosses;
+                console.log('Boss模板数据加载成功');
+            })
+            .catch(error => {
+                console.error('从服务器加载Boss模板数据失败:', error);
+                this.loadTemplatesFallback('bosses');
+            });
     },
 
-    bosses:{
-
+    /**
+     * 加载模板数据失败时的备用方案
+     * @param {string} type - 模板类型 ('monsters' 或 'bosses')
+     */
+    loadTemplatesFallback(type) {
+        console.log(`尝试使用备用方案加载${type}模板数据...`);
+        // 这里可以添加从本地文件或其他来源加载数据的逻辑
     },
 
     /**
      * 初始化地下城系统
      */
     init() {
+        // 加载模板
+        this.loadTemplates();
+
         // 复制地下城定义到地下城数据
         for (const [id, definition] of Object.entries(this.definitions)) {
             this.dungeons[id] = {...definition};

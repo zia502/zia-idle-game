@@ -694,48 +694,158 @@
     display: flex;
     flex-direction: column;
     gap: 10px;
+    max-height: 400px;
+    overflow-y: auto;
 }
 
 .dungeon-info {
-    background-color: #e9e9e9;
-    border-radius: 3px;
-    padding: 10px;
+    background-color: #f0f0f0;
+    border-radius: 5px;
+    padding: 12px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
 }
 
-.dungeon-name {
-    font-size: 16px;
-    font-weight: bold;
-    margin-bottom: 5px;
-}
-
-.dungeon-description {
-    font-size: 12px;
-    color: #555;
+.dungeon-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
     margin-bottom: 10px;
 }
 
+.dungeon-name {
+    font-size: 18px;
+    font-weight: bold;
+    color: #333;
+}
+
+.dungeon-stage {
+    font-size: 12px;
+    padding: 3px 8px;
+    border-radius: 10px;
+    color: white;
+    font-weight: bold;
+}
+
+.dungeon-stage.normal {
+    background-color: #4CAF50;
+}
+
+.dungeon-stage.mini-boss {
+    background-color: #FF9800;
+}
+
+.dungeon-stage.final-boss {
+    background-color: #F44336;
+}
+
+.dungeon-stage.completed {
+    background-color: #2196F3;
+}
+
+.dungeon-description {
+    font-size: 13px;
+    color: #555;
+    margin-bottom: 15px;
+    line-height: 1.4;
+}
+
 .dungeon-progress {
-    margin-top: 10px;
+    margin-bottom: 15px;
 }
 
 .progress-bar {
-    height: 10px;
-    background-color: #ddd;
-    border-radius: 5px;
+    height: 12px;
+    background-color: #e0e0e0;
+    border-radius: 6px;
     overflow: hidden;
     margin-bottom: 5px;
+    box-shadow: inset 0 1px 2px rgba(0,0,0,0.1);
 }
 
 .progress-fill {
     height: 100%;
     background-color: #4CAF50;
     width: 0%;
+    transition: width 0.5s ease;
+    background-image: linear-gradient(45deg,
+                      rgba(255,255,255,0.15) 25%,
+                      transparent 25%,
+                      transparent 50%,
+                      rgba(255,255,255,0.15) 50%,
+                      rgba(255,255,255,0.15) 75%,
+                      transparent 75%,
+                      transparent);
+    background-size: 20px 20px;
+    animation: progress-bar-stripes 1s linear infinite;
+}
+
+@keyframes progress-bar-stripes {
+    from { background-position: 0 0; }
+    to { background-position: 20px 0; }
 }
 
 .progress-text {
     font-size: 12px;
-    color: #777;
+    color: #555;
     text-align: right;
+    font-weight: bold;
+}
+
+.dungeon-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-top: 10px;
+    background-color: #f9f9f9;
+    padding: 10px;
+    border-radius: 5px;
+    border: 1px solid #e0e0e0;
+}
+
+.dungeon-stats .stat-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+}
+
+.dungeon-stats .stat-label {
+    font-size: 11px;
+    color: #777;
+    margin-bottom: 3px;
+}
+
+.dungeon-stats .stat-value {
+    font-size: 13px;
+    font-weight: bold;
+    color: #333;
+}
+
+.dungeon-control-panel {
+    margin-top: 10px;
+    padding: 10px;
+    background-color: #f5f5f5;
+    border-radius: 5px;
+    border: 1px solid #e0e0e0;
+}
+
+.speed-control {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.speed-control label {
+    font-size: 12px;
+    color: #555;
+}
+
+.speed-control select {
+    padding: 5px;
+    border-radius: 3px;
+    border: 1px solid #ccc;
+    font-size: 12px;
+    background-color: white;
 }
 
 /* 战斗日志 */
@@ -743,38 +853,63 @@
     display: flex;
     flex-direction: column;
     gap: 5px;
+    max-height: 400px;
+    overflow-y: auto;
+    padding-right: 5px;
 }
 
 .log-entry {
-    font-size: 12px;
-    padding: 5px;
-    border-radius: 3px;
+    font-size: 13px;
+    padding: 8px 10px;
+    border-radius: 5px;
+    margin-bottom: 5px;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    border-left: 3px solid transparent;
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(5px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 
 .log-entry.normal {
-    background-color: #e9e9e9;
+    background-color: #f5f5f5;
+    border-left-color: #9e9e9e;
 }
 
 .log-entry.success {
     background-color: #E8F5E9;
+    border-left-color: #4CAF50;
 }
 
 .log-entry.warning {
     background-color: #FFF8E1;
+    border-left-color: #FFC107;
 }
 
 .log-entry.danger {
     background-color: #FFEBEE;
+    border-left-color: #F44336;
+}
+
+.log-entry.round {
+    background-color: #E3F2FD;
+    border-left-color: #2196F3;
+    font-weight: bold;
 }
 
 .log-time {
     font-size: 10px;
     color: #777;
-    margin-right: 5px;
+    margin-right: 8px;
+    display: inline-block;
+    min-width: 60px;
 }
 
 .log-content {
     color: #333;
+    line-height: 1.4;
 }
 
 .main-weapon-slot .weapon-attributes {

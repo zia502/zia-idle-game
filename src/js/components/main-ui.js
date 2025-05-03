@@ -917,9 +917,12 @@ const MainUI = {
                 return;
             }
 
-            // 计算进度
+            // 获取进度
             let progressPercent = 0;
-            if (Dungeon.currentRun) {
+            if (Dungeon.currentRun.progress !== undefined) {
+                // 使用DungeonRunner设置的进度
+                progressPercent = Math.min(100, Math.max(0, Dungeon.currentRun.progress));
+            } else {
                 // 简单计算进度：已击败的怪物数量 / 总怪物数量
                 const totalMonsters = Dungeon.currentRun.monsters.length +
                                      Dungeon.currentRun.miniBosses.length +
@@ -933,10 +936,31 @@ const MainUI = {
                                  Math.min(100, Math.round((defeatedMonsters / totalMonsters) * 100)) : 0;
             }
 
+            // 计算当前阶段
+            let stageText = '';
+            let stageClass = '';
+
+            if (Dungeon.currentRun.isCompleted) {
+                stageText = '已完成';
+                stageClass = 'completed';
+            } else if (Dungeon.currentRun.finalBossAppeared) {
+                stageText = '大BOSS战';
+                stageClass = 'final-boss';
+            } else if (Dungeon.currentRun.defeatedMiniBosses < Dungeon.currentRun.miniBosses.length) {
+                stageText = `小BOSS战 (${Dungeon.currentRun.defeatedMiniBosses + 1}/${Dungeon.currentRun.miniBosses.length})`;
+                stageClass = 'mini-boss';
+            } else {
+                stageText = `普通怪物 (${Dungeon.currentRun.currentMonsterIndex}/${Dungeon.currentRun.monsters.length})`;
+                stageClass = 'normal';
+            }
+
             // 构建地下城信息HTML
             const html = `
                 <div class="dungeon-info">
-                    <div class="dungeon-name">${currentDungeon.name}</div>
+                    <div class="dungeon-header">
+                        <div class="dungeon-name">${currentDungeon.name}</div>
+                        <div class="dungeon-stage ${stageClass}">${stageText}</div>
+                    </div>
                     <div class="dungeon-description">${currentDungeon.description || '无描述'}</div>
                     <div class="dungeon-progress">
                         <div class="progress-bar">
@@ -944,10 +968,54 @@ const MainUI = {
                         </div>
                         <div class="progress-text">${progressPercent}%</div>
                     </div>
+                    <div class="dungeon-stats">
+                        <div class="stat-item">
+                            <span class="stat-label">普通怪物:</span>
+                            <span class="stat-value">${Dungeon.currentRun.currentMonsterIndex}/${Dungeon.currentRun.monsters.length}</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">小BOSS:</span>
+                            <span class="stat-value">${Dungeon.currentRun.defeatedMiniBosses}/${Dungeon.currentRun.miniBosses.length}</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">大BOSS:</span>
+                            <span class="stat-value">${Dungeon.currentRun.finalBossAppeared ? (Dungeon.currentRun.isCompleted ? '已击败' : '战斗中') : '未出现'}</span>
+                        </div>
+                    </div>
                 </div>
             `;
 
             dungeonContainer.innerHTML = html;
+
+            // 添加控制按钮
+            if (typeof DungeonRunner !== 'undefined') {
+                const controlPanel = document.createElement('div');
+                controlPanel.className = 'dungeon-control-panel';
+                controlPanel.innerHTML = `
+                    <div class="speed-control">
+                        <label>战斗速度:</label>
+                        <select id="battle-speed-selector">
+                            <option value="500">极快</option>
+                            <option value="1000" selected>正常</option>
+                            <option value="2000">慢速</option>
+                            <option value="3000">非常慢</option>
+                        </select>
+                    </div>
+                `;
+
+                dungeonContainer.appendChild(controlPanel);
+
+                // 添加速度选择器事件
+                const speedSelector = document.getElementById('battle-speed-selector');
+                if (speedSelector) {
+                    speedSelector.addEventListener('change', () => {
+                        const speed = parseInt(speedSelector.value);
+                        if (!isNaN(speed) && typeof DungeonRunner.setLogDisplaySpeed === 'function') {
+                            DungeonRunner.setLogDisplaySpeed(speed);
+                        }
+                    });
+                }
+            }
         } catch (error) {
             console.error('更新地下城信息时出错:', error);
             const dungeonContainer = document.getElementById('main-current-dungeon');
@@ -975,7 +1043,10 @@ const MainUI = {
             // 获取战斗日志
             let battleLogs = [];
 
-            if (Battle.getBattleLogs && typeof Battle.getBattleLogs === 'function') {
+            if (Battle.battleLog) {
+                // 直接使用Battle.battleLog
+                battleLogs = Battle.battleLog;
+            } else if (Battle.getBattleLogs && typeof Battle.getBattleLogs === 'function') {
                 battleLogs = Battle.getBattleLogs();
             } else if (Battle.logs) {
                 // 备选：如果Battle.logs存在，使用它
@@ -990,21 +1061,50 @@ const MainUI = {
             // 构建日志HTML
             let html = '';
 
-            // 最多显示最近的10条日志
-            const recentLogs = battleLogs.slice(-10);
+            // 最多显示最近的20条日志
+            const recentLogs = battleLogs.slice(-20);
+
             recentLogs.forEach(log => {
-                const logClass = log.type || 'normal';
-                const time = log.time ? new Date(log.time).toLocaleTimeString() : '';
+                // 处理日志对象或字符串
+                let message = '';
+                let logClass = 'normal';
+                let time = '';
+
+                if (typeof log === 'string') {
+                    message = log;
+                    time = new Date().toLocaleTimeString();
+                } else if (typeof log === 'object' && log !== null) {
+                    message = log.message || '';
+                    logClass = log.type || 'normal';
+                    time = log.time ? new Date(log.time).toLocaleTimeString() : new Date().toLocaleTimeString();
+                }
+
+                // 根据消息内容设置样式
+                if (message.includes('击败') || message.includes('胜利')) {
+                    logClass = 'success';
+                } else if (message.includes('BOSS') || message.includes('遇到了')) {
+                    logClass = 'warning';
+                } else if (message.includes('失败') || message.includes('被击败')) {
+                    logClass = 'danger';
+                } else if (message.includes('回合') || message.includes('#####')) {
+                    logClass = 'round';
+                    // 清理回合标记
+                    message = message.replace(/#####/g, '').trim();
+                }
 
                 html += `
                     <div class="log-entry ${logClass}">
                         <span class="log-time">${time}</span>
-                        <span class="log-content">${log.message}</span>
+                        <span class="log-content">${message}</span>
                     </div>
                 `;
             });
 
+            // 更新日志容器内容
             logContainer.innerHTML = html;
+
+            // 滚动到底部
+            logContainer.scrollTop = logContainer.scrollHeight;
         } catch (error) {
             console.error('更新战斗日志时出错:', error);
             const logContainer = document.getElementById('main-battle-log');

@@ -69,11 +69,31 @@ const Game = {
         // 确保主角元素属性与主手武器同步
         this.syncMainCharacterElement();
 
+        // 初始化地下城运行器
+        this.initDungeonRunner();
+
         this.startGameLoop();
 
         // 触发游戏加载完成事件
         if (typeof Events !== 'undefined') {
             Events.emit('game:loaded', { version: this.state.version });
+        }
+    },
+
+    /**
+     * 初始化地下城运行器
+     */
+    initDungeonRunner() {
+        if (typeof DungeonRunner !== 'undefined' && typeof DungeonRunner.init === 'function') {
+            console.log('初始化地下城运行器...');
+            try {
+                DungeonRunner.init();
+                console.log('地下城运行器初始化完成');
+            } catch (error) {
+                console.error('初始化地下城运行器时出错:', error);
+            }
+        } else {
+            console.warn('DungeonRunner模块未定义或init方法不存在');
         }
     },
 

@@ -223,7 +223,7 @@ const Dungeon = {
     // 加载怪物和Boss模板数据
     loadTemplates() {
         console.log('开始加载地下城模板数据...');
-        
+
         // 使用本地定义的地下城模板
         this.templates = this.templates || {};
         console.log('地下城模板加载完成:', this.templates);
@@ -281,16 +281,41 @@ const Dungeon = {
      */
     loadDungeonsFallback() {
         console.log('尝试使用备用方案加载地下城数据...');
-        
+
         // 初始化地下城数据
         this.unlockedDungeons = ['forest_cave'];
         this.completedDungeons = [];
-        
-        // 初始化地下城模板
-        this.templates = {
-        };
 
-        // 初始化地下城数据
+        // 确保模板已初始化
+        if (!this.templates || Object.keys(this.templates).length === 0) {
+            console.warn('模板未初始化，使用默认模板');
+
+            // 使用默认模板
+            this.templates = {
+                forest_cave: {
+                    id: 'forest_cave',
+                    name: '森林洞穴',
+                    description: '一个位于森林中的神秘洞穴，有许多低级怪物盘踞。',
+                    level: 1,
+                    entrance: 'forest_entrance',
+                    nextDungeon: 'mountain_path',
+                    type: 'normal',
+                    miniBossCount: 2,
+                    possibleMonsters: ['slime', 'goblin', 'wolf'],
+                    possibleMiniBosses: ['goblinChief', 'skeletonKing'],
+                    possibleFinalBosses: ['forestGuardian'],
+                    rewards: {
+                        gold: 5000,
+                        exp: 2000
+                    }
+                }
+            };
+        }
+
+        // 确保dungeons对象已初始化
+        this.dungeons = this.dungeons || {};
+
+        // 将模板数据复制到dungeons对象中
         for (const [id, template] of Object.entries(this.templates)) {
             this.dungeons[id] = {
                 ...template,
@@ -315,7 +340,7 @@ const Dungeon = {
      */
     init() {
         console.log('初始化地下城系统...');
-        
+
         // 初始化地下城数据
         this.unlockedDungeons = ['forest_cave']; // 默认解锁第一个地下城
         this.completedDungeons = [];
@@ -329,16 +354,41 @@ const Dungeon = {
                 name: '山道入口'
             }
         };
-        
+
         // 加载模板
         this.loadTemplates();
-        
+
+        // 将模板数据复制到dungeons对象中
+        this.copyTemplatesToDungeons();
+
         // 加载地下城数据
         this.loadDungeons();
-        
+
         // 显示初始化消息
         UI.showMessage('地下城系统已初始化');
         console.log('地下城系统初始化完成');
+    },
+
+    /**
+     * 将模板数据复制到dungeons对象中
+     */
+    copyTemplatesToDungeons() {
+        console.log('将模板数据复制到dungeons对象中...');
+
+        // 确保dungeons对象已初始化
+        this.dungeons = this.dungeons || {};
+
+        // 遍历所有模板
+        for (const [dungeonId, template] of Object.entries(this.templates)) {
+            // 将模板添加到dungeons中
+            this.dungeons[dungeonId] = {
+                ...template,
+                isCompleted: this.completedDungeons.includes(dungeonId),
+                isUnlocked: this.unlockedDungeons.includes(dungeonId)
+            };
+        }
+
+        console.log(`已将 ${Object.keys(this.templates).length} 个模板复制到dungeons对象中`);
     },
 
     /**
@@ -359,7 +409,7 @@ const Dungeon = {
                 this.completedDungeons = [];
                 console.log('使用默认地下城数据');
             }
-            
+
             // 更新UI显示
             if (typeof UI !== 'undefined') {
                 UI.updateDungeonList();
@@ -386,15 +436,28 @@ const Dungeon = {
      * @returns {Array} 可探索的地下城列表
      */
     getAvailableDungeons() {
+        // 确保dungeons对象已初始化
+        if (!this.dungeons || Object.keys(this.dungeons).length === 0) {
+            this.copyTemplatesToDungeons();
+        }
+
         return this.unlockedDungeons.map(dungeonId => {
-            const template = this.templates[dungeonId];
-            const entrance = this.entrances[template.entrance];
+            // 优先从dungeons对象中获取地下城数据
+            const dungeon = this.dungeons[dungeonId] || this.templates[dungeonId];
+
+            if (!dungeon) {
+                console.warn(`找不到地下城: ${dungeonId}`);
+                return null;
+            }
+
+            const entrance = this.entrances[dungeon.entrance];
+
             return {
-                ...template,
+                ...dungeon,
                 entrance: entrance,
                 isCompleted: this.completedDungeons.includes(dungeonId)
             };
-        });
+        }).filter(dungeon => dungeon !== null); // 过滤掉null值
     },
 
     /**
@@ -403,12 +466,17 @@ const Dungeon = {
      * @returns {boolean} 是否可以进入
      */
     canEnterDungeon(dungeonId) {
-        const template = this.templates[dungeonId];
-        if (!template) return false;
+        // 确保dungeons对象已初始化
+        if (!this.dungeons || Object.keys(this.dungeons).length === 0) {
+            this.copyTemplatesToDungeons();
+        }
+
+        // 优先从dungeons对象中获取地下城数据
+        const dungeon = this.dungeons[dungeonId] || this.templates[dungeonId];
+        if (!dungeon) return false;
 
         // 检查是否已解锁
         if (!this.unlockedDungeons.includes(dungeonId)) return false;
-
 
         return true;
     },
@@ -420,7 +488,7 @@ const Dungeon = {
     completeDungeon(dungeonId) {
         if (!this.completedDungeons.includes(dungeonId)) {
             this.completedDungeons.push(dungeonId);
-            
+
             // 解锁下一个地下城
             const template = this.templates[dungeonId];
             if (template.nextDungeon && !this.unlockedDungeons.includes(template.nextDungeon)) {
@@ -456,7 +524,24 @@ const Dungeon = {
      * @returns {object|null} 地下城对象
      */
     getDungeon(dungeonId) {
-        return this.dungeons[dungeonId] || null;
+        // 首先尝试从dungeons获取
+        if (this.dungeons[dungeonId]) {
+            return this.dungeons[dungeonId];
+        }
+
+        // 如果在dungeons中找不到，尝试从templates中获取
+        if (this.templates[dungeonId]) {
+            // 将模板添加到dungeons中
+            this.dungeons[dungeonId] = {
+                ...this.templates[dungeonId],
+                isCompleted: false,
+                isUnlocked: true
+            };
+            return this.dungeons[dungeonId];
+        }
+
+        // 如果都找不到，返回null
+        return null;
     },
 
     /**
@@ -473,9 +558,29 @@ const Dungeon = {
      * @returns {boolean} 是否成功初始化
      */
     initDungeonRun(dungeonId) {
-        const dungeon = this.getDungeon(dungeonId);
-        if (!dungeon) return false;
+        // 尝试从dungeons获取地下城，如果不存在则从templates获取
+        let dungeon = this.getDungeon(dungeonId);
 
+        // 如果在dungeons中找不到，尝试从templates中获取
+        if (!dungeon && this.templates[dungeonId]) {
+            console.log(`在dungeons中找不到地下城 ${dungeonId}，使用模板`);
+            dungeon = this.templates[dungeonId];
+
+            // 将模板添加到dungeons中
+            this.dungeons[dungeonId] = {
+                ...this.templates[dungeonId],
+                isCompleted: false,
+                isUnlocked: true
+            };
+        }
+
+        // 如果仍然找不到地下城，返回失败
+        if (!dungeon) {
+            console.error(`找不到地下城: ${dungeonId}`);
+            return false;
+        }
+
+        // 获取地下城类型
         const dungeonType = this.types[dungeon.type] || this.types.normal;
 
         // 确定普通怪物数量
@@ -483,8 +588,87 @@ const Dungeon = {
             (dungeonType.monsterCount.max - dungeonType.monsterCount.min + 1)) +
             dungeonType.monsterCount.min;
 
+        console.log(`生成 ${monsterCount} 个普通怪物`);
+
         // 生成普通怪物
         const monsters = [];
+
+        // 检查是否有怪物模板
+        if (!this.monsterTemplates || Object.keys(this.monsterTemplates).length === 0) {
+            console.warn('怪物模板未加载，使用默认怪物');
+
+            // 使用默认怪物
+            this.monsterTemplates = {
+                slime: {
+                    id: 'slime',
+                    name: '史莱姆',
+                    hp: 100,
+                    atk: 10,
+                    def: 5,
+                    attribute: 'water',
+                    xpReward: 50
+                },
+                goblin: {
+                    id: 'goblin',
+                    name: '哥布林',
+                    hp: 150,
+                    atk: 15,
+                    def: 8,
+                    attribute: 'earth',
+                    xpReward: 80
+                },
+                wolf: {
+                    id: 'wolf',
+                    name: '狼',
+                    hp: 120,
+                    atk: 20,
+                    def: 3,
+                    attribute: 'wind',
+                    xpReward: 70
+                }
+            };
+        }
+
+        // 检查是否有Boss模板
+        if (!this.bossTemplates || Object.keys(this.bossTemplates).length === 0) {
+            console.warn('Boss模板未加载，使用默认Boss');
+
+            // 使用默认Boss
+            this.bossTemplates = {
+                goblinChief: {
+                    id: 'goblinChief',
+                    name: '哥布林酋长',
+                    hp: 500,
+                    atk: 30,
+                    def: 15,
+                    attribute: 'earth',
+                    xpReward: 300,
+                    skills: []
+                },
+                skeletonKing: {
+                    id: 'skeletonKing',
+                    name: '骷髅王',
+                    hp: 600,
+                    atk: 35,
+                    def: 10,
+                    attribute: 'dark',
+                    xpReward: 350,
+                    skills: []
+                },
+                forestGuardian: {
+                    id: 'forestGuardian',
+                    name: '森林守护者',
+                    hp: 1000,
+                    atk: 50,
+                    def: 20,
+                    attribute: 'earth',
+                    xpReward: 800,
+                    skills: []
+                }
+            };
+        }
+
+        // 生成普通怪物
         for (let i = 0; i < monsterCount; i++) {
             const monster = this.generateMonster(dungeon);
             if (monster) {
@@ -496,6 +680,8 @@ const Dungeon = {
         const miniBosses = [];
         const miniBossCount = dungeon.miniBossCount || 2; // 默认至少2个小boss
 
+        console.log(`生成 ${miniBossCount} 个小boss`);
+
         // 确保生成指定数量的小boss
         for (let i = 0; i < miniBossCount; i++) {
             const miniBoss = this.generateBoss(dungeon, 'mini');
@@ -506,6 +692,12 @@ const Dungeon = {
 
         // 生成大boss（但不立即出现）
         const finalBoss = this.generateBoss(dungeon, 'final');
+
+        if (finalBoss) {
+            console.log(`生成大boss: ${finalBoss.name}`);
+        } else {
+            console.warn('无法生成大boss');
+        }
 
         // 初始化运行数据
         this.currentRun = {
@@ -736,17 +928,17 @@ const Dungeon = {
                 // 小boss掉落
                 const silverCount = Math.floor(Math.random() * 3) + 1;
                 const goldCount = Math.floor(Math.random() * 3) + 1;
-                
+
                 // 掉落银宝箱
                 for (let i = 0; i < silverCount; i++) {
                     this.currentRun.rewards.push({ type: 'chest', id: 'silver' });
                 }
-                
+
                 // 掉落金宝箱
                 for (let i = 0; i < goldCount; i++) {
                     this.currentRun.rewards.push({ type: 'chest', id: 'gold' });
                 }
-                
+
                 // 0.05%概率掉落彩虹宝箱
                 if (Math.random() < 0.0005) {
                     this.currentRun.rewards.push({ type: 'chest', id: 'rainbow' });
@@ -755,17 +947,17 @@ const Dungeon = {
                 // 最终boss掉落
                 const goldCount = Math.floor(Math.random() * 3) + 1;
                 const redCount = Math.floor(Math.random() * 3) + 1;
-                
+
                 // 掉落金宝箱
                 for (let i = 0; i < goldCount; i++) {
                     this.currentRun.rewards.push({ type: 'chest', id: 'gold' });
                 }
-                
+
                 // 掉落红宝箱
                 for (let i = 0; i < redCount; i++) {
                     this.currentRun.rewards.push({ type: 'chest', id: 'red' });
                 }
-                
+
                 // 2%概率掉落彩虹宝箱
                 if (Math.random() < 0.02) {
                     this.currentRun.rewards.push({ type: 'chest', id: 'rainbow' });
@@ -799,7 +991,7 @@ const Dungeon = {
 
             // 检查是否是第一次完成
             const isFirstCompletion = !Game.state.progress.completedDungeons.includes(dungeonId);
-            
+
             // 如果是第一次完成，给予金币奖励
             if (isFirstCompletion) {
                 Game.addGold(dungeon.rewards.gold);

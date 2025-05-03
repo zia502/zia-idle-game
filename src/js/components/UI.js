@@ -3024,7 +3024,7 @@ const UI = {
         availableDungeons.forEach(dungeon => {
             const canEnter = Dungeon.canEnterDungeon(dungeon.id);
             const isCompleted = dungeon.isCompleted;
-            
+
             html += `
                 <div class="dungeon-item ${canEnter ? 'available' : 'locked'} ${isCompleted ? 'completed' : ''}">
                     <div class="dungeon-header">
@@ -3042,7 +3042,7 @@ const UI = {
                         </div>
                     </div>
                     <div class="dungeon-actions">
-                        ${canEnter ? 
+                        ${canEnter ?
                             `<button class="btn btn-primary enter-dungeon" data-dungeon-id="${dungeon.id}">进入地下城</button>` :
                             ``
                         }
@@ -3060,7 +3060,17 @@ const UI = {
                 const dungeonId = button.dataset.dungeonId;
                 if (Dungeon.canEnterDungeon(dungeonId)) {
                     Dungeon.initDungeonRun(dungeonId);
-                    this.switchScreen('battle-screen');
+                    // 切换到主屏幕而不是战斗屏幕
+                    this.switchScreen('main-screen');
+                    // 触发地下城开始事件
+                    if (typeof Events !== 'undefined') {
+                        Events.emit('dungeon:start', { dungeonId });
+                    }
+                    // 更新当前地下城信息和战斗日志
+                    if (typeof MainUI !== 'undefined') {
+                        MainUI.updateCurrentDungeon();
+                        MainUI.updateBattleLog();
+                    }
                 }
             });
         });

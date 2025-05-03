@@ -1,0 +1,36 @@
+{
+    "bosses": {
+        "goblinChief": {
+            "name": "哥布林酋长",
+            "attribute": "earth",
+            "hp": 120,
+            "atk": 15,
+            "def": 8,
+            "skills": ["goblinRage", "tribeCall"]
+        },
+        "skeletonKing": {
+            "name": "骷髅王",
+            "attribute": "dark",
+            "hp": 180,
+            "atk": 22,
+            "def": 12,
+            "skills": ["boneStorm", "darkAura"]
+        },
+        "dragonLord": {
+            "name": "龙王",
+            "attribute": "fire",
+            "hp": 500,
+            "atk": 50,
+            "def": 40,
+            "skills": ["dragonBreath", "flameStorm", "dragonRage"]
+        },
+        "pharaoh": {
+            "name": "法老",
+            "attribute": "dark",
+            "hp": 300,
+            "atk": 35,
+            "def": 25,
+            "skills": ["curseOfThePharaoh", "sandStorm", "mummyArmy"]
+        }
+    }
+} 

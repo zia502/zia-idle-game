@@ -93,60 +93,45 @@ const Dungeon = {
             possibleFinalBosses: ['大地泰坦'],
             rewards: {
                 gold: 5000,
-                exp: 2000,
-                weapons: ['surturFlame', 'surturSword']
+                exp: 2000
             },
             chestDrops: {
-                silver: {
-                    materials: [
-                        { id: 'wood', rate: 0.4 },
-                        { id: 'stone', rate: 0.3 },
-                        { id: 'herbs', rate: 0.2 },
-                        { id: 'animalHide', rate: 0.1 }
-                    ]
-                },
-                gold: {
-                    weapons: [
-                        { id: 'forestSword', rate: 0.3 },
-                        { id: 'hunterAxe', rate: 0.3 },
-                        { id: 'guardianSpear', rate: 0.2 },
-                        { id: 'rangerBow', rate: 0.2 }
-                    ],
-                    materials: [
-                        { id: 'magicHerbs', rate: 0.3 },
-                        { id: 'crystal', rate: 0.3 },
-                        { id: 'beastFang', rate: 0.2 },
-                        { id: 'forestEssence', rate: 0.2 }
-                    ]
-                },
-                red: {
-                    weapons: [
-                        { id: 'natureSword', rate: 0.3 },
-                        { id: 'earthAxe', rate: 0.3 },
-                        { id: 'forestSpear', rate: 0.2 },
-                        { id: 'wildBow', rate: 0.2 }
-                    ],
-                    materials: [
-                        { id: 'natureCrystal', rate: 0.3 },
-                        { id: 'earthEssence', rate: 0.3 },
-                        { id: 'forestCore', rate: 0.2 },
-                        { id: 'wildSpirit', rate: 0.2 }
-                    ]
-                },
-                rainbow: {
-                    weapons: [
-                        { id: 'ancientSword', rate: 0.3 },
-                        { id: 'guardianAxe', rate: 0.3 },
-                        { id: 'druidSpear', rate: 0.2 },
-                        { id: 'elvenBow', rate: 0.2 }
-                    ],
-                    materials: [
-                        { id: 'ancientCrystal', rate: 0.3 },
-                        { id: 'guardianEssence', rate: 0.3 },
-                        { id: 'druidCore', rate: 0.2 },
-                        { id: 'elvenSpirit', rate: 0.2 }
-                    ]
-                }
+                silver: [
+                    { id: 'wood', type: 'material', rate: 0.4 },
+                    { id: 'stone', type: 'material', rate: 0.3 },
+                    { id: 'herbs', type: 'material', rate: 0.2 },
+                    { id: 'animalHide', type: 'material', rate: 0.1 }
+                ],
+                gold: [
+                    { id: 'forestSword', type: 'weapon', rate: 0.35 },
+                    { id: 'hunterAxe', type: 'weapon', rate: 0.3 },
+                    { id: 'guardianSpear', type: 'weapon', rate: 0.2 },
+                    { id: 'rangerBow', type: 'weapon', rate: 0.15 },
+                    { id: 'magicHerbs', type: 'material', rate: 0.4 },
+                    { id: 'crystal', type: 'material', rate: 0.3 },
+                    { id: 'beastFang', type: 'material', rate: 0.2 },
+                    { id: 'forestEssence', type: 'material', rate: 0.1 }
+                ],
+                red: [
+                    { id: 'natureSword', type: 'weapon', rate: 0.4 },
+                    { id: 'earthAxe', type: 'weapon', rate: 0.3 },
+                    { id: 'forestSpear', type: 'weapon', rate: 0.2 },
+                    { id: 'wildBow', type: 'weapon', rate: 0.1 },
+                    { id: 'natureCrystal', type: 'material', rate: 0.35 },
+                    { id: 'earthEssence', type: 'material', rate: 0.3 },
+                    { id: 'forestCore', type: 'material', rate: 0.2 },
+                    { id: 'wildSpirit', type: 'material', rate: 0.15 }
+                ],
+                rainbow: [
+                    { id: 'ancientSword', type: 'weapon', rate: 0.4 },
+                    { id: 'guardianAxe', type: 'weapon', rate: 0.3 },
+                    { id: 'druidSpear', type: 'weapon', rate: 0.2 },
+                    { id: 'elvenBow', type: 'weapon', rate: 0.1 },
+                    { id: 'ancientCrystal', type: 'material', rate: 0.35 },
+                    { id: 'guardianEssence', type: 'material', rate: 0.3 },
+                    { id: 'druidCore', type: 'material', rate: 0.2 },
+                    { id: 'elvenSpirit', type: 'material', rate: 0.15 }
+                ]
             }
         },
         dungeon2: {
@@ -160,60 +145,45 @@ const Dungeon = {
             possibleFinalBosses: ['岩龙'],
             rewards: {
                 gold: 5000,
-                exp: 5000,
-                weapons: ['gonggongTouch', 'gonggongPillar']
+                exp: 5000
             },
             chestDrops: {
-                silver: {
-                    materials: [
-                        { id: 'ironOre', rate: 0.4 },
-                        { id: 'copperOre', rate: 0.3 },
-                        { id: 'coal', rate: 0.2 },
-                        { id: 'crystalShard', rate: 0.1 }
-                    ]
-                },
-                gold: {
-                    weapons: [
-                        { id: 'steelPickaxe', rate: 0.3 },
-                        { id: 'crystalAxe', rate: 0.3 },
-                        { id: 'gemSpear', rate: 0.2 },
-                        { id: 'caveBow', rate: 0.2 }
-                    ],
-                    materials: [
-                        { id: 'steelOre', rate: 0.3 },
-                        { id: 'crystal', rate: 0.3 },
-                        { id: 'gem', rate: 0.2 },
-                        { id: 'magicStone', rate: 0.2 }
-                    ]
-                },
-                red: {
-                    weapons: [
-                        { id: 'mithrilPickaxe', rate: 0.3 },
-                        { id: 'diamondAxe', rate: 0.3 },
-                        { id: 'crystalSpear', rate: 0.2 },
-                        { id: 'gemBow', rate: 0.2 }
-                    ],
-                    materials: [
-                        { id: 'mithrilOre', rate: 0.3 },
-                        { id: 'diamond', rate: 0.3 },
-                        { id: 'crystalCore', rate: 0.2 },
-                        { id: 'magicGem', rate: 0.2 }
-                    ]
-                },
-                rainbow: {
-                    weapons: [
-                        { id: 'dragonPickaxe', rate: 0.3 },
-                        { id: 'legendaryAxe', rate: 0.3 },
-                        { id: 'crystalSpear', rate: 0.2 },
-                        { id: 'diamondBow', rate: 0.2 }
-                    ],
-                    materials: [
-                        { id: 'dragonOre', rate: 0.3 },
-                        { id: 'legendaryGem', rate: 0.3 },
-                        { id: 'crystalHeart', rate: 0.2 },
-                        { id: 'diamondCore', rate: 0.2 }
-                    ]
-                }
+                silver: [
+                    { id: 'ironOre', type: 'material', rate: 0.4 },
+                    { id: 'copperOre', type: 'material', rate: 0.3 },
+                    { id: 'coal', type: 'material', rate: 0.2 },
+                    { id: 'crystalShard', type: 'material', rate: 0.1 }
+                ],
+                gold: [
+                    { id: 'steelPickaxe', type: 'weapon', rate: 0.35 },
+                    { id: 'crystalAxe', type: 'weapon', rate: 0.3 },
+                    { id: 'gemSpear', type: 'weapon', rate: 0.2 },
+                    { id: 'caveBow', type: 'weapon', rate: 0.15 },
+                    { id: 'steelOre', type: 'material', rate: 0.4 },
+                    { id: 'crystal', type: 'material', rate: 0.3 },
+                    { id: 'gem', type: 'material', rate: 0.2 },
+                    { id: 'magicStone', type: 'material', rate: 0.1 }
+                ],
+                red: [
+                    { id: 'mithrilPickaxe', type: 'weapon', rate: 0.4 },
+                    { id: 'diamondAxe', type: 'weapon', rate: 0.3 },
+                    { id: 'crystalSpear', type: 'weapon', rate: 0.2 },
+                    { id: 'gemBow', type: 'weapon', rate: 0.1 },
+                    { id: 'mithrilOre', type: 'material', rate: 0.35 },
+                    { id: 'diamond', type: 'material', rate: 0.3 },
+                    { id: 'crystalCore', type: 'material', rate: 0.2 },
+                    { id: 'magicGem', type: 'material', rate: 0.15 }
+                ],
+                rainbow: [
+                    { id: 'dragonPickaxe', type: 'weapon', rate: 0.4 },
+                    { id: 'legendaryAxe', type: 'weapon', rate: 0.3 },
+                    { id: 'crystalSpear', type: 'weapon', rate: 0.2 },
+                    { id: 'diamondBow', type: 'weapon', rate: 0.1 },
+                    { id: 'dragonOre', type: 'material', rate: 0.35 },
+                    { id: 'legendaryGem', type: 'material', rate: 0.3 },
+                    { id: 'crystalHeart', type: 'material', rate: 0.2 },
+                    { id: 'diamondCore', type: 'material', rate: 0.15 }
+                ]
             }
         },
         dungeon3: {
@@ -227,60 +197,45 @@ const Dungeon = {
             possibleFinalBosses: ['暗影魔龙'],
             rewards: {
                 gold: 10000,
-                exp: 10000,
-                weapons: ['dagdaBreath', 'dagdaHorn']
+                exp: 10000
             },
             chestDrops: {
-                silver: {
-                    materials: [
-                        { id: 'ancientStone', rate: 0.4 },
-                        { id: 'ruinCrystal', rate: 0.3 },
-                        { id: 'templeRelic', rate: 0.2 },
-                        { id: 'ancientScroll', rate: 0.1 }
-                    ]
-                },
-                gold: {
-                    weapons: [
-                        { id: 'templeSword', rate: 0.3 },
-                        { id: 'guardianAxe', rate: 0.3 },
-                        { id: 'holySpear', rate: 0.2 },
-                        { id: 'sacredBow', rate: 0.2 }
-                    ],
-                    materials: [
-                        { id: 'templeCrystal', rate: 0.3 },
-                        { id: 'guardianRelic', rate: 0.3 },
-                        { id: 'holyScroll', rate: 0.2 },
-                        { id: 'sacredStone', rate: 0.2 }
-                    ]
-                },
-                red: {
-                    weapons: [
-                        { id: 'holySword', rate: 0.3 },
-                        { id: 'divineAxe', rate: 0.3 },
-                        { id: 'sacredSpear', rate: 0.2 },
-                        { id: 'celestialBow', rate: 0.2 }
-                    ],
-                    materials: [
-                        { id: 'holyCrystal', rate: 0.3 },
-                        { id: 'divineRelic', rate: 0.3 },
-                        { id: 'sacredScroll', rate: 0.2 },
-                        { id: 'celestialStone', rate: 0.2 }
-                    ]
-                },
-                rainbow: {
-                    weapons: [
-                        { id: 'divineSword', rate: 0.3 },
-                        { id: 'celestialAxe', rate: 0.3 },
-                        { id: 'holySpear', rate: 0.2 },
-                        { id: 'sacredBow', rate: 0.2 }
-                    ],
-                    materials: [
-                        { id: 'divineCrystal', rate: 0.3 },
-                        { id: 'celestialRelic', rate: 0.3 },
-                        { id: 'holyScroll', rate: 0.2 },
-                        { id: 'sacredStone', rate: 0.2 }
-                    ]
-                }
+                silver: [
+                    { id: 'ancientStone', type: 'material', rate: 0.4 },
+                    { id: 'ruinCrystal', type: 'material', rate: 0.3 },
+                    { id: 'templeRelic', type: 'material', rate: 0.2 },
+                    { id: 'ancientScroll', type: 'material', rate: 0.1 }
+                ],
+                gold: [
+                    { id: 'templeSword', type: 'weapon', rate: 0.35 },
+                    { id: 'guardianAxe', type: 'weapon', rate: 0.3 },
+                    { id: 'holySpear', type: 'weapon', rate: 0.2 },
+                    { id: 'sacredBow', type: 'weapon', rate: 0.15 },
+                    { id: 'templeCrystal', type: 'material', rate: 0.4 },
+                    { id: 'guardianRelic', type: 'material', rate: 0.3 },
+                    { id: 'holyScroll', type: 'material', rate: 0.2 },
+                    { id: 'sacredStone', type: 'material', rate: 0.1 }
+                ],
+                red: [
+                    { id: 'holySword', type: 'weapon', rate: 0.4 },
+                    { id: 'divineAxe', type: 'weapon', rate: 0.3 },
+                    { id: 'sacredSpear', type: 'weapon', rate: 0.2 },
+                    { id: 'celestialBow', type: 'weapon', rate: 0.1 },
+                    { id: 'holyCrystal', type: 'material', rate: 0.35 },
+                    { id: 'divineRelic', type: 'material', rate: 0.3 },
+                    { id: 'sacredScroll', type: 'material', rate: 0.2 },
+                    { id: 'celestialStone', type: 'material', rate: 0.15 }
+                ],
+                rainbow: [
+                    { id: 'divineSword', type: 'weapon', rate: 0.4 },
+                    { id: 'celestialAxe', type: 'weapon', rate: 0.3 },
+                    { id: 'holySpear', type: 'weapon', rate: 0.2 },
+                    { id: 'sacredBow', type: 'weapon', rate: 0.1 },
+                    { id: 'divineCrystal', type: 'material', rate: 0.35 },
+                    { id: 'celestialRelic', type: 'material', rate: 0.3 },
+                    { id: 'holyScroll', type: 'material', rate: 0.2 },
+                    { id: 'sacredStone', type: 'material', rate: 0.15 }
+                ]
             }
         }
     },

@@ -628,6 +628,23 @@ const Weapon = {
         // 打印更新后的武器盘属性
         this.printWeaponBoardStats(boardId);
 
+        // 查找拥有此武器盘的队伍
+        let teamId = null;
+        if (typeof Team !== 'undefined' && Team.teams) {
+            for (const id in Team.teams) {
+                if (Team.teams[id].weaponBoardId === boardId) {
+                    teamId = id;
+                    break;
+                }
+            }
+        }
+
+        // 如果找到队伍，更新所有角色的weaponBonusStats
+        if (teamId && typeof Character !== 'undefined' && typeof Character.updateTeamWeaponBonusStats === 'function') {
+            console.log('更新队伍中所有角色的武器盘加成属性');
+            Character.updateTeamWeaponBonusStats(teamId);
+        }
+
         // 触发武器变化事件
         if (typeof Events !== 'undefined' && typeof Events.emit === 'function') {
             Events.emit('weapon:updated', { boardId, weaponId, slotType });
@@ -694,6 +711,23 @@ const Weapon = {
 
         // 打印更新后的武器盘属性
         this.printWeaponBoardStats(boardId);
+
+        // 查找拥有此武器盘的队伍
+        let teamId = null;
+        if (typeof Team !== 'undefined' && Team.teams) {
+            for (const id in Team.teams) {
+                if (Team.teams[id].weaponBoardId === boardId) {
+                    teamId = id;
+                    break;
+                }
+            }
+        }
+
+        // 如果找到队伍，更新所有角色的weaponBonusStats
+        if (teamId && typeof Character !== 'undefined' && typeof Character.updateTeamWeaponBonusStats === 'function') {
+            console.log('更新队伍中所有角色的武器盘加成属性');
+            Character.updateTeamWeaponBonusStats(teamId);
+        }
 
         return weaponId;
     },

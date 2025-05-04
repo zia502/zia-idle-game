@@ -69,6 +69,9 @@ const Game = {
         // 确保主角元素属性与主手武器同步
         this.syncMainCharacterElement();
 
+        // 更新所有队伍中角色的weaponBonusStats
+        this.updateAllTeamsWeaponBonusStats();
+
         // 初始化地下城运行器
         this.initDungeonRunner();
 
@@ -95,6 +98,34 @@ const Game = {
         } else {
             console.warn('DungeonRunner模块未定义或init方法不存在');
         }
+    },
+
+    /**
+     * 更新所有队伍中角色的weaponBonusStats
+     */
+    updateAllTeamsWeaponBonusStats() {
+        console.log('更新所有队伍中角色的weaponBonusStats');
+
+        // 检查Team和Character模块是否存在
+        if (typeof Team === 'undefined' || typeof Character === 'undefined' ||
+            typeof Character.updateTeamWeaponBonusStats !== 'function') {
+            console.log('Team或Character模块未定义，无法更新weaponBonusStats');
+            return;
+        }
+
+        // 获取所有队伍
+        const teams = Team.getAllTeams();
+        if (!teams || Object.keys(teams).length === 0) {
+            console.log('没有队伍，无需更新weaponBonusStats');
+            return;
+        }
+
+        // 遍历所有队伍，更新weaponBonusStats
+        for (const teamId in teams) {
+            Character.updateTeamWeaponBonusStats(teamId);
+        }
+
+        console.log('所有队伍中角色的weaponBonusStats已更新');
     },
 
     /**

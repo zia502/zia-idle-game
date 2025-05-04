@@ -257,6 +257,8 @@ const Character = {
             skills: data.skills || [],
             baseStats: baseStats,
             currentStats: {...baseStats},
+            // 新增：武器盘加成后的属性，仅用于界面显示
+            weaponBonusStats: {...baseStats},
             growthRates: {...typeData.growthRates},
             isMainCharacter: isMainCharacter,
             isRecruited: data.isRecruited || false,
@@ -264,7 +266,7 @@ const Character = {
             maxLevel: rarityData.maxLevel, // 设置角色等级上限
             // 战斗相关的临时状态
             nextAttackCritical: false, // 是否必定暴击
-            shield: 0, // 护盾值
+            shield: 0, // 护盷值
             // 传说角色的属性加成
             bonusMultiplier: data.bonusMultiplier || 0,
             // 记录战斗表现
@@ -795,12 +797,35 @@ const Character = {
     },
 
     /**
+     * 更新队伍中所有角色的武器盘加成属性
+     * @param {string} teamId - 队伍ID
+     */
+    updateTeamWeaponBonusStats(teamId) {
+        console.log(`更新队伍 ${teamId} 中所有角色的武器盘加成属性`);
+
+        const team = Team.getTeam(teamId);
+        if (!team || !team.members || team.members.length === 0) {
+            console.log('队伍不存在或没有成员');
+            return;
+        }
+
+        // 遍历队伍中的所有角色
+        for (const characterId of team.members) {
+            // 获取角色完整属性并更新weaponBonusStats
+            this.getCharacterFullStats(characterId, teamId, true);
+        }
+
+        console.log(`队伍 ${teamId} 中所有角色的武器盘加成属性已更新`);
+    },
+
+    /**
      * 获取角色完整状态（包括装备加成）
      * @param {string} characterId - 角色ID
      * @param {string} teamId - 队伍ID
+     * @param {boolean} updateWeaponBonusStats - 是否更新角色的weaponBonusStats属性
      * @returns {object} 角色完整状态
      */
-    getCharacterFullStats(characterId, teamId) {
+    getCharacterFullStats(characterId, teamId, updateWeaponBonusStats = false) {
         const character = this.getCharacter(characterId);
         if (!character) return null;
 
@@ -820,8 +845,8 @@ const Character = {
         let baseStats;
 
         if (inDungeon) {
-            // 在地下城中，使用dungeonOriginalStats作为基础
-            console.log('角色在地下城中，使用dungeonOriginalStats作为基础');
+            // 在地下城中，使用dungeonOriginalStats作为基础计算武器盘加成
+            console.log('角色在地下城中，使用dungeonOriginalStats作为基础计算武器盘加成');
             baseStats = {...character.dungeonOriginalStats};
 
             // 添加地下城中的BUFF效果，但不包括武器盘加成
@@ -894,6 +919,12 @@ const Character = {
         // 确保属性为正数并取整
         for (const stat in fullStats) {
             fullStats[stat] = Math.max(0, Math.floor(fullStats[stat]));
+        }
+
+        // 如果需要，更新角色的weaponBonusStats属性
+        if (updateWeaponBonusStats) {
+            console.log('更新角色的weaponBonusStats属性:', fullStats);
+            character.weaponBonusStats = {...fullStats};
         }
 
         console.log('计算完成的完整属性:', fullStats);

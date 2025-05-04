@@ -169,55 +169,45 @@ const MainUI = {
                 }
             }
 
-            // 获取主角属性（包含武器盘加成）
+            // 获取主角属性（始终使用weaponBonusStats作为显示属性）
             let maxHp = mainCharacter.currentStats.hp;
             let attack = mainCharacter.currentStats.attack;
 
-            // 检查是否在地下城中
-            const inDungeon = typeof Dungeon !== 'undefined' &&
-                              Dungeon.currentRun &&
-                              mainCharacter.dungeonOriginalStats;
-
-            // 如果在地下城中，使用currentStats作为基础，因为它已经包含了地下城中的各种效果
-            if (inDungeon) {
-                console.log('主角在地下城中，使用currentStats作为基础');
-                // 不需要额外处理，因为我们已经使用了currentStats
+            // 无论是否在地下城中，都使用weaponBonusStats作为显示属性
+            if (mainCharacter.weaponBonusStats) {
+                console.log('使用weaponBonusStats作为显示属性:', mainCharacter.weaponBonusStats);
+                attack = mainCharacter.weaponBonusStats.attack || attack;
+                maxHp = mainCharacter.weaponBonusStats.hp || maxHp;
             } else {
-                // 不在地下城中，尝试获取包含武器盘加成的完整属性
+                // 如果weaponBonusStats不存在，尝试更新它
                 try {
-                    // 使用getCharacterFullStats方法获取更准确的值
-                    try {
-                        if (typeof Character !== 'undefined' && typeof Character.getCharacterFullStats === 'function' &&
-                            typeof Game !== 'undefined' && Game.state && Game.state.activeTeamId &&
-                            mainCharacter && mainCharacter.id) {
+                    if (typeof Character !== 'undefined' && typeof Character.getCharacterFullStats === 'function' &&
+                        typeof Game !== 'undefined' && Game.state && Game.state.activeTeamId &&
+                        mainCharacter && mainCharacter.id) {
 
-                            const teamId = Game.state.activeTeamId;
+                        const teamId = Game.state.activeTeamId;
 
-                            // 确保所有必要的对象都存在
-                            if (typeof Team !== 'undefined' && typeof Team.getTeam === 'function' &&
-                                typeof Team.getTeam(teamId) === 'object' && Team.getTeam(teamId) !== null &&
-                                typeof Weapon !== 'undefined' && typeof Weapon.getWeaponBoard === 'function') {
+                        // 确保所有必要的对象都存在
+                        if (typeof Team !== 'undefined' && typeof Team.getTeam === 'function' &&
+                            typeof Team.getTeam(teamId) === 'object' && Team.getTeam(teamId) !== null &&
+                            typeof Weapon !== 'undefined' && typeof Weapon.getWeaponBoard === 'function') {
 
-                                try {
-                                    const completeStats = Character.getCharacterFullStats(mainCharacter.id, teamId);
+                            try {
+                                // 更新weaponBonusStats
+                                const completeStats = Character.getCharacterFullStats(mainCharacter.id, teamId, true);
 
-                                    if (completeStats && typeof completeStats === 'object') {
-                                        console.log('获取到主角完整属性:', completeStats);
-                                        attack = completeStats.attack || attack;
-                                        maxHp = completeStats.hp || maxHp;
-                                    }
-                                } catch (innerError) {
-                                    console.error('调用getCharacterFullStats时出错:', innerError);
+                                if (completeStats && typeof completeStats === 'object') {
+                                    console.log('获取到主角完整属性并更新weaponBonusStats:', completeStats);
+                                    attack = completeStats.attack || attack;
+                                    maxHp = completeStats.hp || maxHp;
                                 }
+                            } catch (innerError) {
+                                console.error('调用getCharacterFullStats时出错:', innerError);
                             }
                         }
-                    } catch (outerError) {
-                        console.error('尝试获取完整属性时出错:', outerError);
                     }
-                } catch (error) {
-                    console.error('获取主角完整属性时出错:', error);
-                    // 如果获取完整属性失败，使用当前属性
-                    console.log('使用当前属性作为备用:', mainCharacter.currentStats);
+                } catch (outerError) {
+                    console.error('尝试获取完整属性时出错:', outerError);
                 }
             }
 

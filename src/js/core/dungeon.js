@@ -1334,6 +1334,15 @@ const Dungeon = {
             }
         }
 
+        // 更新所有角色的weaponBonusStats
+        if (typeof Character !== 'undefined' && typeof Character.updateTeamWeaponBonusStats === 'function') {
+            console.log('地下城完成，更新所有角色的weaponBonusStats');
+            const teamId = team.id;
+            if (teamId) {
+                Character.updateTeamWeaponBonusStats(teamId);
+            }
+        }
+
         // 检查是否击败了大boss
         const finalBossDefeated = this.currentRun.finalBoss && this.currentRun.finalBossAppeared;
 

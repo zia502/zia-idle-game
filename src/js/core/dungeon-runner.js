@@ -817,6 +817,11 @@ const DungeonRunner = {
         this.currentRun = null;
         this.isRunning = false;
 
+        // 清除Dungeon.currentRun
+        if (typeof Dungeon !== 'undefined') {
+            Dungeon.currentRun = null;
+        }
+
         // 清除保存的地下城进度
         if (typeof Storage !== 'undefined') {
             Storage.remove('dungeonProgress');
@@ -833,6 +838,11 @@ const DungeonRunner = {
         // 更新UI显示
         if (typeof MainUI !== 'undefined') {
             MainUI.updateCurrentDungeon();
+        }
+
+        // 更新地下城列表显示
+        if (typeof UI !== 'undefined' && typeof UI.updateDungeonList === 'function') {
+            UI.updateDungeonList();
         }
     },
 

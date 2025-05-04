@@ -3,6 +3,9 @@ const MainCurrentDungeon = {
      * 更新当前地下城显示
      */
     update() {
+        const container = document.getElementById('current-dungeon-container');
+        if (!container) return;
+
         // 检查是否有上一次地下城记录
         const lastRecord = DungeonRunner.getLastDungeonRecord();
         if (lastRecord) {
@@ -76,6 +79,59 @@ const MainCurrentDungeon = {
         `;
 
         container.innerHTML = html;
+    },
+
+    /**
+     * 显示当前地下城信息
+     */
+    showCurrentDungeon() {
+        const container = document.getElementById('current-dungeon-container');
+        if (!container) return;
+
+        if (!Dungeon.currentRun) {
+            this.showNoDungeon();
+            return;
+        }
+
+        const dungeon = Dungeon.getDungeon(Dungeon.currentRun.dungeonId);
+        if (!dungeon) {
+            this.showNoDungeon();
+            return;
+        }
+
+        // 显示当前地下城进度信息
+        const html = `
+            <div class="current-dungeon-info">
+                <h3>${dungeon.name}</h3>
+                <div class="dungeon-progress">
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: ${Dungeon.currentRun.progress || 0}%"></div>
+                    </div>
+                    <div class="progress-text">${Dungeon.currentRun.progress || 0}%</div>
+                </div>
+                <div class="dungeon-stats">
+                    <p>普通怪物：${Dungeon.currentRun.currentMonsterIndex}/${Dungeon.currentRun.monsters.length}</p>
+                    <p>小BOSS：${Dungeon.currentRun.defeatedMiniBosses}/${Dungeon.currentRun.miniBosses.length}</p>
+                    <p>大BOSS：${Dungeon.currentRun.finalBossAppeared ? '已出现' : '未出现'}</p>
+                </div>
+            </div>
+        `;
+
+        container.innerHTML = html;
+    },
+
+    /**
+     * 显示未进入地下城状态
+     */
+    showNoDungeon() {
+        const container = document.getElementById('current-dungeon-container');
+        if (!container) return;
+
+        container.innerHTML = `
+            <div class="no-dungeon">
+                <p>未进入地下城</p>
+            </div>
+        `;
     },
 
     /**

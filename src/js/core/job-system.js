@@ -575,5 +575,141 @@ const JobSystem = {
     getAllowedWeapons(jobId) {
         const job = this.getJob(jobId);
         return job?.allowedWeapons || [];
+    },
+
+    /**
+     * 计算职业升级所需经验
+     * @param {number} level - 当前职业等级
+     * @param {number} tier - 职业等级（1为一阶职业，2为二阶职业）
+     * @returns {number} 升级所需经验值
+     */
+    calculateJobLevelExp(level, tier) {
+        // 一阶职业总经验为100000，二阶职业总经验为500000
+        const totalExp = tier === 1 ? 100000 : 500000;
+
+        // 使用指数曲线，等级越高需要的经验越多
+        // 使用二次方曲线: f(x) = ax^2 + bx + c
+        // 其中 f(1) = 0.01 * totalExp, f(20) = 0.1 * totalExp
+        // 总和为 totalExp
+
+        // 简化计算，使用以下公式：
+        // 第level级所需经验 = totalExp * (0.01 + (level-1) * 0.005)
+        const expRatio = 0.01 + (level - 1) * 0.005;
+        return Math.floor(totalExp * expRatio);
+    },
+
+    /**
+     * 计算从1级到指定等级所需的总经验
+     * @param {number} targetLevel - 目标等级
+     * @param {number} tier - 职业等级（1为一阶职业，2为二阶职业）
+     * @returns {number} 所需总经验值
+     */
+    calculateTotalJobExp(targetLevel, tier) {
+        let totalExp = 0;
+        for (let i = 1; i < targetLevel; i++) {
+            totalExp += this.calculateJobLevelExp(i, tier);
+        }
+        return totalExp;
+    },
+
+    /**
+     * 添加职业经验值
+     * @param {object} character - 角色对象
+     * @param {number} expAmount - 经验值数量
+     * @returns {boolean} 是否成功添加经验
+     */
+    addJobExp(character, expAmount) {
+        if (!character || !character.job) return false;
+
+        // 初始化职业经验值
+        if (!character.job.exp) {
+            character.job.exp = 0;
+        }
+
+        // 获取职业信息
+        const jobId = character.job.current;
+        const job = this.getJob(jobId);
+        if (!job) return false;
+
+        // 检查是否已达到最高等级
+        if (character.job.level >= 20) {
+            console.log(`${character.name} 的 ${job.name} 职业已达到最高等级。`);
+            return false;
+        }
+
+        // 添加经验值
+        character.job.exp += expAmount;
+        console.log(`${character.name} 获得职业经验: ${expAmount}, 当前职业经验: ${character.job.exp}`);
+
+        // 计算下一级所需经验
+        const nextLevelExp = this.calculateJobLevelExp(character.job.level, job.tier);
+
+        // 检查是否可以升级
+        if (character.job.exp >= nextLevelExp) {
+            // 减去升级所需经验
+            character.job.exp -= nextLevelExp;
+
+            // 升级职业
+            this.upgradeJobLevel(character);
+
+            // 递归检查是否可以继续升级
+            return this.addJobExp(character, 0);
+        }
+
+        return true;
+    },
+
+    /**
+     * 升级职业等级
+     * @param {object} character - 角色对象
+     * @returns {boolean} 是否升级成功
+     */
+    upgradeJobLevel(character) {
+        if (!character || !character.job) return false;
+
+        const jobId = character.job.current;
+        const job = this.getJob(jobId);
+        if (!job) return false;
+
+        // 检查是否达到最高等级
+        if (character.job.level >= 20) {
+            if (typeof UI !== 'undefined' && typeof UI.showMessage === 'function') {
+                UI.showMessage(`${character.name} 的 ${job.name} 职业已达到最高等级。`);
+            }
+            return false;
+        }
+
+        // 执行职业升级
+        character.job.level++;
+
+        // 更新角色属性 - 根据当前等级在baseStats和maxStats之间进行插值
+        if (job.baseStats && job.maxStats) {
+            const levelRatio = (character.job.level - 1) / 19; // 1级为0，20级为1
+
+            // 更新基础属性
+            for (const stat in job.baseStats) {
+                if (job.maxStats[stat]) {
+                    const baseValue = job.baseStats[stat];
+                    const maxValue = job.maxStats[stat];
+                    const newValue = Math.floor(baseValue + (maxValue - baseValue) * levelRatio);
+
+                    console.log("更新角色属性");
+                    console.log(newValue);
+                    // 更新角色属性
+                    character.baseStats[stat] = newValue;
+                }
+            }
+
+            console.log(`${character.name} 的 ${job.name} 职业升级到 ${character.job.level} 级，属性已更新`);
+        }
+
+        // 如果达到20级，提示可以转职
+        if (character.job.level === 20 && job.nextTiers && job.nextTiers.length > 0) {
+            if (typeof UI !== 'undefined' && typeof UI.showMessage === 'function') {
+                UI.showMessage(`${character.name} 的 ${job.name} 职业已达到最高等级，可以选择进阶为更高级的职业。`);
+            }
+        }
+
+        return true;
     }
 };

@@ -1136,7 +1136,7 @@ const Dungeon = {
             }
 
             // 处理奖励
-            console.log(monster);
+            console.log("处理奖励"+monster);
             this.processRewards(monster);
 
             // 保存地下城进度
@@ -1176,10 +1176,11 @@ const Dungeon = {
             exp: monster.xpReward || 0,
             items: []
         };
-
+        
+        console.log(monster);
         // 添加经验值
-        Game.addPlayerExp(monster.xpReward);
-        console.log(`玩家获得经验值: ${monster.xpReward}`);
+        //Game.addPlayerExp(monster.xpReward);
+        //console.log(`玩家获得经验值: ${monster.xpReward}`);
 
         // 给队伍中的每个角色添加经验
         let team;
@@ -1191,7 +1192,6 @@ const Dungeon = {
         if (team) {
             team.members.forEach(characterId => {
                 Character.addExperience(characterId, monster.xpReward);
-                console.log(`角色 ${characterId} 获得经验值: ${monster.xpReward}`);
             });
         }
 

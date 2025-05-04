@@ -313,6 +313,7 @@ const Battle = {
             message: this.battleLog.join('\n'),
             turns: this.currentTurn,
             mvp: mvp,
+            monster: monsterCharacter,
             gold: battleResult.gold || 0,
             exp: battleResult.exp || 0,
             battleStats: battleResult.battleStats || {}

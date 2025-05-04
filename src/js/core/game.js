@@ -261,7 +261,7 @@ const Game = {
 
         // 角色升级事件
         Events.on('character:levelup', (data) => {
-            console.log(`角色 ${data.name} 升级到 ${data.level} 级`);
+            console.log(`角色 ${data.name} 升级到 ${data.level} 级.`);
             this.checkUnlocks();
         });
 
@@ -440,44 +440,7 @@ const Game = {
         }
     },
 
-    /**
-     * 触发功能解锁事件
-     * @param {string} feature 解锁的功能名称
-     */
-    triggerUnlock(feature) {
-        console.log(`解锁新功能: ${feature}`);
 
-        if (typeof Events !== 'undefined') {
-            Events.emit('game:unlock', { feature });
-        }
-    },
-
-    /**
-     * 增加玩家经验和等级
-     * @param {number} exp 经验值
-     */
-    addPlayerExp(exp) {
-        // 简单等级系统示例
-        const expNeeded = this.state.playerLevel * 100;
-        const newExp = exp + (this.state.exp || 0);
-
-        if (newExp >= expNeeded) {
-            this.state.playerLevel++;
-            this.state.exp = newExp - expNeeded;
-
-            console.log(`玩家升级到 ${this.state.playerLevel} 级!`);
-            this.checkUnlocks();
-
-            if (typeof Events !== 'undefined') {
-                Events.emit('player:levelup', {
-                    level: this.state.playerLevel,
-                    exp: this.state.exp
-                });
-            }
-        } else {
-            this.state.exp = newExp;
-        }
-    },
 
     /**
      * 添加金币

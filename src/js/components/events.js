@@ -48,15 +48,6 @@ const Events = {
             if (character) {
                 if (typeof UI !== 'undefined' && typeof UI.showNotification === 'function') {
                     UI.showNotification(`${character.name} 升级到了 ${character.level} 级！`);
-
-                    // 检查是否解锁了新的特性
-                    if (data.unlockedTraits && data.unlockedTraits.length > 0) {
-                        const traitNames = data.unlockedTraits.map(traitId =>
-                            Character.traits[traitId] ? Character.traits[traitId].name : '未知特性'
-                        ).join(', ');
-
-                        UI.showNotification(`${character.name} 解锁了新特性: ${traitNames}`);
-                    }
                 } else {
                     console.log(`${character.name} 升级到了 ${character.level} 级！`);
                 }

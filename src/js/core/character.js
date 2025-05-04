@@ -359,37 +359,62 @@ const Character = {
         for (let i = 0; i < levels; i++) {
             // 检查是否已达到最高等级
             if (character.level >= character.maxLevel) {
-                UI.showMessage(`${character.name} 已达到最高等级 ${character.maxLevel}`);
+                if (typeof UI !== 'undefined' && typeof UI.showMessage === 'function') {
+                    UI.showMessage(`${character.name} 已达到最高等级 ${character.maxLevel}`);
+                }
                 break;
             }
 
             const oldLevel = character.level;
             character.level++;
+            console.log("升级前基础:", character.baseStats);
 
-            // 更新属性 - 根据需求，只有HP和攻击力会随等级提升
-            character.baseStats.hp += character.growthRates.hp;
-            character.baseStats.attack += character.growthRates.attack;
+            // 如果是主角且有职业，使用职业属性
+            if (character.isMainCharacter && character.job && typeof JobSystem !== 'undefined') {
+                // 获取当前职业信息
+                const jobId = character.job.current;
+                const job = JobSystem.getJob(jobId);
 
-            // 确保 currentStats 包含所有 baseStats 的属性
-            if (!character.currentStats) {
-                character.currentStats = { ...character.baseStats };
+                if (job && job.baseStats && job.maxStats) {
+                    // 根据职业等级在baseStats和maxStats之间进行插值
+                    const jobLevel = character.job.level || 1;
+                    const levelRatio = (jobLevel - 1) / 19; // 1级为0，20级为1
+
+                    // 更新基础属性
+                    for (const stat in job.baseStats) {
+                        if (job.maxStats[stat]) {
+                            const baseValue = job.baseStats[stat];
+                            const maxValue = job.maxStats[stat];
+                            const newValue = Math.floor(baseValue + (maxValue - baseValue) * levelRatio);
+
+                            console.log("更新角色属性");
+                            console.log(newValue);
+                            // 更新角色属性
+                            character.baseStats[stat] = newValue;
+                        }
+                    }
+
+                    console.log(`根据职业 ${job.name} (等级 ${jobLevel}) 更新角色属性 ${jobLevel}`);
+                } else {
+                    // 如果没有职业信息，使用默认成长率
+                    character.baseStats.hp += character.growthRates.hp;
+                    character.baseStats.attack += character.growthRates.attack;
+                }
             } else {
-                // 更新当前属性
-                character.currentStats.hp = character.baseStats.hp;
-                character.currentStats.attack = character.baseStats.attack;
-                character.currentStats.defense = character.baseStats.defense;
+                // 非主角或没有职业，使用默认成长率
+                character.baseStats.hp += character.growthRates.hp;
+                character.baseStats.attack += character.growthRates.attack;
             }
 
-            console.log('升级后的基础属性:', character.baseStats);
-            console.log('升级后的当前属性:', character.currentStats);
 
+            console.log('升级后的基础属性:', character.baseStats);
+            // TODO 可能需要触发一次 切换武器 来更新weaponBonusStats和currentStats
 
             // 更新下一级所需经验
             character.nextLevelExp = this.calculateNextLevelExp(character.level);
 
-            console.log(`${character.name} 升级到 ${character.level} 级`);
+            console.log(`${character.name} 升级到 ${character.level} 级`,character);
         }
-
 
         // 如果是主角，同步更新主角等级
         if (character.isMainCharacter) {
@@ -409,7 +434,14 @@ const Character = {
         const character = this.getCharacter(characterId);
         if (!character) return;
 
+        console.log(`角色 ${character.name} 获得经验值: ${expAmount}`);
+
         character.exp += expAmount;
+
+        // 如果是主角，同时给当前职业添加经验
+        if (character.isMainCharacter && character.job && typeof JobSystem !== 'undefined' && typeof JobSystem.addJobExp === 'function') {
+            JobSystem.addJobExp(character, expAmount);
+        }
 
         // 检查是否可以升级
         while (character.exp >= character.nextLevelExp) {

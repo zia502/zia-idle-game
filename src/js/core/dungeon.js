@@ -977,6 +977,10 @@ const Dungeon = {
         };
 
         console.log(`初始化地下城运行: ${dungeon.name}，普通怪物: ${monsters.length}, 小boss: ${miniBosses.length}`);
+
+        // 保存地下城进度到Game.state
+        this.saveDungeonProgress();
+
         return true;
     },
 
@@ -1479,7 +1483,7 @@ const Dungeon = {
      * @returns {boolean} 是否成功加载进度
      */
     loadDungeonProgress() {
-        if (typeof Game === 'undefined' || !Game.state || !Game.state.currentDungeon) {
+        if (typeof Game === 'undefined' || !Game.state || !Game.state.currentDungeon || Object.keys(Game.state.currentDungeon).length === 0) {
             console.log('没有可加载的地下城进度');
             return false;
         }

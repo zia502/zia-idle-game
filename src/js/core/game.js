@@ -1149,16 +1149,27 @@ const Game = {
         console.log(`当前是否在地下城中: ${inDungeon}`);
 
         // 检查是否有保存的地下城进度
-        const hasSavedDungeon = this.state && this.state.currentDungeon;
+        const hasSavedDungeon = !!(this.state && this.state.currentDungeon);
         console.log(`是否有保存的地下城进度: ${hasSavedDungeon}`);
 
+        // 如果在地下城中但没有保存的地下城进度，保存当前地下城进度
+        if (inDungeon && !hasSavedDungeon && typeof Dungeon.saveDungeonProgress === 'function') {
+            console.log('检测到在地下城中但没有保存的地下城进度，保存当前地下城进度');
+            Dungeon.saveDungeonProgress();
+            console.log('已保存当前地下城进度');
+        }
         // 如果有保存的地下城进度但Dungeon.currentRun为null，尝试加载地下城进度
-        if (hasSavedDungeon && !inDungeon && typeof Dungeon.loadDungeonProgress === 'function') {
+        else if (hasSavedDungeon && !inDungeon && typeof Dungeon.loadDungeonProgress === 'function') {
             console.log('检测到有保存的地下城进度但不在地下城中，尝试加载地下城进度');
             const loaded = Dungeon.loadDungeonProgress();
             if (loaded) {
                 console.log('成功加载地下城进度，现在在地下城中');
                 return; // 成功加载地下城进度，不需要进一步处理
+            } else {
+                // 加载失败，清除保存的地下城进度
+                console.log('地下城进度加载失败，清除保存的地下城进度');
+                delete this.state.currentDungeon;
+                this.saveGame();
             }
         }
 
@@ -1221,27 +1232,51 @@ const Game = {
                 console.log('未检测到异常的地下城状态');
             }
         } else if (inDungeon && typeof Character !== 'undefined') {
-            // 在地下城中，检查所有角色是否有dungeonOriginalStats
-            console.log('在地下城中，检查所有角色是否有dungeonOriginalStats');
+            // 在地下城中，检查所有角色是否有dungeonOriginalStats和dungeonAppliedPassives
+            console.log('在地下城中，检查所有角色是否有dungeonOriginalStats和dungeonAppliedPassives');
 
             const characters = Object.values(Character.characters || {});
             let needToSaveOriginalStats = false;
+            let needToInitAppliedPassives = false;
 
             for (const character of characters) {
+                // 检查是否需要保存原始属性
                 if (!character.dungeonOriginalStats) {
                     console.log(`检测到角色 ${character.name} 在地下城中但没有dungeonOriginalStats，需要保存原始属性`);
                     needToSaveOriginalStats = true;
-                    break;
+                }
+
+                // 检查是否需要初始化已应用的被动技能记录
+                if (!character.dungeonAppliedPassives) {
+                    console.log(`检测到角色 ${character.name} 在地下城中但没有dungeonAppliedPassives，需要初始化`);
+                    needToInitAppliedPassives = true;
                 }
             }
 
+            // 处理需要保存原始属性的情况
             if (needToSaveOriginalStats) {
                 console.log('为所有角色保存地下城原始属性');
                 for (const character of characters) {
-                    character.dungeonOriginalStats = JSON.parse(JSON.stringify(character.baseStats));
-                    console.log(`为角色 ${character.name} 保存地下城原始属性:`, character.dungeonOriginalStats);
+                    if (!character.dungeonOriginalStats) {
+                        character.dungeonOriginalStats = JSON.parse(JSON.stringify(character.baseStats));
+                        console.log(`为角色 ${character.name} 保存地下城原始属性:`, character.dungeonOriginalStats);
+                    }
                 }
+            }
 
+            // 处理需要初始化已应用的被动技能记录的情况
+            if (needToInitAppliedPassives) {
+                console.log('为所有角色初始化dungeonAppliedPassives');
+                for (const character of characters) {
+                    if (!character.dungeonAppliedPassives) {
+                        character.dungeonAppliedPassives = {};
+                        console.log(`为角色 ${character.name} 初始化dungeonAppliedPassives`);
+                    }
+                }
+            }
+
+            // 如果有任何修改，保存游戏状态
+            if (needToSaveOriginalStats || needToInitAppliedPassives) {
                 // 保存游戏状态以确保修复被保存
                 this.saveGame();
             }

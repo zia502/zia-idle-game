@@ -897,10 +897,31 @@ const MainUI = {
                 return;
             }
 
-            // 获取当前地下城
+            // 检查是否有当前地下城运行
             if (!Dungeon.currentRun || !Dungeon.currentRun.dungeonId) {
-                dungeonContainer.innerHTML = '<div class="empty-message">未进入地下城</div>';
-                return;
+                // 如果没有当前地下城运行，尝试从Game.state加载
+                if (typeof Game !== 'undefined' && Game.state && Game.state.currentDungeon && Object.keys(Game.state.currentDungeon).length > 0) {
+                    console.log('检测到保存的地下城进度，尝试加载');
+
+                    // 尝试加载地下城进度
+                    if (typeof Dungeon.loadDungeonProgress === 'function') {
+                        const loaded = Dungeon.loadDungeonProgress();
+                        if (!loaded || !Dungeon.currentRun) {
+                            console.log('加载地下城进度失败');
+                            dungeonContainer.innerHTML = '<div class="empty-message">未进入地下城</div>';
+                            return;
+                        }
+                        console.log('成功加载地下城进度');
+                    } else {
+                        // 如果loadDungeonProgress方法不存在，直接使用Game.state.currentDungeon
+                        console.log('Dungeon.loadDungeonProgress方法不存在，直接使用Game.state.currentDungeon');
+                        Dungeon.currentRun = JSON.parse(JSON.stringify(Game.state.currentDungeon));
+                    }
+                } else {
+                    // 如果没有保存的地下城进度，显示未进入地下城
+                    dungeonContainer.innerHTML = '<div class="empty-message">未进入地下城</div>';
+                    return;
+                }
             }
 
             const dungeonId = Dungeon.currentRun.dungeonId;

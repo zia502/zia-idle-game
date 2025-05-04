@@ -998,7 +998,6 @@ const MainUI = {
                         </div>
                     </div>
                     <div class="dungeon-controls">
-                        <button id="dungeon-pause-btn" class="dungeon-btn pause-btn">暂停</button>
                         <button id="dungeon-exit-btn" class="dungeon-btn exit-btn">退出</button>
                     </div>
                 </div>
@@ -1127,29 +1126,7 @@ const MainUI = {
      * 绑定地下城控制按钮事件
      */
     bindDungeonControlEvents() {
-        const pauseBtn = document.getElementById('dungeon-pause-btn');
         const exitBtn = document.getElementById('dungeon-exit-btn');
-
-        if (pauseBtn) {
-            pauseBtn.addEventListener('click', () => {
-                if (typeof DungeonRunner === 'undefined') {
-                    console.warn('DungeonRunner模块未定义');
-                    return;
-                }
-
-                if (DungeonRunner.isRunning) {
-                    // 暂停地下城探索
-                    DungeonRunner.pauseExploration();
-                    pauseBtn.textContent = '继续';
-                    pauseBtn.classList.add('paused');
-                } else {
-                    // 继续地下城探索
-                    DungeonRunner.resumeExploration();
-                    pauseBtn.textContent = '暂停';
-                    pauseBtn.classList.remove('paused');
-                }
-            });
-        }
 
         if (exitBtn) {
             exitBtn.addEventListener('click', () => {

@@ -1149,8 +1149,15 @@ const Game = {
         console.log(`当前是否在地下城中: ${inDungeon}`);
 
         // 检查是否有保存的地下城进度
-        const hasSavedDungeon = !!(this.state && this.state.currentDungeon);
+        const hasSavedDungeon = !!(this.state && this.state.currentDungeon && Object.keys(this.state.currentDungeon || {}).length > 0);
         console.log(`是否有保存的地下城进度: ${hasSavedDungeon}`);
+
+        // 如果保存的地下城进度是空对象，视为没有保存的地下城进度
+        if (this.state && this.state.currentDungeon && Object.keys(this.state.currentDungeon).length === 0) {
+            console.log('保存的地下城进度是空对象，清除它');
+            delete this.state.currentDungeon;
+            this.saveGame();
+        }
 
         // 如果在地下城中但没有保存的地下城进度，保存当前地下城进度
         if (inDungeon && !hasSavedDungeon && typeof Dungeon.saveDungeonProgress === 'function') {
@@ -1168,8 +1175,20 @@ const Game = {
             } else {
                 // 加载失败，清除保存的地下城进度
                 console.log('地下城进度加载失败，清除保存的地下城进度');
+                this.state.currentDungeon = null;
                 delete this.state.currentDungeon;
                 this.saveGame();
+
+                // 强制刷新本地存储
+                if (typeof Storage !== 'undefined' && typeof Storage.save === 'function') {
+                    const gameData = {
+                        state: this.state,
+                        settings: this.settings,
+                        timestamp: Date.now()
+                    };
+                    Storage.save('gameData', gameData);
+                    console.log('已强制刷新本地存储');
+                }
             }
         }
 
@@ -1213,12 +1232,24 @@ const Game = {
 
                 // 清除保存的地下城进度
                 if (this.state) {
+                    this.state.currentDungeon = null;
                     delete this.state.currentDungeon;
                     console.log('已清除保存的地下城进度');
                 }
 
                 // 保存游戏状态以确保修复被保存
                 this.saveGame();
+
+                // 强制刷新本地存储
+                if (typeof Storage !== 'undefined' && typeof Storage.save === 'function') {
+                    const gameData = {
+                        state: this.state,
+                        settings: this.settings,
+                        timestamp: Date.now()
+                    };
+                    Storage.save('gameData', gameData);
+                    console.log('已强制刷新本地存储');
+                }
 
                 // 更新UI显示
                 if (typeof UI !== 'undefined' && typeof UI.renderMainCharacter === 'function') {

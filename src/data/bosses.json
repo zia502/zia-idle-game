@@ -3,8 +3,8 @@
         "goblinChief": {
             "name": "哥布林酋长",
             "attribute": "earth",
-            "hp": 120,
-            "atk": 15,
+            "hp": 12000,
+            "atk": 1500,
             "def": 8,
             "skills": ["goblinRage", "tribeCall"],
             "xpReward": 1000
@@ -12,17 +12,17 @@
         "skeletonKing": {
             "name": "骷髅王",
             "attribute": "dark",
-            "hp": 180,
-            "atk": 22,
+            "hp": 28000,
+            "atk": 2200,
             "def": 12,
             "skills": ["boneStorm", "darkAura"],
-            "xpReward": 1500
+            "xpReward": 2000
         },
         "dragonLord": {
             "name": "龙王",
             "attribute": "fire",
-            "hp": 500,
-            "atk": 50,
+            "hp": 50000,
+            "atk": 1800,
             "def": 40,
             "skills": ["dragonBreath", "flameStorm", "dragonRage"],
             "xpReward": 5000
@@ -30,8 +30,8 @@
         "pharaoh": {
             "name": "法老",
             "attribute": "dark",
-            "hp": 300,
-            "atk": 35,
+            "hp": 30000,
+            "atk": 2500,
             "def": 25,
             "skills": ["curseOfThePharaoh", "sandStorm", "mummyArmy"],
             "xpReward": 3000

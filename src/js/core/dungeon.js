@@ -399,75 +399,6 @@ const Dungeon = {
     loadTemplatesFallback(type) {
         console.log(`尝试使用备用方案加载${type}模板数据...`);
 
-        if (type === 'monsters') {
-            // 使用默认怪物模板
-            this.monsterTemplates = {
-                slime: {
-                    id: 'slime',
-                    name: '史莱姆',
-                    hp: 100,
-                    atk: 10,
-                    def: 5,
-                    attribute: 'water',
-                    xpReward: 50
-                },
-                goblin: {
-                    id: 'goblin',
-                    name: '哥布林',
-                    hp: 150,
-                    atk: 15,
-                    def: 8,
-                    attribute: 'earth',
-                    xpReward: 80
-                },
-                wolf: {
-                    id: 'wolf',
-                    name: '狼',
-                    hp: 120,
-                    atk: 20,
-                    def: 3,
-                    attribute: 'wind',
-                    xpReward: 70
-                }
-            };
-            console.log('已加载默认怪物模板:', this.monsterTemplates);
-        } else if (type === 'bosses') {
-            // 使用默认Boss模板
-            this.bossTemplates = {
-                goblinChief: {
-                    id: 'goblinChief',
-                    name: '哥布林酋长',
-                    hp: 500,
-                    atk: 30,
-                    def: 15,
-                    attribute: 'earth',
-                    xpReward: 300,
-                    skills: []
-                },
-                skeletonKing: {
-                    id: 'skeletonKing',
-                    name: '骷髅王',
-                    hp: 600,
-                    atk: 35,
-                    def: 10,
-                    attribute: 'dark',
-                    xpReward: 350,
-                    skills: []
-                },
-                forestGuardian: {
-                    id: 'forestGuardian',
-                    name: '森林守护者',
-                    hp: 1000,
-                    atk: 50,
-                    def: 20,
-                    attribute: 'earth',
-                    xpReward: 800,
-                    skills: []
-                }
-            };
-            console.log('已加载默认Boss模板:', this.bossTemplates);
-        }
-
         // 确保模板中的每个对象都有id属性和属性
         if (type === 'monsters' && this.monsterTemplates) {
             for (const [id, monster] of Object.entries(this.monsterTemplates)) {
@@ -1036,6 +967,7 @@ const Dungeon = {
             isFinalBoss: false,
             xpReward: Math.floor(monsterTemplate.xpReward * dungeonType.rewardMultiplier)
         };
+        console.log(monster);
 
         return monster;
     },

@@ -8,10 +8,14 @@
         return;
     }
 
+    // 添加一个标志，防止循环调用
+    let isUpdatingMainUI = false;
+
     /**
      * 渲染主角信息
+     * @param {boolean} skipMainUI - 是否跳过更新主界面
      */
-    UI.renderMainCharacter = function() {
+    UI.renderMainCharacter = function(skipMainUI = false) {
         console.log('渲染主角信息');
 
         const mainCharacterContainer = document.getElementById('main-character-info');
@@ -54,6 +58,17 @@
                     alert('职业选择功能尚未实现');
                 }
             });
+        }
+
+        // 同时更新主界面中的主角信息，但避免循环调用
+        if (!skipMainUI && typeof MainUI !== 'undefined' && typeof MainUI.updateMainHeroInfo === 'function' && !isUpdatingMainUI) {
+            console.log('同时更新主界面中的主角信息');
+            isUpdatingMainUI = true;
+            try {
+                MainUI.updateMainHeroInfo();
+            } finally {
+                isUpdatingMainUI = false;
+            }
         }
     };
 
@@ -211,6 +226,13 @@
             console.log('武器更新事件触发，重新渲染主角信息', data);
             // 武器盘更新时，主角的属性可能会受到影响，所以需要重新渲染
             UI.renderMainCharacter();
+        });
+
+        // 在职业经验更新时重新渲染主角信息
+        Events.on('character:exp-updated', (data) => {
+            console.log('职业经验更新事件触发，重新渲染主角信息', data);
+            // 职业经验更新时，需要更新经验进度条，但跳过更新主界面以避免循环调用
+            UI.renderMainCharacter(true); // 传入true表示跳过更新主界面
         });
 
         // 在切换到角色界面时也渲染主角信息

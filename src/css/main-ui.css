@@ -446,9 +446,17 @@
     margin-bottom: 5px;
 }
 
+.hero-level-exp-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 5px;
+}
+
 .hero-level {
     font-size: 12px;
     color: #777;
+    white-space: nowrap;
 }
 
 .hero-element {
@@ -521,6 +529,25 @@
     color: #333;
     font-weight: bold;
     font-size: 0.9em;
+}
+
+/* 内联经验条样式 */
+.job-exp-inline {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 1;
+}
+
+.job-exp-inline .job-exp-bar {
+    flex: 1;
+    height: 8px;
+    min-width: 100px;
+}
+
+.job-exp-inline .job-exp-value {
+    font-size: 11px;
+    white-space: nowrap;
 }
 
 .job-exp-bar {

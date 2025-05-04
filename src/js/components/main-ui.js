@@ -227,17 +227,19 @@ const MainUI = {
             if (hasJob) {
                 html += `
                         <div class="hero-class">${jobName}</div>
-                        <div class="hero-level">等级 ${jobLevel}</div>`;
+                        <div class="hero-level-exp-container">
+                            <div class="hero-level">等级 ${jobLevel}</div>`;
+
+                // 在hero-level右侧添加职业经验进度条
+                html += this.renderJobExpBar(mainCharacter);
+
+                html += `
+                        </div>`;
             }
 
             html += `
                     </div>
                 </div>`;
-
-            // 添加职业经验进度条
-            if (hasJob) {
-                html += this.renderJobExpBar(mainCharacter);
-            }
 
             html += `
                 <div class="hero-stats">
@@ -1161,16 +1163,13 @@ const MainUI = {
         // 计算经验百分比
         const expPercent = Math.min(100, Math.max(0, (currentExp / nextLevelExp) * 100));
 
-        // 返回进度条HTML
+        // 返回进度条HTML - 简化版本，适合在hero-level旁边显示
         return `
-            <div class="job-exp-container">
-                <div class="job-exp-info">
-                    <span class="job-exp-label">职业经验</span>
-                    <span class="job-exp-value">${currentExp}/${nextLevelExp}</span>
-                </div>
+            <div class="job-exp-inline">
                 <div class="job-exp-bar">
                     <div class="job-exp-fill" style="width: ${expPercent}%"></div>
                 </div>
+                <span class="job-exp-value">${currentExp}/${nextLevelExp}</span>
             </div>
         `;
     },

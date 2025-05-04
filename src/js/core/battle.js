@@ -169,15 +169,26 @@ const Battle = {
         }
         this.logBattle(`遇到了 ${monster.name}${monsterTypeText}`);
 
+        // 检查是否在地下城中
+        const inDungeon = typeof Dungeon !== 'undefined' && Dungeon.currentRun;
+
         // 检查是否是地下城中的第一场战斗
         // 如果有任何队员有dungeonOriginalStats属性，则不是第一场战斗
-        const isFirstBattleInDungeon = !teamMembers.some(member => member.dungeonOriginalStats);
+        // 如果有任何队员有dungeonAppliedPassives属性，也不是第一场战斗
+        const isFirstBattleInDungeon = inDungeon &&
+            !teamMembers.some(member => member.dungeonOriginalStats) &&
+            !teamMembers.some(member => member.dungeonAppliedPassives && Object.keys(member.dungeonAppliedPassives).length > 0);
+
         console.log(`是否是地下城中的第一场战斗: ${isFirstBattleInDungeon}`);
 
-        // 额外检查：如果在地下城中但没有任何角色有dungeonOriginalStats，强制设为第一场战斗
-        const inDungeon = typeof Dungeon !== 'undefined' && Dungeon.currentRun;
+        // 如果在地下城中且是第一场战斗，记录日志
         if (inDungeon && isFirstBattleInDungeon) {
             console.log('检测到在地下城中且是第一场战斗');
+
+            // 确保所有角色的dungeonAppliedPassives被初始化为空对象
+            for (const member of teamMembers) {
+                member.dungeonAppliedPassives = {};
+            }
         }
 
         // 处理角色属性
@@ -884,7 +895,7 @@ const Battle = {
      */
     processCharacterAction(character, monster, battleStats) {
         this.logBattle(`检查角色是否存活`);
-        console.log(character.currentStats);
+        console.log(character);
         // 检查角色是否存活
         if (character.currentStats.hp <= 0) return;
 

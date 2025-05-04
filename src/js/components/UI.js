@@ -455,6 +455,11 @@ const UI = {
         targetScreen.classList.remove('hidden');
         this.activeScreen = screenId;
 
+        // 如果切换到地下城界面，更新地下城列表
+        if (screenId === 'dungeon-screen') {
+            this.updateDungeonList();
+        }
+
         // 创建并触发自定义事件
         const screenEvent = new CustomEvent('screenChanged', {
             detail: { screen: screenId }
@@ -3014,6 +3019,58 @@ const UI = {
             return;
         }
 
+        // 检查主角是否已在地下城中
+        const isInDungeon = Dungeon.currentRun && Dungeon.currentRun.dungeonId;
+
+        // 如果已在地下城中，只显示退出按钮
+        if (isInDungeon) {
+            const currentDungeon = Dungeon.getDungeon(Dungeon.currentRun.dungeonId);
+            const dungeonName = currentDungeon ? currentDungeon.name : '未知地下城';
+
+            let html = `
+                <div class="dungeon-in-progress">
+                    <div class="dungeon-warning">
+                        <h3>你已经在地下城中</h3>
+                        <p>当前地下城: ${dungeonName}</p>
+                        <p>你必须先退出当前地下城才能进入新的地下城</p>
+                    </div>
+                    <div class="dungeon-exit-actions">
+                        <button id="exit-current-dungeon" class="btn btn-danger">退出当前地下城</button>
+                    </div>
+                </div>
+            `;
+
+            dungeonList.innerHTML = html;
+
+            // 添加退出按钮事件监听器
+            const exitButton = document.getElementById('exit-current-dungeon');
+            if (exitButton) {
+                exitButton.addEventListener('click', () => {
+                    if (typeof DungeonRunner !== 'undefined') {
+                        // 确认是否退出
+                        if (confirm('确定要退出地下城探索吗？')) {
+                            DungeonRunner.exitDungeon();
+                            // 刷新地下城列表
+                            this.updateDungeonList();
+                        }
+                    } else {
+                        console.warn('DungeonRunner模块未定义');
+                        // 尝试使用Dungeon模块直接退出
+                        if (typeof Dungeon !== 'undefined' && typeof Dungeon.reset === 'function') {
+                            if (confirm('确定要退出地下城探索吗？')) {
+                                Dungeon.reset();
+                                // 刷新地下城列表
+                                this.updateDungeonList();
+                            }
+                        }
+                    }
+                });
+            }
+
+            return;
+        }
+
+        // 如果不在地下城中，显示可用地下城列表
         const availableDungeons = Dungeon.getAvailableDungeons();
         if (!availableDungeons || availableDungeons.length === 0) {
             dungeonList.innerHTML = '<div class="empty-message">暂无可用地下城</div>';

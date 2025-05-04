@@ -718,6 +718,12 @@ const Dungeon = {
      * @returns {boolean} 是否可以进入
      */
     canEnterDungeon(dungeonId) {
+        // 检查是否已在地下城中
+        if (this.currentRun && this.currentRun.dungeonId) {
+            console.log('已在地下城中，无法进入新的地下城');
+            return false;
+        }
+
         // 确保dungeons对象已初始化
         if (!this.dungeons || Object.keys(this.dungeons).length === 0) {
             this.copyTemplatesToDungeons();
@@ -1497,6 +1503,24 @@ const Dungeon = {
             return false;
         }
 
+        // 确保所有角色的dungeonOriginalStats和dungeonAppliedPassives属性被正确设置
+        if (typeof Character !== 'undefined' && Character.characters) {
+            const characters = Object.values(Character.characters);
+            for (const character of characters) {
+                // 如果角色没有dungeonOriginalStats，设置它
+                if (!character.dungeonOriginalStats) {
+                    console.log(`为角色 ${character.name} 设置dungeonOriginalStats`);
+                    character.dungeonOriginalStats = JSON.parse(JSON.stringify(character.baseStats));
+                }
+
+                // 如果角色没有dungeonAppliedPassives，初始化它
+                if (!character.dungeonAppliedPassives) {
+                    console.log(`为角色 ${character.name} 初始化dungeonAppliedPassives`);
+                    character.dungeonAppliedPassives = {};
+                }
+            }
+        }
+
         console.log('地下城进度加载成功:', this.currentRun);
         return true;
     },
@@ -1517,6 +1541,12 @@ const Dungeon = {
         if (typeof Game !== 'undefined' && Game.state) {
             delete Game.state.currentDungeon;
             console.log('已清除保存的地下城进度');
+
+            // 保存游戏状态
+            if (typeof Game.saveGame === 'function') {
+                Game.saveGame();
+                console.log('已保存游戏状态（清除地下城进度）');
+            }
         }
 
         // 清除所有角色的dungeonOriginalStats

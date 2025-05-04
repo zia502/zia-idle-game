@@ -131,6 +131,8 @@ const DungeonRunner = {
                     console.log('清除队伍成员的地下城原始属性，确保被识别为新的地下城探索');
                     for (const memberId of team.members) {
                         const member = Character.getCharacter(memberId);
+                        member.dungeonAppliedPassives = {};
+                        member.skillCooldowns = {};
                         if (member && member.dungeonOriginalStats) {
                             delete member.dungeonOriginalStats;
                             console.log(`已清除 ${member.name} 的地下城原始属性`);
@@ -923,6 +925,17 @@ const DungeonRunner = {
         // 重置地下城运行
         Dungeon.currentRun = null;
 
+        // 清除保存的地下城进度
+        if (typeof Game !== 'undefined' && Game.state) {
+            delete Game.state.currentDungeon;
+
+            // 保存游戏状态
+            if (typeof Game.saveGame === 'function') {
+                Game.saveGame();
+                console.log('已清除保存的地下城进度');
+            }
+        }
+
         // 发出事件
         if (typeof Events !== 'undefined') {
             Events.emit('dungeon:exited');
@@ -931,6 +944,11 @@ const DungeonRunner = {
         // 更新地下城信息显示
         if (typeof MainUI !== 'undefined') {
             MainUI.updateCurrentDungeon();
+        }
+
+        // 更新地下城列表
+        if (typeof UI !== 'undefined' && typeof UI.updateDungeonList === 'function') {
+            UI.updateDungeonList();
         }
     }
 };

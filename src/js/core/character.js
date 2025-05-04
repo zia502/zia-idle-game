@@ -907,6 +907,7 @@ const Character = {
                     fullStats.attack += Math.floor(fullStats.attack * (elementBonus.attack / 100));
                 }
 
+                fullStats.maxHp = fullStats.hp;
                 // 应用HP百分比加成
                 if (elementBonus.hp && fullStats.hp !== undefined) {
                     // 元素HP是百分比加成

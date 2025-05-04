@@ -43,20 +43,6 @@
         const mainCharacterInfo = new MainCharacterInfo(mainCharacter);
         mainCharacterContainer.innerHTML = mainCharacterInfo.render();
 
-        // 添加详情按钮事件
-        const detailsButton = mainCharacterContainer.querySelector('.details-button');
-        if (detailsButton) {
-            detailsButton.addEventListener('click', function() {
-                if (typeof UI.showCharacterDetails === 'function') {
-                    UI.showCharacterDetails(mainCharacter.id);
-                } else {
-                    console.warn('UI.showCharacterDetails方法不存在');
-                    // 如果方法不存在，创建一个临时的详情显示
-                    UI.showTempCharacterDetails(mainCharacter);
-                }
-            });
-        }
-
         // 添加职业按钮事件
         const jobButton = mainCharacterContainer.querySelector('.job-button');
         if (jobButton) {
@@ -164,18 +150,6 @@
                         <div style="font-weight:bold; margin-bottom:5px;">饰品</div>
                         <div>${character.equipment?.accessory ? character.equipment.accessory.name : '无'}</div>
                     </div>
-                </div>
-            </div>
-
-            <div style="margin-bottom:20px;">
-                <h3 style="margin-top:0; padding-bottom:5px; border-bottom:1px solid #eee;">特性</h3>
-                <div style="display:flex; flex-wrap:wrap; gap:10px;">
-                    ${character.traits && character.traits.length > 0 ?
-                        character.traits.map(trait => `
-                            <div style="padding:5px 10px; border:1px solid #eee; border-radius:3px;">${trait}</div>
-                        `).join('') :
-                        '<div>无特性</div>'
-                    }
                 </div>
             </div>
 

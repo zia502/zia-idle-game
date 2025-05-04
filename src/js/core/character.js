@@ -247,7 +247,6 @@ const Character = {
             level: data.level || 1,
             exp: data.exp || 0,
             nextLevelExp: this.calculateNextLevelExp(data.level || 1),
-            traits: traits, // 对于主角，这将是空数组
             skills: data.skills || [],
             baseStats: baseStats,
             currentStats: {...baseStats},
@@ -357,8 +356,6 @@ const Character = {
         const character = this.getCharacter(characterId);
         if (!character) return;
 
-        let newTraitsUnlocked = false;
-
         for (let i = 0; i < levels; i++) {
             // 检查是否已达到最高等级
             if (character.level >= character.maxLevel) {
@@ -411,11 +408,6 @@ const Character = {
     addExperience(characterId, expAmount) {
         const character = this.getCharacter(characterId);
         if (!character) return;
-
-        // 应用特性加成
-        if (character.traits.includes('quickLearner')) {
-            expAmount = this.traits.quickLearner.effect(character, expAmount);
-        }
 
         character.exp += expAmount;
 
@@ -582,8 +574,6 @@ const Character = {
             const attributes = Object.keys(this.attributes);
             const randomAttribute = attributes[Math.floor(Math.random() * attributes.length)];
 
-            // 随机选择一个特性
-            const randomTrait = Object.keys(this.traits)[Math.floor(Math.random() * Object.keys(this.traits).length)];
 
             // 随机名称
             const firstNames = ['艾', '布', '克', '德', '埃', '弗', '格', '霍', '伊', '贾', '凯', '莱', '米', '尼', '奥', '佩', '奎', '罗', '萨', '泰'];
@@ -617,7 +607,6 @@ const Character = {
                 name: name,
                 type: randomType,
                 attribute: randomAttribute,
-                traits: [randomTrait],
                 rarity: rarity,
                 description: description,
                 level: 1,
@@ -628,7 +617,6 @@ const Character = {
                 growthRates: {...typeData.growthRates},
                 isRecruited: true,
                 maxLevel: this.rarities[rarity].maxLevel,
-                maxTraits: this.rarities[rarity].maxTraits,
                 nextAttackCritical: false,
                 shield: 0,
                 bonusMultiplier: 0,
@@ -806,13 +794,6 @@ const Character = {
             }
         }
 
-        // 应用特性效果
-        for (const traitId of character.traits || []) {
-            const trait = this.traits ? this.traits[traitId] : null;
-            if (trait && trait.effect) {
-                fullStats = trait.effect(character, fullStats, team.members.map(id => this.getCharacter(id)));
-            }
-        }
 
         // 确保属性为正数并取整（只对整数属性取整）
         for (const stat in fullStats) {
@@ -957,17 +938,8 @@ const Character = {
             }
         }
 
-        // 应用攻击力EX加成 (来自特性、武器等)
+        // 应用攻击力EX加成 (来自武器等)
         let attackExBonus = 0;
-
-        // 从特性中获取攻击力EX加成
-        for (const traitId of character.traits) {
-            if (!traitId) continue;
-            const trait = this.traits[traitId];
-            if (trait && trait.attackExBonus) {
-                attackExBonus += trait.attackExBonus;
-            }
-        }
 
         // 从武器中获取攻击力EX加成
         if (character.equipment && character.equipment.weapon) {
@@ -981,15 +953,6 @@ const Character = {
 
         // 添加伤害上升总合
         let damageIncrease = 0;
-
-        // 从特性中获取伤害上升总合
-        for (const traitId of character.traits) {
-            if (!traitId) continue;
-            const trait = this.traits[traitId];
-            if (trait && trait.damageIncrease) {
-                damageIncrease += trait.damageIncrease;
-            }
-        }
 
         // 从武器中获取伤害上升总合
         if (character.equipment && character.equipment.weapon) {
@@ -1010,55 +973,6 @@ const Character = {
         return attackPower;
     },
 
-    /**
-     * 处理角色特性触发
-     * @param {string} characterId - 角色ID
-     * @param {string} eventType - 事件类型 (attack, damaged, etc)
-     * @param {object} eventData - 事件数据
-     * @returns {array} 触发的特性效果
-     */
-    processTraitTriggers(characterId, eventType, eventData) {
-        const character = this.getCharacter(characterId);
-        if (!character) return [];
-
-        const triggeredEffects = [];
-
-        for (const traitId of character.traits) {
-            if (!traitId) continue;
-            const trait = this.traits[traitId];
-
-            // 只处理主动特性
-            if (trait && trait.type === 'active') {
-                // 检查触发概率
-                if (Math.random() < trait.triggerRate) {
-                    // 根据事件类型和特性执行不同逻辑
-                    if (eventType === 'attack' && traitId === 'criticalSurge') {
-                        const result = trait.effect(character);
-                        if (result.triggered) {
-                            triggeredEffects.push(result);
-                        }
-                    } else if (eventType === 'attack' && traitId === 'elementalBurst') {
-                        const result = trait.effect(character, eventData.target, eventData.baseDamage);
-                        if (result.triggered) {
-                            triggeredEffects.push(result);
-                        }
-                    } else if (eventType === 'heal' && traitId === 'divineBlessing') {
-                        const result = trait.effect(character, eventData.target, eventData.healAmount);
-                        if (result.triggered) {
-                            triggeredEffects.push(result);
-                        }
-                    } else if (eventType === 'damaged' && traitId === 'counterAttack') {
-                        const result = trait.effect(character, eventData.attacker);
-                        if (result.triggered) {
-                            triggeredEffects.push(result);
-                        }
-                    }
-                }
-            }
-        }
-
-        return triggeredEffects;
-    },
 
     /**
      * 计算治疗量
@@ -1074,15 +988,6 @@ const Character = {
         if (!healer || !target) return 0;
 
         let healAmount = baseHealAmount;
-
-        // 应用治疗特性加成
-        for (const traitId of healer.traits) {
-            if (!traitId) continue;
-            const trait = this.traits[traitId];
-            if (trait && trait.type === 'passive' && traitId === 'healer') {
-                healAmount = trait.effect(healer, healAmount);
-            }
-        }
 
         // 计入角色治疗统计
         healer.stats.totalHealing += healAmount;
@@ -1170,23 +1075,6 @@ const Character = {
         // 执行职业升级
         character.job.level++;
 
-        // 检查是否解锁新特性
-        if (jobData.unlockTraits[character.job.level]) {
-            const traitId = jobData.unlockTraits[character.job.level];
-
-            // 将解锁的特性添加到职业特性库
-            if (!character.job.jobTraits[currentJob]) {
-                character.job.jobTraits[currentJob] = [];
-            }
-
-            character.job.jobTraits[currentJob].push(traitId);
-            character.unlockedTraits.push(traitId);
-
-            UI.showNotification(`${character.name} 的 ${jobData.name} 职业等级升至 ${character.job.level}，解锁了特性: ${this.traits[traitId].name}！`);
-        } else {
-            UI.showNotification(`${character.name} 的 ${jobData.name} 职业等级升至 ${character.job.level}。`);
-        }
-
         // 如果达到20级，提示可以转职
         if (character.job.level === 20 && jobData.nextTierJobs && jobData.nextTierJobs.length > 0) {
             UI.showMessage(`${character.name} 的 ${jobData.name} 职业已达到最高等级，可以选择进阶为更高级的职业。`);
@@ -1232,52 +1120,13 @@ const Character = {
         character.baseStats = {...newJobData.baseStats};
         character.growthRates = {...newJobData.growthRates};
 
-        // 解锁新职业的初始特性
-        if (newJobData.unlockTraits[1]) {
-            const traitId = newJobData.unlockTraits[1];
-
-            // 将解锁的特性添加到职业特性库
-            if (!character.job.jobTraits[newJobId]) {
-                character.job.jobTraits[newJobId] = [];
-            }
-
-            character.job.jobTraits[newJobId].push(traitId);
-            character.unlockedTraits.push(traitId);
-        }
 
         UI.showNotification(`${character.name} 已成功转职为 ${newJobData.name}！`);
 
         return true;
     },
 
-    /**
-     * 获取主角可用的职业特性
-     * @param {string} characterId - 主角ID
-     * @returns {array} 可用特性列表
-     */
-    getAvailableJobTraits(characterId) {
-        const character = this.getCharacter(characterId);
-        if (!character || !character.isMainCharacter || !character.job) return [];
 
-        const availableTraits = [];
-
-        // 收集所有已解锁的职业特性
-        for (const jobId in character.job.jobTraits) {
-            const jobTraits = character.job.jobTraits[jobId];
-            for (const traitId of jobTraits) {
-                if (this.traits[traitId]) {
-                    availableTraits.push({
-                        id: traitId,
-                        name: this.traits[traitId].name,
-                        description: this.traits[traitId].description,
-                        job: this.jobs[jobId]?.name || jobId
-                    });
-                }
-            }
-        }
-
-        return availableTraits;
-    },
 
     /**
      * 获取角色系统保存数据

@@ -98,13 +98,13 @@ const Events = {
         this.on('battle:end', (data) => {
             if (typeof UI !== 'undefined' && typeof UI.showNotification === 'function') {
                 if (data.victory) {
-                    UI.showNotification(`击败了 ${data.dungeonName}！获得了 ${data.gold} 金币和 ${data.exp} 经验值`);
+                    UI.showNotification(`击败了 ${data.dungeonName}！获得了 ${data.exp} 经验值`);
                 } else {
                     UI.showNotification(`在 ${data.dungeonName} 中失败了...`);
                 }
             } else {
                 if (data.victory) {
-                    console.log(`击败了 ${data.dungeonName}！获得了 ${data.gold} 金币和 ${data.exp} 经验值`);
+                    console.log(`击败了 ${data.dungeonName}！获得了 ${data.exp} 经验值`);
                 } else {
                     console.log(`在 ${data.dungeonName} 中失败了...`);
                 }

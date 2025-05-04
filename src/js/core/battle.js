@@ -130,8 +130,8 @@ const Battle = {
             isBoss: monster.isBoss || false,
             isMiniBoss: monster.isMiniBoss || false,
             isFinalBoss: monster.isFinalBoss || false,
-            traits: [],
-            stats: { totalDamage: 0, totalHealing: 0 }
+            stats: { totalDamage: 0, totalHealing: 0 },
+            xpReward: monster.xpReward || 100
         };
 
         // 确保怪物的HP和maxHp是有效数字
@@ -563,13 +563,6 @@ const Battle = {
             // 队伍胜利
             this.logBattle(`===== 战斗胜利！=====`);
 
-            if (monster.goldReward) {
-                gold = Math.floor(Math.random() *
-                    (monster.goldReward.max - monster.goldReward.min + 1)) +
-                    monster.goldReward.min;
-                this.logBattle(`获得 ${gold} 金币！`);
-            }
-
             if (monster.xpReward) {
                 exp = monster.xpReward;
                 this.logBattle(`获得 ${exp} 经验值！`);
@@ -676,32 +669,8 @@ const Battle = {
             }
         }
 
-        if (!character || !character.traits) return;
+        if (!character) return;
 
-        for (const traitId of character.traits) {
-            if (!traitId) continue;
-            const trait = Character.traits[traitId];
-            if (trait && trait.type === 'passive' && trait.triggerTiming === 'battleStart') {
-                // 在地下城中检查该特性是否已经应用过
-                if (inDungeon && character.dungeonAppliedPassives && character.dungeonAppliedPassives[`trait_${traitId}`]) {
-                    this.logBattle(`${character.name} 的特性 ${trait.name} 已在地下城中应用过，跳过`);
-                    continue;
-                }
-
-                if (trait.effect) {
-                    const result = trait.effect(character, character.currentStats, teamMembers);
-                    if (result && result.message) {
-                        this.logBattle(`${character.name} 的特性 ${trait.name} 触发：${result.message}`);
-
-                        // 在地下城中标记该特性已应用
-                        if (inDungeon && character.dungeonAppliedPassives) {
-                            character.dungeonAppliedPassives[`trait_${traitId}`] = true;
-                            this.logBattle(`${character.name} 的特性 ${trait.name} 已标记为在地下城中应用过`);
-                        }
-                    }
-                }
-            }
-        }
     },
 
     /**

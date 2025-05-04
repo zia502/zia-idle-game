@@ -660,6 +660,43 @@ const DungeonRunner = {
 
             if (isVictory) {
                 // 战斗胜利
+                // 处理奖励
+                const rewardInfo = Dungeon.processRewards(result.monster);
+
+                // 显示奖励信息
+                this.addBattleLog(`获得经验值: ${rewardInfo.exp}`, 'success');
+
+                // 显示物品奖励
+                if (rewardInfo.items && rewardInfo.items.length > 0) {
+                    const itemCounts = {};
+
+                    // 统计每种物品的数量
+                    rewardInfo.items.forEach(item => {
+                        if (!itemCounts[item.id]) {
+                            itemCounts[item.id] = 0;
+                        }
+                        itemCounts[item.id] += item.count || 1;
+                    });
+
+                    // 显示物品奖励
+                    for (const [itemId, count] of Object.entries(itemCounts)) {
+                        let itemName = itemId;
+
+                        // 尝试获取物品名称
+                        if (itemId === 'silver_chest') {
+                            itemName = '银宝箱';
+                        } else if (itemId === 'gold_chest') {
+                            itemName = '金宝箱';
+                        } else if (itemId === 'red_chest') {
+                            itemName = '红宝箱';
+                        } else if (itemId === 'rainbow_chest') {
+                            itemName = '彩虹宝箱';
+                        }
+
+                        this.addBattleLog(`获得 ${itemName} x${count}`, 'success');
+                    }
+                }
+
                 if (isBoss) {
                     if (isFinalBoss) {
                         // 击败最终boss
@@ -731,22 +768,15 @@ const DungeonRunner = {
                 // 战斗失败
                 this.addBattleLog(`队伍被 ${result.monster.name} 击败了...`, 'danger');
 
-                // 结束地下城运行
-                this.isRunning = false;
-
                 // 添加失败信息
                 this.addBattleLog('地下城挑战失败！', 'danger');
 
                 // 更新地下城进度
                 this.updateDungeonProgress(0);
 
-                // 重置地下城运行
-                Dungeon.currentRun = null;
-
-                // 更新地下城信息显示
-                if (typeof MainUI !== 'undefined') {
-                    MainUI.updateCurrentDungeon();
-                }
+                // 调用exitDungeon方法，正确清理地下城状态
+                console.log('战斗失败，自动退出地下城');
+                this.exitDungeon();
             }
         } catch (error) {
             console.error('处理战斗结果时出错:', error);
@@ -794,21 +824,7 @@ const DungeonRunner = {
             // 添加完成日志
             this.addBattleLog(`地下城 ${dungeonName} 挑战成功！`, 'success');
 
-            // 处理奖励
-            let totalGold = 0;
-            let totalExp = 0;
-
-            if (Dungeon.currentRun.rewards && Array.isArray(Dungeon.currentRun.rewards)) {
-                Dungeon.currentRun.rewards.forEach(reward => {
-                    if (reward) {
-                        totalGold += reward.gold || 0;
-                        totalExp += reward.exp || 0;
-                    }
-                });
-            }
-
-            // 添加奖励日志
-            this.addBattleLog(`获得了 ${totalGold} 金币和 ${totalExp} 经验值！`, 'success');
+            // 不再显示奖励信息，因为奖励已经在每次战斗胜利后立即给予
 
             // 更新地下城进度
             this.updateDungeonProgress(100);

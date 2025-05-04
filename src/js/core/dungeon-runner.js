@@ -227,115 +227,11 @@ const DungeonRunner = {
         }
 
         try {
-            // 检查是否有怪物数组
-            if (!Dungeon.currentRun.monsters || !Array.isArray(Dungeon.currentRun.monsters) || Dungeon.currentRun.monsters.length === 0) {
-                console.warn('地下城没有普通怪物，尝试生成默认怪物');
-
-                // 创建默认怪物
-                Dungeon.currentRun.monsters = [
-                    {
-                        id: 'default_monster_1',
-                        name: '史莱姆',
-                        attribute: 'water',
-                        baseStats: {
-                            hp: 100,
-                            attack: 10,
-                            defense: 5,
-                            maxHp: 100
-                        },
-                        currentStats: {
-                            hp: 100,
-                            attack: 10,
-                            defense: 5,
-                            maxHp: 100
-                        },
-                        isBoss: false,
-                        isMiniBoss: false,
-                        isFinalBoss: false,
-                        xpReward: 50
-                    },
-                    {
-                        id: 'default_monster_2',
-                        name: '哥布林',
-                        attribute: 'earth',
-                        baseStats: {
-                            hp: 150,
-                            attack: 15,
-                            defense: 8,
-                            maxHp: 150
-                        },
-                        currentStats: {
-                            hp: 150,
-                            attack: 15,
-                            defense: 8,
-                            maxHp: 150
-                        },
-                        isBoss: false,
-                        isMiniBoss: false,
-                        isFinalBoss: false,
-                        xpReward: 80
-                    }
-                ];
-            }
-
-            // 检查是否有小boss数组
-            if (!Dungeon.currentRun.miniBosses || !Array.isArray(Dungeon.currentRun.miniBosses) || Dungeon.currentRun.miniBosses.length === 0) {
-                console.warn('地下城没有小boss，尝试生成默认小boss');
-
-                // 创建默认小boss
-                Dungeon.currentRun.miniBosses = [
-                    {
-                        id: 'default_miniboss',
-                        name: '哥布林酋长',
-                        attribute: 'earth',
-                        baseStats: {
-                            hp: 500,
-                            attack: 30,
-                            defense: 15,
-                            maxHp: 500
-                        },
-                        currentStats: {
-                            hp: 500,
-                            attack: 30,
-                            defense: 15,
-                            maxHp: 500
-                        },
-                        isBoss: true,
-                        isMiniBoss: true,
-                        isFinalBoss: false,
-                        xpReward: 300,
-                        skills: []
-                    }
-                ];
-            }
-
             // 检查是否有大boss
             if (!Dungeon.currentRun.finalBoss) {
                 console.warn('地下城没有大boss，尝试生成默认大boss');
 
-                // 创建默认大boss
-                Dungeon.currentRun.finalBoss = {
-                    id: 'default_finalboss',
-                    name: '森林守护者',
-                    attribute: 'earth',
-                    baseStats: {
-                        hp: 1000,
-                        attack: 50,
-                        defense: 20,
-                        maxHp: 1000
-                    },
-                    currentStats: {
-                        hp: 1000,
-                        attack: 50,
-                        defense: 20,
-                        maxHp: 1000
-                    },
-                    isBoss: true,
-                    isMiniBoss: false,
-                    isFinalBoss: true,
-                    xpReward: 800,
-                    skills: []
-                };
+                return;
             }
 
             // 获取当前怪物
@@ -396,33 +292,7 @@ const DungeonRunner = {
         try {
             // 检查是否有小boss
             if (!Dungeon.currentRun.miniBosses || !Array.isArray(Dungeon.currentRun.miniBosses) || Dungeon.currentRun.miniBosses.length === 0) {
-                console.warn('地下城没有小boss，尝试生成默认小boss');
-
-                // 创建默认小boss
-                Dungeon.currentRun.miniBosses = [
-                    {
-                        id: 'default_miniboss',
-                        name: '哥布林酋长',
-                        attribute: 'earth',
-                        baseStats: {
-                            hp: 500,
-                            attack: 30,
-                            defense: 15,
-                            maxHp: 500
-                        },
-                        currentStats: {
-                            hp: 500,
-                            attack: 30,
-                            defense: 15,
-                            maxHp: 500
-                        },
-                        isBoss: true,
-                        isMiniBoss: true,
-                        isFinalBoss: false,
-                        xpReward: 300,
-                        skills: []
-                    }
-                ];
+                console.warn('地下城没有小boss');
 
                 // 重置已击败的小boss计数
                 Dungeon.currentRun.defeatedMiniBosses = 0;
@@ -480,29 +350,7 @@ const DungeonRunner = {
             if (!Dungeon.currentRun.finalBoss) {
                 console.warn('地下城没有大boss，尝试生成默认大boss');
 
-                // 创建默认大boss
-                Dungeon.currentRun.finalBoss = {
-                    id: 'default_finalboss',
-                    name: '森林守护者',
-                    attribute: 'earth',
-                    baseStats: {
-                        hp: 1000,
-                        attack: 50,
-                        defense: 20,
-                        maxHp: 1000
-                    },
-                    currentStats: {
-                        hp: 1000,
-                        attack: 50,
-                        defense: 20,
-                        maxHp: 1000
-                    },
-                    isBoss: true,
-                    isMiniBoss: false,
-                    isFinalBoss: true,
-                    xpReward: 800,
-                    skills: []
-                };
+                return;
             }
 
             // 获取大boss

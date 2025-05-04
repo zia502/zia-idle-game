@@ -617,6 +617,12 @@ const Battle = {
                 }
             } else {
                 this.logBattle(`地下城战斗，保留BUFF状态`);
+                
+                // 在地下城战斗失败时，立即调用DungeonRunner.exitDungeon()
+                if (typeof DungeonRunner !== 'undefined' && typeof DungeonRunner.exitDungeon === 'function') {
+                    console.log('地下城战斗失败，立即退出地下城');
+                    DungeonRunner.exitDungeon();
+                }
             }
 
             return {

@@ -859,6 +859,14 @@ const Character = {
 
         const fullStats = {...baseStats};
 
+        // 确保所有需要的属性都存在
+        if (fullStats.critRate === undefined) fullStats.critRate = 0.05; // 默认5%暴击率
+        if (fullStats.daRate === undefined) fullStats.daRate = 0.1; // 默认10%双攻率
+        if (fullStats.taRate === undefined) fullStats.taRate = 0.05; // 默认5%三攻率
+        if (fullStats.exAttack === undefined) fullStats.exAttack = 0; // 默认0%EX攻击加成
+        if (fullStats.stamina === undefined) fullStats.stamina = 0; // 默认0浑身值
+        if (fullStats.enmity === undefined) fullStats.enmity = 0; // 默认0背水值
+
         console.log('计算角色完整属性，基础属性:', baseStats);
 
         // 应用武器盘加成
@@ -894,17 +902,51 @@ const Character = {
                 console.log(`应用${characterElement}元素属性加成:`, elementBonus);
 
                 // 应用攻击力百分比加成
-                if (elementBonus.attackPercentage && fullStats.attack !== undefined) {
-                    fullStats.attack *= (1 + elementBonus.attackPercentage);
+                if (elementBonus.attack && fullStats.attack !== undefined) {
+                    // 元素攻击力是百分比加成
+                    fullStats.attack += Math.floor(fullStats.attack * (elementBonus.attack / 100));
+                }
+
+                // 应用HP百分比加成
+                if (elementBonus.hp && fullStats.hp !== undefined) {
+                    // 元素HP是百分比加成
+                    fullStats.hp += Math.floor(fullStats.hp * (elementBonus.hp / 100));
                 }
 
                 // 应用暴击率加成
-                if (elementBonus.critRate && fullStats.critRate !== undefined) {
-                    fullStats.critRate += elementBonus.critRate;
+                if (elementBonus.critRate) {
+                    fullStats.critRate += elementBonus.critRate / 100; // 转换为小数
                 }
 
-                // 应用其他元素特定加成
-                // ...
+                // 应用DA率加成
+                if (elementBonus.daRate) {
+                    fullStats.daRate += elementBonus.daRate / 100; // 转换为小数
+                }
+
+                // 应用TA率加成
+                if (elementBonus.taRate) {
+                    fullStats.taRate += elementBonus.taRate / 100; // 转换为小数
+                }
+
+                // 应用EX攻击加成
+                if (elementBonus.exAttack) {
+                    fullStats.exAttack += elementBonus.exAttack / 100; // 转换为小数
+                }
+
+                // 应用防御力加成
+                if (elementBonus.defense && fullStats.defense !== undefined) {
+                    fullStats.defense += elementBonus.defense;
+                }
+
+                // 应用浑身加成
+                if (elementBonus.stamina) {
+                    fullStats.stamina += elementBonus.stamina;
+                }
+
+                // 应用背水加成
+                if (elementBonus.enmity) {
+                    fullStats.enmity += elementBonus.enmity;
+                }
             }
         }
 
@@ -916,9 +958,15 @@ const Character = {
             }
         }
 
-        // 确保属性为正数并取整
+        // 确保属性为正数并取整（只对整数属性取整）
         for (const stat in fullStats) {
-            fullStats[stat] = Math.max(0, Math.floor(fullStats[stat]));
+            if (stat === 'critRate' || stat === 'daRate' || stat === 'taRate' || stat === 'exAttack') {
+                // 这些是小数属性，不需要取整
+                fullStats[stat] = Math.max(0, fullStats[stat]);
+            } else {
+                // 其他属性取整
+                fullStats[stat] = Math.max(0, Math.floor(fullStats[stat]));
+            }
         }
 
         // 如果需要，更新角色的weaponBonusStats属性

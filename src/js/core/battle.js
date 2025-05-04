@@ -180,58 +180,55 @@ const Battle = {
             console.log('检测到在地下城中且是第一场战斗');
         }
 
-        // 只在地下城的第一场战斗时保存原始属性
-        if (isFirstBattleInDungeon) {
-            console.log('地下城第一场战斗，保存队伍成员的原始属性');
-            for (const member of teamMembers) {
-                // 保存地下城探索开始时的原始属性（整个地下城探索过程中只保存一次）
-                member.dungeonOriginalStats = JSON.parse(JSON.stringify(member.baseStats));
-                console.log(`保存 ${member.name} 的地下城原始属性:`, member.dungeonOriginalStats);
-            }
-        } else {
-            console.log('地下城后续战斗，保持队伍成员当前状态');
-        }
-
-        // 每场战斗开始时仍然保存当前状态，用于战斗失败时恢复
+        // 处理角色属性
         for (const member of teamMembers) {
+            // 初始化originalStats用于战斗失败时恢复
             if (!member.originalStats) {
                 member.originalStats = {};
             }
 
-            if (isFirstBattleInDungeon) {
-                member.originalStats = JSON.parse(JSON.stringify(member.baseStats));
-                console.log('还是第一场战斗,使用basestats');
-            }else{
+            // 如果在地下城中且是第一场战斗，使用weaponBonusStats
+            if (inDungeon && isFirstBattleInDungeon) {
+                if (member.weaponBonusStats) {
+                    console.log(`${member.name} 使用weaponBonusStats作为战斗属性`);
+                    member.currentStats = JSON.parse(JSON.stringify(member.weaponBonusStats));
+                    // 保存当前状态作为战斗原始属性
+                    member.originalStats = JSON.parse(JSON.stringify(member.weaponBonusStats));
+                } else {
+                    console.log(`${member.name} 没有weaponBonusStats，使用baseStats`);
+                    member.currentStats = JSON.parse(JSON.stringify(member.baseStats));
+                    member.originalStats = JSON.parse(JSON.stringify(member.baseStats));
+                }
+            } else {
+                // 不在地下城中或不是第一场战斗，保持当前状态
+                console.log(`${member.name} 保持当前状态`);
                 // 保存当前状态作为战斗原始属性
                 member.originalStats = JSON.parse(JSON.stringify(member.currentStats));
-                console.log(`保存 ${member.name} 的战斗原始属性:`, member.originalStats);
             }
+            console.log(`${member.name} 的战斗属性:`, member.currentStats);
         }
 
-        // 只在地下城的第一场战斗时应用武器盘加成
-        if (isFirstBattleInDungeon && typeof WeaponBoardBonusSystem !== 'undefined') {
-            this.logBattle('首次进入地下城，应用武器盘加成...');
-            const bonusApplied = WeaponBoardBonusSystem.applyWeaponBoardBonuses(team, teamMembers);
-            if (bonusApplied) {
-                this.logBattle('武器盘加成已应用到队伍成员');
-            } else {
-                this.logBattle('无法应用武器盘加成');
-            }
-        } else if (!isFirstBattleInDungeon) {
-            this.logBattle('地下城后续战斗，不重复应用武器盘加成');
-            console.log('地下城后续战斗，跳过武器盘加成应用');
-        } else {
-            console.warn('WeaponBoardBonusSystem未定义，无法应用武器盘加成');
-        }
+        // 不再需要应用武器盘加成，因为已经在weaponBonusStats中包含了这些加成
+        this.logBattle('使用角色的weaponBonusStats属性，不再单独应用武器盘加成');
+        console.log('使用角色的weaponBonusStats属性，不再单独应用武器盘加成');
 
         // 战斗循环
         let battleResult = this.processBattle(teamMembers, monsterCharacter);
 
-        // 战斗失败时恢复队伍成员的战斗前状态
+        // 战斗失败时恢复队伍成员为weaponBonusStats
         if (!battleResult.victory) {
             for (const member of teamMembers) {
-                if (member.originalStats) {
-                    console.log(`战斗失败，恢复 ${member.name} 的战斗前状态`);
+                if (member.weaponBonusStats) {
+                    console.log(`战斗失败，恢复 ${member.name} 为weaponBonusStats`);
+                    member.currentStats = JSON.parse(JSON.stringify(member.weaponBonusStats));
+
+                    // 保持当前HP不变，除非HP大于maxHP
+                    if (member.currentStats.hp > member.currentStats.maxHp) {
+                        member.currentStats.hp = member.currentStats.maxHp;
+                    }
+                } else if (member.originalStats) {
+                    // 如果没有weaponBonusStats，则使用originalStats
+                    console.log(`战斗失败，恢复 ${member.name} 的战斗前状态（无weaponBonusStats）`);
                     member.currentStats = JSON.parse(JSON.stringify(member.originalStats));
 
                     // 保持当前HP不变，除非HP大于maxHP
@@ -887,6 +884,7 @@ const Battle = {
      */
     processCharacterAction(character, monster, battleStats) {
         this.logBattle(`检查角色是否存活`);
+        console.log(character.currentStats);
         // 检查角色是否存活
         if (character.currentStats.hp <= 0) return;
 
@@ -1088,7 +1086,7 @@ const Battle = {
         }
 
         // 计算DA和TA率
-        let daRate = character.currentStats.daRate || 0.10; // 基础DA率15%
+        let daRate = character.currentStats.daRate || 0.10; // 基础DA率10%
         let taRate = character.currentStats.taRate || 0.05; // 基础TA率5%
 
         // 应用BUFF效果

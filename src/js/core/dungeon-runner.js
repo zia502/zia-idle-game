@@ -18,6 +18,16 @@ const DungeonRunner = {
     logDisplaySpeed: 800,
 
     /**
+     * 当前运行数据
+     */
+    currentRun: null,
+
+    /**
+     * 上一次地下城记录
+     */
+    lastDungeonRecord: null,
+
+    /**
      * 初始化地下城运行器
      */
     init() {
@@ -622,6 +632,18 @@ const DungeonRunner = {
                 // 更新地下城进度
                 this.updateDungeonProgress(0);
 
+                // 保存战斗记录
+                if (this.currentRun) {
+                    this.lastDungeonRecord = {
+                        dungeonName: this.currentRun.dungeonName,
+                        floor: this.currentRun.currentFloor,
+                        monsterName: result.monster.name,
+                        monsterType: result.monster.isBoss ? 'BOSS' : '普通怪物',
+                        defeatReason: this.getDefeatReason(result),
+                        teamStats: this.getTeamStats(result)
+                    };
+                }
+
                 // 调用exitDungeon方法，正确清理地下城状态
                 console.log('战斗失败，自动退出地下城');
                 this.exitDungeon();
@@ -769,90 +791,105 @@ const DungeonRunner = {
      * 退出地下城
      */
     exitDungeon() {
-        if (!Dungeon.currentRun) {
-            console.warn('没有正在进行的地下城探索');
-            return;
-        }
-
-        this.isRunning = false;
-        this.isPaused = false;
-
-        this.addBattleLog('退出地下城探索', 'warning');
-
-        // 恢复队伍成员的地下城原始属性
-        const team = Game.getActiveTeam();
-        if (team && team.members) {
-            const teamMembers = team.members.map(id => Character.getCharacter(id)).filter(char => char);
-
-            for (const member of teamMembers) {
-                if (member.dungeonOriginalStats) {
-                    console.log(`退出地下城，恢复 ${member.name} 的地下城原始属性`);
-                    member.currentStats = JSON.parse(JSON.stringify(member.dungeonOriginalStats));
-
-                    // 清除地下城原始属性
-                    delete member.dungeonOriginalStats;
-
-                    // 清除地下城已应用的被动技能记录
-                    if (member.dungeonAppliedPassives) {
-                        delete member.dungeonAppliedPassives;
-                        console.log(`清除 ${member.name} 的地下城已应用被动技能记录`);
+        // 保存战斗记录
+        if (this.currentRun) {
+            // 恢复队伍成员的地下城原始属性
+            if (this.currentRun.team && this.currentRun.team.members) {
+                for (const member of this.currentRun.team.members) {
+                    const character = Character.getCharacter(member);
+                    if (character && character.dungeonOriginalStats) {
+                        character.currentStats = JSON.parse(JSON.stringify(character.dungeonOriginalStats));
+                        delete character.dungeonOriginalStats;
                     }
+                }
 
-                    // 清除所有BUFF
-                    if (typeof BuffSystem !== 'undefined') {
-                        BuffSystem.clearAllBuffs(member);
-                    } else {
-                        member.buffs = [];
+                // 清除所有BUFF
+                for (const member of this.currentRun.team.members) {
+                    const character = Character.getCharacter(member);
+                    if (character && typeof BuffSystem !== 'undefined') {
+                        BuffSystem.clearAllBuffs(character);
                     }
                 }
             }
         }
 
-        // 重置地下城运行
-        Dungeon.currentRun = null;
+        // 重置地下城运行状态
+        this.currentRun = null;
+        this.isRunning = false;
 
         // 清除保存的地下城进度
+        if (typeof Storage !== 'undefined') {
+            Storage.remove('dungeonProgress');
+        }
+
+        // 清除Game.state中的地下城进度
         if (typeof Game !== 'undefined' && Game.state) {
-            console.log('清除前的地下城进度:', Game.state.currentDungeon);
-
-            // 确保完全删除地下城进度
-            Game.state.currentDungeon = null;
             delete Game.state.currentDungeon;
-
-            console.log('清除后的地下城进度:', Game.state.currentDungeon);
-
-            // 保存游戏状态
             if (typeof Game.saveGame === 'function') {
-                const saveResult = Game.saveGame();
-                console.log('保存游戏状态结果:', saveResult);
-                console.log('已清除保存的地下城进度');
-
-                // 强制刷新本地存储
-                if (typeof Storage !== 'undefined' && typeof Storage.save === 'function') {
-                    const gameData = {
-                        state: Game.state,
-                        settings: Game.settings,
-                        timestamp: Date.now()
-                    };
-                    Storage.save('gameData', gameData);
-                    console.log('已强制刷新本地存储');
-                }
+                Game.saveGame();
             }
         }
 
-        // 发出事件
-        if (typeof Events !== 'undefined') {
-            Events.emit('dungeon:exited');
-        }
-
-        // 更新地下城信息显示
+        // 更新UI显示
         if (typeof MainUI !== 'undefined') {
             MainUI.updateCurrentDungeon();
         }
+    },
 
-        // 更新地下城列表
-        if (typeof UI !== 'undefined' && typeof UI.updateDungeonList === 'function') {
-            UI.updateDungeonList();
+    /**
+     * 获取战败原因
+     * @param {object} battle - 战斗记录
+     * @returns {string} 战败原因
+     */
+    getDefeatReason(battle) {
+        const aliveMembers = battle.teamMembers.filter(member => member.currentStats.hp > 0);
+        if (aliveMembers.length === 0) {
+            return '队伍全灭';
         }
+        
+        const totalDamage = battle.teamMembers.reduce((sum, member) => sum + (member.stats?.totalDamage || 0), 0);
+        const monsterHp = battle.monster.currentStats.maxHp;
+        
+        if (totalDamage < monsterHp * 0.1) {
+            return '输出不足';
+        } else if (totalDamage < monsterHp * 0.3) {
+            return '伤害不够';
+        } else if (totalDamage < monsterHp * 0.5) {
+            return '未能造成有效伤害';
+        } else {
+            return '战斗失败';
+        }
+    },
+
+    /**
+     * 获取队伍统计信息
+     * @param {object} battle - 战斗记录
+     * @returns {array} 队伍成员统计信息
+     */
+    getTeamStats(battle) {
+        return battle.teamMembers.map(member => ({
+            name: member.name,
+            totalDamage: member.stats?.totalDamage || 0,
+            totalHealing: member.stats?.totalHealing || 0,
+            daCount: member.stats?.daCount || 0,
+            taCount: member.stats?.taCount || 0,
+            critCount: member.stats?.critCount || 0,
+            isAlive: member.currentStats.hp > 0
+        }));
+    },
+
+    /**
+     * 获取上一次地下城记录
+     * @returns {object|null} 上一次地下城记录
+     */
+    getLastDungeonRecord() {
+        return this.lastDungeonRecord;
+    },
+
+    /**
+     * 清除上一次地下城记录
+     */
+    clearLastDungeonRecord() {
+        this.lastDungeonRecord = null;
     }
 };

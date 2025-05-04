@@ -552,6 +552,18 @@ const JobSystem = {
         }
 
         console.log(`切换职业成功：从${oldJobId}切换到${newJobId}`);
+
+        // 触发职业经验更新事件
+        if (typeof Events !== 'undefined' && typeof Events.emit === 'function') {
+            Events.emit('character:exp-updated', {
+                characterId: character.id,
+                jobId: newJobId,
+                currentExp: character.job.exp || 0,
+                nextLevelExp: this.calculateJobLevelExp(character.job.level, newJob.tier),
+                jobLevel: character.job.level
+            });
+        }
+
         return true;
     },
 
@@ -646,6 +658,17 @@ const JobSystem = {
         const nextLevelExp = this.calculateJobLevelExp(character.job.level, job.tier);
         console.log("下一级所需经验",nextLevelExp);
 
+        // 触发经验更新事件
+        if (typeof Events !== 'undefined' && typeof Events.emit === 'function') {
+            Events.emit('character:exp-updated', {
+                characterId: character.id,
+                jobId: jobId,
+                currentExp: character.job.exp,
+                nextLevelExp: nextLevelExp,
+                jobLevel: character.job.level
+            });
+        }
+
         // 检查是否可以升级
         if (character.job.exp >= nextLevelExp) {
             // 减去升级所需经验
@@ -711,6 +734,17 @@ const JobSystem = {
             if (typeof UI !== 'undefined' && typeof UI.showMessage === 'function') {
                 UI.showMessage(`${character.name} 的 ${job.name} 职业已达到最高等级，可以选择进阶为更高级的职业。`);
             }
+        }
+
+        // 触发职业等级更新事件
+        if (typeof Events !== 'undefined' && typeof Events.emit === 'function') {
+            Events.emit('character:exp-updated', {
+                characterId: character.id,
+                jobId: character.job.current,
+                currentExp: character.job.exp || 0,
+                nextLevelExp: this.calculateJobLevelExp(character.job.level, job.tier),
+                jobLevel: character.job.level
+            });
         }
 
         return true;

@@ -9,7 +9,59 @@ class MainCharacterInfo {
                 // 这里不需要做任何事情，因为每次渲染时都会重新计算属性
                 // 只需确保UI.renderMainCharacter()被调用即可
             });
+
+            // 监听角色经验更新事件
+            Events.on('character:exp-updated', (data) => {
+                console.log('MainCharacterInfo: 收到角色经验更新事件', data);
+                // 确保UI.renderMainCharacter()被调用以更新经验进度条
+                if (typeof UI !== 'undefined' && typeof UI.renderMainCharacter === 'function') {
+                    UI.renderMainCharacter();
+                }
+            });
         }
+    }
+
+    /**
+     * 渲染职业经验进度条
+     * @param {object} character - 角色对象
+     * @param {number} jobLevel - 职业等级
+     * @returns {string} 职业经验进度条HTML
+     */
+    renderJobExpBar(character, jobLevel) {
+        // 如果没有职业或已达到最高等级，不显示经验条
+        if (!character.job || !character.job.current || jobLevel >= 20) {
+            return '';
+        }
+
+        // 获取职业信息
+        const jobId = character.job.current;
+        const jobInfo = typeof JobSystem !== 'undefined' ? JobSystem.getJob(jobId) : null;
+
+        if (!jobInfo) {
+            return '';
+        }
+
+        // 获取当前经验和下一级所需经验
+        const currentExp = character.job.exp || 0;
+        const nextLevelExp = typeof JobSystem !== 'undefined' && typeof JobSystem.calculateJobLevelExp === 'function'
+            ? JobSystem.calculateJobLevelExp(jobLevel, jobInfo.tier)
+            : 100000; // 默认值
+
+        // 计算经验百分比
+        const expPercent = Math.min(100, Math.max(0, (currentExp / nextLevelExp) * 100));
+
+        // 返回进度条HTML
+        return `
+            <div class="job-exp-container">
+                <div class="job-exp-info">
+                    <span class="job-exp-label">职业经验</span>
+                    <span class="job-exp-value">${currentExp}/${nextLevelExp}</span>
+                </div>
+                <div class="job-exp-bar">
+                    <div class="job-exp-fill" style="width: ${expPercent}%"></div>
+                </div>
+            </div>
+        `;
     }
 
     render() {
@@ -270,6 +322,9 @@ class MainCharacterInfo {
                         }).join('')}
                     </div>
                 </div>
+
+                <!-- 职业经验进度条 -->
+                ${this.renderJobExpBar(character, jobLevel)}
 
                 <div class="info-stats">
                     <div class="stat-row">

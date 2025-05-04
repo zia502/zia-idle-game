@@ -232,7 +232,14 @@ const MainUI = {
 
             html += `
                     </div>
-                </div>
+                </div>`;
+
+            // 添加职业经验进度条
+            if (hasJob) {
+                html += this.renderJobExpBar(mainCharacter);
+            }
+
+            html += `
                 <div class="hero-stats">
                     <div class="stat-item">
                         <span class="stat-name">生命值</span>
@@ -1127,6 +1134,48 @@ const MainUI = {
     },
 
     /**
+     * 渲染职业经验进度条
+     * @param {object} character - 角色对象
+     * @returns {string} 职业经验进度条HTML
+     */
+    renderJobExpBar(character) {
+        // 如果没有职业或已达到最高等级，不显示经验条
+        if (!character.job || !character.job.current || character.job.level >= 20) {
+            return '';
+        }
+
+        // 获取职业信息
+        const jobId = character.job.current;
+        const jobInfo = typeof JobSystem !== 'undefined' ? JobSystem.getJob(jobId) : null;
+
+        if (!jobInfo) {
+            return '';
+        }
+
+        // 获取当前经验和下一级所需经验
+        const currentExp = character.job.exp || 0;
+        const nextLevelExp = typeof JobSystem !== 'undefined' && typeof JobSystem.calculateJobLevelExp === 'function'
+            ? JobSystem.calculateJobLevelExp(character.job.level, jobInfo.tier)
+            : 100000; // 默认值
+
+        // 计算经验百分比
+        const expPercent = Math.min(100, Math.max(0, (currentExp / nextLevelExp) * 100));
+
+        // 返回进度条HTML
+        return `
+            <div class="job-exp-container">
+                <div class="job-exp-info">
+                    <span class="job-exp-label">职业经验</span>
+                    <span class="job-exp-value">${currentExp}/${nextLevelExp}</span>
+                </div>
+                <div class="job-exp-bar">
+                    <div class="job-exp-fill" style="width: ${expPercent}%"></div>
+                </div>
+            </div>
+        `;
+    },
+
+    /**
      * 绑定地下城控制按钮事件
      */
     bindDungeonControlEvents() {
@@ -1174,6 +1223,12 @@ const MainUI = {
             Events.on('weapon:updated', () => {
                 console.log('MainUI 收到武器更新事件');
                 this.updateWeaponBoard();
+            });
+
+            // 监听职业经验更新事件
+            Events.on('character:exp-updated', (data) => {
+                console.log('MainUI 收到职业经验更新事件', data);
+                this.updateMainHeroInfo();
             });
         }
 

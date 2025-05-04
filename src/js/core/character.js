@@ -236,13 +236,7 @@ const Character = {
 
         // 对于主角，特性系统已被技能系统取代
         const isMainCharacter = data.isMainCharacter || false;
-        // 初始特性数组
-        let traits = [];
 
-        // 对于非主角，仍然使用特性系统
-        if (!isMainCharacter && data.traits) {
-            traits = data.traits.slice(0, rarityData.maxTraits);
-        }
 
         // 创建角色对象
         const character = {
@@ -387,32 +381,11 @@ const Character = {
                 character.currentStats.hp = character.baseStats.hp;
                 character.currentStats.attack = character.baseStats.attack;
                 character.currentStats.defense = character.baseStats.defense;
-                character.currentStats.speed = character.baseStats.speed;
             }
 
             console.log('升级后的基础属性:', character.baseStats);
             console.log('升级后的当前属性:', character.currentStats);
 
-            // 检查是否解锁新特性
-            if (!character.isMainCharacter) { // 非主角的特性解锁机制
-                // 稀有角色最多1个特性，史诗可以有2个，传说可以有3个
-                if (character.level >= character.traitUnlockLevels.second &&
-                    character.traits.length < 2 &&
-                    character.rarity !== 'rare') {
-                    newTraitsUnlocked = true;
-                    UI.showNotification(`${character.name} 达到65级，可以装备第二个特性！`);
-                }
-
-                if (character.level >= character.traitUnlockLevels.third &&
-                    character.traits.length < 3 &&
-                    character.rarity === 'legendary') {
-                    newTraitsUnlocked = true;
-                    UI.showNotification(`${character.name} 达到90级，可以装备第三个特性！`);
-                }
-            } else {
-                // 主角的职业特性解锁 - 根据职业等级解锁
-                this.checkJobTraitUnlocks(characterId);
-            }
 
             // 更新下一级所需经验
             character.nextLevelExp = this.calculateNextLevelExp(character.level);
@@ -420,10 +393,6 @@ const Character = {
             console.log(`${character.name} 升级到 ${character.level} 级`);
         }
 
-        // 如果解锁了新特性，提示玩家
-        if (newTraitsUnlocked) {
-            UI.showMessage(`${character.name} 解锁了新的特性槽位，可以在角色界面配置特性。`);
-        }
 
         // 如果是主角，同步更新主角等级
         if (character.isMainCharacter) {
@@ -431,123 +400,8 @@ const Character = {
         }
     },
 
-    /**
-     * 检查主角职业特性解锁
-     * @param {string} characterId - 角色ID
-     */
-    checkJobTraitUnlocks(characterId) {
-        const character = this.getCharacter(characterId);
-        if (!character || !character.isMainCharacter || !character.job) return;
 
-        const jobLevel = character.job.level;
-        const currentJob = character.job.current;
 
-        // 职业等级1/10/20解锁特性
-        if (jobLevel === 1 || jobLevel === 10 || jobLevel === 20) {
-            // 这里需要根据职业系统设计具体实现
-            // 模拟解锁特性
-            const unlockedTrait = `${currentJob}_trait_${jobLevel === 1 ? 'basic' : jobLevel === 10 ? 'advanced' : 'master'}`;
-
-            // 将解锁的特性添加到职业特性库
-            if (!character.job.jobTraits[currentJob]) {
-                character.job.jobTraits[currentJob] = [];
-            }
-
-            character.job.jobTraits[currentJob].push(unlockedTrait);
-            character.unlockedTraits.push(unlockedTrait);
-
-            UI.showNotification(`${character.name} 的 ${currentJob} 职业等级达到 ${jobLevel}，解锁了新特性: ${unlockedTrait}！`);
-        }
-    },
-
-    /**
-     * 为角色装备特性
-     * @param {string} characterId - 角色ID
-     * @param {string} traitId - 特性ID
-     * @param {number} slotIndex - 特性槽位索引
-     * @returns {boolean} 是否装备成功
-     */
-    equipTrait(characterId, traitId, slotIndex) {
-        const character = this.getCharacter(characterId);
-        if (!character) return false;
-
-        // 检查特性是否存在
-        const trait = this.traits[traitId];
-        if (!trait) return false;
-
-        // 检查特性是否兼容该角色类型
-        if (!trait.compatibleTypes.includes(character.type) && !character.isMainCharacter) {
-            UI.showMessage(`${character.name} 不能装备 ${trait.name} 特性，类型不兼容。`);
-            return false;
-        }
-
-        // 注意：特性系统已被技能系统取代，这段代码保留但不再使用
-        // 主角的技能由职业决定，不再需要手动装备特性
-        if (character.isMainCharacter) {
-            console.log('主角不再使用特性系统，技能由职业决定');
-            return false;
-        }
-
-        // 检查角色的特性解锁状态
-        if (!character.isMainCharacter) {
-            // 非主角根据等级限制特性数量
-            if (slotIndex === 1 && character.level < character.traitUnlockLevels.second) {
-                UI.showMessage(`需要角色达到65级才能装备第二个特性。`);
-                return false;
-            }
-
-            if (slotIndex === 2 && character.level < character.traitUnlockLevels.third) {
-                UI.showMessage(`需要角色达到90级才能装备第三个特性。`);
-                return false;
-            }
-
-            // 检查稀有度限制
-            if (slotIndex >= character.maxTraits) {
-                UI.showMessage(`${character.name} 的稀有度限制了可装备的特性数量。`);
-                return false;
-            }
-        }
-
-        // 确保特性数组有足够空间
-        while (character.traits.length <= slotIndex) {
-            character.traits.push(null);
-        }
-
-        // 装备特性
-        character.traits[slotIndex] = traitId;
-
-        console.log(`${character.name} 装备了特性 ${trait.name} 到槽位 ${slotIndex + 1}`);
-        UI.showNotification(`${character.name} 装备了特性: ${trait.name}`);
-
-        return true;
-    },
-
-    /**
-     * 移除角色的特性
-     * @param {string} characterId - 角色ID
-     * @param {number} slotIndex - 特性槽位索引
-     * @returns {boolean} 是否移除成功
-     */
-    unequipTrait(characterId, slotIndex) {
-        const character = this.getCharacter(characterId);
-        if (!character || slotIndex >= character.traits.length || !character.traits[slotIndex]) {
-            return false;
-        }
-
-        const traitId = character.traits[slotIndex];
-        const trait = this.traits[traitId];
-
-        character.traits[slotIndex] = null;
-        // 调整数组，移除末尾的空值
-        while (character.traits.length > 0 && character.traits[character.traits.length - 1] === null) {
-            character.traits.pop();
-        }
-
-        console.log(`从 ${character.name} 移除了特性 ${trait.name}`);
-        UI.showNotification(`从 ${character.name} 移除了特性: ${trait.name}`);
-
-        return true;
-    },
 
     /**
      * 添加经验值

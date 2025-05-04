@@ -989,6 +989,10 @@ const MainUI = {
                             <span class="stat-value">${Dungeon.currentRun.currentMonsterIndex}/${Dungeon.currentRun.monsters.length}</span>
                         </div>
                         <div class="stat-item">
+                            <span class="stat-label">已击败怪物:</span>
+                            <span class="stat-value">${Dungeon.currentRun.defeatedMonsters || 0}</span>
+                        </div>
+                        <div class="stat-item">
                             <span class="stat-label">小BOSS:</span>
                             <span class="stat-value">${Dungeon.currentRun.defeatedMiniBosses}/${Dungeon.currentRun.miniBosses.length}</span>
                         </div>

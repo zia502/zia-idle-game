@@ -9,6 +9,7 @@ const MainCurrentDungeon = {
         // 检查是否有上一次地下城记录
         const lastRecord = DungeonRunner.getLastDungeonRecord();
         if (lastRecord) {
+            console.log('显示上一次地下城记录:', lastRecord);
             this.showLastDungeonRecord(lastRecord);
             return;
         }
@@ -38,6 +39,8 @@ const MainCurrentDungeon = {
                     <p>层数：第 ${record.floor} 层</p>
                     <p>战败怪物：${record.monsterName} (${record.monsterType})</p>
                     <p>战败原因：${record.defeatReason}</p>
+                    <p>已击败怪物：${record.defeatedMonsters || 0}/${record.totalMonsters || 0}</p>
+                    <p>已击败小BOSS：${record.defeatedMiniBosses || 0}/${record.totalMiniBosses || 0}</p>
                 </div>
                 <div class="team-stats">
                     <h4>队伍统计</h4>
@@ -111,6 +114,7 @@ const MainCurrentDungeon = {
                 </div>
                 <div class="dungeon-stats">
                     <p>普通怪物：${Dungeon.currentRun.currentMonsterIndex}/${Dungeon.currentRun.monsters.length}</p>
+                    <p>已击败怪物：${Dungeon.currentRun.defeatedMonsters || 0}</p>
                     <p>小BOSS：${Dungeon.currentRun.defeatedMiniBosses}/${Dungeon.currentRun.miniBosses.length}</p>
                     <p>大BOSS：${Dungeon.currentRun.finalBossAppeared ? '已出现' : '未出现'}</p>
                 </div>
@@ -141,4 +145,4 @@ const MainCurrentDungeon = {
         DungeonRunner.clearLastDungeonRecord();
         this.update();
     }
-}; 
+};

@@ -896,11 +896,13 @@ const Dungeon = {
         // 初始化运行数据
         this.currentRun = {
             dungeonId: dungeonId,
+            dungeonName: dungeon.name, // 添加地下城名称
             progress: 0,
             monsters: monsters,
             miniBosses: miniBosses,
             finalBoss: finalBoss,
             defeatedMiniBosses: 0,
+            defeatedMonsters: 0, // 添加已击败的普通怪物计数
             currentMonsterIndex: 0,
             rewards: [],
             isCompleted: false,
@@ -1134,6 +1136,7 @@ const Dungeon = {
             }
 
             // 处理奖励
+            console.log(monster);
             this.processRewards(monster);
 
             // 保存地下城进度

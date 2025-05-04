@@ -28,6 +28,11 @@ const DungeonRunner = {
     lastDungeonRecord: null,
 
     /**
+     * 当前地下城信息
+     */
+    currentDungeonInfo: null,
+
+    /**
      * 初始化地下城运行器
      */
     init() {
@@ -409,6 +414,38 @@ const DungeonRunner = {
                 return;
             }
 
+            // 保存当前地下城信息
+            // 获取地下城名称
+            let dungeonName = '未知地下城';
+            if (Dungeon.currentRun.dungeonId) {
+                // 尝试从getDungeon获取
+                if (typeof Dungeon.getDungeon === 'function') {
+                    const dungeon = Dungeon.getDungeon(Dungeon.currentRun.dungeonId);
+                    if (dungeon && dungeon.name) {
+                        dungeonName = dungeon.name;
+                    }
+                }
+
+                // 如果getDungeon失败，尝试从templates获取
+                if (dungeonName === '未知地下城' && Dungeon.templates && Dungeon.templates[Dungeon.currentRun.dungeonId]) {
+                    const template = Dungeon.templates[Dungeon.currentRun.dungeonId];
+                    if (template && template.name) {
+                        dungeonName = template.name;
+                    }
+                }
+            }
+
+            this.currentDungeonInfo = {
+                dungeonName: dungeonName,
+                currentFloor: Dungeon.currentRun.currentFloor || 0,
+                dungeonId: Dungeon.currentRun.dungeonId
+            };
+
+            // 确保Dungeon.currentRun也有dungeonName属性
+            Dungeon.currentRun.dungeonName = dungeonName;
+
+            console.log('保存当前地下城信息:', this.currentDungeonInfo);
+
             // 获取当前活动队伍
             let team;
             if (typeof Game.getActiveTeam === 'function') {
@@ -494,10 +531,22 @@ const DungeonRunner = {
      * @param {boolean} isFinalBoss - 是否为最终boss
      */
     processBattleResult(result, isBoss = false, isFinalBoss = false) {
-        if (!this.isRunning || !Dungeon.currentRun) {
-            console.warn('地下城运行器未运行或当前运行数据不存在');
-            return;
-        }
+        console.log('开始处理战斗结果:', { result, isBoss, isFinalBoss });
+        console.log('当前DungeonRunner状态:', { isRunning: this.isRunning, currentRun: this.currentRun });
+
+        // 详细记录战斗结果对象
+        console.log('战斗结果对象详细结构:', {
+            success: result.success,
+            victory: result.victory,
+            defeated: result.defeated,
+            failed: result.failed,
+            monster: result.monster,
+            teamMembers: result.teamMembers,
+            battleLog: result.battleLog,
+            turnCount: result.turnCount,
+            totalDamage: result.totalDamage,
+            totalHealing: result.totalHealing
+        });
 
         try {
             // 检查结果对象是否有效
@@ -508,15 +557,57 @@ const DungeonRunner = {
                 return;
             }
 
-            // 确保result.monster存在
+            // 确保result.monster存在并有正确的名称
             if (!result.monster) {
-                result.monster = { name: '未知怪物' };
+                // 如果result.monster不存在，尝试从当前战斗中获取怪物信息
+                if (typeof Battle !== 'undefined' && Battle.currentMonster) {
+                    result.monster = Battle.currentMonster;
+                } else {
+                    // 如果无法获取当前战斗的怪物，使用默认值
+                    result.monster = { name: '未知怪物' };
+                }
+            }
+
+            // 如果monster.name不存在或为空，尝试设置一个有意义的名称
+            if (!result.monster.name || result.monster.name === '未知怪物') {
+                // 尝试从当前地下城运行中获取怪物名称
+                if (Dungeon.currentRun) {
+                    if (isFinalBoss && Dungeon.currentRun.finalBoss) {
+                        result.monster.name = Dungeon.currentRun.finalBoss.name || '大BOSS';
+                    } else if (isBoss) {
+                        // 尝试获取当前小boss名称
+                        const miniBossIndex = Dungeon.currentRun.defeatedMiniBosses;
+                        if (Dungeon.currentRun.miniBosses && Dungeon.currentRun.miniBosses[miniBossIndex]) {
+                            result.monster.name = Dungeon.currentRun.miniBosses[miniBossIndex].name || '小BOSS';
+                        } else {
+                            result.monster.name = '小BOSS';
+                        }
+                    } else {
+                        // 尝试获取当前普通怪物名称
+                        const monsterIndex = Dungeon.currentRun.currentMonsterIndex;
+                        if (Dungeon.currentRun.monsters && Dungeon.currentRun.monsters[monsterIndex]) {
+                            result.monster.name = Dungeon.currentRun.monsters[monsterIndex].name || '普通怪物';
+                        } else {
+                            result.monster.name = '普通怪物';
+                        }
+                    }
+                }
             }
 
             // 检查战斗结果
-            const isVictory = result.success || result.victory;
+            const isVictory = result.success && result.victory;
+            const isDefeated = result.defeated || result.failed || !result.success || !result.victory;
 
-            if (isVictory) {
+            console.log('战斗结果判断:', {
+                isVictory,
+                isDefeated,
+                success: result.success,
+                victory: result.victory,
+                defeated: result.defeated,
+                failed: result.failed
+            });
+
+            if (isVictory && !isDefeated) {
                 // 战斗胜利
                 // 处理奖励
                 const rewardInfo = Dungeon.processRewards(result.monster);
@@ -600,8 +691,9 @@ const DungeonRunner = {
                     // 击败普通怪物
                     this.addBattleLog(`击败了 ${result.monster.name}！`, 'success');
 
-                    // 增加当前怪物索引
+                    // 增加当前怪物索引和已击败怪物计数
                     Dungeon.currentRun.currentMonsterIndex++;
+                    Dungeon.currentRun.defeatedMonsters = (Dungeon.currentRun.defeatedMonsters || 0) + 1;
 
                     // 更新地下城进度
                     const totalMonsters = Dungeon.currentRun.monsters.length || 1;
@@ -623,6 +715,7 @@ const DungeonRunner = {
                     }, this.logDisplaySpeed);
                 }
             } else {
+                console.log('战斗失败，开始处理失败逻辑');
                 // 战斗失败
                 this.addBattleLog(`队伍被 ${result.monster.name} 击败了...`, 'danger');
 
@@ -633,20 +726,36 @@ const DungeonRunner = {
                 this.updateDungeonProgress(0);
 
                 // 保存战斗记录
-                if (this.currentRun) {
-                    this.lastDungeonRecord = {
-                        dungeonName: this.currentRun.dungeonName,
-                        floor: this.currentRun.currentFloor,
-                        monsterName: result.monster.name,
-                        monsterType: result.monster.isBoss ? 'BOSS' : '普通怪物',
-                        defeatReason: this.getDefeatReason(result),
-                        teamStats: this.getTeamStats(result)
-                    };
-                }
+                const currentRunData = {
+                    dungeonName: this.currentDungeonInfo?.dungeonName || Dungeon.currentRun?.dungeonName || '未知地下城',
+                    floor: this.currentDungeonInfo?.currentFloor || 0,
+                    monsterName: result.monster.name || '未知怪物',
+                    monsterType: result.monster.isBoss ? 'BOSS' : '普通怪物',
+                    defeatReason: this.getDefeatReason(result),
+                    teamStats: this.getTeamStats(result),
+                    defeatedMonsters: Dungeon.currentRun?.defeatedMonsters || 0,
+                    totalMonsters: Dungeon.currentRun?.monsters?.length || 0,
+                    defeatedMiniBosses: Dungeon.currentRun?.defeatedMiniBosses || 0,
+                    totalMiniBosses: Dungeon.currentRun?.miniBosses?.length || 0
+                };
 
-                // 调用exitDungeon方法，正确清理地下城状态
-                console.log('战斗失败，自动退出地下城');
+                console.log('准备保存的战斗记录:', currentRunData);
+                console.log('当前Dungeon.currentRun状态:', Dungeon.currentRun);
+                console.log('当前lastDungeonRecord状态:', this.lastDungeonRecord);
+
+                // 先保存战斗记录
+                this.lastDungeonRecord = currentRunData;
+                console.log('战斗记录已保存，新的lastDungeonRecord:', this.lastDungeonRecord);
+
+                // 然后清理地下城状态
+                console.log('开始清理地下城状态');
                 this.exitDungeon();
+
+                // 更新UI显示
+                if (typeof MainUI !== 'undefined') {
+                    console.log('更新UI显示');
+                    MainUI.updateCurrentDungeon();
+                }
             }
         } catch (error) {
             console.error('处理战斗结果时出错:', error);
@@ -791,6 +900,12 @@ const DungeonRunner = {
      * 退出地下城
      */
     exitDungeon() {
+        console.log('开始退出地下城，当前状态:', {
+            currentRun: this.currentRun,
+            isRunning: this.isRunning,
+            lastDungeonRecord: this.lastDungeonRecord
+        });
+
         // 保存战斗记录
         if (this.currentRun) {
             // 恢复队伍成员的地下城原始属性
@@ -835,6 +950,12 @@ const DungeonRunner = {
             }
         }
 
+        console.log('地下城状态已清理，当前状态:', {
+            currentRun: this.currentRun,
+            isRunning: this.isRunning,
+            lastDungeonRecord: this.lastDungeonRecord
+        });
+
         // 更新UI显示
         if (typeof MainUI !== 'undefined') {
             MainUI.updateCurrentDungeon();
@@ -852,14 +973,18 @@ const DungeonRunner = {
      * @returns {string} 战败原因
      */
     getDefeatReason(battle) {
+        if (!battle || !battle.teamMembers) {
+            return '队伍全灭';
+        }
+
         const aliveMembers = battle.teamMembers.filter(member => member.currentStats.hp > 0);
         if (aliveMembers.length === 0) {
             return '队伍全灭';
         }
-        
+
         const totalDamage = battle.teamMembers.reduce((sum, member) => sum + (member.stats?.totalDamage || 0), 0);
-        const monsterHp = battle.monster.currentStats.maxHp;
-        
+        const monsterHp = battle.monster?.currentStats?.maxHp || 0;
+
         if (totalDamage < monsterHp * 0.1) {
             return '输出不足';
         } else if (totalDamage < monsterHp * 0.3) {
@@ -877,14 +1002,18 @@ const DungeonRunner = {
      * @returns {array} 队伍成员统计信息
      */
     getTeamStats(battle) {
+        if (!battle || !battle.teamMembers) {
+            return [];
+        }
+
         return battle.teamMembers.map(member => ({
-            name: member.name,
+            name: member.name || '未知角色',
             totalDamage: member.stats?.totalDamage || 0,
             totalHealing: member.stats?.totalHealing || 0,
             daCount: member.stats?.daCount || 0,
             taCount: member.stats?.taCount || 0,
             critCount: member.stats?.critCount || 0,
-            isAlive: member.currentStats.hp > 0
+            isAlive: member.currentStats?.hp > 0
         }));
     },
 

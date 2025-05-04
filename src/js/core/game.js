@@ -61,7 +61,6 @@ const Game = {
         console.log("初始化游戏核心...");
         this.loadGame();
         this.setupEventListeners();
-        this.checkUnlocks();
 
         // 检查活动队伍是否存在
         this.checkActiveTeam();
@@ -262,7 +261,6 @@ const Game = {
         // 角色升级事件
         Events.on('character:levelup', (data) => {
             console.log(`角色 ${data.name} 升级到 ${data.level} 级.`);
-            this.checkUnlocks();
         });
 
         // 监听角色创建成功事件
@@ -410,36 +408,6 @@ const Game = {
         }
         console.log("游戏已停止");
     },
-
-    /**
-     * 检查游戏解锁条件
-     */
-    checkUnlocks() {
-        // 检查商店解锁
-        if (!this.state.unlocks.features.shop && this.state.playerLevel >= 2) {
-            this.state.unlocks.features.shop = true;
-            this.triggerUnlock('shop');
-        }
-
-        // 检查制作系统解锁
-        if (!this.state.unlocks.features.crafting && this.state.playerLevel >= 5) {
-            this.state.unlocks.features.crafting = true;
-            this.triggerUnlock('crafting');
-        }
-
-        // 检查地下城解锁
-        if (!this.state.unlocks.features.dungeon && this.state.playerLevel >= 3) {
-            this.state.unlocks.features.dungeon = true;
-            this.triggerUnlock('dungeon');
-        }
-
-        // 检查竞技场解锁
-        if (!this.state.unlocks.features.arena && this.state.playerLevel >= 10) {
-            this.state.unlocks.features.arena = true;
-            this.triggerUnlock('arena');
-        }
-    },
-
 
 
     /**

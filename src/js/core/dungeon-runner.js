@@ -906,6 +906,11 @@ const DungeonRunner = {
             lastDungeonRecord: this.lastDungeonRecord
         });
 
+        // 刷新主角信息
+        if (typeof UI !== 'undefined' && typeof UI.renderMainCharacter === 'function') {
+             UI.renderMainCharacter();
+        }
+
         // 保存战斗记录
         if (this.currentRun) {
             // 恢复队伍成员的地下城原始属性

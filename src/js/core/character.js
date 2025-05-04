@@ -387,7 +387,7 @@ const Character = {
                             const maxValue = job.maxStats[stat];
                             const newValue = Math.floor(baseValue + (maxValue - baseValue) * levelRatio);
 
-                            console.log("更新角色属性");
+                            console.log("更新角色属性1");
                             console.log(newValue);
                             // 更新角色属性
                             character.baseStats[stat] = newValue;
@@ -1084,36 +1084,6 @@ const Character = {
         };
     },
 
-    /**
-     * 升级主角职业
-     * @param {string} characterId - 主角ID
-     * @returns {boolean} 是否升级成功
-     */
-    upgradeJobLevel(characterId) {
-        const character = this.getCharacter(characterId);
-        if (!character || !character.isMainCharacter || !character.job) return false;
-
-        const currentJob = character.job.current;
-        const jobData = this.jobs[currentJob];
-
-        if (!jobData) return false;
-
-        // 检查是否达到该职业等级上限
-        if (character.job.level >= 20) {
-            UI.showMessage(`${character.name} 的 ${jobData.name} 职业已达到最高等级。`);
-            return false;
-        }
-
-        // 执行职业升级
-        character.job.level++;
-
-        // 如果达到20级，提示可以转职
-        if (character.job.level === 20 && jobData.nextTierJobs && jobData.nextTierJobs.length > 0) {
-            UI.showMessage(`${character.name} 的 ${jobData.name} 职业已达到最高等级，可以选择进阶为更高级的职业。`);
-        }
-
-        return true;
-    },
 
     /**
      * 主角转职

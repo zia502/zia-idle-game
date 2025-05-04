@@ -273,10 +273,6 @@ class MainCharacterInfo {
 
                 <div class="info-stats">
                     <div class="stat-row">
-                        <span class="stat-label">等级</span>
-                        <span class="stat-value">${character.level}</span>
-                    </div>
-                    <div class="stat-row">
                         <span class="stat-label">攻击力</span>
                         <span class="stat-value">${totalAttack}</span>
                     </div>

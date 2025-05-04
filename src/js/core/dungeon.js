@@ -1137,7 +1137,11 @@ const Dungeon = {
 
             // 处理奖励
             console.log("处理奖励"+monster);
-            this.processRewards(monster);
+            try{
+                this.processRewards(monster);
+            }catch{
+                console.log("处理奖励失败");
+            }
 
             // 保存地下城进度
             this.saveDungeonProgress();

@@ -619,6 +619,7 @@ const JobSystem = {
      * @returns {boolean} 是否成功添加经验
      */
     addJobExp(character, expAmount) {
+        console.log("addJobExp");
         if (!character || !character.job) return false;
 
         // 初始化职业经验值
@@ -639,10 +640,11 @@ const JobSystem = {
 
         // 添加经验值
         character.job.exp += expAmount;
-        console.log(`${character.name} 获得职业经验: ${expAmount}, 当前职业经验: ${character.job.exp}`);
+        console.log(`${character.name} 获得职业经验: ${expAmount}, 当前职业经验  : ${character.job.exp}`);
 
         // 计算下一级所需经验
         const nextLevelExp = this.calculateJobLevelExp(character.job.level, job.tier);
+        console.log("下一级所需经验",nextLevelExp);
 
         // 检查是否可以升级
         if (character.job.exp >= nextLevelExp) {
@@ -650,6 +652,7 @@ const JobSystem = {
             character.job.exp -= nextLevelExp;
 
             // 升级职业
+            console.log("升级职业");
             this.upgradeJobLevel(character);
 
             // 递归检查是否可以继续升级

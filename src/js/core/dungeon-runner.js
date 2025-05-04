@@ -621,6 +621,12 @@ const DungeonRunner = {
 
                         this.updateDungeonProgress(progress);
 
+                        // 保存地下城进度
+                        if (typeof Dungeon.saveDungeonProgress === 'function') {
+                            Dungeon.saveDungeonProgress();
+                            console.log('已保存地下城进度（击败小BOSS后）');
+                        }
+
                         // 延迟一段时间后处理下一个怪物或boss
                         setTimeout(() => {
                             if (Dungeon.currentRun.defeatedMiniBosses < Dungeon.currentRun.miniBosses.length) {
@@ -646,6 +652,12 @@ const DungeonRunner = {
                                      (50 / Math.max(1, totalMonsters + totalMiniBosses + 1)); // 普通怪物占50%进度
 
                     this.updateDungeonProgress(progress);
+
+                    // 保存地下城进度
+                    if (typeof Dungeon.saveDungeonProgress === 'function') {
+                        Dungeon.saveDungeonProgress();
+                        console.log('已保存地下城进度（击败普通怪物后）');
+                    }
 
                     // 延迟一段时间后处理下一个怪物
                     setTimeout(() => {
@@ -799,14 +811,21 @@ const DungeonRunner = {
     /**
      * 更新地下城进度
      * @param {number} progress - 进度百分比 (0-100)
+     * @param {boolean} saveProgress - 是否保存地下城进度
      */
-    updateDungeonProgress(progress) {
+    updateDungeonProgress(progress, saveProgress = false) {
         if (!Dungeon.currentRun) {
             return;
         }
 
         // 更新进度
         Dungeon.currentRun.progress = Math.min(100, Math.max(0, progress));
+
+        // 如果需要，保存地下城进度
+        if (saveProgress && typeof Dungeon.saveDungeonProgress === 'function') {
+            Dungeon.saveDungeonProgress();
+            console.log('已保存地下城进度（更新进度时）');
+        }
 
         // 发出事件
         if (typeof Events !== 'undefined') {

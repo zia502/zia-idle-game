@@ -1,10 +1,40 @@
 const MainCurrentDungeon = {
     /**
+     * 初始化
+     */
+    init() {
+        console.log('初始化MainCurrentDungeon组件');
+
+        // 注册事件监听
+        if (typeof Events !== 'undefined') {
+            // 监听地下城更新事件
+            Events.on('dungeon:updated', () => {
+                console.log('MainCurrentDungeon收到地下城更新事件');
+                this.update();
+            });
+
+            // 监听战斗结束事件
+            Events.on('battle:end', (data) => {
+                console.log('MainCurrentDungeon收到战斗结束事件:', data.victory ? '胜利' : '失败');
+                // 如果在地下城中，且战斗失败，更新显示
+                if (typeof Dungeon !== 'undefined' && Dungeon.currentRun && !data.victory) {
+                    setTimeout(() => this.update(), 500); // 延迟更新，确保DungeonRunner处理完战斗结果
+                }
+            });
+        }
+
+        // 初始更新
+        this.update();
+    },
+    /**
      * 更新当前地下城显示
      */
     update() {
-        const container = document.getElementById('current-dungeon-container');
-        if (!container) return;
+        const container = document.getElementById('main-current-dungeon');
+        if (!container) {
+            console.error('找不到main-current-dungeon容器');
+            return;
+        }
 
         // 检查是否有上一次地下城记录
         const lastRecord = DungeonRunner.getLastDungeonRecord();
@@ -27,8 +57,11 @@ const MainCurrentDungeon = {
      * @param {object} record - 地下城记录
      */
     showLastDungeonRecord(record) {
-        const container = document.getElementById('current-dungeon-container');
-        if (!container) return;
+        const container = document.getElementById('main-current-dungeon');
+        if (!container) {
+            console.error('找不到main-current-dungeon容器');
+            return;
+        }
 
         // 创建记录显示HTML
         let html = `
@@ -88,8 +121,11 @@ const MainCurrentDungeon = {
      * 显示当前地下城信息
      */
     showCurrentDungeon() {
-        const container = document.getElementById('current-dungeon-container');
-        if (!container) return;
+        const container = document.getElementById('main-current-dungeon');
+        if (!container) {
+            console.error('找不到main-current-dungeon容器');
+            return;
+        }
 
         if (!Dungeon.currentRun) {
             this.showNoDungeon();
@@ -141,8 +177,11 @@ const MainCurrentDungeon = {
      * 显示未进入地下城状态
      */
     showNoDungeon() {
-        const container = document.getElementById('current-dungeon-container');
-        if (!container) return;
+        const container = document.getElementById('main-current-dungeon');
+        if (!container) {
+            console.error('找不到main-current-dungeon容器');
+            return;
+        }
 
         container.innerHTML = `
             <div class="no-dungeon">

@@ -743,8 +743,14 @@ const DungeonRunner = {
 
                 // 更新UI显示
                 if (typeof MainUI !== 'undefined') {
-                    // console.log('更新UI显示');
+                    console.log('战斗失败后更新UI显示');
                     MainUI.updateCurrentDungeon();
+                }
+
+                // 如果MainCurrentDungeon组件存在，直接调用它的update方法
+                if (typeof MainCurrentDungeon !== 'undefined' && typeof MainCurrentDungeon.update === 'function') {
+                    console.log('使用MainCurrentDungeon组件更新地下城显示');
+                    setTimeout(() => MainCurrentDungeon.update(), 100); // 短暂延迟确保lastDungeonRecord已设置
                 }
             }
         } catch (error) {
@@ -812,7 +818,14 @@ const DungeonRunner = {
 
             // 更新地下城信息显示
             if (typeof MainUI !== 'undefined') {
+                console.log('地下城完成后更新UI显示');
                 MainUI.updateCurrentDungeon();
+            }
+
+            // 如果MainCurrentDungeon组件存在，直接调用它的update方法
+            if (typeof MainCurrentDungeon !== 'undefined' && typeof MainCurrentDungeon.update === 'function') {
+                console.log('使用MainCurrentDungeon组件更新地下城显示');
+                MainCurrentDungeon.update();
             }
         } catch (error) {
             console.error('完成地下城时出错:', error);
@@ -821,7 +834,14 @@ const DungeonRunner = {
 
             // 更新地下城信息显示
             if (typeof MainUI !== 'undefined') {
+                console.log('地下城完成出错后更新UI显示');
                 MainUI.updateCurrentDungeon();
+            }
+
+            // 如果MainCurrentDungeon组件存在，直接调用它的update方法
+            if (typeof MainCurrentDungeon !== 'undefined' && typeof MainCurrentDungeon.update === 'function') {
+                console.log('使用MainCurrentDungeon组件更新地下城显示');
+                MainCurrentDungeon.update();
             }
         }
     },
@@ -966,7 +986,14 @@ const DungeonRunner = {
 
         // 更新UI显示
         if (typeof MainUI !== 'undefined') {
+            console.log('退出地下城后更新UI显示');
             MainUI.updateCurrentDungeon();
+        }
+
+        // 如果MainCurrentDungeon组件存在，直接调用它的update方法
+        if (typeof MainCurrentDungeon !== 'undefined' && typeof MainCurrentDungeon.update === 'function') {
+            console.log('使用MainCurrentDungeon组件更新地下城显示');
+            MainCurrentDungeon.update();
         }
 
         // 更新地下城列表显示

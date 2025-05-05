@@ -32,7 +32,14 @@ const MainUI = {
             }
 
             try {
-                this.updateCurrentDungeon();
+                // 如果MainCurrentDungeon组件存在，初始化它
+                if (typeof MainCurrentDungeon !== 'undefined' && typeof MainCurrentDungeon.init === 'function') {
+                    console.log('初始化MainCurrentDungeon组件');
+                    MainCurrentDungeon.init();
+                } else {
+                    // 否则使用内置方法更新
+                    this.updateCurrentDungeon();
+                }
             } catch (error) {
                 console.error('初始化地下城信息时出错:', error);
             }
@@ -898,6 +905,13 @@ const MainUI = {
         try {
             const dungeonContainer = document.getElementById('main-current-dungeon');
             if (!dungeonContainer) return;
+
+            // 如果MainCurrentDungeon组件存在，优先使用它来更新显示
+            if (typeof MainCurrentDungeon !== 'undefined' && typeof MainCurrentDungeon.update === 'function') {
+                console.log('使用MainCurrentDungeon组件更新地下城显示');
+                MainCurrentDungeon.update();
+                return;
+            }
 
             // 检查Dungeon模块是否存在
             if (typeof Dungeon === 'undefined') {

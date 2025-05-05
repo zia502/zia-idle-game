@@ -286,7 +286,7 @@ const DungeonRunner = {
             }
 
             // 添加遇到怪物的日志
-            this.addBattleLog(`遇到了 ${monster.name}`, 'warning');
+            this.addBattleLog(`地下城回合${Battle.dungeonTurn+1}-遇到了 ${monster.name}`, 'warning');
 
             // 延迟一段时间后开始战斗
             setTimeout(() => {
@@ -503,7 +503,6 @@ const DungeonRunner = {
             };
 
             // 开始战斗
-            this.addBattleLog(`开始与 ${monster.name} 战斗...`, isBoss ? 'danger' : 'warning');
             const result = Battle.startBattle(team, monster);
 
             // 恢复原始的logBattle方法
@@ -616,9 +615,6 @@ const DungeonRunner = {
                 // 处理奖励
                 const rewardInfo = Dungeon.processRewards(result.monster);
 
-                // 显示奖励信息
-                this.addBattleLog(`获得经验值: ${rewardInfo.exp}`, 'success');
-
                 // 显示物品奖励
                 if (rewardInfo.items && rewardInfo.items.length > 0) {
                     const itemCounts = {};
@@ -631,6 +627,7 @@ const DungeonRunner = {
                         itemCounts[item.id] += item.count || 1;
                     });
 
+                    let msg = "";
                     // 显示物品奖励
                     for (const [itemId, count] of Object.entries(itemCounts)) {
                         let itemName = itemId;
@@ -646,8 +643,10 @@ const DungeonRunner = {
                             itemName = '彩虹宝箱';
                         }
 
-                        this.addBattleLog(`获得 ${itemName} x${count}`, 'success');
+                        msg += `,${itemName} x${count}`;
                     }
+                                    // 显示奖励信息
+                    this.addBattleLog(`获得经验值: ${rewardInfo.exp} ${msg}`, 'success');
                 }
 
                 if (isBoss) {
@@ -660,8 +659,6 @@ const DungeonRunner = {
                             this.completeDungeon();
                         }, this.logDisplaySpeed);
                     } else {
-                        // 击败小boss
-                        this.addBattleLog(`击败了小BOSS ${result.monster.name}！`, 'success');
 
                         // 增加已击败的小boss数量
                         Dungeon.currentRun.defeatedMiniBosses++;
@@ -687,8 +684,6 @@ const DungeonRunner = {
                         }, this.logDisplaySpeed);
                     }
                 } else {
-                    // 击败普通怪物
-                    this.addBattleLog(`击败了 ${result.monster.name}！`, 'success');
 
                     // 增加当前怪物索引和已击败怪物计数
                     Dungeon.currentRun.currentMonsterIndex++;

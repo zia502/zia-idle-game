@@ -102,21 +102,34 @@ const MainCurrentDungeon = {
             return;
         }
 
+        // 使用Dungeon.currentRun.progress作为进度百分比
+        let progressPercent = Dungeon.currentRun.progress || 0;
+
+        // 计算总怪物数量和已击败的怪物数量，仅用于显示
+        const totalMonsters = Dungeon.currentRun.monsters.length +
+                             Dungeon.currentRun.miniBosses.length +
+                             (Dungeon.currentRun.finalBoss ? 1 : 0);
+
+        const defeatedMonsters = Dungeon.currentRun.currentMonsterIndex +
+                                Dungeon.currentRun.defeatedMiniBosses +
+                                (Dungeon.currentRun.isCompleted ? 1 : 0);
+
         // 显示当前地下城进度信息
         const html = `
             <div class="current-dungeon-info">
                 <h3>${dungeon.name}</h3>
                 <div class="dungeon-progress">
                     <div class="progress-bar">
-                        <div class="progress-fill" style="width: ${Dungeon.currentRun.progress || 0}%"></div>
+                        <div class="progress-fill" style="width: ${progressPercent}%"></div>
                     </div>
-                    <div class="progress-text">${Dungeon.currentRun.progress || 0}%</div>
+                    <div class="progress-text">${progressPercent}%</div>
                 </div>
                 <div class="dungeon-stats">
                     <p>普通怪物：${Dungeon.currentRun.currentMonsterIndex}/${Dungeon.currentRun.monsters.length}</p>
                     <p>已击败怪物：${Dungeon.currentRun.defeatedMonsters || 0}</p>
                     <p>小BOSS：${Dungeon.currentRun.defeatedMiniBosses}/${Dungeon.currentRun.miniBosses.length}</p>
                     <p>大BOSS：${Dungeon.currentRun.finalBossAppeared ? '已出现' : '未出现'}</p>
+                    <p>总进度：${defeatedMonsters}/${totalMonsters}</p>
                 </div>
             </div>
         `;

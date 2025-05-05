@@ -941,24 +941,17 @@ const MainUI = {
                 return;
             }
 
-            // 获取进度
-            let progressPercent = 0;
-            if (Dungeon.currentRun.progress !== undefined) {
-                // 使用DungeonRunner设置的进度
-                progressPercent = Math.min(100, Math.max(0, Dungeon.currentRun.progress));
-            } else {
-                // 简单计算进度：已击败的怪物数量 / 总怪物数量
-                const totalMonsters = Dungeon.currentRun.monsters.length +
-                                     Dungeon.currentRun.miniBosses.length +
-                                     (Dungeon.currentRun.finalBoss ? 1 : 0);
+            // 直接使用Dungeon.currentRun.progress作为进度百分比
+            let progressPercent = Dungeon.currentRun.progress || 0;
 
-                const defeatedMonsters = Dungeon.currentRun.currentMonsterIndex +
-                                        Dungeon.currentRun.defeatedMiniBosses +
-                                        (Dungeon.currentRun.isCompleted ? 1 : 0);
+            // 计算总怪物数量和已击败的怪物数量，仅用于显示
+            const totalMonsters = Dungeon.currentRun.monsters.length +
+                                 Dungeon.currentRun.miniBosses.length +
+                                 (Dungeon.currentRun.finalBoss ? 1 : 0);
 
-                progressPercent = totalMonsters > 0 ?
-                                 Math.min(100, Math.round((defeatedMonsters / totalMonsters) * 100)) : 0;
-            }
+            const defeatedMonsters = Dungeon.currentRun.currentMonsterIndex +
+                                    Dungeon.currentRun.defeatedMiniBosses +
+                                    (Dungeon.currentRun.isCompleted ? 1 : 0);
 
             // 计算当前阶段
             let stageText = '';
@@ -1008,6 +1001,10 @@ const MainUI = {
                         <div class="stat-item">
                             <span class="stat-label">大BOSS:</span>
                             <span class="stat-value">${Dungeon.currentRun.finalBossAppeared ? (Dungeon.currentRun.isCompleted ? '已击败' : '战斗中') : '未出现'}</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">总进度:</span>
+                            <span class="stat-value">${defeatedMonsters}/${totalMonsters}</span>
                         </div>
                     </div>
                     <div class="dungeon-controls">

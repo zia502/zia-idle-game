@@ -224,7 +224,7 @@ const DungeonRunner = {
         this.addBattleLog(`开始挑战地下城: ${dungeonName}`, 'info');
 
         // 更新地下城进度
-        this.updateDungeonProgress(0);
+        this.updateDungeonProgress();
 
         // 开始处理第一个怪物
         setTimeout(() => {
@@ -663,12 +663,7 @@ const DungeonRunner = {
                         Dungeon.currentRun.defeatedMiniBosses++;
 
                         // 更新地下城进度
-                        const totalMonsters = Dungeon.currentRun.monsters.length || 0;
-                        const totalMiniBosses = Dungeon.currentRun.miniBosses.length || 0;
-                        const progress = ((Dungeon.currentRun.currentMonsterIndex + Dungeon.currentRun.defeatedMiniBosses) /
-                                         Math.max(1, totalMonsters + totalMiniBosses)) * 80; // 小boss占80%进度
-
-                        this.updateDungeonProgress(progress);
+                        this.updateDungeonProgress(true);
 
                         // 保存地下城进度
                         if (typeof Dungeon.saveDungeonProgress === 'function') {
@@ -696,12 +691,7 @@ const DungeonRunner = {
                     Dungeon.currentRun.defeatedMonsters = (Dungeon.currentRun.defeatedMonsters || 0) + 1;
 
                     // 更新地下城进度
-                    const totalMonsters = Dungeon.currentRun.monsters.length || 1;
-                    const totalMiniBosses = Dungeon.currentRun.miniBosses.length || 0;
-                    const progress = (Dungeon.currentRun.currentMonsterIndex / totalMonsters) *
-                                     (50 / Math.max(1, totalMonsters + totalMiniBosses + 1)); // 普通怪物占50%进度
-
-                    this.updateDungeonProgress(progress);
+                    this.updateDungeonProgress(true);
 
                     // 保存地下城进度
                     if (typeof Dungeon.saveDungeonProgress === 'function') {
@@ -723,7 +713,7 @@ const DungeonRunner = {
                 this.addBattleLog('地下城挑战失败！', 'danger');
 
                 // 更新地下城进度
-                this.updateDungeonProgress(0);
+                this.updateDungeonProgress();
 
                 // 保存战斗记录
                 const currentRunData = {
@@ -806,7 +796,7 @@ const DungeonRunner = {
             // 不再显示奖励信息，因为奖励已经在每次战斗胜利后立即给予
 
             // 更新地下城进度
-            this.updateDungeonProgress(100);
+            this.updateDungeonProgress(true);
 
             // 完成地下城
             if (typeof Dungeon.completeDungeon === 'function' && Dungeon.currentRun.dungeonId) {
@@ -868,16 +858,29 @@ const DungeonRunner = {
 
     /**
      * 更新地下城进度
-     * @param {number} progress - 进度百分比 (0-100)
      * @param {boolean} saveProgress - 是否保存地下城进度
      */
-    updateDungeonProgress(progress, saveProgress = false) {
+    updateDungeonProgress(saveProgress = false) {
         if (!Dungeon.currentRun) {
             return;
         }
 
+        // 计算总怪物数量（普通怪物 + 小BOSS + 大BOSS）
+        const totalMonsters = Dungeon.currentRun.monsters.length +
+                             Dungeon.currentRun.miniBosses.length +
+                             (Dungeon.currentRun.finalBoss ? 1 : 0);
+
+        // 计算已击败的怪物数量
+        const defeatedMonsters = Dungeon.currentRun.currentMonsterIndex +
+                                Dungeon.currentRun.defeatedMiniBosses +
+                                (Dungeon.currentRun.isCompleted ? 1 : 0);
+
+        // 计算进度百分比 - 确保是整数
+        const progress = totalMonsters > 0 ?
+                        Math.floor((defeatedMonsters / totalMonsters) * 100) : 0;
+
         // 更新进度
-        Dungeon.currentRun.progress = Math.min(100, Math.max(0, progress));
+        Dungeon.currentRun.progress = progress;
 
         // 如果需要，保存地下城进度
         if (saveProgress && typeof Dungeon.saveDungeonProgress === 'function') {

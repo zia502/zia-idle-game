@@ -39,7 +39,17 @@ const MainCurrentDungeon = {
         // 检查是否有上一次地下城记录
         const lastRecord = DungeonRunner.getLastDungeonRecord();
         if (lastRecord) {
-            console.log('显示上一次地下城记录:', lastRecord);
+            console.log('显示上一次地下城记录:', JSON.stringify(lastRecord, null, 2));
+
+            // 检查记录中的关键数据
+            console.log('地下城名称:', lastRecord.dungeonName);
+            console.log('怪物名称:', lastRecord.monsterName);
+            console.log('怪物类型:', lastRecord.monsterType);
+            console.log('战败原因:', lastRecord.defeatReason);
+            console.log('已击败怪物:', lastRecord.defeatedMonsters, '/', lastRecord.totalMonsters);
+            console.log('已击败小BOSS:', lastRecord.defeatedMiniBosses, '/', lastRecord.totalMiniBosses);
+            console.log('队伍统计:', lastRecord.teamStats);
+
             this.showLastDungeonRecord(lastRecord);
             return;
         }
@@ -69,7 +79,7 @@ const MainCurrentDungeon = {
                 <h3>上一次地下城记录</h3>
                 <div class="record-info">
                     <p>地下城：${record.dungeonName}</p>
-                    <p>层数：第 ${record.floor} 层</p>
+                    ${record.floor ? `<p>层数：第 ${record.floor} 层</p>` : ''}
                     <p>战败怪物：${record.monsterName} (${record.monsterType})</p>
                     <p>战败原因：${record.defeatReason}</p>
                     <p>已击败怪物：${record.defeatedMonsters || 0}/${record.totalMonsters || 0}</p>
@@ -93,19 +103,27 @@ const MainCurrentDungeon = {
         `;
 
         // 添加每个队员的统计信息
-        record.teamStats.forEach(member => {
+        if (record.teamStats && record.teamStats.length > 0) {
+            record.teamStats.forEach(member => {
+                html += `
+                    <tr>
+                        <td>${member.name}</td>
+                        <td>${member.totalDamage}</td>
+                        <td>${member.totalHealing}</td>
+                        <td>${member.daCount}</td>
+                        <td>${member.taCount}</td>
+                        <td>${member.critCount}</td>
+                        <td>${member.isAlive ? '存活' : '阵亡'}</td>
+                    </tr>
+                `;
+            });
+        } else {
             html += `
                 <tr>
-                    <td>${member.name}</td>
-                    <td>${member.totalDamage}</td>
-                    <td>${member.totalHealing}</td>
-                    <td>${member.daCount}</td>
-                    <td>${member.taCount}</td>
-                    <td>${member.critCount}</td>
-                    <td>${member.isAlive ? '存活' : '阵亡'}</td>
+                    <td colspan="7" style="text-align: center;">无队伍统计数据</td>
                 </tr>
             `;
-        });
+        }
 
         html += `
                         </tbody>

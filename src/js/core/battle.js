@@ -6,6 +6,7 @@ const Battle = {
     isFirstTurn: true,
     currentTurn: 0,
     battleLog: [],
+    currentBattle: null, // 保存当前战斗信息
 
     /**
      * 初始化战斗系统
@@ -79,11 +80,17 @@ const Battle = {
                         critCount: 0
                     };
                 } else {
+                    // 保存之前的统计数据用于调试
+                    const oldStats = JSON.stringify(character.stats);
+
+                    // 重置统计数据
                     character.stats.totalDamage = 0;
                     character.stats.totalHealing = 0;
                     character.stats.daCount = 0;
                     character.stats.taCount = 0;
                     character.stats.critCount = 0;
+
+                    console.log(`重置角色 ${character.name} 的战斗统计，从 ${oldStats} 变为 ${JSON.stringify(character.stats)}`);
                 }
 
                 // 重置战斗状态
@@ -306,18 +313,25 @@ const Battle = {
             });
         }
 
-        // 返回战斗结果
-        return {
+        // 创建战斗结果对象
+        const result = {
             success: true,
             victory: battleResult.victory,
             message: this.battleLog.join('\n'),
             turns: this.currentTurn,
             mvp: mvp,
             monster: monsterCharacter,
+            teamMembers: teamMembers, // 添加队伍成员信息
             gold: battleResult.gold || 0,
             exp: battleResult.exp || 0,
             battleStats: battleResult.battleStats || {}
         };
+
+        // 保存当前战斗信息
+        this.currentBattle = result;
+
+        // 返回战斗结果
+        return result;
     },
 
     /**
@@ -611,11 +625,35 @@ const Battle = {
                 }
             } else {
                 this.logBattle(`地下城战斗，保留BUFF状态`);
-                
+
                 // 在地下城战斗失败时，立即调用DungeonRunner.exitDungeon()
                 if (typeof DungeonRunner !== 'undefined' && typeof DungeonRunner.exitDungeon === 'function') {
                     console.log('地下城战斗失败，立即退出地下城');
                     DungeonRunner.exitDungeon();
+                }
+            }
+
+            // 确保战斗统计信息包含队伍成员的统计
+            for (const member of teamMembers) {
+                if (!member.stats) {
+                    member.stats = {
+                        totalDamage: 0,
+                        totalHealing: 0,
+                        daCount: 0,
+                        taCount: 0,
+                        critCount: 0
+                    };
+                }
+
+                // 确保战斗统计中包含这个队员的数据
+                if (battleStats && battleStats.characterStats && !battleStats.characterStats[member.id]) {
+                    battleStats.characterStats[member.id] = {
+                        totalDamage: member.stats.totalDamage || 0,
+                        totalHealing: member.stats.totalHealing || 0,
+                        daCount: member.stats.daCount || 0,
+                        taCount: member.stats.taCount || 0,
+                        critCount: member.stats.critCount || 0
+                    };
                 }
             }
 

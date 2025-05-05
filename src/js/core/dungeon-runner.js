@@ -715,6 +715,155 @@ const DungeonRunner = {
                 // 更新地下城进度
                 this.updateDungeonProgress();
 
+                // 计算总怪物数量和已击败的怪物数量
+                let totalMonsters = 0;
+                let defeatedMonsters = 0;
+                let totalMiniBosses = 0;
+                let defeatedMiniBosses = 0;
+
+                // 从Dungeon.currentRun中获取数据
+                if (Dungeon.currentRun) {
+                    console.log('从Dungeon.currentRun中获取怪物统计数据');
+
+                    // 获取总怪物数量
+                    if (Dungeon.currentRun.monsterCount) {
+                        totalMonsters = Dungeon.currentRun.monsterCount;
+                        console.log(`从Dungeon.currentRun.monsterCount获取到总怪物数量: ${totalMonsters}`);
+                    } else if (Dungeon.currentRun.monsters && Dungeon.currentRun.monsters.length > 0) {
+                        totalMonsters = Dungeon.currentRun.monsters.length;
+                        console.log(`从Dungeon.currentRun.monsters.length获取到总怪物数量: ${totalMonsters}`);
+                    }
+
+                    // 获取已击败怪物数量
+                    if (typeof Dungeon.currentRun.defeatedMonsters === 'number') {
+                        defeatedMonsters = Dungeon.currentRun.defeatedMonsters;
+                        console.log(`从Dungeon.currentRun.defeatedMonsters获取到已击败怪物数量: ${defeatedMonsters}`);
+                    }
+
+                    // 获取总小BOSS数量
+                    if (Dungeon.currentRun.miniBossCount) {
+                        totalMiniBosses = Dungeon.currentRun.miniBossCount;
+                        console.log(`从Dungeon.currentRun.miniBossCount获取到总小BOSS数量: ${totalMiniBosses}`);
+                    } else if (Dungeon.currentRun.miniBosses && Dungeon.currentRun.miniBosses.length > 0) {
+                        totalMiniBosses = Dungeon.currentRun.miniBosses.length;
+                        console.log(`从Dungeon.currentRun.miniBosses.length获取到总小BOSS数量: ${totalMiniBosses}`);
+                    }
+
+                    // 获取已击败小BOSS数量
+                    if (typeof Dungeon.currentRun.defeatedMiniBosses === 'number') {
+                        defeatedMiniBosses = Dungeon.currentRun.defeatedMiniBosses;
+                        console.log(`从Dungeon.currentRun.defeatedMiniBosses获取到已击败小BOSS数量: ${defeatedMiniBosses}`);
+                    }
+                }
+
+                // 如果总怪物数量为0，尝试从Dungeon.templates获取
+                if (totalMonsters === 0 && Dungeon.currentRun && Dungeon.currentRun.dungeonId) {
+                    console.log('总怪物数量为0，尝试从Dungeon.templates获取');
+
+                    if (typeof Dungeon !== 'undefined' && Dungeon.templates && Dungeon.templates[Dungeon.currentRun.dungeonId]) {
+                        const template = Dungeon.templates[Dungeon.currentRun.dungeonId];
+
+                        if (template.monsterCount) {
+                            totalMonsters = template.monsterCount;
+                            console.log(`从模板获取到总怪物数量: ${totalMonsters}`);
+                        }
+
+                        if (template.miniBossCount) {
+                            totalMiniBosses = template.miniBossCount;
+                            console.log(`从模板获取到总小BOSS数量: ${totalMiniBosses}`);
+                        }
+                    }
+                }
+
+                // 如果仍然为0，设置默认值
+                if (totalMonsters === 0) {
+                    totalMonsters = 10; // 默认值
+                    console.log(`设置默认总怪物数量: ${totalMonsters}`);
+                }
+
+                if (totalMiniBosses === 0) {
+                    totalMiniBosses = 3; // 默认值
+                    console.log(`设置默认总小BOSS数量: ${totalMiniBosses}`);
+                }
+
+                // 如果在地下城中，尝试从this.currentDungeonInfo获取更多信息
+                if (this.currentDungeonInfo) {
+                    console.log('从this.currentDungeonInfo中获取更多信息');
+
+                    if (this.currentDungeonInfo.defeatedMonsters !== undefined) {
+                        defeatedMonsters = this.currentDungeonInfo.defeatedMonsters;
+                        console.log(`从this.currentDungeonInfo.defeatedMonsters获取到已击败怪物数量: ${defeatedMonsters}`);
+                    }
+
+                    if (this.currentDungeonInfo.defeatedMiniBosses !== undefined) {
+                        defeatedMiniBosses = this.currentDungeonInfo.defeatedMiniBosses;
+                        console.log(`从this.currentDungeonInfo.defeatedMiniBosses获取到已击败小BOSS数量: ${defeatedMiniBosses}`);
+                    }
+                }
+
+                console.log('战斗失败时的统计数据:', {
+                    totalMonsters,
+                    defeatedMonsters,
+                    totalMiniBosses,
+                    defeatedMiniBosses
+                });
+
+                // 在获取队伍统计信息前，确保战斗结果中包含正确的战斗状态
+                if (result) {
+                    // 明确设置战斗失败标志
+                    result.victory = false;
+                    result.defeated = true;
+                    result.failed = true;
+
+                    // 如果有队伍成员信息，确保所有队伍成员的HP为0（表示阵亡）
+                    if (result.teamMembers) {
+                        for (const member of result.teamMembers) {
+                            if (member.currentStats) {
+                                // 保存原始HP值用于调试
+                                const originalHp = member.currentStats.hp;
+                                // 设置HP为0表示阵亡
+                                member.currentStats.hp = 0;
+                                console.log(`设置角色 ${member.name} 的HP从 ${originalHp} 变为 0（阵亡）`);
+                            }
+
+                            // 从Battle.currentBattle中获取战斗统计数据
+                            if (typeof Battle !== 'undefined' && Battle.currentBattle &&
+                                Battle.currentBattle.battleStats &&
+                                Battle.currentBattle.battleStats.characterStats &&
+                                Battle.currentBattle.battleStats.characterStats[member.id]) {
+
+                                // 获取战斗统计数据
+                                const battleStats = Battle.currentBattle.battleStats.characterStats[member.id];
+
+                                // 更新角色的统计数据
+                                if (!member.stats) {
+                                    member.stats = {
+                                        totalDamage: battleStats.totalDamage || 0,
+                                        totalHealing: battleStats.totalHealing || 0,
+                                        daCount: battleStats.daCount || 0,
+                                        taCount: battleStats.taCount || 0,
+                                        critCount: battleStats.critCount || 0
+                                    };
+                                } else {
+                                    member.stats.totalDamage = battleStats.totalDamage || 0;
+                                    member.stats.totalHealing = battleStats.totalHealing || 0;
+                                    member.stats.daCount = battleStats.daCount || 0;
+                                    member.stats.taCount = battleStats.taCount || 0;
+                                    member.stats.critCount = battleStats.critCount || 0;
+                                }
+
+                                console.log(`从Battle.currentBattle中获取角色 ${member.name} 的战斗统计数据:`, member.stats);
+                            } else {
+                                console.log(`无法从Battle.currentBattle中获取角色 ${member.name} 的战斗统计数据`);
+                            }
+                        }
+                    }
+                }
+
+                // 获取队伍统计信息
+                const teamStats = this.getTeamStats(result);
+                console.log('获取到的队伍统计信息:', teamStats);
+
                 // 保存战斗记录
                 const currentRunData = {
                     dungeonName: this.currentDungeonInfo?.dungeonName || Dungeon.currentRun?.dungeonName || '未知地下城',
@@ -722,11 +871,11 @@ const DungeonRunner = {
                     monsterName: result.monster.name || '未知怪物',
                     monsterType: result.monster.isBoss ? 'BOSS' : '普通怪物',
                     defeatReason: this.getDefeatReason(result),
-                    teamStats: this.getTeamStats(result),
-                    defeatedMonsters: Dungeon.currentRun?.defeatedMonsters || 0,
-                    totalMonsters: Dungeon.currentRun?.monsters?.length || 0,
-                    defeatedMiniBosses: Dungeon.currentRun?.defeatedMiniBosses || 0,
-                    totalMiniBosses: Dungeon.currentRun?.miniBosses?.length || 0
+                    teamStats: teamStats,
+                    defeatedMonsters: defeatedMonsters,
+                    totalMonsters: totalMonsters,
+                    defeatedMiniBosses: defeatedMiniBosses,
+                    totalMiniBosses: totalMiniBosses
                 };
 
                 // console.log('准备保存的战斗记录:', currentRunData);
@@ -1037,19 +1186,124 @@ const DungeonRunner = {
      * @returns {array} 队伍成员统计信息
      */
     getTeamStats(battle) {
+        console.log('获取队伍统计信息，战斗记录:', battle);
+
+        // 首先尝试从Battle.currentBattle获取最新的战斗统计数据
+        if (typeof Battle !== 'undefined' && Battle.currentBattle &&
+            Battle.currentBattle.battleStats && Battle.currentBattle.teamMembers) {
+
+            console.log('从Battle.currentBattle获取最新的战斗统计数据');
+
+            const teamStats = [];
+
+            // 遍历队伍成员
+            for (const member of Battle.currentBattle.teamMembers) {
+                // 获取角色的战斗统计数据
+                const characterStats = Battle.currentBattle.battleStats.characterStats &&
+                                      Battle.currentBattle.battleStats.characterStats[member.id];
+
+                if (characterStats) {
+                    console.log(`从Battle.currentBattle中获取角色 ${member.name} 的战斗统计数据:`, characterStats);
+
+                    // 如果战斗失败，所有角色都应该是阵亡的
+                    const isAlive = Battle.currentBattle.victory !== false && member.currentStats?.hp > 0;
+
+                    teamStats.push({
+                        name: member.name || '未知角色',
+                        totalDamage: characterStats.totalDamage || 0,
+                        totalHealing: characterStats.totalHealing || 0,
+                        daCount: characterStats.daCount || 0,
+                        taCount: characterStats.taCount || 0,
+                        critCount: characterStats.critCount || 0,
+                        isAlive: isAlive
+                    });
+                } else {
+                    console.log(`无法从Battle.currentBattle中获取角色 ${member.name} 的战斗统计数据，使用角色自身的统计数据`);
+
+                    // 如果战斗失败，所有角色都应该是阵亡的
+                    const isAlive = Battle.currentBattle.victory !== false && member.currentStats?.hp > 0;
+
+                    teamStats.push({
+                        name: member.name || '未知角色',
+                        totalDamage: member.stats?.totalDamage || 0,
+                        totalHealing: member.stats?.totalHealing || 0,
+                        daCount: member.stats?.daCount || 0,
+                        taCount: member.stats?.taCount || 0,
+                        critCount: member.stats?.critCount || 0,
+                        isAlive: isAlive
+                    });
+                }
+            }
+
+            if (teamStats.length > 0) {
+                console.log('成功从Battle.currentBattle获取队伍统计信息:', teamStats);
+                return teamStats;
+            }
+        }
+
+        // 如果没有战斗记录或队伍成员，尝试从Game.getActiveTeam获取
         if (!battle || !battle.teamMembers) {
+            console.log('战斗记录中没有队伍成员信息，尝试从Game.getActiveTeam获取');
+
+            if (typeof Game !== 'undefined' && typeof Game.getActiveTeam === 'function') {
+                const team = Game.getActiveTeam();
+                if (team && team.members && team.members.length > 0) {
+                    console.log('从Game.getActiveTeam获取到队伍成员:', team.members);
+
+                    const teamStats = [];
+                    for (const memberId of team.members) {
+                        if (typeof Character !== 'undefined' && typeof Character.getCharacter === 'function') {
+                            const character = Character.getCharacter(memberId);
+                            if (character) {
+                                console.log(`获取到角色 ${character.name} 的统计信息:`, character.stats);
+
+                                // 如果战斗失败，所有角色都应该是阵亡的
+                                const isAlive = battle && battle.victory === false ? false : character.currentStats?.hp > 0;
+
+                                teamStats.push({
+                                    name: character.name || '未知角色',
+                                    totalDamage: character.stats?.totalDamage || 0,
+                                    totalHealing: character.stats?.totalHealing || 0,
+                                    daCount: character.stats?.daCount || 0,
+                                    taCount: character.stats?.taCount || 0,
+                                    critCount: character.stats?.critCount || 0,
+                                    isAlive: isAlive
+                                });
+                            }
+                        }
+                    }
+
+                    if (teamStats.length > 0) {
+                        console.log('成功获取队伍统计信息:', teamStats);
+                        return teamStats;
+                    }
+                }
+            }
+
+            console.warn('无法获取队伍统计信息，返回空数组');
             return [];
         }
 
-        return battle.teamMembers.map(member => ({
-            name: member.name || '未知角色',
-            totalDamage: member.stats?.totalDamage || 0,
-            totalHealing: member.stats?.totalHealing || 0,
-            daCount: member.stats?.daCount || 0,
-            taCount: member.stats?.taCount || 0,
-            critCount: member.stats?.critCount || 0,
-            isAlive: member.currentStats?.hp > 0
-        }));
+        // 从战斗记录中获取队伍统计信息
+        const teamStats = battle.teamMembers.map(member => {
+            console.log(`从战斗记录中获取角色 ${member.name} 的统计信息:`, member.stats);
+
+            // 如果战斗失败，所有角色都应该是阵亡的
+            const isAlive = battle.victory !== false && member.currentStats?.hp > 0;
+
+            return {
+                name: member.name || '未知角色',
+                totalDamage: member.stats?.totalDamage || 0,
+                totalHealing: member.stats?.totalHealing || 0,
+                daCount: member.stats?.daCount || 0,
+                taCount: member.stats?.taCount || 0,
+                critCount: member.stats?.critCount || 0,
+                isAlive: isAlive
+            };
+        });
+
+        console.log('成功从战斗记录中获取队伍统计信息:', teamStats);
+        return teamStats;
     },
 
     /**

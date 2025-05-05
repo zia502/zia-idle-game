@@ -2089,8 +2089,25 @@ const Battle = {
      * @param {string} message - 日志消息
      */
     logBattle(message) {
+        // 添加新日志
         this.battleLog.push(message);
+
+        // 如果日志超过100条，保留最新的100条
+        if (this.battleLog.length > 100) {
+            this.battleLog = this.battleLog.slice(-100);
+        }
+
         console.log(`[战斗] ${message}`);
+
+        // 触发日志更新事件，确保UI更新
+        if (typeof Events !== 'undefined') {
+            Events.emit('battle:log', { message });
+        }
+
+        // 如果MainUI存在，直接调用更新方法
+        if (typeof MainUI !== 'undefined') {
+            MainUI.updateBattleLog();
+        }
     },
 
 

@@ -1073,6 +1073,11 @@ const DungeonRunner = {
             time: Date.now()
         });
 
+        // 如果日志超过100条，保留最新的100条
+        if (Battle.battleLog.length > 100) {
+            Battle.battleLog = Battle.battleLog.slice(-100);
+        }
+
         // 发出事件
         if (typeof Events !== 'undefined') {
             Events.emit('battle:log', { message, type });
@@ -1080,7 +1085,10 @@ const DungeonRunner = {
 
         // 更新战斗日志显示
         if (typeof MainUI !== 'undefined') {
-            MainUI.updateBattleLog();
+            // 使用setTimeout确保在DOM更新后执行滚动
+            setTimeout(() => {
+                MainUI.updateBattleLog();
+            }, 0);
         }
     },
 

@@ -1076,8 +1076,11 @@ const MainUI = {
             // 构建日志HTML
             let html = '';
 
-            // 最多显示最近的20条日志
+            // 最多显示最近的100条日志
             const recentLogs = battleLogs.slice(-100);
+
+            // 创建日志条目数组，以便倒序显示
+            const logEntries = [];
 
             recentLogs.forEach(log => {
                 // 处理日志对象或字符串
@@ -1107,19 +1110,27 @@ const MainUI = {
                     message = message.replace(/#####/g, '').trim();
                 }
 
-                html += `
+                // 将日志条目添加到数组中
+                logEntries.push(`
                     <div class="log-entry ${logClass}">
                         <span class="log-time">${time}</span>
                         <span class="log-content">${message}</span>
                     </div>
-                `;
+                `);
             });
+
+            // 倒序添加日志条目到HTML中（最新的在顶部）
+            for (let i = logEntries.length - 1; i >= 0; i--) {
+                html += logEntries[i];
+            }
 
             // 更新日志容器内容
             logContainer.innerHTML = html;
 
-            // 滚动到底部
-            logContainer.scrollTop = logContainer.scrollHeight;
+            // 滚动到顶部 - 使用setTimeout确保在DOM更新后执行
+            setTimeout(() => {
+                logContainer.scrollTop = 0;
+            }, 0);
         } catch (error) {
             console.error('更新战斗日志时出错:', error);
             const logContainer = document.getElementById('main-battle-log');

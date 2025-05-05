@@ -1019,3 +1019,8 @@
 .main-ui-left .main-ui-section:nth-child(3) {
     height: 500px;
 }
+
+/* 战斗日志区域特殊高度 */
+.main-ui-left .main-ui-section:nth-child(2) {
+    height: 400px;
+}

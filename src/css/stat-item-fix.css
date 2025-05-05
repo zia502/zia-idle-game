@@ -30,7 +30,7 @@
 /* 直接针对所有 stat-name 和 stat-value */
 span.stat-name, span.stat-label {
     display: inline-block !important;
-    width: 50px !important;
+    width: 150px !important;
     max-width: 150px !important;
     overflow: hidden !important;
     text-overflow: ellipsis !important;

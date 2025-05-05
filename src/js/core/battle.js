@@ -790,7 +790,7 @@ const Battle = {
             if (typeof BuffSystem !== 'undefined') {
                 const expiredBuffs = BuffSystem.updateBuffDurations(member);
 
-                const buffNames = "";
+                let buffNames = "";
                 for (const buff of expiredBuffs) {
                     buffNames += buff.name + ", ";
                 }
@@ -831,7 +831,7 @@ const Battle = {
         if (typeof BuffSystem !== 'undefined') {
             const expiredBuffs = BuffSystem.updateBuffDurations(monster);
 
-            const buffNames = "";
+            let buffNames = "";
             for (const buff of expiredBuffs) {
                 buffNames += buff.name + ", ";
             }
@@ -1048,7 +1048,9 @@ const Battle = {
         }
 
         if (attackCount > 1) {
-            this.logBattle(`${character.name} ${attackType} 总共造成 ${totalDamage} 点伤害！`);
+            if (totalDamage > 0) {
+                this.logBattle(`${character.name} ${attackType} 总共造成 ${totalDamage} 点伤害！`);
+            }
         }
 
         // 更新角色伤害统计
@@ -1063,10 +1065,6 @@ const Battle = {
             if (isTA) battleStats.characterStats[character.id].taCount++;
         }
 
-        // 检查怪物是否被击败
-        if (monster.currentStats.hp <= 0) {
-            this.logBattle(`HP${monster_starthp}的${monster.name} 被击败了！`);
-        }
     },
 
     /**
@@ -1240,7 +1238,9 @@ const Battle = {
             }
 
             if (attackCount > 1) {
-                this.logBattle(`${monster.name} ${attackType} 总共造成 ${totalDamage} 点伤害！`);
+                if (totalDamage > 0) {
+                    this.logBattle(`${monster.name} ${attackType} 总共造成 ${totalDamage} 点伤害！`);
+                }
             }
 
             monster.stats.totalDamage += totalDamage;

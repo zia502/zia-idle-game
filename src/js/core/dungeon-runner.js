@@ -645,8 +645,8 @@ const DungeonRunner = {
 
                         msg += `,${itemName} x${count}`;
                     }
-                                    // 显示奖励信息
-                    this.addBattleLog(`获得经验值: ${rewardInfo.exp} ${msg}`, 'success');
+                    // 显示奖励信息
+                    this.addBattleLog(`击败了${result.monster.name},获得经验值: ${rewardInfo.exp} ${msg}`, 'success');
                 }
 
                 if (isBoss) {

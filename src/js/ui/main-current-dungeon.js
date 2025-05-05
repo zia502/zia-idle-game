@@ -208,10 +208,29 @@ const MainCurrentDungeon = {
                     <p>大BOSS：${Dungeon.currentRun.finalBossAppeared ? '已出现' : '未出现'}</p>
                     <p>总进度：${defeatedMonsters}/${totalMonsters}</p>
                 </div>
+                <div class="dungeon-controls">
+                    <button id="main-dungeon-exit-btn" class="dungeon-btn exit-btn">退出地下城</button>
+                </div>
             </div>
         `;
 
         container.innerHTML = html;
+
+        // 添加退出按钮事件监听器
+        const exitButton = document.getElementById('main-dungeon-exit-btn');
+        if (exitButton) {
+            exitButton.addEventListener('click', () => {
+                if (typeof DungeonRunner !== 'undefined' && typeof DungeonRunner.exitDungeon === 'function') {
+                    // 确认是否退出地下城
+                    if (confirm('确定要退出地下城吗？')) {
+                        console.log('用户点击了退出地下城按钮');
+                        DungeonRunner.exitDungeon();
+                    }
+                } else {
+                    console.error('DungeonRunner.exitDungeon 方法不存在');
+                }
+            });
+        }
     },
 
     /**

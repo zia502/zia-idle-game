@@ -1077,7 +1077,7 @@ const MainUI = {
             let html = '';
 
             // 最多显示最近的20条日志
-            const recentLogs = battleLogs.slice(-20);
+            const recentLogs = battleLogs.slice(-100);
 
             recentLogs.forEach(log => {
                 // 处理日志对象或字符串

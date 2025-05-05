@@ -41,7 +41,8 @@ const Battle = {
 
         // 重置当前战斗的回合数
         this.currentTurn = 0;
-        this.battleLog = [];
+        // 不再清空战斗日志，保留之前的记录
+        // this.battleLog = [];
 
         // 确保Character对象存在
         if (typeof Character === 'undefined') {

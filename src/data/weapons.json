@@ -1,4 +1,184 @@
 {
+    "endStar_dark":{
+        "id": "endStar_dark",
+        "name": "终焉之星",
+        "type": "sword",
+        "element": "dark",
+        "rarity": 5,
+        "baseStats": { 
+            "attack": 355,
+            "hp": 70,
+            "100Attack": 2750,
+            "100Hp": 531,
+            "150Attack": 3145,
+            "150Hp": 640
+        },
+        "specialEffects": [
+            {
+                "type": "majesty",
+                "level": 2,
+                "unlock": 1,
+                "description": "提高攻击力和HP"
+            },
+            {
+                "type": "deathstrike",
+                "level": 1,
+                "unlock": 1,
+                "description": "提高额外伤害"
+            }
+        ],
+        "description": "暗黑之神的佩剑，能够引导亡者前往冥界"
+    },
+    "endStar_fire":{
+        "id": "endStar_fire",
+        "name": "终焉之星",
+        "type": "sword",
+        "element": "fire",
+        "rarity": 5,
+        "baseStats": { 
+            "attack": 355,
+            "hp": 70,
+            "100Attack": 2750,
+            "100Hp": 531,
+            "150Attack": 3145,
+            "150Hp": 640
+        },
+        "specialEffects": [
+            {
+                "type": "majesty",
+                "level": 2,
+                "unlock": 1,
+                "description": "提高攻击力和HP"
+            },
+            {
+                "type": "deathstrike",
+                "level": 1,
+                "unlock": 1,
+                "description": "提高额外伤害"
+            }
+        ],
+        "description": "暗黑之神的佩剑，能够引导亡者前往冥界"
+    },
+    "endStar_water":{
+        "id": "endStar_water",
+        "name": "终焉之星",
+        "type": "sword",
+        "element": "water",
+        "rarity": 5,
+        "baseStats": { 
+            "attack": 355,
+            "hp": 70,
+            "100Attack": 2750,
+            "100Hp": 531,
+            "150Attack": 3145,
+            "150Hp": 640
+        },
+        "specialEffects": [
+            {
+                "type": "majesty",
+                "level": 2,
+                "unlock": 1,
+                "description": "提高攻击力和HP"
+            },
+            {
+                "type": "deathstrike",
+                "level": 1,
+                "unlock": 1,
+                "description": "提高额外伤害"
+            }
+        ],
+        "description": "暗黑之神的佩剑，能够引导亡者前往冥界"
+    },
+    "endStar_wind":{
+        "id": "endStar_wind",
+        "name": "终焉之星",
+        "type": "sword",
+        "element": "wind",
+        "rarity": 5,
+        "baseStats": { 
+            "attack": 355,
+            "hp": 70,
+            "100Attack": 2750,
+            "100Hp": 531,
+            "150Attack": 3145,
+            "150Hp": 640
+        },
+        "specialEffects": [
+            {
+                "type": "majesty",
+                "level": 2,
+                "unlock": 1,
+                "description": "提高攻击力和HP"
+            },
+            {
+                "type": "deathstrike",
+                "level": 1,
+                "unlock": 1,
+                "description": "提高额外伤害"
+            }
+        ],
+        "description": "暗黑之神的佩剑，能够引导亡者前往冥界"
+    },
+    "endStar_earth":{
+        "id": "endStar_earth",
+        "name": "终焉之星",
+        "type": "sword",
+        "element": "earth",
+        "rarity": 5,
+        "baseStats": { 
+            "attack": 355,
+            "hp": 70,
+            "100Attack": 2750,
+            "100Hp": 531,
+            "150Attack": 3145,
+            "150Hp": 640
+        },
+        "specialEffects": [
+            {
+                "type": "majesty",
+                "level": 2,
+                "unlock": 1,
+                "description": "提高攻击力和HP"
+            },
+            {
+                "type": "deathstrike",
+                "level": 1,
+                "unlock": 1,
+                "description": "提高额外伤害"
+            }
+        ],
+        "description": "暗黑之神的佩剑，能够引导亡者前往冥界"
+    },
+    "endStar_light":{
+        "id": "endStar_light",
+        "name": "终焉之星",
+        "type": "sword",
+        "element": "light",
+        "rarity": 5,
+        "baseStats": { 
+            "attack": 355,
+            "hp": 70,
+            "100Attack": 2750,
+            "100Hp": 531,
+            "150Attack": 3145,
+            "150Hp": 640
+        },
+        "specialEffects": [
+            {
+                "type": "majesty",
+                "level": 2,
+                "unlock": 1,
+                "description": "提高攻击力和HP"
+            },
+            {
+                "type": "deathstrike",
+                "level": 1,
+                "unlock": 1,
+                "description": "提高额外伤害"
+            }
+        ],
+        "description": "暗黑之神的佩剑，能够引导亡者前往冥界"
+    },
     "surturFlame": {
         "id": "surturFlame",
         "name": "苏尔特尔之焰·终末",

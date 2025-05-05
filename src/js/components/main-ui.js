@@ -406,7 +406,10 @@ const MainUI = {
                         }
                     }
 
-                    // 计算HP百分比
+                    // 如果角色没有当前状态的最大HP
+                    if (!character.currentStats.maxHp){
+                        character.currentStats = character.weaponBonusStats;
+                    }
                     const hpPercent = character.currentStats && character.currentStats.maxHp ?
                         Math.floor((character.currentStats.hp / character.currentStats.maxHp) * 100) : 100;
 
@@ -431,7 +434,7 @@ const MainUI = {
                         <div class="member-hp-bar-container">
                             <div class="member-hp-bar" style="width: ${hpPercent}%"></div>
                         </div>
-                        <div class="member-hp-text">${currentHp}/${maxHp}</div>`;
+                        <div class="member-hp-text">  ${currentHp}/${maxHp}</div>`;
 
 
                     // 添加技能信息

@@ -1199,7 +1199,7 @@ const MainUI = {
         // 监听角色变化事件
         if (typeof Events !== 'undefined') {
             Events.on('character:updated', (data) => {
-                console.log('MainUI 收到角色更新事件', data);
+                // console.log('MainUI 收到角色更新事件', data);
                 this.updateMainHeroInfo();
             });
 
@@ -1217,20 +1217,20 @@ const MainUI = {
 
             // 监听武器变化事件
             Events.on('weapon:updated', () => {
-                console.log('MainUI 收到武器更新事件');
+                // console.log('MainUI 收到武器更新事件');
                 this.updateWeaponBoard();
             });
 
             // 监听职业经验更新事件
             Events.on('character:exp-updated', (data) => {
-                console.log('MainUI 收到职业经验更新事件', data);
+                // console.log('MainUI 收到职业经验更新事件', data);
                 this.updateMainHeroInfo();
             });
         }
 
         // 兼容旧版事件系统
         document.addEventListener('weaponChanged', () => {
-            console.log('MainUI 收到武器变化事件');
+            // console.log('MainUI 收到武器变化事件');
             this.updateWeaponBoard();
         });
     }

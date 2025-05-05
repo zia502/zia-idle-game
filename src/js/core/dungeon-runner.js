@@ -36,19 +36,19 @@ const DungeonRunner = {
      * 初始化地下城运行器
      */
     init() {
-        console.log('初始化地下城运行器...');
+        // console.log('初始化地下城运行器...');
         this.setupEventListeners();
 
         // 检查是否有正在进行的地下城探索
         if (typeof Dungeon !== 'undefined' && Dungeon.currentRun) {
-            console.log('检测到正在进行的地下城探索，检查是否应该自动继续');
+            // console.log('检测到正在进行的地下城探索，检查是否应该自动继续');
 
             // 检查Game.state.currentDungeon是否存在
             const hasSavedDungeon = typeof Game !== 'undefined' && Game.state &&
                                    Game.state.currentDungeon &&
                                    Object.keys(Game.state.currentDungeon || {}).length > 0;
 
-            console.log('是否有保存的地下城进度:', hasSavedDungeon);
+            // console.log('是否有保存的地下城进度:', hasSavedDungeon);
 
             // 检查角色是否有dungeonOriginalStats
             let hasCharacterDungeonStats = false;
@@ -62,7 +62,7 @@ const DungeonRunner = {
                 }
             }
 
-            console.log('角色是否有地下城原始属性:', hasCharacterDungeonStats);
+            // console.log('角色是否有地下城原始属性:', hasCharacterDungeonStats);
 
             // 只有当Game.state.currentDungeon存在且角色有dungeonOriginalStats时才自动继续
             if (hasSavedDungeon && hasCharacterDungeonStats) {
@@ -75,28 +75,28 @@ const DungeonRunner = {
                     this.processNextMonster();
                 }, this.logDisplaySpeed);
             } else {
-                console.log('检测到不一致的地下城状态，不自动继续');
+                // console.log('检测到不一致的地下城状态，不自动继续');
                 // 清理不一致的状态
                 if (!hasSavedDungeon) {
-                    console.log('没有保存的地下城进度，重置Dungeon.currentRun');
+                    // console.log('没有保存的地下城进度，重置Dungeon.currentRun');
                     Dungeon.currentRun = null;
                 }
 
                 if (!hasCharacterDungeonStats) {
-                    console.log('角色没有地下城原始属性，重置Dungeon.currentRun');
+                    // console.log('角色没有地下城原始属性，重置Dungeon.currentRun');
                     Dungeon.currentRun = null;
                 }
 
                 // 如果Game.state.currentDungeon存在但角色没有dungeonOriginalStats，清除Game.state.currentDungeon
                 if (hasSavedDungeon && !hasCharacterDungeonStats && typeof Game !== 'undefined' && Game.state) {
-                    console.log('保存的地下城进度存在但角色没有地下城原始属性，清除保存的地下城进度');
+                    // console.log('保存的地下城进度存在但角色没有地下城原始属性，清除保存的地下城进度');
                     Game.state.currentDungeon = null;
                     delete Game.state.currentDungeon;
 
                     // 保存游戏状态
                     if (typeof Game.saveGame === 'function') {
                         Game.saveGame();
-                        console.log('已清除保存的地下城进度');
+                        // console.log('已清除保存的地下城进度');
                     }
                 }
             }
@@ -114,7 +114,7 @@ const DungeonRunner = {
 
         // 监听地下城开始事件
         Events.on('dungeon:start', (data) => {
-            console.log('收到地下城开始事件:', data);
+            // console.log('收到地下城开始事件:', data);
             this.startDungeonRun(data.dungeonId);
         });
     },
@@ -144,7 +144,7 @@ const DungeonRunner = {
 
             // 尝试初始化地下城运行
             if (dungeonId && typeof Dungeon.initDungeonRun === 'function') {
-                console.log(`尝试初始化地下城运行: ${dungeonId}`);
+                // console.log(`尝试初始化地下城运行: ${dungeonId}`);
                 const success = Dungeon.initDungeonRun(dungeonId);
                 if (!success) {
                     console.error(`初始化地下城运行失败: ${dungeonId}`);
@@ -190,7 +190,7 @@ const DungeonRunner = {
             }
         }
 
-        console.log(`开始地下城运行: ${actualDungeonId}, 当前运行ID: ${updatedCurrentRun.dungeonId}, 地下城名称: ${dungeonName}`);
+        console.log(`开始地下城运行: ${dungeonName}`);
 
         // 设置运行状态
         this.isRunning = true;
@@ -206,14 +206,14 @@ const DungeonRunner = {
                 typeof Character !== 'undefined' && typeof Character.getCharacter === 'function') {
                 const team = Game.getActiveTeam();
                 if (team && team.members) {
-                    console.log('清除队伍成员的地下城原始属性，确保被识别为新的地下城探索');
+                    // console.log('清除队伍成员的地下城原始属性，确保被识别为新的地下城探索');
                     for (const memberId of team.members) {
                         const member = Character.getCharacter(memberId);
                         member.dungeonAppliedPassives = {};
                         member.skillCooldowns = {};
                         if (member && member.dungeonOriginalStats) {
                             delete member.dungeonOriginalStats;
-                            console.log(`已清除 ${member.name} 的地下城原始属性`);
+                            // console.log(`已清除 ${member.name} 的地下城原始属性`);
                         }
                     }
                 }
@@ -265,7 +265,7 @@ const DungeonRunner = {
             }
 
             if (!monster) {
-                console.log('没有找到当前怪物，检查是否有小boss或大boss');
+                // console.log('没有找到当前怪物，检查是否有小boss或大boss');
 
                 // 如果没有更多怪物，检查是否有小boss
                 if (Dungeon.currentRun.defeatedMiniBosses < Dungeon.currentRun.miniBosses.length) {
@@ -315,7 +315,7 @@ const DungeonRunner = {
 
             // 检查是否已击败所有小boss
             if (Dungeon.currentRun.defeatedMiniBosses >= Dungeon.currentRun.miniBosses.length) {
-                console.log('已击败所有小boss，检查是否有大boss');
+                // console.log('已击败所有小boss，检查是否有大boss');
                 if (!Dungeon.currentRun.finalBossAppeared && Dungeon.currentRun.finalBoss) {
                     this.processFinalBoss();
                 } else {
@@ -327,7 +327,7 @@ const DungeonRunner = {
             // 获取下一个小boss
             const miniBoss = Dungeon.currentRun.miniBosses[Dungeon.currentRun.defeatedMiniBosses];
             if (!miniBoss) {
-                console.log('没有更多小boss，检查是否有大boss');
+                // console.log('没有更多小boss，检查是否有大boss');
                 // 如果没有更多小boss，检查是否有大boss
                 if (!Dungeon.currentRun.finalBossAppeared && Dungeon.currentRun.finalBoss) {
                     this.processFinalBoss();
@@ -371,7 +371,7 @@ const DungeonRunner = {
             // 获取大boss
             const finalBoss = Dungeon.currentRun.finalBoss;
             if (!finalBoss) {
-                console.log('无法创建大boss，完成地下城');
+                // console.log('无法创建大boss，完成地下城');
                 this.completeDungeon();
                 return;
             }
@@ -444,7 +444,7 @@ const DungeonRunner = {
             // 确保Dungeon.currentRun也有dungeonName属性
             Dungeon.currentRun.dungeonName = dungeonName;
 
-            console.log('保存当前地下城信息:', this.currentDungeonInfo);
+            // console.log('保存当前地下城信息:', this.currentDungeonInfo);
 
             // 获取当前活动队伍
             let team;
@@ -477,7 +477,7 @@ const DungeonRunner = {
                 if (typeof originalLogBattle === 'function') {
                     originalLogBattle.call(Battle, message);
                 } else {
-                    console.log('战斗日志:', message);
+                    // console.log('战斗日志:', message);
                     // 如果原始方法不存在，直接添加到battleLog数组
                     if (!Battle.battleLog) Battle.battleLog = [];
                     Battle.battleLog.push({
@@ -531,22 +531,22 @@ const DungeonRunner = {
      * @param {boolean} isFinalBoss - 是否为最终boss
      */
     processBattleResult(result, isBoss = false, isFinalBoss = false) {
-        console.log('开始处理战斗结果:', { result, isBoss, isFinalBoss });
-        console.log('当前DungeonRunner状态:', { isRunning: this.isRunning, currentRun: this.currentRun });
+        // console.log('开始处理战斗结果:', { result, isBoss, isFinalBoss });
+        // console.log('当前DungeonRunner状态:', { isRunning: this.isRunning, currentRun: this.currentRun });
 
         // 详细记录战斗结果对象
-        console.log('战斗结果对象详细结构:', {
-            success: result.success,
-            victory: result.victory,
-            defeated: result.defeated,
-            failed: result.failed,
-            monster: result.monster,
-            teamMembers: result.teamMembers,
-            battleLog: result.battleLog,
-            turnCount: result.turnCount,
-            totalDamage: result.totalDamage,
-            totalHealing: result.totalHealing
-        });
+        // console.log('战斗结果对象详细结构:', {
+        //     success: result.success,
+        //     victory: result.victory,
+        //     defeated: result.defeated,
+        //     failed: result.failed,
+        //     monster: result.monster,
+        //     teamMembers: result.teamMembers,
+        //     battleLog: result.battleLog,
+        //     turnCount: result.turnCount,
+        //     totalDamage: result.totalDamage,
+        //     totalHealing: result.totalHealing
+        // });
 
         try {
             // 检查结果对象是否有效
@@ -598,14 +598,14 @@ const DungeonRunner = {
             const isVictory = result.success && result.victory;
             const isDefeated = result.defeated || result.failed || !result.success || !result.victory;
 
-            console.log('战斗结果判断:', {
-                isVictory,
-                isDefeated,
-                success: result.success,
-                victory: result.victory,
-                defeated: result.defeated,
-                failed: result.failed
-            });
+            // console.log('战斗结果判断:', {
+            //     isVictory,
+            //     isDefeated,
+            //     success: result.success,
+            //     victory: result.victory,
+            //     defeated: result.defeated,
+            //     failed: result.failed
+            // });
 
             if (isVictory && !isDefeated) {
                 // 战斗胜利
@@ -668,7 +668,7 @@ const DungeonRunner = {
                         // 保存地下城进度
                         if (typeof Dungeon.saveDungeonProgress === 'function') {
                             Dungeon.saveDungeonProgress();
-                            console.log('已保存地下城进度（击败小BOSS后）');
+                            // console.log('已保存地下城进度（击败小BOSS后）');
                         }
 
                         // 延迟一段时间后处理下一个怪物或boss
@@ -696,7 +696,7 @@ const DungeonRunner = {
                     // 保存地下城进度
                     if (typeof Dungeon.saveDungeonProgress === 'function') {
                         Dungeon.saveDungeonProgress();
-                        console.log('已保存地下城进度（击败普通怪物后）');
+                        // console.log('已保存地下城进度（击败普通怪物后）');
                     }
 
                     // 延迟一段时间后处理下一个怪物
@@ -705,7 +705,7 @@ const DungeonRunner = {
                     }, this.logDisplaySpeed);
                 }
             } else {
-                console.log('战斗失败，开始处理失败逻辑');
+                // console.log('战斗失败，开始处理失败逻辑');
                 // 战斗失败
                 this.addBattleLog(`队伍被 ${result.monster.name} 击败了...`, 'danger');
 
@@ -729,21 +729,21 @@ const DungeonRunner = {
                     totalMiniBosses: Dungeon.currentRun?.miniBosses?.length || 0
                 };
 
-                console.log('准备保存的战斗记录:', currentRunData);
-                console.log('当前Dungeon.currentRun状态:', Dungeon.currentRun);
-                console.log('当前lastDungeonRecord状态:', this.lastDungeonRecord);
+                // console.log('准备保存的战斗记录:', currentRunData);
+                // console.log('当前Dungeon.currentRun状态:', Dungeon.currentRun);
+                // console.log('当前lastDungeonRecord状态:', this.lastDungeonRecord);
 
                 // 先保存战斗记录
                 this.lastDungeonRecord = currentRunData;
-                console.log('战斗记录已保存，新的lastDungeonRecord:', this.lastDungeonRecord);
+                // console.log('战斗记录已保存，新的lastDungeonRecord:', this.lastDungeonRecord);
 
                 // 然后清理地下城状态
-                console.log('开始清理地下城状态');
+                // console.log('开始清理地下城状态');
                 this.exitDungeon();
 
                 // 更新UI显示
                 if (typeof MainUI !== 'undefined') {
-                    console.log('更新UI显示');
+                    // console.log('更新UI显示');
                     MainUI.updateCurrentDungeon();
                 }
             }
@@ -885,7 +885,7 @@ const DungeonRunner = {
         // 如果需要，保存地下城进度
         if (saveProgress && typeof Dungeon.saveDungeonProgress === 'function') {
             Dungeon.saveDungeonProgress();
-            console.log('已保存地下城进度（更新进度时）');
+            // console.log('已保存地下城进度（更新进度时）');
         }
 
         // 发出事件
@@ -903,11 +903,11 @@ const DungeonRunner = {
      * 退出地下城
      */
     exitDungeon() {
-        console.log('开始退出地下城，当前状态:', {
-            currentRun: this.currentRun,
-            isRunning: this.isRunning,
-            lastDungeonRecord: this.lastDungeonRecord
-        });
+        // console.log('开始退出地下城，当前状态:', {
+        //     currentRun: this.currentRun,
+        //     isRunning: this.isRunning,
+        //     lastDungeonRecord: this.lastDungeonRecord
+        // });
 
         // 刷新主角信息
         if (typeof UI !== 'undefined' && typeof UI.renderMainCharacter === 'function') {
@@ -958,11 +958,11 @@ const DungeonRunner = {
             }
         }
 
-        console.log('地下城状态已清理，当前状态:', {
-            currentRun: this.currentRun,
-            isRunning: this.isRunning,
-            lastDungeonRecord: this.lastDungeonRecord
-        });
+        // console.log('地下城状态已清理，当前状态:', {
+        //     currentRun: this.currentRun,
+        //     isRunning: this.isRunning,
+        //     lastDungeonRecord: this.lastDungeonRecord
+        // });
 
         // 更新UI显示
         if (typeof MainUI !== 'undefined') {

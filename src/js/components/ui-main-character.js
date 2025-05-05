@@ -16,7 +16,7 @@
      * @param {boolean} skipMainUI - 是否跳过更新主界面
      */
     UI.renderMainCharacter = function(skipMainUI = false) {
-        console.log('渲染主角信息');
+        // console.log('渲染主角信息');
 
         const mainCharacterContainer = document.getElementById('main-character-info');
         if (!mainCharacterContainer) {
@@ -36,12 +36,12 @@
 
         const mainCharacter = Character.getMainCharacter();
         if (!mainCharacter) {
-            console.log('主角不存在');
+            // console.log('主角不存在');
             mainCharacterContainer.innerHTML = '<div class="empty-message">主角信息未找到</div>';
             return;
         }
 
-        console.log('主角信息:', mainCharacter);
+        // console.log('主角信息:', mainCharacter);
 
         // 使用 MainCharacterInfo 组件渲染主角信息
         const mainCharacterInfo = new MainCharacterInfo(mainCharacter);
@@ -62,7 +62,7 @@
 
         // 同时更新主界面中的主角信息，但避免循环调用
         if (!skipMainUI && typeof MainUI !== 'undefined' && typeof MainUI.updateMainHeroInfo === 'function' && !isUpdatingMainUI) {
-            console.log('同时更新主界面中的主角信息');
+            // console.log('同时更新主界面中的主角信息');
             isUpdatingMainUI = true;
             try {
                 MainUI.updateMainHeroInfo();
@@ -204,18 +204,18 @@
     // 添加到Events监听器，在角色创建完成后渲染主角信息
     if (typeof Events !== 'undefined' && typeof Events.on === 'function') {
         Events.on('character:created', (data) => {
-            console.log('角色创建完成事件触发，渲染主角信息');
+            // console.log('角色创建完成事件触发，渲染主角信息');
             UI.renderMainCharacter();
         });
 
         // 在角色更新时重新渲染主角信息（包括元素属性变化）
         Events.on('character:updated', (data) => {
-            console.log('角色更新事件触发，重新渲染主角信息', data);
+            // console.log('角色更新事件触发，重新渲染主角信息', data);
             // 检查是否是主角的更新
             if (typeof Character !== 'undefined' && typeof Character.getMainCharacter === 'function') {
                 const mainCharacter = Character.getMainCharacter();
                 if (mainCharacter && data.characterId === mainCharacter.id) {
-                    console.log('主角信息已更新，重新渲染UI');
+                    // console.log('主角信息已更新，重新渲染UI');
                     UI.renderMainCharacter();
                 }
             }
@@ -223,14 +223,14 @@
 
         // 在武器更新时重新渲染主角信息
         Events.on('weapon:updated', (data) => {
-            console.log('武器更新事件触发，重新渲染主角信息', data);
+            // console.log('武器更新事件触发，重新渲染主角信息', data);
             // 武器盘更新时，主角的属性可能会受到影响，所以需要重新渲染
             UI.renderMainCharacter();
         });
 
         // 在职业经验更新时重新渲染主角信息
         Events.on('character:exp-updated', (data) => {
-            console.log('职业经验更新事件触发，重新渲染主角信息', data);
+            // console.log('职业经验更新事件触发，重新渲染主角信息', data);
             // 职业经验更新时，需要更新经验进度条，但跳过更新主界面以避免循环调用
             UI.renderMainCharacter(true); // 传入true表示跳过更新主界面
         });
@@ -238,7 +238,7 @@
         // 在切换到角色界面时也渲染主角信息
         Events.on('ui:screenChanged', (data) => {
             if (data.screen === 'character-screen') {
-                console.log('切换到角色界面，渲染主角信息');
+                // console.log('切换到角色界面，渲染主角信息');
                 UI.renderMainCharacter();
             }
         });
@@ -250,7 +250,7 @@
             if (typeof Character !== 'undefined' && typeof Character.getMainCharacter === 'function') {
                 const mainCharacter = Character.getMainCharacter();
                 if (mainCharacter) {
-                    console.log('页面加载完成，主角已存在，渲染主角信息');
+                    // console.log('页面加载完成，主角已存在，渲染主角信息');
                     UI.renderMainCharacter();
                 }
             }

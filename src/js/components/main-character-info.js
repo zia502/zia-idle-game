@@ -5,14 +5,14 @@ class MainCharacterInfo {
         // 添加事件监听器，在武器盘更新时重新计算属性
         if (typeof Events !== 'undefined' && typeof Events.on === 'function') {
             Events.on('weapon:updated', () => {
-                console.log('MainCharacterInfo: 收到武器盘更新事件，重新计算属性');
+                // console.log('MainCharacterInfo: 收到武器盘更新事件，重新计算属性');
                 // 这里不需要做任何事情，因为每次渲染时都会重新计算属性
                 // 只需确保UI.renderMainCharacter()被调用即可
             });
 
             // 监听角色经验更新事件
             Events.on('character:exp-updated', (data) => {
-                console.log('MainCharacterInfo: 收到角色经验更新事件', data);
+                // console.log('MainCharacterInfo: 收到角色经验更新事件', data);
                 // 确保UI.renderMainCharacter()被调用以更新经验进度条
                 if (typeof UI !== 'undefined' && typeof UI.renderMainCharacter === 'function') {
                     UI.renderMainCharacter();
@@ -68,9 +68,9 @@ class MainCharacterInfo {
         const character = this.character;
 
         // 调试信息：输出角色对象结构
-        console.log('角色对象:', character);
-        console.log('角色基础属性:', character.baseStats);
-        console.log('角色当前属性:', character.currentStats);
+        // console.log('角色对象:', character);
+        // console.log('角色基础属性:', character.baseStats);
+        // console.log('角色当前属性:', character.currentStats);
 
         // 使用 element 或 attribute 属性
         const element = character.element || character.attribute || 'fire';
@@ -94,7 +94,7 @@ class MainCharacterInfo {
                     default: elementColor = '#ff4d4d';
                 }
             } else {
-                console.log('Character.attributes 未定义或不包含元素:', element);
+                // console.log('Character.attributes 未定义或不包含元素:', element);
             }
         } catch (error) {
             console.error('获取元素信息时出错:', error);
@@ -136,7 +136,7 @@ class MainCharacterInfo {
 
                 if (team && team.weaponBoardId) {
                     weaponBoardId = team.weaponBoardId;
-                    console.log(`找到主角队伍的武器盘ID: ${weaponBoardId}`);
+                    // console.log(`找到主角队伍的武器盘ID: ${weaponBoardId}`);
                 }
             }
 
@@ -145,15 +145,15 @@ class MainCharacterInfo {
                 if (typeof Weapon.printWeaponBoardStats === 'function') {
                     // printWeaponBoardStats 会在控制台打印详细信息，并返回属性对象
                     weaponBoardStats = Weapon.printWeaponBoardStats(weaponBoardId);
-                    console.log('成功获取武器盘属性:', weaponBoardStats);
+                    // console.log('成功获取武器盘属性:', weaponBoardStats);
                 }
                 // 如果 printWeaponBoardStats 不可用，则使用 calculateWeaponBoardStats
                 else if (typeof Weapon.calculateWeaponBoardStats === 'function') {
                     weaponBoardStats = Weapon.calculateWeaponBoardStats(weaponBoardId);
-                    console.log('成功计算武器盘属性:', weaponBoardStats);
+                    // console.log('成功计算武器盘属性:', weaponBoardStats);
                 }
             } else {
-                console.log('无法获取武器盘属性加成，使用默认值');
+                // console.log('无法获取武器盘属性加成，使用默认值');
                 weaponBoardStats = {
                     base: { attack: 0, hp: 0 },
                     elementStats: {
@@ -177,9 +177,9 @@ class MainCharacterInfo {
         };
 
         // 调试信息
-        console.log(`当前元素: ${element}`);
-        console.log('武器盘基础属性:', weaponBoardStats.base);
-        console.log(`${element}元素属性加成:`, elementStats);
+        // console.log(`当前元素: ${element}`);
+        // console.log('武器盘基础属性:', weaponBoardStats.base);
+        // console.log(`${element}元素属性加成:`, elementStats);
 
         // 获取包含武器盘加成的完整属性值
         let totalAttack = character.currentStats?.attack || 0;
@@ -187,7 +187,7 @@ class MainCharacterInfo {
 
         // 无论是否在地下城中，都使用weaponBonusStats作为显示属性
         if (character.weaponBonusStats) {
-            console.log('使用weaponBonusStats作为显示属性:', character.weaponBonusStats);
+            // console.log('使用weaponBonusStats作为显示属性:', character.weaponBonusStats);
             totalAttack = character.weaponBonusStats.attack || 0;
             totalHp = character.weaponBonusStats.hp || 0;
         } else {
@@ -209,12 +209,12 @@ class MainCharacterInfo {
                             const completeStats = Character.getCharacterFullStats(character.id, teamId, true);
 
                             if (completeStats && typeof completeStats === 'object') {
-                                console.log('获取到完整属性并更新weaponBonusStats:', completeStats);
+                                // console.log('获取到完整属性并更新weaponBonusStats:', completeStats);
                                 totalAttack = completeStats.attack || totalAttack;
                                 totalHp = completeStats.hp || totalHp;
                             } else {
                                 // 如果无法获取完整属性，使用备用计算方式
-                                console.log('无法获取完整属性，使用备用计算方式');
+                                // console.log('无法获取完整属性，使用备用计算方式');
                                 totalAttack = (character.baseStats?.attack || 0) + (weaponBoardStats.base?.attack || 0);
                                 totalHp = (character.baseStats?.hp || 0) + (weaponBoardStats.base?.hp || 0);
                             }
@@ -226,13 +226,13 @@ class MainCharacterInfo {
                         }
                     } else {
                         // 如果缺少必要对象，使用备用计算方式
-                        console.log('缺少必要对象，使用备用计算方式');
+                        // console.log('缺少必要对象，使用备用计算方式');
                         totalAttack = (character.baseStats?.attack || 0) + (weaponBoardStats.base?.attack || 0);
                         totalHp = (character.baseStats?.hp || 0) + (weaponBoardStats.base?.hp || 0);
                     }
                 } else {
                     // 如果Character.getCharacterFullStats不可用，使用备用计算方式
-                    console.log('Character.getCharacterFullStats不可用，使用备用计算方式');
+                    // console.log('Character.getCharacterFullStats不可用，使用备用计算方式');
                     totalAttack = (character.baseStats?.attack || 0) + (weaponBoardStats.base?.attack || 0);
                     totalHp = (character.baseStats?.hp || 0) + (weaponBoardStats.base?.hp || 0);
                 }
@@ -244,12 +244,12 @@ class MainCharacterInfo {
             }
         }
 
-        console.log('角色基础攻击力:', character.currentStats?.attack);
-        console.log('武器盘攻击力加成:', weaponBoardStats.base?.attack || 0);
-        console.log('总攻击力:', totalAttack);
-        console.log('角色基础生命值:', character.currentStats?.hp);
-        console.log('武器盘生命值加成:', weaponBoardStats.base?.hp || 0);
-        console.log('总生命值:', totalHp);
+        // console.log('角色基础攻击力:', character.currentStats?.attack);
+        // console.log('武器盘攻击力加成:', weaponBoardStats.base?.attack || 0);
+        // console.log('总攻击力:', totalAttack);
+        // console.log('角色基础生命值:', character.currentStats?.hp);
+        // console.log('武器盘生命值加成:', weaponBoardStats.base?.hp || 0);
+        // console.log('总生命值:', totalHp);
 
         // 计算预期伤害 (使用包含武器盘加成的总攻击力)
         const elementMultiplier = 1.5; // 克制属性倍率
@@ -289,16 +289,16 @@ class MainCharacterInfo {
         );
 
         // 调试信息：输出攻击力和预期伤害
-        console.log('总攻击力:', totalAttack);
-        console.log('元素克制倍率:', elementMultiplier);
-        console.log('攻击力提升百分比:', attackPercentBonus);
-        console.log('暴击率:', elementStats.critRate, '%');
-        console.log('暴击率是否达到100%:', hasCritical);
-        console.log('暴击倍率:', critMultiplier);
-        console.log('EX攻击力提升:', exAttackBonus);
-        console.log('浑身值:', elementStats.stamina);
-        console.log('浑身提升效果:', staminaBonus);
-        console.log('预期伤害:', expectedDamage);
+        // console.log('总攻击力:', totalAttack);
+        // console.log('元素克制倍率:', elementMultiplier);
+        // console.log('攻击力提升百分比:', attackPercentBonus);
+        // console.log('暴击率:', elementStats.critRate, '%');
+        // console.log('暴击率是否达到100%:', hasCritical);
+        // console.log('暴击倍率:', critMultiplier);
+        // console.log('EX攻击力提升:', exAttackBonus);
+        // console.log('浑身值:', elementStats.stamina);
+        // console.log('浑身提升效果:', staminaBonus);
+        // console.log('预期伤害:', expectedDamage);
 
         return `
             <div class="main-character-info" style="border-color: ${elementColor}">

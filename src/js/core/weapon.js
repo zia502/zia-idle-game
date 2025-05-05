@@ -1094,8 +1094,8 @@ const Weapon = {
             return;
         }
 
-        console.log('\n=== 武器盘技能详情 ===');
-        console.log(`武器盘ID: ${boardId}`);
+        // console.log('\n=== 武器盘技能详情 ===');
+        // console.log(`武器盘ID: ${boardId}`);
 
         for (const slotType in board.slots) {
             const weaponId = board.slots[slotType];
@@ -1151,12 +1151,12 @@ const Weapon = {
 
         const stats = this.calculateWeaponBoardStats(boardId);
 
-        console.log('\n=== 武器盘属性统计 ===');
-        console.log('基础属性:');
-        console.log(`- 总攻击力: ${stats.base.attack}`);
-        console.log(`- 总生命值: ${stats.base.hp}`);
+        // console.log('\n=== 武器盘属性统计 ===');
+        // console.log('基础属性:');
+        // console.log(`- 总攻击力: ${stats.base.attack}`);
+        // console.log(`- 总生命值: ${stats.base.hp}`);
 
-        console.log('\n属性加成:');
+        // console.log('\n属性加成:');
         const elements = ['fire', 'water', 'earth', 'wind', 'light', 'dark'];
         const elementNames = {
             fire: '火',
@@ -1173,43 +1173,9 @@ const Weapon = {
                 elementStats.daRate > 0 || elementStats.taRate > 0 || elementStats.exAttack > 0 ||
                 elementStats.defense > 0 || elementStats.stamina > 0 || elementStats.enmity > 0 ||
                 elementStats.na_cap > 0 || elementStats.skill_cap > 0 || elementStats.bonusDamage > 0) {
-                console.log(`\n${elementNames[element]}属性加成:`);
-                if (elementStats.hp > 0) {
-                    console.log(`- HP提升: ${elementStats.hp}%`);
-                }
-                if (elementStats.attack > 0) {
-                    console.log(`- 攻击力提升: ${elementStats.attack}%`);
-                }
-                if (elementStats.critRate > 0) {
-                    console.log(`- 暴击率提升: ${elementStats.critRate}%`);
-                }
-                if (elementStats.daRate > 0) {
-                    console.log(`- DA率提升: ${elementStats.daRate}%`);
-                }
-                if (elementStats.taRate > 0) {
-                    console.log(`- TA率提升: ${elementStats.taRate}%`);
-                }
-                if (elementStats.exAttack > 0) {
-                    console.log(`- EX攻击力提升: ${elementStats.exAttack}%`);
-                }
-                if (elementStats.defense > 0) {
-                    console.log(`- 防御力提升: ${elementStats.defense}%`);
-                }
-                if (elementStats.stamina > 0) {
-                    console.log(`- 浑身值提升: ${elementStats.stamina}%`);
-                }
-                if (elementStats.enmity > 0) {
-                    console.log(`- 背水值提升: ${elementStats.enmity}%`);
-                }
-                if (elementStats.na_cap > 0) {
-                    console.log(`- 技能伤害上限提升: ${elementStats.na_cap}%`);
-                }
-                if (elementStats.skill_cap > 0) {
-                    console.log(`- 伤害上限提升: ${elementStats.skill_cap}%`);
-                }
-                if (elementStats.bonusDamage > 0) {
-                    console.log(`- 额外伤害: ${elementStats.bonusDamage}`);
-                }
+                // console.log(`\n${elementNames[element]}属性加成:`);
+                // 注释掉所有元素属性加成的日志输出
+                // 这些信息已经在UI中显示，不需要在控制台重复输出
             }
         });
 

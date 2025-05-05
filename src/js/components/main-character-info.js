@@ -10,14 +10,8 @@ class MainCharacterInfo {
                 // 只需确保UI.renderMainCharacter()被调用即可
             });
 
-            // 监听角色经验更新事件
-            Events.on('character:exp-updated', (data) => {
-                // console.log('MainCharacterInfo: 收到角色经验更新事件', data);
-                // 确保UI.renderMainCharacter()被调用以更新经验进度条
-                if (typeof UI !== 'undefined' && typeof UI.renderMainCharacter === 'function') {
-                    UI.renderMainCharacter();
-                }
-            });
+            // 移除对character:exp-updated事件的监听，避免重复处理
+            // 现在只在ui-main-character.js中处理此事件
         }
     }
 

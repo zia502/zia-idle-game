@@ -1221,11 +1221,8 @@ const MainUI = {
                 this.updateWeaponBoard();
             });
 
-            // 监听职业经验更新事件
-            Events.on('character:exp-updated', (data) => {
-                // console.log('MainUI 收到职业经验更新事件', data);
-                this.updateMainHeroInfo();
-            });
+            // 移除对character:exp-updated事件的监听，避免重复处理
+            // 现在只在ui-main-character.js中处理此事件
         }
 
         // 兼容旧版事件系统

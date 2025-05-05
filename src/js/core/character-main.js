@@ -98,7 +98,7 @@ Character.getMainCharacter = function() {
     for (const id in this.characters) {
         const character = this.characters[id];
         if (character && character.isMainCharacter) {
-            console.log('找到主角:', character.name);
+            // console.log('找到主角:', character.name);
             return character;
         }
     }

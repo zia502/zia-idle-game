@@ -8,15 +8,22 @@
         return;
     }
 
-    // 添加一个标志，防止循环调用
+    // 添加标志，防止循环调用
     let isUpdatingMainUI = false;
+    let isHandlingExpUpdate = false;
 
     /**
      * 渲染主角信息
      * @param {boolean} skipMainUI - 是否跳过更新主界面
+     * @param {boolean} isFromExpUpdate - 是否来自经验更新事件
      */
-    UI.renderMainCharacter = function(skipMainUI = false) {
+    UI.renderMainCharacter = function(skipMainUI = false, isFromExpUpdate = false) {
         // console.log('渲染主角信息');
+
+        // 如果正在处理经验更新事件，并且这个调用也来自经验更新，则跳过
+        if (isHandlingExpUpdate && isFromExpUpdate) {
+            return;
+        }
 
         const mainCharacterContainer = document.getElementById('main-character-info');
         if (!mainCharacterContainer) {
@@ -231,8 +238,22 @@
         // 在职业经验更新时重新渲染主角信息
         Events.on('character:exp-updated', (data) => {
             // console.log('职业经验更新事件触发，重新渲染主角信息', data);
-            // 职业经验更新时，需要更新经验进度条，但跳过更新主界面以避免循环调用
-            UI.renderMainCharacter(true); // 传入true表示跳过更新主界面
+
+            // 设置标志，表示正在处理经验更新事件
+            isHandlingExpUpdate = true;
+
+            try {
+                // 更新主角信息，跳过更新主界面，并标记为来自经验更新
+                UI.renderMainCharacter(true, true);
+
+                // 直接更新主界面中的主角信息
+                if (typeof MainUI !== 'undefined' && typeof MainUI.updateMainHeroInfo === 'function') {
+                    MainUI.updateMainHeroInfo();
+                }
+            } finally {
+                // 重置标志
+                isHandlingExpUpdate = false;
+            }
         });
 
         // 在切换到角色界面时也渲染主角信息

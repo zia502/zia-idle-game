@@ -902,8 +902,10 @@ const Dungeon = {
             miniBosses: miniBosses,
             finalBoss: finalBoss,
             defeatedMiniBosses: 0,
-            defeatedMonsters: 0, // 添加已击败的普通怪物计数
+            defeatedMonsters: 0, // 已击败的普通怪物计数
             currentMonsterIndex: 0,
+            monsterCount: monsters.length, // 总怪物数量
+            miniBossCount: miniBosses.length, // 总小boss数量
             rewards: [],
             isCompleted: false,
             finalBossAppeared: false
@@ -1069,32 +1071,54 @@ const Dungeon = {
             return this.currentRun.finalBoss;
         }
 
-        // 定义每个小boss前需要击败的普通怪物数量
-        const monstersPerMiniBoss = Math.ceil(this.currentRun.monsters.length / Math.max(1, this.currentRun.miniBosses.length));
+        // 计算总怪物数量和小boss数量
+        const totalMonsters = this.currentRun.monsters.length;
+        const totalMiniBosses = this.currentRun.miniBosses.length;
+
+        // 如果没有怪物或小boss，直接返回null
+        if (totalMonsters === 0 && totalMiniBosses === 0) {
+            console.log('没有怪物或小boss可战斗');
+            return null;
+        }
+
+        // 计算每个小boss前需要击败的普通怪物数量
+        // 将怪物平均分配到每个小boss之前
+        const monstersPerMiniBoss = Math.ceil(totalMonsters / Math.max(1, totalMiniBosses + 1));
 
         // 计算当前应该遇到的小boss索引
-        const expectedMiniBossIndex = Math.floor(this.currentRun.currentMonsterIndex / monstersPerMiniBoss);
+        // 根据已击败的怪物数量，确定是否应该遇到小boss
+        const defeatedMonsters = this.currentRun.defeatedMonsters || 0;
 
-        // 如果当前应该遇到小boss，并且还有小boss未击败
-        // 修改条件：当expectedMiniBossIndex >= defeatedMiniBosses时，应该遇到小boss
-        if (expectedMiniBossIndex >= this.currentRun.defeatedMiniBosses &&
-            this.currentRun.defeatedMiniBosses < this.currentRun.miniBosses.length) {
-            console.log(`应该遇到小boss: expectedMiniBossIndex=${expectedMiniBossIndex}, defeatedMiniBosses=${this.currentRun.defeatedMiniBosses}`);
+        // 计算当前应该处于的阶段
+        // 每个阶段包含一定数量的怪物和一个小boss
+        const currentPhase = Math.floor(defeatedMonsters / monstersPerMiniBoss);
+
+        // 计算当前阶段内已击败的怪物数量
+        const monstersDefeatedInCurrentPhase = defeatedMonsters % monstersPerMiniBoss;
+
+        console.log(`当前阶段: ${currentPhase}, 当前阶段已击败怪物: ${monstersDefeatedInCurrentPhase}, 每阶段怪物数: ${monstersPerMiniBoss}`);
+        console.log(`总怪物数: ${totalMonsters}, 已击败怪物: ${defeatedMonsters}, 总小boss数: ${totalMiniBosses}, 已击败小boss: ${this.currentRun.defeatedMiniBosses}`);
+
+        // 如果当前阶段内的所有怪物都已击败，并且还有小boss未击败，则返回小boss
+        if (monstersDefeatedInCurrentPhase >= monstersPerMiniBoss &&
+            this.currentRun.defeatedMiniBosses < totalMiniBosses &&
+            currentPhase === this.currentRun.defeatedMiniBosses) {
+            console.log(`应该遇到小boss: 当前阶段=${currentPhase}, 已击败小boss=${this.currentRun.defeatedMiniBosses}`);
             return this.currentRun.miniBosses[this.currentRun.defeatedMiniBosses];
         }
 
-        // 如果所有小boss已击败，但大boss还未出现，则让大boss出现
-        if (this.currentRun.miniBosses.length > 0 &&
-            this.currentRun.defeatedMiniBosses >= this.currentRun.miniBosses.length &&
+        // 如果所有小boss已击败，并且所有怪物也已击败，则让大boss出现
+        if (this.currentRun.defeatedMiniBosses >= totalMiniBosses &&
+            defeatedMonsters >= totalMonsters &&
             !this.currentRun.finalBossAppeared &&
             this.currentRun.finalBoss) {
             this.currentRun.finalBossAppeared = true;
-            console.log('所有小boss已击败，大boss出现');
+            console.log('所有小boss和怪物已击败，大boss出现');
             return this.currentRun.finalBoss;
         }
 
-        // 如果没有boss或所有boss已击败，返回普通怪物
-        if (this.currentRun.currentMonsterIndex < this.currentRun.monsters.length) {
+        // 如果当前阶段内还有怪物未击败，或者已经进入新阶段但还有怪物未击败，则返回普通怪物
+        if (this.currentRun.currentMonsterIndex < totalMonsters) {
             console.log(`返回普通怪物: currentMonsterIndex=${this.currentRun.currentMonsterIndex}`);
             return this.currentRun.monsters[this.currentRun.currentMonsterIndex];
         }

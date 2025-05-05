@@ -255,7 +255,8 @@ const DungeonRunner = {
             // 获取当前怪物
             let monster;
 
-            // 尝试使用Dungeon.getCurrentMonster()方法
+            // 使用Dungeon.getCurrentMonster()方法获取下一个怪物
+            // 这个方法会根据当前的进度决定返回普通怪物、小boss还是大boss
             if (typeof Dungeon.getCurrentMonster === 'function') {
                 monster = Dungeon.getCurrentMonster();
                 console.log('从Dungeon.getCurrentMonster()获取到怪物:', monster);
@@ -272,13 +273,24 @@ const DungeonRunner = {
             if (!monster) {
                 console.log('没有找到当前怪物，检查是否有小boss或大boss');
 
-                // 如果没有更多怪物，检查是否有小boss
-                if (Dungeon.currentRun.defeatedMiniBosses < Dungeon.currentRun.miniBosses.length) {
-                    // 处理小boss
-                    this.processMiniBoss();
-                } else if (!Dungeon.currentRun.finalBossAppeared && Dungeon.currentRun.finalBoss) {
+                // 计算总怪物数和已击败怪物数
+                const totalMonsters = Dungeon.currentRun.monsters.length;
+                const defeatedMonsters = Dungeon.currentRun.defeatedMonsters || 0;
+                const totalMiniBosses = Dungeon.currentRun.miniBosses.length;
+                const defeatedMiniBosses = Dungeon.currentRun.defeatedMiniBosses || 0;
+
+                console.log(`当前地下城状态: 总怪物=${totalMonsters}, 已击败怪物=${defeatedMonsters}, 总小boss=${totalMiniBosses}, 已击败小boss=${defeatedMiniBosses}`);
+
+                // 如果所有小boss和怪物都已击败，但大boss还未出现
+                if (defeatedMonsters >= totalMonsters &&
+                    defeatedMiniBosses >= totalMiniBosses &&
+                    !Dungeon.currentRun.finalBossAppeared &&
+                    Dungeon.currentRun.finalBoss) {
                     // 处理大boss
                     this.processFinalBoss();
+                } else if (defeatedMiniBosses < totalMiniBosses) {
+                    // 如果还有小boss未击败
+                    this.processMiniBoss();
                 } else {
                     // 完成地下城
                     this.completeDungeon();
@@ -705,13 +717,15 @@ const DungeonRunner = {
                     Dungeon.currentRun.currentMonsterIndex++;
                     Dungeon.currentRun.defeatedMonsters = (Dungeon.currentRun.defeatedMonsters || 0) + 1;
 
+                    console.log(`击败普通怪物后: 当前怪物索引=${Dungeon.currentRun.currentMonsterIndex}, 已击败怪物数=${Dungeon.currentRun.defeatedMonsters}`);
+
                     // 更新地下城进度
                     this.updateDungeonProgress(true);
 
                     // 保存地下城进度
                     if (typeof Dungeon.saveDungeonProgress === 'function') {
                         Dungeon.saveDungeonProgress();
-                        // console.log('已保存地下城进度（击败普通怪物后）');
+                        console.log('已保存地下城进度（击败普通怪物后）');
                     }
 
                     // 延迟一段时间后处理下一个怪物

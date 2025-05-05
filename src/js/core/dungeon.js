@@ -911,6 +911,12 @@ const Dungeon = {
 
         console.log(`初始化地下城运行: ${dungeon.name}，普通怪物: ${monsters.length}, 小boss: ${miniBosses.length}`);
 
+        // 清除上一次地下城记录
+        if (typeof DungeonRunner !== 'undefined' && typeof DungeonRunner.clearLastDungeonRecord === 'function') {
+            console.log('清除上一次地下城记录');
+            DungeonRunner.clearLastDungeonRecord();
+        }
+
         // 保存地下城进度到Game.state
         this.saveDungeonProgress();
 
@@ -1180,7 +1186,7 @@ const Dungeon = {
             exp: monster.xpReward || 0,
             items: []
         };
-        
+
         console.log(monster);
         // 添加经验值
         //Game.addPlayerExp(monster.xpReward);

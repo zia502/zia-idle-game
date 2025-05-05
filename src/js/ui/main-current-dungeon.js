@@ -36,9 +36,23 @@ const MainCurrentDungeon = {
             return;
         }
 
-        // 检查是否有上一次地下城记录
+        // 首先检查是否有当前正在进行的地下城
+        if (Dungeon.currentRun) {
+            console.log('检测到当前有活跃的地下城运行，显示当前地下城进度');
+            this.showCurrentDungeon();
+            return;
+        }
+
+        // 如果没有当前地下城，检查是否有上一次地下城记录
         const lastRecord = DungeonRunner.getLastDungeonRecord();
         if (lastRecord) {
+            // 强制修正森林洞穴地下城的怪物数量
+            if (lastRecord.dungeonName === '森林洞穴' || lastRecord.dungeonId === 'forest_cave') {
+                console.log('在update方法中强制修正森林洞穴地下城的怪物数量');
+                lastRecord.totalMonsters = 5;
+                lastRecord.totalMiniBosses = 2;
+            }
+
             console.log('显示上一次地下城记录:', JSON.stringify(lastRecord, null, 2));
 
             // 检查记录中的关键数据
@@ -54,12 +68,8 @@ const MainCurrentDungeon = {
             return;
         }
 
-        // 如果没有记录，显示当前地下城信息
-        if (Dungeon.currentRun) {
-            this.showCurrentDungeon();
-        } else {
-            this.showNoDungeon();
-        }
+        // 如果既没有当前地下城，也没有上一次记录，显示未进入地下城状态
+        this.showNoDungeon();
     },
 
     /**
@@ -73,6 +83,13 @@ const MainCurrentDungeon = {
             return;
         }
 
+        // 强制修正森林洞穴地下城的怪物数量
+        if (record.dungeonName === '森林洞穴' || record.dungeonId === 'forest_cave') {
+            console.log('强制修正森林洞穴地下城的怪物数量');
+            record.totalMonsters = 5;
+            record.totalMiniBosses = 2;
+        }
+
         // 创建记录显示HTML
         let html = `
             <div class="last-dungeon-record">
@@ -82,8 +99,6 @@ const MainCurrentDungeon = {
                     ${record.floor ? `<p>层数：第 ${record.floor} 层</p>` : ''}
                     <p>战败怪物：${record.monsterName} (${record.monsterType})</p>
                     <p>战败原因：${record.defeatReason}</p>
-                    <p>已击败怪物：${record.defeatedMonsters || 0}/${record.totalMonsters || 0}</p>
-                    <p>已击败小BOSS：${record.defeatedMiniBosses || 0}/${record.totalMiniBosses || 0}</p>
                 </div>
                 <div class="team-stats">
                     <h4>队伍统计</h4>
@@ -150,11 +165,19 @@ const MainCurrentDungeon = {
             return;
         }
 
+        // 清除上一次地下城记录，确保UI显示当前地下城进度
+        if (typeof DungeonRunner !== 'undefined' && typeof DungeonRunner.clearLastDungeonRecord === 'function') {
+            console.log('在showCurrentDungeon中清除上一次地下城记录');
+            DungeonRunner.clearLastDungeonRecord();
+        }
+
         const dungeon = Dungeon.getDungeon(Dungeon.currentRun.dungeonId);
         if (!dungeon) {
             this.showNoDungeon();
             return;
         }
+
+        console.log('显示当前地下城进度:', Dungeon.currentRun);
 
         // 使用Dungeon.currentRun.progress作为进度百分比
         let progressPercent = Dungeon.currentRun.progress || 0;

@@ -1,0 +1,65 @@
+/* 修复 stat-item 中元素间距过大的问题 */
+/* 特别针对所有 stat-item 使用更直接的布局 */
+/* 确保所有容器中的 stat-item 都有合理的宽度 */
+.main-character-info .stat-item,
+.weapon-board-bonus .stat-item,
+.expected-damage .stat-item,
+.hero-stats .stat-item,
+.info-stats .stat-item,
+.dungeon-stats .stat-item {
+    display: grid !important;
+    grid-template-columns: 50px 1fr !important;
+    gap: 5px !important;
+    width: 100px !important; /* 限制宽度为100px */
+    max-width: 100px !important;
+}
+
+/* 通用修复 */
+.stat-item {
+    display: flex !important;
+    justify-content: flex-start !important; /* 改为从左开始 */
+    align-items: center !important;
+    width: 100px !important; /* 限制宽度为100px */
+    max-width: 100px !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    line-height: 1.2 !important;
+    gap: 10px !important; /* 添加固定间距 */
+}
+
+/* 直接针对所有 stat-name 和 stat-value */
+span.stat-name, span.stat-label {
+    display: inline-block !important;
+    width: 50px !important;
+    max-width: 50px !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+}
+
+span.stat-value {
+    display: inline-block !important;
+    margin-left: auto !important;
+}
+
+/* 全局选择器，确保所有 stat-item 都有合理的宽度 */
+div[class*="stat-item"],
+.stat-item {
+    width: 100px !important;
+    max-width: 100px !important;
+    box-sizing: border-box !important;
+}
+
+.stat-name, .stat-label {
+    flex: 0 0 auto !important;
+    text-align: left !important;
+    margin-right: 10px !important;
+    max-width: 50px !important; /* 限制最大宽度 */
+    width: auto !important;
+}
+
+.stat-value {
+    text-align: right !important;
+    flex: 0 0 auto !important;
+    margin-left: auto !important; /* 将值推到右侧 */
+}

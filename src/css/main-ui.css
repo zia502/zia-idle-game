@@ -495,13 +495,39 @@
 .hero-stats {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
-    gap: 5px;
+    gap: 0; /* 移除网格间距 */
 }
 
 .stat-item {
     font-size: 12px;
     display: flex;
     justify-content: space-between;
+    padding: 0; /* 移除内边距 */
+    margin: 0; /* 移除外边距 */
+    line-height: 1.2; /* 减小行高 */
+}
+
+.stat-name {
+    color: #555;
+    margin: 0; /* 移除外边距 */
+    padding: 0; /* 移除内边距 */
+}
+
+.stat-value {
+    font-weight: bold;
+    margin: 0; /* 移除外边距 */
+    padding: 0; /* 移除内边距 */
+}
+
+/* 使用更简单的选择器 */
+.stat-item:nth-child(1) .stat-value {
+    color: #4CAF50 !important; /* 绿色 */
+    font-weight: bold;
+}
+
+.stat-item:nth-child(2) .stat-value {
+    color: #f44336 !important; /* 红色 */
+    font-weight: bold;
 }
 
 /* 职业经验进度条样式 */
@@ -576,14 +602,6 @@
 @keyframes job-exp-bar-stripes {
     from { background-position: 0 0; }
     to { background-position: 20px 0; }
-}
-
-.stat-name {
-    color: #555;
-}
-
-.stat-value {
-    font-weight: bold;
 }
 
 .hero-skills {

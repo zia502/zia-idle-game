@@ -31,7 +31,7 @@
 span.stat-name, span.stat-label {
     display: inline-block !important;
     width: 50px !important;
-    max-width: 50px !important;
+    max-width: 150px !important;
     overflow: hidden !important;
     text-overflow: ellipsis !important;
     white-space: nowrap !important;
@@ -54,7 +54,7 @@ div[class*="stat-item"],
     flex: 0 0 auto !important;
     text-align: left !important;
     margin-right: 10px !important;
-    max-width: 50px !important; /* 限制最大宽度 */
+    max-width: 100px !important; /* 限制最大宽度 */
     width: auto !important;
 }
 

@@ -276,9 +276,7 @@ class MainCharacterInfo {
         const expectedDamage = Math.floor(
             totalAttack *
             elementMultiplier *
-            (1 + attackPercentBonus) *
             critMultiplier *
-            (1 + exAttackBonus) *
             (1 + staminaBonus)
         );
 

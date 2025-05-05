@@ -143,30 +143,37 @@
 }
 
 /* 角色操作区域样式 */
-.character-actions {
+#available-characters-list .character-actions {
     display: flex;
     justify-content: center;
     align-items: center;
     margin-left: 10px;
+    height: 40px; /* 确保有足够的高度 */
 }
 
 /* 添加角色按钮样式（绿色十字） */
-.plus-icon {
+#available-characters-list .plus-icon {
     color: #4caf50;
     font-size: 32px;
     font-weight: bold;
     cursor: pointer;
     transition: all 0.2s ease;
-    display: inline-block;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 32px;
+    height: 32px;
     line-height: 1;
+    text-align: center;
+    vertical-align: middle;
 }
 
-.plus-icon:hover {
+#available-characters-list .plus-icon:hover {
     color: #45a049;
     transform: scale(1.2);
 }
 
-.plus-icon.disabled {
+#available-characters-list .plus-icon.disabled {
     color: #cccccc;
     cursor: not-allowed;
     transform: none;

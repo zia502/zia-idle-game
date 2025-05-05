@@ -230,8 +230,8 @@ const UI = {
             }
             .character-info {
                 display: flex;
-                flex-direction: column;
-                gap: 5px;
+                flex-direction: row;
+                gap: 2px;
             }
             .character-job {
                 display: flex;

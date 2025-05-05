@@ -406,8 +406,16 @@ const MainUI = {
                         }
                     }
 
+                    // 计算HP百分比
+                    const hpPercent = character.currentStats && character.currentStats.maxHp ?
+                        Math.floor((character.currentStats.hp / character.currentStats.maxHp) * 100) : 100;
+
+                    // 获取当前HP和最大HP
+                    const currentHp = character.currentStats ? Math.floor(character.currentStats.hp) : 0;
+                    const maxHp = character.currentStats ? character.currentStats.maxHp : 0;
+
                     html += `
-                        <div class="team-member">
+                        <div class="team-member" data-character-id="${character.id}">
                             <div class="member-avatar">${character.name.charAt(0)}</div>
                             <div class="member-info">
                                 <div class="member-name">${character.name}</div>`;
@@ -417,6 +425,14 @@ const MainUI = {
                         html += `<div class="member-class">${jobName}</div>
                                 <div class="member-level">等级 ${jobLevel}</div>`;
                     }
+
+                    // 添加HP条
+                    html += `
+                        <div class="member-hp-bar-container">
+                            <div class="member-hp-bar" style="width: ${hpPercent}%"></div>
+                        </div>
+                        <div class="member-hp-text">${currentHp}/${maxHp}</div>`;
+
 
                     // 添加技能信息
                     if (character.skills && character.skills.length > 0) {
@@ -1218,6 +1234,79 @@ const MainUI = {
     },
 
     /**
+     * 更新队伍成员HP条
+     */
+    updateTeamMembersHP() {
+        try {
+            // 检查Game和Character模块是否存在
+            if (typeof Game === 'undefined' || typeof Character === 'undefined' || typeof Team === 'undefined') {
+                console.warn('Game、Character或Team模块未定义，无法更新队伍成员HP条');
+                return;
+            }
+
+            // 获取当前队伍
+            const activeTeamId = Game.state.activeTeamId;
+            if (!activeTeamId || !Team.teams || !Team.teams[activeTeamId]) {
+                console.warn('未找到当前队伍，无法更新队伍成员HP条');
+                return;
+            }
+
+            const team = Team.teams[activeTeamId];
+            if (!team.members || team.members.length === 0) {
+                console.warn('队伍中没有成员，无法更新队伍成员HP条');
+                return;
+            }
+
+            // 更新每个队伍成员的HP条
+            team.members.forEach(memberId => {
+                // 检查角色是否存在
+                if (!Character.characters || !Character.characters[memberId]) {
+                    return;
+                }
+
+                const character = Character.characters[memberId];
+
+                // 获取角色的HP元素
+                const memberElement = document.querySelector(`.team-member[data-character-id="${memberId}"]`);
+                if (!memberElement) {
+                    return;
+                }
+
+                // 获取HP条和HP文本元素
+                const hpBar = memberElement.querySelector('.member-hp-bar');
+                const hpText = memberElement.querySelector('.member-hp-text');
+
+                if (!hpBar || !hpText) {
+                    return;
+                }
+
+                // 计算HP百分比
+                const hpPercent = character.currentStats && character.currentStats.maxHp ?
+                    Math.floor((character.currentStats.hp / character.currentStats.maxHp) * 100) : 100;
+
+                // 获取当前HP和最大HP
+                const currentHp = character.currentStats ? Math.floor(character.currentStats.hp) : 0;
+                const maxHp = character.currentStats ? character.currentStats.maxHp : 0;
+
+                // 更新HP条和HP文本
+                hpBar.style.width = `${hpPercent}%`;
+                hpText.textContent = `${currentHp}/${maxHp}`;
+
+                // 根据HP百分比设置颜色
+                if (hpPercent <= 25) {
+                    hpBar.style.backgroundColor = '#FF5252'; // 红色
+                } else if (hpPercent <= 50) {
+                    hpBar.style.backgroundColor = '#FFC107'; // 黄色
+                } else {
+                    hpBar.style.backgroundColor = '#4CAF50'; // 绿色
+                }
+            });
+        } catch (error) {
+            console.error('更新队伍成员HP条时出错:', error);
+        }
+    },
+
+    /**
      * 注册事件监听
      */
     registerEventListeners() {
@@ -1226,6 +1315,7 @@ const MainUI = {
             Events.on('character:updated', (data) => {
                 // console.log('MainUI 收到角色更新事件', data);
                 this.updateMainHeroInfo();
+                this.updateTeamMembersHP(); // 更新队伍成员HP条
             });
 
             Events.on('team:updated', () => {
@@ -1244,6 +1334,12 @@ const MainUI = {
             Events.on('weapon:updated', () => {
                 // console.log('MainUI 收到武器更新事件');
                 this.updateWeaponBoard();
+            });
+
+            // 监听战斗回合结束事件
+            Events.on('battle:turn-end', () => {
+                // console.log('MainUI 收到战斗回合结束事件');
+                this.updateTeamMembersHP();
             });
 
             // 移除对character:exp-updated事件的监听，避免重复处理

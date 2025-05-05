@@ -471,6 +471,7 @@ const Battle = {
             // 处理回合结束效果
             console.log(`----- 回合结束触发事件 -----`);
 
+
             // 处理队伍成员的回合结束效果
             for (const member of teamMembers) {
                 if (member.currentStats.hp <= 0) continue;
@@ -546,6 +547,11 @@ const Battle = {
             // 检查战斗是否已结束
             if (this.isBattleOver(teamMembers, monster)) {
                 break;
+            }
+
+            // 触发回合结束事件，用于更新UI
+            if (typeof Events !== 'undefined' && typeof Events.emit === 'function') {
+                Events.emit('battle:turn-end');
             }
 
             // 第一回合结束

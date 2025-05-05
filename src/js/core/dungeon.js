@@ -881,7 +881,7 @@ const Dungeon = {
                 miniBosses.push(miniBoss);
             }
         }
-        console.log(`生成小boss ${miniBosses}`);
+        console.log(`生成小boss `,miniBosses);
 
         // 生成大boss（但不立即出现）
         const finalBoss = this.generateBoss(dungeon, 'final');
@@ -1076,8 +1076,10 @@ const Dungeon = {
         const expectedMiniBossIndex = Math.floor(this.currentRun.currentMonsterIndex / monstersPerMiniBoss);
 
         // 如果当前应该遇到小boss，并且还有小boss未击败
-        if (expectedMiniBossIndex > this.currentRun.defeatedMiniBosses &&
+        // 修改条件：当expectedMiniBossIndex >= defeatedMiniBosses时，应该遇到小boss
+        if (expectedMiniBossIndex >= this.currentRun.defeatedMiniBosses &&
             this.currentRun.defeatedMiniBosses < this.currentRun.miniBosses.length) {
+            console.log(`应该遇到小boss: expectedMiniBossIndex=${expectedMiniBossIndex}, defeatedMiniBosses=${this.currentRun.defeatedMiniBosses}`);
             return this.currentRun.miniBosses[this.currentRun.defeatedMiniBosses];
         }
 
@@ -1087,14 +1089,17 @@ const Dungeon = {
             !this.currentRun.finalBossAppeared &&
             this.currentRun.finalBoss) {
             this.currentRun.finalBossAppeared = true;
+            console.log('所有小boss已击败，大boss出现');
             return this.currentRun.finalBoss;
         }
 
         // 如果没有boss或所有boss已击败，返回普通怪物
         if (this.currentRun.currentMonsterIndex < this.currentRun.monsters.length) {
+            console.log(`返回普通怪物: currentMonsterIndex=${this.currentRun.currentMonsterIndex}`);
             return this.currentRun.monsters[this.currentRun.currentMonsterIndex];
         }
 
+        console.log('没有更多怪物可战斗');
         return null;
     },
 

@@ -249,7 +249,6 @@ const DungeonRunner = {
             // 检查是否有大boss
             if (!Dungeon.currentRun.finalBoss) {
                 console.warn('地下城没有大boss，尝试生成默认大boss');
-
                 return;
             }
 
@@ -259,6 +258,7 @@ const DungeonRunner = {
             // 尝试使用Dungeon.getCurrentMonster()方法
             if (typeof Dungeon.getCurrentMonster === 'function') {
                 monster = Dungeon.getCurrentMonster();
+                console.log('从Dungeon.getCurrentMonster()获取到怪物:', monster);
             }
             // 如果方法不存在或返回null，尝试直接从currentRun获取
             else if (Dungeon.currentRun.monsters && Dungeon.currentRun.monsters.length > 0) {
@@ -266,10 +266,11 @@ const DungeonRunner = {
                     Dungeon.currentRun.currentMonsterIndex = 0;
                 }
                 monster = Dungeon.currentRun.monsters[Dungeon.currentRun.currentMonsterIndex];
+                console.log('从Dungeon.currentRun.monsters获取到怪物:', monster);
             }
 
             if (!monster) {
-                // console.log('没有找到当前怪物，检查是否有小boss或大boss');
+                console.log('没有找到当前怪物，检查是否有小boss或大boss');
 
                 // 如果没有更多怪物，检查是否有小boss
                 if (Dungeon.currentRun.defeatedMiniBosses < Dungeon.currentRun.miniBosses.length) {
@@ -285,6 +286,21 @@ const DungeonRunner = {
                 return;
             }
 
+            // 根据怪物类型处理
+            if (monster.isFinalBoss) {
+                console.log('当前怪物是大boss，调用processFinalBoss');
+                // 处理大boss
+                this.processFinalBoss();
+                return;
+            } else if (monster.isMiniBoss) {
+                console.log('当前怪物是小boss，调用processMiniBoss');
+                // 处理小boss
+                this.processMiniBoss();
+                return;
+            }
+
+            // 处理普通怪物
+            console.log('当前怪物是普通怪物，开始战斗');
             // 添加遇到怪物的日志
             this.addBattleLog(`地下城回合${Battle.dungeonTurn+1}-遇到了 ${monster.name}`, 'warning');
 

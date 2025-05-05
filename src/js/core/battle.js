@@ -151,7 +151,7 @@ const Battle = {
             monsterCharacter.currentStats.hp = monsterCharacter.currentStats.maxHp;
         }
 
-        console.log("创建怪物角色对象:", monsterCharacter);
+        console.log(`怪物当前hp: ${monsterCharacter.currentStats.hp}, 怪物状态: `, monsterCharacter);
 
         // 触发战斗开始事件
         if (typeof Events !== 'undefined') {
@@ -449,7 +449,7 @@ const Battle = {
                 Math.floor((monster.currentStats.hp / monster.currentStats.maxHp) * 100) : 0;
 
             //this.logBattle(`${monster.name} HP: ${Math.floor(monster.currentStats.hp)}/${monster.currentStats.maxHp} (${monsterHpPercent}%)`, true); // 强制记录，不过滤
-            console.log(`怪物当前状态: `, monster.currentStats);
+            console.log(`怪物当前hp: ${monster.currentStats.hp}, 怪物状态: `, monster.currentStats);
 
             for (const member of teamMembers) {
                 if (member.currentStats.hp > 0) {
@@ -465,7 +465,7 @@ const Battle = {
 
             // 在每个回合结束时打印双方的HP
             if (monster.currentStats.hp > 0) {
-                this.logBattle(`\n回合 ${this.currentTurn} 结束, ${monster.name} HP: ${Math.floor(monster.currentStats.hp)}/${monster.currentStats.maxHp} (${monsterHpPercent}%)`);
+                this.logBattle(`\n回合 ${this.dungeonTurn} 结束, ${monster.name} HP: ${Math.floor(monster.currentStats.hp)}/${monster.currentStats.maxHp} (${monsterHpPercent}%)`);
             }
 
             // 处理回合结束效果
@@ -500,6 +500,7 @@ const Battle = {
                                 // 处理回合结束类型的效果
                                 if (effect.type === 'endOfTurn') {
                                     this.processEndOfTurnEffect(member, effect.effect, teamMembers, monster, skillId);
+                                    this.logBattle(`回合结束${member.name}触发技能${skill.name}`);
                                 }
                             }
                         }

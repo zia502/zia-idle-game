@@ -6,7 +6,7 @@
     "type": "attack",
     "baseStats": {
       "hp": 264,
-      "maxHp": 1520,
+      "maxHp": 3520,
       "attack": 1650,
       "maxAttack": 9600,
       "defense": 10,
@@ -24,7 +24,7 @@
     "type": "defense",
     "baseStats": {
       "hp": 264,
-      "maxHp": 2110,
+      "maxHp": 4110,
       "attack": 1650,
       "maxAttack": 7900,
       "defense": 10,
@@ -42,7 +42,7 @@
     "type": "defense",
     "baseStats": {
       "hp": 264,
-      "maxHp": 1960,
+      "maxHp": 3960,
       "attack": 1650,
       "maxAttack": 8300,
       "defense": 10,
@@ -60,7 +60,7 @@
     "type": "attack",
     "baseStats": {
       "hp": 264,
-      "maxHp": 1464,
+      "maxHp": 3464,
       "attack": 1650,
       "maxAttack": 13680,
       "defense": 10,
@@ -78,7 +78,7 @@
     "type": "attack",
     "baseStats": {
       "hp": 264,
-      "maxHp": 1150,
+      "maxHp": 3150,
       "attack": 1650,
       "maxAttack": 10100,
       "defense": 10,
@@ -96,7 +96,7 @@
     "type": "magic",
     "baseStats": {
       "hp": 264,
-      "maxHp": 1520,
+      "maxHp": 3520,
       "attack": 1650,
       "maxAttack": 9600,
       "defense": 0,
@@ -114,7 +114,7 @@
     "type": "attack",
     "baseStats": {
       "hp": 264,
-      "maxHp": 1520,
+      "maxHp": 3520,
       "attack": 1650,
       "maxAttack": 9600,
       "defense": 0,
@@ -132,7 +132,7 @@
     "type": "magic",
     "baseStats": {
       "hp": 264,
-      "maxHp": 1520,
+      "maxHp": 3520,
       "attack": 1650,
       "maxAttack": 9600,
       "defense": 0,
@@ -150,7 +150,7 @@
     "type": "support",
     "baseStats": {
       "hp": 264,
-      "maxHp": 1520,
+      "maxHp": 3520,
       "attack": 1650,
       "maxAttack": 9600,
       "defense": 0,

@@ -407,8 +407,10 @@ const MainUI = {
                     }
 
                     // 如果角色没有当前状态的最大HP
-                    if (!character.currentStats.maxHp){
+                    if (!character.currentStats.maxHp && character.weaponBonusStats){
                         character.currentStats = character.weaponBonusStats;
+                    }else{
+                        character.currentStats = character.baseStats.hp;
                     }
                     const hpPercent = character.currentStats && character.currentStats.maxHp ?
                         Math.floor((character.currentStats.hp / character.currentStats.maxHp) * 100) : 100;

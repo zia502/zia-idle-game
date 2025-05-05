@@ -7,12 +7,32 @@ const Battle = {
     currentTurn: 0,
     battleLog: [],
     currentBattle: null, // 保存当前战斗信息
+    dungeonTurn: 0, // 地下城回合数
 
     /**
      * 初始化战斗系统
      */
     init() {
         console.log('战斗系统已初始化');
+    },
+
+    /**
+     * 重置战斗系统
+     */
+    reset() {
+        console.log('重置战斗系统...');
+        this.isFirstTurn = true;
+        this.currentTurn = 0;
+        this.battleLog = [];
+        this.currentBattle = null;
+        this.dungeonTurn = 0;
+
+        // 清除备用队员信息
+        if (this.backLineMembers) {
+            this.backLineMembers = [];
+        }
+
+        console.log('战斗系统已重置');
     },
 
     /**

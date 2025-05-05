@@ -300,8 +300,8 @@ const Game = {
             if (typeof Inventory !== 'undefined' && !this.hasInitialExpMaterials) {
                 console.log('添加初始经验材料...');
                 Inventory.addItem('exp_small', 10);
-                Inventory.addItem('exp_medium', 10);
-                Inventory.addItem('exp_large', 10);
+                // Inventory.addItem('exp_medium', 10);
+                // Inventory.addItem('exp_large', 10);
                 this.hasInitialExpMaterials = true;
                 // 保存游戏状态
                 this.saveGame();
@@ -871,6 +871,42 @@ const Game = {
 
             console.log("游戏状态已重置");
 
+            // 重置战斗系统
+            if (typeof Battle !== 'undefined') {
+                console.log("重置战斗系统...");
+                // 清空战斗日志
+                Battle.battleLog = [];
+                // 重置战斗状态
+                Battle.isFirstTurn = true;
+                Battle.currentTurn = 0;
+                Battle.currentBattle = null;
+                Battle.dungeonTurn = 0;
+
+                // 如果Battle有reset方法，调用它
+                if (typeof Battle.reset === 'function') {
+                    Battle.reset();
+                }
+
+                console.log("战斗系统已重置");
+            }
+
+            // 重置地下城运行器
+            if (typeof DungeonRunner !== 'undefined') {
+                console.log("重置地下城运行器...");
+                DungeonRunner.isRunning = false;
+                DungeonRunner.isPaused = false;
+                DungeonRunner.currentRun = null;
+                DungeonRunner.lastDungeonRecord = null;
+                DungeonRunner.currentDungeonInfo = null;
+
+                // 如果DungeonRunner有reset方法，调用它
+                if (typeof DungeonRunner.reset === 'function') {
+                    DungeonRunner.reset();
+                }
+
+                console.log("地下城运行器已重置");
+            }
+
             // 重置地下城系统
             if (typeof Dungeon !== 'undefined' && typeof Dungeon.reset === 'function') {
                 console.log("重置地下城系统...");
@@ -912,13 +948,51 @@ const Game = {
                     Character.characters = {};
                 }
 
-                // 检查所有角色是否有dungeonOriginalStats
+                // 检查所有角色是否有dungeonOriginalStats或战斗相关属性
                 if (Character.characters) {
                     for (const characterId in Character.characters) {
                         const character = Character.characters[characterId];
+
+                        // 清除地下城原始属性
                         if (character.dungeonOriginalStats) {
                             console.warn(`警告：角色 ${character.name} 仍有dungeonOriginalStats，强制清除`);
                             delete character.dungeonOriginalStats;
+                        }
+
+                        // 清除战斗统计
+                        if (character.stats) {
+                            character.stats = {
+                                totalDamage: 0,
+                                totalHealing: 0,
+                                daCount: 0,
+                                taCount: 0,
+                                critCount: 0
+                            };
+                        }
+
+                        // 清除战斗状态
+                        if (character.hasAttacked !== undefined) {
+                            delete character.hasAttacked;
+                        }
+
+                        // 清除BUFF
+                        if (character.buffs) {
+                            character.buffs = [];
+                        }
+
+                        // 清除技能冷却
+                        if (character.skillCooldowns) {
+                            character.skillCooldowns = {};
+                        }
+
+                        // 清除已应用的被动技能
+                        if (character.dungeonAppliedPassives) {
+                            delete character.dungeonAppliedPassives;
+                        }
+
+                        // 清除原始状态
+                        if (character.originalStats) {
+                            delete character.originalStats;
                         }
                     }
                 }
@@ -934,6 +1008,39 @@ const Game = {
                     console.warn("警告：队伍未被清除，强制清除");
                     Team.teams = {};
                     Team.activeTeamId = null;
+                }
+            }
+
+            // 重置BUFF系统
+            if (typeof BuffSystem !== 'undefined' && typeof BuffSystem.reset === 'function') {
+                console.log("重置BUFF系统...");
+                BuffSystem.reset();
+            }
+
+            // 清除UI中的战斗日志显示
+            if (typeof UI !== 'undefined') {
+                console.log("清除UI中的战斗日志显示...");
+                const battleLogElement = document.getElementById('main-battle-log');
+                if (battleLogElement) {
+                    battleLogElement.innerHTML = '';
+                }
+
+                // 清除当前地下城信息显示
+                const currentDungeonElement = document.getElementById('main-current-dungeon');
+                if (currentDungeonElement) {
+                    currentDungeonElement.innerHTML = '';
+                    currentDungeonElement.style.display = 'none';
+                }
+
+                // 清除地下城进度条
+                const dungeonProgressElement = document.getElementById('dungeon-progress-bar');
+                if (dungeonProgressElement) {
+                    dungeonProgressElement.style.width = '0%';
+                }
+
+                const dungeonProgressTextElement = document.getElementById('dungeon-progress-text');
+                if (dungeonProgressTextElement) {
+                    dungeonProgressTextElement.textContent = '0%';
                 }
             }
 

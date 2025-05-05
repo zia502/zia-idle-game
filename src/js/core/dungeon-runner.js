@@ -33,6 +33,46 @@ const DungeonRunner = {
     currentDungeonInfo: null,
 
     /**
+     * 重置地下城运行器
+     */
+    reset() {
+        console.log('重置地下城运行器...');
+        this.isRunning = false;
+        this.isPaused = false;
+        this.currentRun = null;
+        this.lastDungeonRecord = null;
+        this.currentDungeonInfo = null;
+
+        // 清除UI中的地下城信息
+        this.clearDungeonUI();
+
+        console.log('地下城运行器已重置');
+    },
+
+    /**
+     * 清除UI中的地下城信息
+     */
+    clearDungeonUI() {
+        // 清除当前地下城信息显示
+        const currentDungeonElement = document.getElementById('main-current-dungeon');
+        if (currentDungeonElement) {
+            currentDungeonElement.innerHTML = '';
+            currentDungeonElement.style.display = 'none';
+        }
+
+        // 清除地下城进度条
+        const dungeonProgressElement = document.getElementById('dungeon-progress-bar');
+        if (dungeonProgressElement) {
+            dungeonProgressElement.style.width = '0%';
+        }
+
+        const dungeonProgressTextElement = document.getElementById('dungeon-progress-text');
+        if (dungeonProgressTextElement) {
+            dungeonProgressTextElement.textContent = '0%';
+        }
+    },
+
+    /**
      * 初始化地下城运行器
      */
     init() {

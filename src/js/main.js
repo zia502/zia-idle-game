@@ -160,6 +160,14 @@ document.addEventListener('DOMContentLoaded', function() {
             console.warn('找不到WeaponBoardBonusSystem模块，跳过初始化');
         }
 
+        // 初始化技能提示框 - 立即初始化，不等待JobSystem就绪
+        if (typeof SkillTooltip !== 'undefined') {
+            console.log('初始化技能提示框...');
+            SkillTooltip.init();
+        } else {
+            console.warn('找不到SkillTooltip模块，跳过初始化');
+        }
+
         // 在职业系统就绪后初始化UI系统
         Events.on('jobSystem:ready', function() {
             console.log('职业系统就绪，现在初始化UI系统...');
@@ -172,12 +180,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 console.warn('找不到UI模块，跳过初始化');
             }
 
-            // 初始化技能提示框
+            // 再次初始化技能提示框，确保它能正常工作
             if (typeof SkillTooltip !== 'undefined') {
-                console.log('初始化技能提示框...');
+                console.log('重新初始化技能提示框...');
                 SkillTooltip.init();
-            } else {
-                console.warn('找不到SkillTooltip模块，跳过初始化');
             }
         });
 

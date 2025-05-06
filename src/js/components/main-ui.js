@@ -290,14 +290,14 @@ const MainUI = {
                                 html += `<div class="skill-item" data-skill-id="${skill}">${skillInfo.name}</div>`;
                             } else {
                                 // 如果找不到技能信息，只显示技能ID
-                                html += `<div class="skill-item">${skill}</div>`;
+                                html += `<div class="skill-item" data-skill-id="${skill}">${skill}</div>`;
                             }
                         } else if (typeof skill === 'object' && skill !== null) {
                             // 如果技能是对象，直接使用其属性
                             html += `<div class="skill-item" data-skill-id="${skill.id || ''}">${skill.name || '未知技能'}</div>`;
                         } else {
                             // 处理其他情况
-                            html += `<div class="skill-item">未知技能</div>`;
+                            html += `<div class="skill-item" data-skill-id="unknown">未知技能</div>`;
                         }
                     });
                 }
@@ -309,6 +309,11 @@ const MainUI = {
             }
 
             heroInfoContainer.innerHTML = html;
+
+            // 重新初始化技能提示框，确保新添加的技能元素能够显示提示框
+            if (typeof SkillTooltip !== 'undefined') {
+                setTimeout(() => SkillTooltip.init(), 100);
+            }
         } catch (error) {
             console.error('更新主角信息时出错:', error);
             const heroInfoContainer = document.getElementById('main-hero-info');
@@ -530,14 +535,14 @@ const MainUI = {
                                         html += `<div class="member-skill ${skillClass}" data-skill-id="${skill}" title="${skillInfo.name}"></div>`;
                                     } else {
                                         // 如果找不到技能信息，显示默认圆点
-                                        html += `<div class="member-skill skill-buff" title="${skill}"></div>`;
+                                        html += `<div class="member-skill skill-buff" data-skill-id="${skill}" title="${skill}"></div>`;
                                     }
                                 } else if (typeof skill === 'object' && skill !== null) {
                                     // 如果技能是对象，直接使用其属性
                                     html += `<div class="member-skill skill-buff" data-skill-id="${skill.id || ''}" title="${skill.name || '未知技能'}"></div>`;
                                 } else {
                                     // 处理其他情况
-                                    html += `<div class="member-skill skill-buff" title="未知技能"></div>`;
+                                    html += `<div class="member-skill skill-buff" data-skill-id="unknown" title="未知技能"></div>`;
                                 }
                             });
                         }
@@ -557,6 +562,11 @@ const MainUI = {
             }
 
             teamContainer.innerHTML = html;
+
+            // 重新初始化技能提示框，确保新添加的技能元素能够显示提示框
+            if (typeof SkillTooltip !== 'undefined') {
+                setTimeout(() => SkillTooltip.init(), 100);
+            }
         } catch (error) {
             console.error('更新队伍信息时出错:', error);
             const teamContainer = document.getElementById('main-current-team');

@@ -15,48 +15,66 @@ const SkillTooltip = {
      * 创建提示框元素
      */
     createTooltipElement() {
-        // 检查是否已存在
-        if (document.getElementById('skill-tooltip')) {
-            return;
+        // 先移除可能存在的旧提示框
+        const oldTooltip = document.getElementById('skill-tooltip');
+        if (oldTooltip) {
+            oldTooltip.remove();
         }
 
         // 创建提示框元素
         const tooltip = document.createElement('div');
         tooltip.id = 'skill-tooltip';
         tooltip.className = 'skill-tooltip';
+
+        // 确保提示框初始状态是隐藏的
+        tooltip.style.visibility = 'hidden';
+        tooltip.style.opacity = '0';
+
         document.body.appendChild(tooltip);
 
         // 保存引用
         this.tooltipElement = tooltip;
+
+        console.log('技能提示框元素已创建');
     },
 
     /**
      * 添加事件监听器
      */
     attachEventListeners() {
+        // 移除可能存在的旧事件监听器
+        if (this.mouseover) document.removeEventListener('mouseover', this.mouseover);
+        if (this.mousemove) document.removeEventListener('mousemove', this.mousemove);
+        if (this.mouseout) document.removeEventListener('mouseout', this.mouseout);
+
         // 监听技能项的鼠标事件
-        document.addEventListener('mouseover', (event) => {
+        this.mouseover = (event) => {
             const skillItem = this.findSkillElement(event.target);
             if (skillItem) {
                 const skillId = skillItem.dataset.skillId;
                 if (skillId) {
+                    console.log(`显示技能提示框: ${skillId}`);
                     this.showTooltip(skillId, event);
                 }
             }
-        });
+        };
 
-        document.addEventListener('mousemove', (event) => {
+        this.mousemove = (event) => {
             if (this.tooltipElement.classList.contains('visible')) {
                 this.positionTooltip(event);
             }
-        });
+        };
 
-        document.addEventListener('mouseout', (event) => {
+        this.mouseout = (event) => {
             const skillItem = this.findSkillElement(event.target);
             if (skillItem) {
                 this.hideTooltip();
             }
-        });
+        };
+
+        document.addEventListener('mouseover', this.mouseover);
+        document.addEventListener('mousemove', this.mousemove);
+        document.addEventListener('mouseout', this.mouseout);
     },
 
     /**
@@ -134,6 +152,9 @@ const SkillTooltip = {
 
         // 显示提示框
         this.tooltipElement.classList.add('visible');
+        // 确保提示框可见
+        this.tooltipElement.style.visibility = 'visible';
+        this.tooltipElement.style.opacity = '1';
 
         // 定位提示框
         this.positionTooltip(event);
@@ -144,6 +165,9 @@ const SkillTooltip = {
      */
     hideTooltip() {
         this.tooltipElement.classList.remove('visible');
+        // 确保提示框隐藏
+        this.tooltipElement.style.visibility = 'hidden';
+        this.tooltipElement.style.opacity = '0';
     },
 
     /**

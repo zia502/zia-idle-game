@@ -1184,13 +1184,13 @@
   },
   "frostArrow": {
     "name": "冰霜箭矢",
-    "description": "对敌方单体造成4.5倍攻击力的水属性伤害并施加速度-20%debuff，持续2回合，CD5回合",
+    "description": "对敌方单体造成4.5倍攻击力的水属性伤害，CD5回合",
     "type": "attack",
     "power": 1.0,
     "cost": 0,
     "fixed": false,
     "cooldown": 5,
-    "effectType": "damage_and_debuff",
+    "effectType": "damage",
     "targetType": "enemy",
     "duration": 2,
     "effects": [
@@ -1198,16 +1198,6 @@
         "type": "damage",
         "multiplier": 4.5,
         "element": "water"
-      },
-      {
-        "type": "speedDown",
-        "value": 0.2,
-        "duration": 2,
-        "stackable": true,
-        "dispellable": true,
-        "name": "冰冻",
-        "description": "降低速度",
-        "icon": "❄️🐢"
       }
     ]
   },
@@ -1798,7 +1788,7 @@
   },
   "galeBlessing": {
     "name": "疾风祝福",
-    "description": "为全体队友提供持续恢复效果[每回合恢复450点生命值]并提供速度+15%buff，持续3回合，CD6回合",
+    "description": "为全体队友提供持续恢复效果[每回合恢复450点生命值]，持续3回合，CD6回合",
     "type": "heal",
     "power": 0.8,
     "cost": 0,
@@ -1817,16 +1807,6 @@
         "name": "疾风再生",
         "description": "持续恢复生命值",
         "icon": "🌪️❤️"
-      },
-      {
-        "type": "speedUp",
-        "value": 0.15,
-        "duration": 3,
-        "stackable": true,
-        "dispellable": true,
-        "name": "疾风加速",
-        "description": "提高速度",
-        "icon": "🌪️⚡"
       }
     ]
   },

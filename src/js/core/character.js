@@ -131,7 +131,6 @@ const Character = {
                 return response.json();
             })
             .then(data => {
-                console.log(`成功加载${type.toUpperCase()}角色数据:`, data);
 
                 // 根据角色类型设置稀有度
                 let rarityValue;
@@ -147,7 +146,7 @@ const Character = {
                 const characters = Object.values(data).map(character => {
                     return {
                         ...character,
-                        rarity: character.rarity || rarityValue // 如果已有rarity属性则保留，否则使用根据类型设置的值
+                        rarity: rarityValue // 如果已有rarity属性则保留，否则使用根据类型设置的值
                     };
                 });
 
@@ -171,11 +170,15 @@ const Character = {
                     });
                 }
 
+                // 打印修改后的角色数据，包含rarity属性
                 if (type === 'r') {
+                    console.log(`成功加载${type.toUpperCase()}角色数据:`);
                     return this.rCharacters;
                 } else if (type === 'sr') {
+                    console.log(`成功加载${type.toUpperCase()}角色数据:`);
                     return this.srCharacters;
                 } else {
+                    console.log(`成功加载${type.toUpperCase()}角色数据:`);
                     return this.ssrCharacters;
                 }
             })
@@ -802,12 +805,12 @@ const Character = {
                     const ssrCharacter = {
                         ...ssrTemplate,
                         id: `ssr_${Date.now()}_${i}`,
-                        rarity: 'epic',
+                        rarity: 'legendary', // 修正为legendary（SSR）
                         isRecruited: true,
                         level: 1,
                         exp: 0,
                         nextLevelExp: this.calculateNextLevelExp(1),
-                        maxLevel: this.rarities['epic'].maxLevel,
+                        maxLevel: this.rarities['legendary'].maxLevel, // 修正为legendary的最大等级
                         nextAttackCritical: false,
                         shield: 0,
                         bonusMultiplier: 0,
@@ -887,12 +890,12 @@ const Character = {
                         const ssrCharacter = {
                             ...ssrTemplate,
                             id: `ssr_${Date.now()}_${i}`,
-                            rarity: 'epic',
+                            rarity: 'legendary', // 修正为legendary（SSR）
                             isRecruited: true,
                             level: 1,
                             exp: 0,
                             nextLevelExp: this.calculateNextLevelExp(1),
-                            maxLevel: this.rarities['epic'].maxLevel,
+                            maxLevel: this.rarities['legendary'].maxLevel, // 修正为legendary的最大等级
                             nextAttackCritical: false,
                             shield: 0,
                             bonusMultiplier: 0,

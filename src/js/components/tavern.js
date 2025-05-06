@@ -100,7 +100,7 @@
                 currentRecruitResults.forEach(character => {
                     if (typeof Character !== 'undefined' && typeof Character.addCharacter === 'function') {
                         const newCharacterId = Character.addCharacter(character);
-                        console.log(`添加角色: ${character.name} (ID: ${newCharacterId})`);
+                        console.log(`添加角色: ${character.name} ( ${character.rarity})`);
                     }
                 });
 
@@ -309,6 +309,7 @@
         currentRecruitResults.forEach(character => {
             const resultItem = document.createElement('div');
             resultItem.className = `recruit-result-item ${character.rarity}`;
+            //console.log(character);
 
             // 获取类型和属性的中文名称
             const typeDisplay = Character.types[character.type]?.name || character.type;

@@ -542,15 +542,15 @@
                     <h4>${character.name}</h4>
                     ${rarityBadge}
                     <p>
-                        等级: ${character.level || 1}
+                        LV: ${character.level || 1}
                         <span class="info-separator">|</span>
-                        类型: ${typeDisplay}
+                        ${typeDisplay}
                         <span class="info-separator">|</span>
-                        属性: ${attributeDisplay} <span class="attribute-circle ${character.attribute}"></span>
+                        ${attributeDisplay} <span class="attribute-circle ${character.attribute}"></span>
                         ${character.isMainCharacter ? '<span class="main-character-tag">主角</span>' : ''}
                         ${character.skills && character.skills.length > 0 ?
                             `<span class="info-separator">|</span>
-                            技能: ${character.skills.map(skillId => {
+                            ${character.skills.map(skillId => {
                                 // 获取技能信息
                                 let skillName = skillId;
                                 let skillInfo = null;

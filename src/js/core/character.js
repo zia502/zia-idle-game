@@ -96,18 +96,31 @@ const Character = {
 
 
     init(){
-        // 加载SR角色数据
-        this.loadSrCharacters();
+        // 初始化传说角色数组
+        this.legendaryCharacters = [];
+
+        // 初始化可招募角色数组
+        this.recruitableCharacters = [];
+
+        // 初始化SR和SSR角色数组
+        this.srCharacters = [];
+        this.ssrCharacters = [];
+
+        // 加载SR和SSR角色数据
+        this.loadCharacterData('sr', 'src/data/sr.json');
+        this.loadCharacterData('ssr', 'src/data/ssr.json');
     },
 
     /**
-     * 加载SR角色数据
+     * 加载角色数据
+     * @param {string} type - 角色类型 ('sr' 或 'ssr')
+     * @param {string} url - JSON文件的URL
      */
-    loadSrCharacters() {
-        console.log('开始加载SR角色数据...');
+    loadCharacterData(type, url) {
+        console.log(`开始加载${type.toUpperCase()}角色数据...`);
 
-        // 从JSON文件加载SR角色数据
-        fetch('src/data/sr.json')
+        // 从JSON文件加载角色数据
+        fetch(url)
             .then(response => {
                 if (!response.ok) {
                     throw new Error(`HTTP错误! 状态: ${response.status}`);
@@ -115,13 +128,22 @@ const Character = {
                 return response.json();
             })
             .then(data => {
-                console.log('成功加载SR角色数据:', data);
-                this.srCharacters = Object.values(data);
-                console.log(`加载了 ${this.srCharacters.length} 个SR角色`);
+                console.log(`成功加载${type.toUpperCase()}角色数据:`, data);
+                if (type === 'sr') {
+                    this.srCharacters = Object.values(data);
+                    console.log(`加载了 ${this.srCharacters.length} 个SR角色`);
+                } else if (type === 'ssr') {
+                    this.ssrCharacters = Object.values(data);
+                    console.log(`加载了 ${this.ssrCharacters.length} 个SSR角色`);
+                }
             })
             .catch(error => {
-                console.error('加载SR角色数据失败:', error);
-                this.srCharacters = []; // 设置为空数组
+                console.error(`加载${type.toUpperCase()}角色数据失败:`, error);
+                if (type === 'sr') {
+                    this.srCharacters = []; // 设置为空数组
+                } else if (type === 'ssr') {
+                    this.ssrCharacters = []; // 设置为空数组
+                }
             });
     },
     /**
@@ -488,9 +510,9 @@ const Character = {
         const isLegendary = templateId.startsWith('legend');
 
         let template;
-        if (isLegendary) {
+        if (isLegendary && Array.isArray(this.legendaryCharacters)) {
             template = this.legendaryCharacters.find(c => c.id === templateId);
-        } else {
+        } else if (this.recruitableCharacters) {
             template = this.recruitableCharacters.find(c => c.id === templateId);
         }
 
@@ -582,7 +604,7 @@ const Character = {
         // 随机决定是否有传说角色出现（概率较低）
         const hasLegendary = Math.random() < 0.05; // 5%概率出现传说角色
 
-        if (hasLegendary && count > 0) {
+        if (hasLegendary && count > 0 && Array.isArray(this.legendaryCharacters) && this.legendaryCharacters.length > 0) {
             // 随机选择一个传说角色
             const availableLegendaries = [...this.legendaryCharacters];
             const randomIndex = Math.floor(Math.random() * availableLegendaries.length);
@@ -601,7 +623,7 @@ const Character = {
             const roll = Math.random();
             if (roll < 0.75) { // 75%概率
                 rarity = 'rare';
-            } else if (roll < 0.95) { // 20%概率
+            } else if (roll < 0.90) { // 15%概率
                 rarity = 'epic';
 
                 // 如果是史诗角色，从SR角色数据中随机选择一个
@@ -639,11 +661,82 @@ const Character = {
                     continue; // 跳过其余的角色创建步骤
                 }
                 // 如果没有SR角色数据，继续使用随机生成的方式
+            } else if (roll < 0.95) { // 5%概率
+                rarity = 'epic';
+
+                // 如果是SSR角色，从SSR角色数据中随机选择一个
+                if (this.ssrCharacters && this.ssrCharacters.length > 0) {
+                    const ssrIndex = Math.floor(Math.random() * this.ssrCharacters.length);
+                    const ssrTemplate = this.ssrCharacters[ssrIndex];
+
+                    // 复制模板并调整ID和稀有度
+                    const ssrCharacter = {
+                        ...ssrTemplate,
+                        id: `ssr_${Date.now()}_${i}`,
+                        rarity: 'epic',
+                        isRecruited: true,
+                        level: 1,
+                        exp: 0,
+                        nextLevelExp: this.calculateNextLevelExp(1),
+                        maxLevel: this.rarities['epic'].maxLevel,
+                        nextAttackCritical: false,
+                        shield: 0,
+                        bonusMultiplier: 0,
+                        currentStats: {...ssrTemplate.baseStats},
+                        traitUnlockLevels: {
+                            second: 65,
+                            third: 90
+                        },
+                        stats: {
+                            totalDamage: 0,
+                            totalHealing: 0,
+                            mvpCount: 0,
+                            battlesParticipated: 0
+                        }
+                    };
+
+                    result.push(ssrCharacter);
+                    continue; // 跳过其余的角色创建步骤
+                }
+                // 如果没有SSR角色数据，尝试使用SR角色
+                else if (this.srCharacters && this.srCharacters.length > 0) {
+                    const srIndex = Math.floor(Math.random() * this.srCharacters.length);
+                    const srTemplate = this.srCharacters[srIndex];
+
+                    // 复制模板并调整ID和稀有度
+                    const srCharacter = {
+                        ...srTemplate,
+                        id: `sr_${Date.now()}_${i}`,
+                        rarity: 'epic',
+                        isRecruited: true,
+                        level: 1,
+                        exp: 0,
+                        nextLevelExp: this.calculateNextLevelExp(1),
+                        maxLevel: this.rarities['epic'].maxLevel,
+                        nextAttackCritical: false,
+                        shield: 0,
+                        bonusMultiplier: 0,
+                        currentStats: {...srTemplate.baseStats},
+                        traitUnlockLevels: {
+                            second: 65,
+                            third: 90
+                        },
+                        stats: {
+                            totalDamage: 0,
+                            totalHealing: 0,
+                            mvpCount: 0,
+                            battlesParticipated: 0
+                        }
+                    };
+
+                    result.push(srCharacter);
+                    continue; // 跳过其余的角色创建步骤
+                }
             } else { // 5%概率(保底)，确保一定比例的传说
                 rarity = 'legendary';
 
                 // 如果是传说角色，随机选择一个传说角色模板
-                if (this.legendaryCharacters && this.legendaryCharacters.length > 0) {
+                if (Array.isArray(this.legendaryCharacters) && this.legendaryCharacters.length > 0) {
                     const legendIndex = Math.floor(Math.random() * this.legendaryCharacters.length);
                     const legendTemplate = this.legendaryCharacters[legendIndex];
 
@@ -656,11 +749,42 @@ const Character = {
                     result.push(legendCharacter);
                     continue; // 跳过其余的角色创建步骤
                 } else {
-                    // 如果没有传说角色模板，降级为史诗角色
-                    rarity = 'epic';
+                    // 如果没有传说角色模板，尝试使用SSR角色
+                    if (this.ssrCharacters && this.ssrCharacters.length > 0) {
+                        const ssrIndex = Math.floor(Math.random() * this.ssrCharacters.length);
+                        const ssrTemplate = this.ssrCharacters[ssrIndex];
 
-                    // 尝试从SR角色数据中选择
-                    if (this.srCharacters && this.srCharacters.length > 0) {
+                        // 复制模板并调整ID和稀有度
+                        const ssrCharacter = {
+                            ...ssrTemplate,
+                            id: `ssr_${Date.now()}_${i}`,
+                            rarity: 'epic',
+                            isRecruited: true,
+                            level: 1,
+                            exp: 0,
+                            nextLevelExp: this.calculateNextLevelExp(1),
+                            maxLevel: this.rarities['epic'].maxLevel,
+                            nextAttackCritical: false,
+                            shield: 0,
+                            bonusMultiplier: 0,
+                            currentStats: {...ssrTemplate.baseStats},
+                            traitUnlockLevels: {
+                                second: 65,
+                                third: 90
+                            },
+                            stats: {
+                                totalDamage: 0,
+                                totalHealing: 0,
+                                mvpCount: 0,
+                                battlesParticipated: 0
+                            }
+                        };
+
+                        result.push(ssrCharacter);
+                        continue; // 跳过其余的角色创建步骤
+                    }
+                    // 如果没有SSR角色数据，降级为SR角色
+                    else if (this.srCharacters && this.srCharacters.length > 0) {
                         const srIndex = Math.floor(Math.random() * this.srCharacters.length);
                         const srTemplate = this.srCharacters[srIndex];
 
@@ -1263,9 +1387,13 @@ const Character = {
             this.legendaryCharacters = data.legendaryCharacters;
         }
 
-        // 确保SR角色数据已加载
+        // 确保SR和SSR角色数据已加载
         if (this.srCharacters.length === 0) {
-            this.loadSrCharacters();
+            this.loadCharacterData('sr', 'src/data/sr.json');
+        }
+
+        if (this.ssrCharacters.length === 0) {
+            this.loadCharacterData('ssr', 'src/data/ssr.json');
         }
     }
 };

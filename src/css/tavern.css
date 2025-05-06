@@ -16,10 +16,23 @@
     margin: 20px 0;
 }
 
-#recruit-one-btn, #recruit-five-btn {
+#recruit-one-btn, #recruit-five-btn, #recruit-ssr-btn {
     padding: 10px 20px;
     font-size: 16px;
     min-width: 150px;
+}
+
+/* SSR招募按钮特殊样式 */
+#recruit-ssr-btn {
+    background-color: #fc0;
+    color: #333;
+    font-weight: bold;
+    border: 2px solid #e0b000;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+#recruit-ssr-btn:hover {
+    background-color: #ffda44;
 }
 
 /* 招募结果样式 */

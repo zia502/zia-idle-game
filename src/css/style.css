@@ -222,6 +222,13 @@ button:active, .btn:active {
     font-weight: bold;
 }
 
+.btn-special {
+    background-color: #fc0;
+    color: #333;
+    border: 1px solid #e0b000;
+    font-weight: bold;
+}
+
 /* 队伍卡片 */
 .team-card {
     border: 1px solid var(--border-color);

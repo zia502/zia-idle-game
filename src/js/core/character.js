@@ -115,12 +115,13 @@ const Character = {
      * 加载角色数据
      * @param {string} type - 角色类型 ('sr' 或 'ssr')
      * @param {string} url - JSON文件的URL
+     * @returns {Promise} 加载完成的Promise
      */
     loadCharacterData(type, url) {
         console.log(`开始加载${type.toUpperCase()}角色数据...`);
 
-        // 从JSON文件加载角色数据
-        fetch(url)
+        // 返回Promise以便调用者可以等待加载完成
+        return fetch(url)
             .then(response => {
                 if (!response.ok) {
                     throw new Error(`HTTP错误! 状态: ${response.status}`);
@@ -136,6 +137,16 @@ const Character = {
                     this.ssrCharacters = Object.values(data);
                     console.log(`加载了 ${this.ssrCharacters.length} 个SSR角色`);
                 }
+
+                // 触发角色数据加载完成事件
+                if (typeof Events !== 'undefined') {
+                    Events.emit(`${type}Characters:loaded`, {
+                        type: type,
+                        count: type === 'sr' ? this.srCharacters.length : this.ssrCharacters.length
+                    });
+                }
+
+                return type === 'sr' ? this.srCharacters : this.ssrCharacters;
             })
             .catch(error => {
                 console.error(`加载${type.toUpperCase()}角色数据失败:`, error);
@@ -144,7 +155,24 @@ const Character = {
                 } else if (type === 'ssr') {
                     this.ssrCharacters = []; // 设置为空数组
                 }
+                throw error; // 重新抛出错误以便调用者可以捕获
             });
+    },
+
+    /**
+     * 确保SSR角色数据已加载
+     * @returns {Promise} 加载完成的Promise
+     */
+    ensureSSRCharactersLoaded() {
+        // 如果SSR角色数据已加载，直接返回
+        if (Array.isArray(this.ssrCharacters) && this.ssrCharacters.length > 0) {
+            console.log('SSR角色数据已加载，共 ' + this.ssrCharacters.length + ' 个角色');
+            return Promise.resolve(this.ssrCharacters);
+        }
+
+        // 否则加载SSR角色数据
+        console.log('SSR角色数据未加载，开始加载...');
+        return this.loadCharacterData('ssr', 'src/data/ssr.json');
     },
     /**
      * 获取角色

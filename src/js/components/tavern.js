@@ -12,6 +12,7 @@
     const SINGLE_RECRUIT_COST = 2000; // 单抽价格
     const MULTI_RECRUIT_COST = 9000;  // 五连抽价格
     const MULTI_RECRUIT_COUNT = 5;    // 五连抽数量
+    const SSR_RECRUIT_COST = 20000;   // 必得SSR抽卡价格
 
     // 当前招募结果
     let currentRecruitResults = [];
@@ -30,6 +31,11 @@
             // 五连抽按钮点击
             if (event.target.id === 'recruit-five-btn') {
                 recruitCharacters(MULTI_RECRUIT_COUNT);
+            }
+
+            // 必得SSR抽卡按钮点击
+            if (event.target.id === 'recruit-ssr-btn') {
+                recruitSSRCharacter();
             }
 
             // 关闭结果按钮点击
@@ -83,7 +89,7 @@
             // 生成随机角色
             if (typeof Character !== 'undefined' && typeof Character.generateRandomRecruitables === 'function') {
                 currentRecruitResults = Character.generateRandomRecruitables(count);
-                
+
                 // 添加角色到游戏
                 currentRecruitResults.forEach(character => {
                     if (typeof Character !== 'undefined' && typeof Character.addCharacter === 'function') {
@@ -109,6 +115,88 @@
             }
         } else {
             UI.showMessage('金币不足，无法招募角色');
+        }
+    }
+
+    /**
+     * 招募必得SSR角色
+     */
+    function recruitSSRCharacter() {
+        console.log('招募必得SSR角色');
+
+        // 检查金币是否足够
+        if (typeof Game === 'undefined' || !Game.hasEnoughGold(SSR_RECRUIT_COST)) {
+            UI.showMessage('金币不足，无法招募SSR角色');
+            return;
+        }
+
+        // 检查是否有SSR角色数据
+        if (typeof Character === 'undefined') {
+            UI.showMessage('角色系统未加载，请稍后再试');
+            return;
+        }
+
+        // 确保SSR角色数据已加载
+        UI.showMessage('正在准备SSR角色数据，请稍候...');
+
+        // 使用新的确保SSR角色数据已加载方法
+        Character.ensureSSRCharactersLoaded()
+            .then(ssrCharacters => {
+                console.log('SSR角色数据加载成功，共 ' + ssrCharacters.length + ' 个角色');
+                processSSRRecruitment();
+            })
+            .catch(error => {
+                console.error('SSR角色数据加载失败:', error);
+                UI.showMessage('无法加载SSR角色数据，请刷新页面后再试');
+            });
+
+        /**
+         * 处理SSR角色招募流程
+         */
+        function processSSRRecruitment() {
+            // 扣除金币
+            if (Game.removeGold(SSR_RECRUIT_COST)) {
+                // 清空当前招募结果
+                currentRecruitResults = [];
+
+                // 随机选择一个SSR角色
+                const randomIndex = Math.floor(Math.random() * Character.ssrCharacters.length);
+                const selectedSSR = Character.ssrCharacters[randomIndex];
+
+                console.log(`选择了SSR角色: ${selectedSSR.name}`);
+
+                // 创建角色数据
+                const ssrCharacter = {
+                    ...selectedSSR,
+                    rarity: 'legendary',
+                    isRecruited: true,
+                    level: 1,
+                    exp: 0
+                };
+
+                // 添加到结果中
+                currentRecruitResults.push(ssrCharacter);
+
+                // 添加角色到游戏
+                if (typeof Character !== 'undefined' && typeof Character.addCharacter === 'function') {
+                    const newCharacterId = Character.addCharacter(ssrCharacter);
+                    console.log(`添加SSR角色: ${ssrCharacter.name} (ID: ${newCharacterId})`);
+                }
+
+                // 显示招募结果
+                showRecruitResult();
+
+                // 更新金币显示
+                updateGoldDisplay();
+
+                // 保存游戏状态
+                if (typeof Game !== 'undefined' && typeof Game.saveGame === 'function') {
+                    console.log('保存游戏状态');
+                    Game.saveGame();
+                }
+            } else {
+                UI.showMessage('金币不足，无法招募SSR角色');
+            }
         }
     }
 

@@ -1,7 +1,7 @@
 {
   "r_01": {
     "id": "character_101",
-    "name": "火焰学徒",
+    "name": "普罗米修斯",
     "attribute": "fire",
     "type": "special",
     "baseStats": {
@@ -19,7 +19,7 @@
   },
   "r_02": {
     "id": "character_102",
-    "name": "水流学徒",
+    "name": "波塞冬",
     "attribute": "water",
     "type": "special",
     "baseStats": {
@@ -37,7 +37,7 @@
   },
   "r_03": {
     "id": "character_103",
-    "name": "风之学徒",
+    "name": "埃俄罗斯",
     "attribute": "wind",
     "type": "special",
     "baseStats": {
@@ -55,7 +55,7 @@
   },
   "r_04": {
     "id": "character_104",
-    "name": "土之学徒",
+    "name": "盖亚",
     "attribute": "earth",
     "type": "special",
     "baseStats": {
@@ -73,7 +73,7 @@
   },
   "r_05": {
     "id": "character_105",
-    "name": "光明学徒",
+    "name": "阿波罗",
     "attribute": "light",
     "type": "healing",
     "baseStats": {
@@ -91,7 +91,7 @@
   },
   "r_06": {
     "id": "character_106",
-    "name": "暗影学徒",
+    "name": "哈迪斯",
     "attribute": "dark",
     "type": "special",
     "baseStats": {
@@ -109,7 +109,7 @@
   },
   "r_07": {
     "id": "character_107",
-    "name": "火焰战士",
+    "name": "赫淮斯托斯",
     "attribute": "fire",
     "type": "attack",
     "baseStats": {
@@ -127,7 +127,7 @@
   },
   "r_08": {
     "id": "character_108",
-    "name": "水流战士",
+    "name": "特提斯",
     "attribute": "water",
     "type": "attack",
     "baseStats": {
@@ -145,7 +145,7 @@
   },
   "r_09": {
     "id": "character_109",
-    "name": "风之战士",
+    "name": "赫拉克勒斯",
     "attribute": "wind",
     "type": "attack",
     "baseStats": {
@@ -163,7 +163,7 @@
   },
   "r_10": {
     "id": "character_110",
-    "name": "土之战士",
+    "name": "阿特拉斯",
     "attribute": "earth",
     "type": "attack",
     "baseStats": {
@@ -181,7 +181,7 @@
   },
   "r_11": {
     "id": "character_111",
-    "name": "光明战士",
+    "name": "阿尔忒弥斯",
     "attribute": "light",
     "type": "attack",
     "baseStats": {
@@ -199,7 +199,7 @@
   },
   "r_12": {
     "id": "character_112",
-    "name": "暗影战士",
+    "name": "塔纳托斯",
     "attribute": "dark",
     "type": "attack",
     "baseStats": {
@@ -217,7 +217,7 @@
   },
   "r_13": {
     "id": "character_113",
-    "name": "火焰守卫",
+    "name": "阿瑞斯",
     "attribute": "fire",
     "type": "defense",
     "baseStats": {
@@ -235,7 +235,7 @@
   },
   "r_14": {
     "id": "character_114",
-    "name": "水流守卫",
+    "name": "尼普顿",
     "attribute": "water",
     "type": "defense",
     "baseStats": {
@@ -253,7 +253,7 @@
   },
   "r_15": {
     "id": "character_115",
-    "name": "风之守卫",
+    "name": "波瑞阿斯",
     "attribute": "wind",
     "type": "defense",
     "baseStats": {
@@ -271,7 +271,7 @@
   },
   "r_16": {
     "id": "character_116",
-    "name": "土之守卫",
+    "name": "克洛诺斯",
     "attribute": "earth",
     "type": "defense",
     "baseStats": {
@@ -289,7 +289,7 @@
   },
   "r_17": {
     "id": "character_117",
-    "name": "光明祭司",
+    "name": "赫利俄斯",
     "attribute": "light",
     "type": "healing",
     "baseStats": {
@@ -307,7 +307,7 @@
   },
   "r_18": {
     "id": "character_118",
-    "name": "暗影祭司",
+    "name": "厄瑞玻斯",
     "attribute": "dark",
     "type": "special",
     "baseStats": {
@@ -325,7 +325,7 @@
   },
   "r_19": {
     "id": "character_119",
-    "name": "火焰术士",
+    "name": "赫斯提亚",
     "attribute": "fire",
     "type": "special",
     "baseStats": {
@@ -343,7 +343,7 @@
   },
   "r_20": {
     "id": "character_120",
-    "name": "水流术士",
+    "name": "俄刻阿诺斯",
     "attribute": "water",
     "type": "special",
     "baseStats": {
@@ -361,7 +361,7 @@
   },
   "r_21": {
     "id": "character_121",
-    "name": "风之术士",
+    "name": "诺托斯",
     "attribute": "wind",
     "type": "special",
     "baseStats": {
@@ -379,7 +379,7 @@
   },
   "r_22": {
     "id": "character_122",
-    "name": "土之术士",
+    "name": "德墨忒尔",
     "attribute": "earth",
     "type": "special",
     "baseStats": {
@@ -397,7 +397,7 @@
   },
   "r_23": {
     "id": "character_123",
-    "name": "火焰弓手",
+    "name": "阿格尼",
     "attribute": "fire",
     "type": "attack",
     "baseStats": {
@@ -415,7 +415,7 @@
   },
   "r_24": {
     "id": "character_124",
-    "name": "水流弓手",
+    "name": "伏尔塔努斯",
     "attribute": "water",
     "type": "attack",
     "baseStats": {
@@ -433,7 +433,7 @@
   },
   "r_25": {
     "id": "character_125",
-    "name": "风之弓手",
+    "name": "泽费洛斯",
     "attribute": "wind",
     "type": "attack",
     "baseStats": {
@@ -451,7 +451,7 @@
   },
   "r_26": {
     "id": "character_126",
-    "name": "土之弓手",
+    "name": "潘",
     "attribute": "earth",
     "type": "attack",
     "baseStats": {
@@ -469,7 +469,7 @@
   },
   "r_27": {
     "id": "character_127",
-    "name": "光明弓手",
+    "name": "厄俄斯",
     "attribute": "light",
     "type": "attack",
     "baseStats": {
@@ -487,7 +487,7 @@
   },
   "r_28": {
     "id": "character_128",
-    "name": "暗影弓手",
+    "name": "尼克斯",
     "attribute": "dark",
     "type": "attack",
     "baseStats": {
@@ -505,7 +505,7 @@
   },
   "r_29": {
     "id": "character_129",
-    "name": "火焰骑士",
+    "name": "苏尔特",
     "attribute": "fire",
     "type": "defense",
     "baseStats": {
@@ -523,7 +523,7 @@
   },
   "r_30": {
     "id": "character_130",
-    "name": "水流骑士",
+    "name": "埃癸斯",
     "attribute": "water",
     "type": "defense",
     "baseStats": {
@@ -541,7 +541,7 @@
   },
   "r_31": {
     "id": "character_131",
-    "name": "风之骑士",
+    "name": "欧律托斯",
     "attribute": "wind",
     "type": "defense",
     "baseStats": {
@@ -559,7 +559,7 @@
   },
   "r_32": {
     "id": "character_132",
-    "name": "土之骑士",
+    "name": "泰坦",
     "attribute": "earth",
     "type": "defense",
     "baseStats": {
@@ -577,7 +577,7 @@
   },
   "r_33": {
     "id": "character_133",
-    "name": "光明骑士",
+    "name": "赫拉",
     "attribute": "light",
     "type": "defense",
     "baseStats": {
@@ -595,7 +595,7 @@
   },
   "r_34": {
     "id": "character_134",
-    "name": "暗影骑士",
+    "name": "莫摩斯",
     "attribute": "dark",
     "type": "defense",
     "baseStats": {
@@ -613,7 +613,7 @@
   },
   "r_35": {
     "id": "character_135",
-    "name": "火焰医师",
+    "name": "阿斯克勒庇俄斯",
     "attribute": "fire",
     "type": "healing",
     "baseStats": {
@@ -631,7 +631,7 @@
   },
   "r_36": {
     "id": "character_136",
-    "name": "水流医师",
+    "name": "伊阿宋",
     "attribute": "water",
     "type": "healing",
     "baseStats": {
@@ -649,7 +649,7 @@
   },
   "r_37": {
     "id": "character_137",
-    "name": "风之医师",
+    "name": "希波克拉底",
     "attribute": "wind",
     "type": "healing",
     "baseStats": {
@@ -667,7 +667,7 @@
   },
   "r_38": {
     "id": "character_138",
-    "name": "土之医师",
+    "name": "盖伦",
     "attribute": "earth",
     "type": "healing",
     "baseStats": {
@@ -685,7 +685,7 @@
   },
   "r_39": {
     "id": "character_139",
-    "name": "光明医师",
+    "name": "帕纳刻亚",
     "attribute": "light",
     "type": "healing",
     "baseStats": {
@@ -703,7 +703,7 @@
   },
   "r_40": {
     "id": "character_140",
-    "name": "暗影医师",
+    "name": "海卡忒",
     "attribute": "dark",
     "type": "healing",
     "baseStats": {
@@ -721,7 +721,7 @@
   },
   "r_41": {
     "id": "character_141",
-    "name": "火焰刺客",
+    "name": "洛基",
     "attribute": "fire",
     "type": "attack",
     "baseStats": {
@@ -739,7 +739,7 @@
   },
   "r_42": {
     "id": "character_142",
-    "name": "水流刺客",
+    "name": "忒提斯",
     "attribute": "water",
     "type": "attack",
     "baseStats": {
@@ -757,7 +757,7 @@
   },
   "r_43": {
     "id": "character_143",
-    "name": "风之刺客",
+    "name": "赫尔墨斯",
     "attribute": "wind",
     "type": "attack",
     "baseStats": {
@@ -775,7 +775,7 @@
   },
   "r_44": {
     "id": "character_144",
-    "name": "土之刺客",
+    "name": "珀尔修斯",
     "attribute": "earth",
     "type": "attack",
     "baseStats": {
@@ -793,7 +793,7 @@
   },
   "r_45": {
     "id": "character_145",
-    "name": "光明刺客",
+    "name": "塞勒涅",
     "attribute": "light",
     "type": "attack",
     "baseStats": {
@@ -811,7 +811,7 @@
   },
   "r_46": {
     "id": "character_146",
-    "name": "暗影刺客",
+    "name": "墨杜莎",
     "attribute": "dark",
     "type": "attack",
     "baseStats": {
@@ -829,7 +829,7 @@
   },
   "r_47": {
     "id": "character_147",
-    "name": "火焰舞者",
+    "name": "特耳普西科瑞",
     "attribute": "fire",
     "type": "special",
     "baseStats": {
@@ -847,7 +847,7 @@
   },
   "r_48": {
     "id": "character_148",
-    "name": "水流舞者",
+    "name": "阿芙洛狄忒",
     "attribute": "water",
     "type": "special",
     "baseStats": {
@@ -865,7 +865,7 @@
   },
   "r_49": {
     "id": "character_149",
-    "name": "风之舞者",
+    "name": "欧忒耳佩",
     "attribute": "wind",
     "type": "special",
     "baseStats": {
@@ -883,7 +883,7 @@
   },
   "r_50": {
     "id": "character_150",
-    "name": "土之舞者",
+    "name": "墨尔波墨涅",
     "attribute": "earth",
     "type": "special",
     "baseStats": {

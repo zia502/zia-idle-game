@@ -132,14 +132,33 @@ const Character = {
             })
             .then(data => {
                 console.log(`成功加载${type.toUpperCase()}角色数据:`, data);
+
+                // 根据角色类型设置稀有度
+                let rarityValue;
                 if (type === 'r') {
-                    this.rCharacters = Object.values(data);
+                    rarityValue = 'rare';
+                } else if (type === 'sr') {
+                    rarityValue = 'epic';
+                } else if (type === 'ssr') {
+                    rarityValue = 'legendary';
+                }
+
+                // 为每个角色添加rarity属性
+                const characters = Object.values(data).map(character => {
+                    return {
+                        ...character,
+                        rarity: character.rarity || rarityValue // 如果已有rarity属性则保留，否则使用根据类型设置的值
+                    };
+                });
+
+                if (type === 'r') {
+                    this.rCharacters = characters;
                     console.log(`加载了 ${this.rCharacters.length} 个R角色`);
                 } else if (type === 'sr') {
-                    this.srCharacters = Object.values(data);
+                    this.srCharacters = characters;
                     console.log(`加载了 ${this.srCharacters.length} 个SR角色`);
                 } else if (type === 'ssr') {
-                    this.ssrCharacters = Object.values(data);
+                    this.ssrCharacters = characters;
                     console.log(`加载了 ${this.ssrCharacters.length} 个SSR角色`);
                 }
 

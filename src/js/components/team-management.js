@@ -253,7 +253,7 @@
                                                 <h4>${member.name}</h4>
                                                 ${rarityBadge}
                                                 <p>
-                                                    等级: ${member.job.level || 1}
+                                                    等级: ${member.isMainCharacter ? (member.job?.level || 1) : (member.level || 1)}
                                                     <span class="info-separator">|</span>
                                                     类型: ${typeDisplay}
                                                     <span class="info-separator">|</span>
@@ -300,7 +300,7 @@
                                                     <h4>${member.name}</h4>
                                                     ${rarityBadge}
                                                     <p>
-                                                        等级: ${member.job.level || 1}
+                                                        等级: ${member.isMainCharacter ? (member.job?.level || 1) : (member.level || 1)}
                                                         <span class="info-separator">|</span>
                                                         类型: ${typeDisplay}
                                                         <span class="info-separator">|</span>

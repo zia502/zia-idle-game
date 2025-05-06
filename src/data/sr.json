@@ -3,7 +3,7 @@
       "id": "character_001",
       "name": "普罗米修斯",
       "attribute": "fire",
-      "type": "magic",
+      "type": "special",
       "baseStats": {
         "hp": 198,
         "maxHp": 2645,
@@ -21,7 +21,7 @@
       "id": "character_002",
       "name": "涅瑞伊得",
       "attribute": "water",
-      "type": "magic",
+      "type": "special",
       "baseStats": {
         "hp": 205,
         "maxHp": 2730,
@@ -39,7 +39,7 @@
       "id": "character_003",
       "name": "希尔芙",
       "attribute": "wind",
-      "type": "magic",
+      "type": "special",
       "baseStats": {
         "hp": 187,
         "maxHp": 2490,
@@ -57,7 +57,7 @@
       "id": "character_004",
       "name": "盖亚使者",
       "attribute": "earth",
-      "type": "magic",
+      "type": "special",
       "baseStats": {
         "hp": 220,
         "maxHp": 2930,
@@ -75,7 +75,7 @@
       "id": "character_005",
       "name": "瓦尔基里",
       "attribute": "light",
-      "type": "support",
+      "type": "healing",
       "baseStats": {
         "hp": 215,
         "maxHp": 2860,
@@ -93,7 +93,7 @@
       "id": "character_006",
       "name": "卡戎",
       "attribute": "dark",
-      "type": "magic",
+      "type": "special",
       "baseStats": {
         "hp": 195,
         "maxHp": 2600,
@@ -327,7 +327,7 @@
       "id": "character_019",
       "name": "凤凰治愈师",
       "attribute": "fire",
-      "type": "support",
+      "type": "healing",
       "baseStats": {
         "hp": 228,
         "maxHp": 3040,
@@ -345,7 +345,7 @@
       "id": "character_020",
       "name": "那亚德",
       "attribute": "water",
-      "type": "support",
+      "type": "healing",
       "baseStats": {
         "hp": 203,
         "maxHp": 2710,
@@ -363,7 +363,7 @@
       "id": "character_021",
       "name": "森林治愈师",
       "attribute": "wind",
-      "type": "support",
+      "type": "healing",
       "baseStats": {
         "hp": 194,
         "maxHp": 2580,
@@ -381,7 +381,7 @@
       "id": "character_022",
       "name": "盖布门徒",
       "attribute": "earth",
-      "type": "support",
+      "type": "healing",
       "baseStats": {
         "hp": 222,
         "maxHp": 2960,
@@ -399,7 +399,7 @@
       "id": "character_023",
       "name": "光明预言者",
       "attribute": "light",
-      "type": "support",
+      "type": "healing",
       "baseStats": {
         "hp": 212,
         "maxHp": 2830,
@@ -417,7 +417,7 @@
       "id": "character_024",
       "name": "冥河祭司",
       "attribute": "dark",
-      "type": "support",
+      "type": "healing",
       "baseStats": {
         "hp": 183,
         "maxHp": 2440,
@@ -543,7 +543,7 @@
       "id": "character_031",
       "name": "伊弗利特法师",
       "attribute": "fire",
-      "type": "magic",
+      "type": "special",
       "baseStats": {
         "hp": 196,
         "maxHp": 2610,
@@ -561,7 +561,7 @@
       "id": "character_032",
       "name": "利维坦法师",
       "attribute": "water",
-      "type": "magic",
+      "type": "special",
       "baseStats": {
         "hp": 207,
         "maxHp": 2760,
@@ -579,7 +579,7 @@
       "id": "character_033",
       "name": "迦楼罗学徒",
       "attribute": "wind",
-      "type": "magic",
+      "type": "special",
       "baseStats": {
         "hp": 191,
         "maxHp": 2550,
@@ -597,7 +597,7 @@
       "id": "character_034",
       "name": "泰坦学者",
       "attribute": "earth",
-      "type": "magic",
+      "type": "special",
       "baseStats": {
         "hp": 226,
         "maxHp": 3010,
@@ -615,7 +615,7 @@
       "id": "character_035",
       "name": "光辉贤者",
       "attribute": "light",
-      "type": "magic",
+      "type": "special",
       "baseStats": {
         "hp": 214,
         "maxHp": 2850,
@@ -633,7 +633,7 @@
       "id": "character_036",
       "name": "地狱犬驯兽师",
       "attribute": "dark",
-      "type": "magic",
+      "type": "special",
       "baseStats": {
         "hp": 184,
         "maxHp": 2450,
@@ -867,7 +867,7 @@
       "id": "character_049",
       "name": "火焰术士",
       "attribute": "fire",
-      "type": "magic",
+      "type": "special",
       "baseStats": {
         "hp": 201,
         "maxHp": 2680,
@@ -885,7 +885,7 @@
       "id": "character_050",
       "name": "水流术士",
       "attribute": "water",
-      "type": "magic",
+      "type": "special",
       "baseStats": {
         "hp": 206,
         "maxHp": 2740,

@@ -1024,24 +1024,12 @@ const Game = {
                 if (battleLogElement) {
                     battleLogElement.innerHTML = '';
                 }
+            }
 
-                // 清除当前地下城信息显示
-                const currentDungeonElement = document.getElementById('main-current-dungeon');
-                if (currentDungeonElement) {
-                    currentDungeonElement.innerHTML = '';
-                    currentDungeonElement.style.display = 'none';
-                }
-
-                // 清除地下城进度条
-                const dungeonProgressElement = document.getElementById('dungeon-progress-bar');
-                if (dungeonProgressElement) {
-                    dungeonProgressElement.style.width = '0%';
-                }
-
-                const dungeonProgressTextElement = document.getElementById('dungeon-progress-text');
-                if (dungeonProgressTextElement) {
-                    dungeonProgressTextElement.textContent = '0%';
-                }
+            // 使用DungeonRunner的clearDungeonUI方法清除地下城UI
+            if (typeof DungeonRunner !== 'undefined' && typeof DungeonRunner.clearDungeonUI === 'function') {
+                console.log("使用DungeonRunner.clearDungeonUI清除地下城UI...");
+                DungeonRunner.clearDungeonUI();
             }
 
             console.log("游戏已完全重置");

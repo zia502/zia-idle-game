@@ -80,7 +80,7 @@ const DungeonRunner = {
         this.setupEventListeners();
 
         // 检查是否有正在进行的地下城探索
-        if (typeof Dungeon !== 'undefined' && Dungeon.currentRun) {
+        if (typeof Dungeon !== 'undefined' && Dungeon.currentRun && Dungeon.currentRun.dungeonId) {
             // console.log('检测到正在进行的地下城探索，检查是否应该自动继续');
 
             // 检查Game.state.currentDungeon是否存在

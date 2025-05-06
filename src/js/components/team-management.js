@@ -306,6 +306,40 @@
                                                         <span class="info-separator">|</span>
                                                         属性: ${attributeDisplay} <span class="attribute-circle ${member.attribute}"></span>
                                                         ${member.isMainCharacter ? '<span class="main-character-tag">主角</span>' : ''}
+                                                        ${member.skills && member.skills.length > 0 ?
+                                                            `<span class="info-separator">|</span>
+                                                            技能: ${member.skills.map(skillId => {
+                                                                // 获取技能信息
+                                                                let skillName = skillId;
+                                                                let skillInfo = null;
+
+                                                                // 尝试从JobSystem获取技能信息
+                                                                if (typeof JobSystem !== 'undefined' && typeof JobSystem.getSkill === 'function') {
+                                                                    skillInfo = JobSystem.getSkill(skillId);
+                                                                    if (skillInfo && skillInfo.name) {
+                                                                        skillName = skillInfo.name;
+                                                                    }
+                                                                }
+
+                                                                // 如果是R角色技能，尝试从r_skills.json获取
+                                                                if (typeof window.r_skills !== 'undefined' && window.r_skills[skillId]) {
+                                                                    skillInfo = window.r_skills[skillId];
+                                                                    if (skillInfo && skillInfo.name) {
+                                                                        skillName = skillInfo.name;
+                                                                    }
+                                                                }
+
+                                                                // 如果是SR角色技能，尝试从sr_skills.json获取
+                                                                if (typeof window.sr_skills !== 'undefined' && window.sr_skills[skillId]) {
+                                                                    skillInfo = window.sr_skills[skillId];
+                                                                    if (skillInfo && skillInfo.name) {
+                                                                        skillName = skillInfo.name;
+                                                                    }
+                                                                }
+
+                                                                return `<span class="skill-name" data-skill-id="${skillId}">${skillName}</span>`;
+                                                            }).join(', ')}`
+                                                            : ''}
                                                     </p>
                                                 </div>
                                                 <div class="member-actions">

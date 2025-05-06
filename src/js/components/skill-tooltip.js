@@ -66,14 +66,14 @@ const SkillTooltip = {
      */
     findSkillElement(element) {
         // 检查元素或其父元素是否是技能项
-        if (element.classList.contains('skill-item') || element.classList.contains('member-skill')) {
+        if (element.classList.contains('skill-item') || element.classList.contains('member-skill') || element.classList.contains('skill-name')) {
             return element;
         }
 
         // 检查父元素
         let parent = element.parentElement;
         while (parent) {
-            if (parent.classList.contains('skill-item') || parent.classList.contains('member-skill')) {
+            if (parent.classList.contains('skill-item') || parent.classList.contains('member-skill') || parent.classList.contains('skill-name')) {
                 return parent;
             }
             parent = parent.parentElement;
@@ -89,12 +89,32 @@ const SkillTooltip = {
      */
     showTooltip(skillId, event) {
         // 获取技能信息
-        const skillInfo = typeof JobSystem !== 'undefined' && typeof JobSystem.getSkill === 'function' ?
-            JobSystem.getSkill(skillId) : null;
+        let skillInfo = null;
+
+        // 尝试从JobSystem获取技能信息
+        if (typeof JobSystem !== 'undefined' && typeof JobSystem.getSkill === 'function') {
+            skillInfo = JobSystem.getSkill(skillId);
+        }
+
+        // 如果是R角色技能，尝试从r_skills.json获取
+        if (!skillInfo && typeof window.r_skills !== 'undefined' && window.r_skills[skillId]) {
+            skillInfo = window.r_skills[skillId];
+        }
+
+        // 如果是SR角色技能，尝试从sr_skills.json获取
+        if (!skillInfo && typeof window.sr_skills !== 'undefined' && window.sr_skills[skillId]) {
+            skillInfo = window.sr_skills[skillId];
+        }
 
         if (!skillInfo) {
             console.warn(`找不到技能信息: ${skillId}`);
-            return;
+            // 创建一个基本的技能信息对象
+            skillInfo = {
+                name: skillId,
+                description: '技能信息未找到',
+                type: 'unknown',
+                effects: []
+            };
         }
 
         // 生成提示框内容
@@ -126,14 +146,6 @@ const SkillTooltip = {
         // 获取视口尺寸
         const viewportWidth = window.innerWidth;
         const viewportHeight = window.innerHeight;
-
-        // 获取页面滚动位置
-        const scrollX = window.pageXOffset || document.documentElement.scrollLeft;
-        const scrollY = window.pageYOffset || document.documentElement.scrollTop;
-
-        // 计算鼠标在页面中的绝对位置
-        const mouseX = event.clientX + scrollX;
-        const mouseY = event.clientY + scrollY;
 
         // 计算位置，避免超出视口
         let left = event.clientX + 15;

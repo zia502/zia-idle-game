@@ -37,7 +37,7 @@ const MainCurrentDungeon = {
         }
 
         // 首先检查是否有当前正在进行的地下城
-        if (Dungeon.currentRun) {
+        if (Dungeon.currentRun && Dungeon.currentRun.dungeonId) {
             console.log('检测到当前有活跃的地下城运行，显示当前地下城进度');
             this.showCurrentDungeon();
             return;

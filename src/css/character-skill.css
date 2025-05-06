@@ -1,0 +1,162 @@
+/* 角色技能样式 */
+.skill-name {
+    display: inline-block;
+    color: #0066cc;
+    cursor: pointer;
+    position: relative;
+    font-weight: bold;
+}
+
+.skill-name:hover {
+    text-decoration: underline;
+}
+
+/* 稀有度对应的技能颜色 */
+.rare .skill-name {
+    color: #3366cc;
+}
+
+.epic .skill-name {
+    color: #9933cc;
+}
+
+.legendary .skill-name {
+    color: #cc9900;
+}
+
+/* 技能tooltip样式 */
+.skill-tooltip {
+    position: absolute;
+    z-index: 1000;
+    background-color: rgba(0, 0, 0, 0.85);
+    color: #fff;
+    border-radius: 4px;
+    padding: 8px 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    width: 250px;
+    font-size: 12px;
+    pointer-events: none;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.2s ease;
+}
+
+.skill-name:hover .skill-tooltip {
+    opacity: 1;
+    visibility: visible;
+}
+
+.skill-tooltip-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 5px;
+    padding-bottom: 5px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.skill-tooltip-name {
+    font-weight: bold;
+    font-size: 14px;
+}
+
+.skill-tooltip-type {
+    font-size: 12px;
+    padding: 2px 4px;
+    border-radius: 2px;
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.skill-tooltip-description {
+    margin-bottom: 8px;
+    line-height: 1.4;
+}
+
+.skill-tooltip-stats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    margin-bottom: 5px;
+}
+
+.skill-tooltip-stat {
+    font-size: 11px;
+    padding: 2px 4px;
+    border-radius: 2px;
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* 技能类型颜色 */
+.skill-type-attack {
+    color: #ff6666;
+}
+
+.skill-type-magic {
+    color: #66aaff;
+}
+
+.skill-type-heal {
+    color: #66cc66;
+}
+
+.skill-type-buff {
+    color: #ffaa66;
+}
+
+.skill-type-debuff {
+    color: #cc66cc;
+}
+
+.skill-type-defense {
+    color: #66ccff;
+}
+
+/* 技能效果列表 */
+.skill-tooltip-effects {
+    margin-top: 5px;
+    padding-top: 5px;
+    border-top: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.skill-tooltip-effect {
+    margin-bottom: 3px;
+    display: flex;
+    align-items: flex-start;
+}
+
+.skill-tooltip-effect-icon {
+    margin-right: 5px;
+    min-width: 14px;
+}
+
+.skill-tooltip-effect-text {
+    flex: 1;
+}
+
+/* 效果类型颜色 */
+.effect-type-damage {
+    color: #ff6666;
+}
+
+.effect-type-heal {
+    color: #66cc66;
+}
+
+.effect-type-shield {
+    color: #66ccff;
+}
+
+.effect-type-attackUp,
+.effect-type-defenseUp,
+.effect-type-daBoost,
+.effect-type-taBoost {
+    color: #ffaa66;
+}
+
+.effect-type-attackDown,
+.effect-type-defenseDown,
+.effect-type-daDown,
+.effect-type-taDown,
+.effect-type-missRate {
+    color: #cc66cc;
+}

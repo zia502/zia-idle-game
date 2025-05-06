@@ -1171,7 +1171,7 @@ const Game = {
         }
 
         // 检查是否有当前地下城运行
-        const inDungeon = Dungeon.currentRun !== null && Dungeon.currentRun !== undefined;
+        const inDungeon = Dungeon.currentRun !== null && Dungeon.currentRun !== undefined && Dungeon.currentRun.dungeonId !== null;
         console.log(`当前是否在地下城中: ${inDungeon}`);
 
         // 检查是否有保存的地下城进度

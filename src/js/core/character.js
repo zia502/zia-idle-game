@@ -1496,12 +1496,16 @@ const Character = {
             this.legendaryCharacters = data.legendaryCharacters;
         }
 
-        // 确保SR和SSR角色数据已加载
-        if (this.srCharacters.length === 0) {
+        // 确保R、SR和SSR角色数据已加载
+        if (!this.rCharacters || this.rCharacters.length === 0) {
+            this.loadCharacterData('r', 'src/data/r.json');
+        }
+
+        if (!this.srCharacters || this.srCharacters.length === 0) {
             this.loadCharacterData('sr', 'src/data/sr.json');
         }
 
-        if (this.ssrCharacters.length === 0) {
+        if (!this.ssrCharacters || this.ssrCharacters.length === 0) {
             this.loadCharacterData('ssr', 'src/data/ssr.json');
         }
     }

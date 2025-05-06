@@ -252,18 +252,7 @@ const Dungeon = {
     completedDungeons: [],
 
     // 当前运行的地下城数据
-    currentRun: {
-        dungeonId: null,
-        progress: 0,
-        monsters: [],
-        miniBosses: [],
-        finalBoss: null,
-        defeatedMiniBosses: 0,
-        currentMonsterIndex: 0,
-        rewards: [],
-        isCompleted: false,
-        finalBossAppeared: false
-    },
+    currentRun: null,
 
     // 地下城类型定义
     types: {

@@ -57,6 +57,8 @@ Character.createMainCharacter = function(data) {
                     ...characterData.baseStats,
                     ...jobInfo.baseStats
                 };
+
+                characterData.baseStats.maxHp = characterData.baseStats.hp;
                 // 完全复制基础属性到当前属性
                 characterData.currentStats = { ...characterData.baseStats };
             }

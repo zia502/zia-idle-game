@@ -415,7 +415,6 @@ const MainUI = {
                         character.currentStats = character.weaponBonusStats;
                     }else{
                         character.currentStats = character.baseStats;
-                        character.currentStats.maxHp = character.baseStats.hp;
                     }
                     const hpPercent = character.currentStats && character.currentStats.maxHp ?
                         Math.floor((character.currentStats.hp / character.currentStats.maxHp) * 100) : 100;

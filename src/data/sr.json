@@ -447,7 +447,7 @@
         "daRate": 0.08,
         "taRate": 0.04
       },
-      "skills": ["infernoAura", "flameBarrier"]
+      "skills": ["infernoAura", "flameBarrier2"]
     },
     "sr_26": {
       "id": "character_026",
@@ -465,7 +465,7 @@
         "daRate": 0.08,
         "taRate": 0.04
       },
-      "skills": ["tidalAura", "iceBarrier"]
+      "skills": ["tidalAura", "iceBarrier2"]
     },
     "sr_27": {
       "id": "character_027",
@@ -483,7 +483,7 @@
         "daRate": 0.08,
         "taRate": 0.04
       },
-      "skills": ["tempestAura", "aerialBarrier"]
+      "skills": ["tempestAura", "aerialBarrier2"]
     },
     "sr_28": {
       "id": "character_028",
@@ -501,7 +501,7 @@
         "daRate": 0.08,
         "taRate": 0.04
       },
-      "skills": ["tectonicAura", "earthenBarrier"]
+      "skills": ["tectonicAura", "earthenBarrier2"]
     },
     "sr_29": {
       "id": "character_029",
@@ -519,7 +519,7 @@
         "daRate": 0.08,
         "taRate": 0.04
       },
-      "skills": ["holyAura", "divineBarrier"]
+      "skills": ["holyAura", "divineBarrier2"]
     },
     "sr_30": {
       "id": "character_030",
@@ -537,7 +537,7 @@
         "daRate": 0.08,
         "taRate": 0.04
       },
-      "skills": ["shadowAura", "abyssalBarrier"]
+      "skills": ["shadowAura", "abyssalBarrier2"]
     },
     "sr_31": {
       "id": "character_031",
@@ -555,7 +555,7 @@
         "daRate": 0.08,
         "taRate": 0.04
       },
-      "skills": ["pyroBlast", "infernoBurst"]
+      "skills": ["pyroBlast", "infernoBurst2"]
     },
     "sr_32": {
       "id": "character_032",
@@ -573,7 +573,7 @@
         "daRate": 0.08,
         "taRate": 0.04
       },
-      "skills": ["hydroBlast", "aquaSurge"]
+      "skills": ["hydroBlast", "aquaSurge2"]
     },
     "sr_33": {
       "id": "character_033",
@@ -591,7 +591,7 @@
         "daRate": 0.08,
         "taRate": 0.04
       },
-      "skills": ["aeroBlast", "cycloneBurst"]
+      "skills": ["aeroBlast", "cycloneBurst2"]
     },
     "sr_34": {
       "id": "character_034",
@@ -609,7 +609,7 @@
         "daRate": 0.08,
         "taRate": 0.04
       },
-      "skills": ["geoBlast", "seismicBurst"]
+      "skills": ["geoBlast", "seismicBurst2"]
     },
     "sr_35": {
       "id": "character_035",
@@ -627,7 +627,7 @@
         "daRate": 0.08,
         "taRate": 0.04
       },
-      "skills": ["lumiBlast", "radiantBurst"]
+      "skills": ["lumiBlast", "radiantBurst2"]
     },
     "sr_36": {
       "id": "character_036",
@@ -645,7 +645,7 @@
         "daRate": 0.08,
         "taRate": 0.04
       },
-      "skills": ["darkBlast", "voidBurst"]
+      "skills": ["darkBlast", "voidBurst2"]
     },
     "sr_37": {
       "id": "character_037",
@@ -663,7 +663,7 @@
         "daRate": 0.08,
         "taRate": 0.04
       },
-      "skills": ["blazingStrike", "phoenixFlare"]
+      "skills": ["blazingStrike2", "phoenixFlare"]
     },
     "sr_38": {
       "id": "character_038",
@@ -681,7 +681,7 @@
         "daRate": 0.08,
         "taRate": 0.04
       },
-      "skills": ["tidalStrike", "frostArrow"]
+      "skills": ["tidalStrike2", "frostArrow"]
     },
     "sr_39": {
       "id": "character_039",
@@ -699,7 +699,7 @@
         "daRate": 0.08,
         "taRate": 0.04
       },
-      "skills": ["gustStrike", "tempestArrow"]
+      "skills": ["gustStrike2", "tempestArrow"]
     },
     "sr_40": {
       "id": "character_040",
@@ -717,7 +717,7 @@
         "daRate": 0.08,
         "taRate": 0.04
       },
-      "skills": ["boulderStrike", "terraArrow"]
+      "skills": ["boulderStrike2", "terraArrow"]
     },
     "sr_41": {
       "id": "character_041",
@@ -735,7 +735,7 @@
         "daRate": 0.08,
         "taRate": 0.04
       },
-      "skills": ["holyStrike", "luminousArrow"]
+      "skills": ["holyStrike2", "luminousArrow"]
     },
     "sr_42": {
       "id": "character_042",
@@ -753,7 +753,7 @@
         "daRate": 0.08,
         "taRate": 0.04
       },
-      "skills": ["shadowStrike", "umbralArrow"]
+      "skills": ["shadowStrike2", "umbralArrow"]
     },
     "sr_43": {
       "id": "character_043",
@@ -771,7 +771,7 @@
         "daRate": 0.08,
         "taRate": 0.04
       },
-      "skills": ["blazingStrike", "emberShield"]
+      "skills": ["blazingStrike3", "emberShield"]
     },
     "sr_44": {
       "id": "character_044",
@@ -789,7 +789,7 @@
         "daRate": 0.08,
         "taRate": 0.04
       },
-      "skills": ["tidalStrike", "glacialShield"]
+      "skills": ["tidalStrike3", "glacialShield"]
     },
     "sr_45": {
       "id": "character_045",
@@ -807,7 +807,7 @@
         "daRate": 0.08,
         "taRate": 0.04
       },
-      "skills": ["gustStrike", "zephyrShield"]
+      "skills": ["gustStrike3", "zephyrShield"]
     },
     "sr_46": {
       "id": "character_046",
@@ -825,7 +825,7 @@
         "daRate": 0.08,
         "taRate": 0.04
       },
-      "skills": ["boulderStrike", "graniteShield"]
+      "skills": ["boulderStrike3", "graniteShield"]
     },
     "sr_47": {
       "id": "character_047",
@@ -843,7 +843,7 @@
         "daRate": 0.08,
         "taRate": 0.04
       },
-      "skills": ["holyStrike", "celestialShield"]
+      "skills": ["holyStrike3", "celestialShield"]
     },
     "sr_48": {
       "id": "character_048",
@@ -861,7 +861,7 @@
         "daRate": 0.08,
         "taRate": 0.04
       },
-      "skills": ["shadowStrike", "netherShield"]
+      "skills": ["shadowStrike3", "netherShield"]
     },
     "sr_49": {
       "id": "character_049",
@@ -879,7 +879,7 @@
         "daRate": 0.08,
         "taRate": 0.04
       },
-      "skills": ["infernoBurst", "pyroBlast"]
+      "skills": ["infernoBurst3", "pyroBlast"]
     },
     "sr_50": {
       "id": "character_050",
@@ -897,6 +897,6 @@
         "daRate": 0.08,
         "taRate": 0.04
       },
-      "skills": ["aquaSurge", "hydroBlast"]
+      "skills": ["aquaSurge3", "hydroBlast"]
     }
 }

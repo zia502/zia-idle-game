@@ -374,6 +374,7 @@ const Character = {
 
         // 使用传入的baseStats或创建一个默认的基础属性对象
         const baseStats = data.baseStats;
+        baseStats.maxHp = baseStats.hp;
         const rarity = data.rarity || 'rare'; // 默认稀有度为rare
         const rarityData = this.rarities[rarity] || this.rarities.rare;
 

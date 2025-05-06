@@ -1,9 +1,9 @@
-damage    
+damage
 damage and buff
-damage and debuff 
-buff 
+damage and debuff
+buff
 heal
-debuff 
+debuff
 
 
 伤害分为：
@@ -39,3 +39,13 @@ debuff 分为:
 降低DA 10-30%
 降低TA 10-30%
 黑暗 10%-50%
+
+注意：为了避免技能名称重复，已经为重复的技能创建了新的变体：
+- 原始技能保持不变
+- 二级变体（技能名+2）：略微提升效果
+- 三级变体（技能名+3）：显著提升效果
+
+例如：
+blazingStrike - 原始技能
+blazingStrike2 - 二级变体，伤害和效果略微提升
+blazingStrike3 - 三级变体，伤害和效果显著提升

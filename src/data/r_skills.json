@@ -1,0 +1,490 @@
+{
+  "fireBlast": {
+    "name": "火焰爆破",
+    "description": "对敌方单体造成2.5倍攻击力的火属性伤害，CD5回合",
+    "type": "magic",
+    "power": 1.0,
+    "cost": 0,
+    "fixed": false,
+    "cooldown": 5,
+    "effectType": "damage",
+    "targetType": "enemy",
+    "effects": [
+      {
+        "type": "damage",
+        "multiplier": 2.5,
+        "element": "fire"
+      }
+    ]
+  },
+  "waterBlast": {
+    "name": "水流爆破",
+    "description": "对敌方单体造成3次0.8倍攻击力的水属性伤害，CD5回合",
+    "type": "magic",
+    "power": 1.0,
+    "cost": 0,
+    "fixed": false,
+    "cooldown": 5,
+    "effectType": "damage",
+    "targetType": "enemy",
+    "effects": [
+      {
+        "type": "multi_attack",
+        "count": 3,
+        "multiplier": 0.8,
+        "element": "water"
+      }
+    ]
+  },
+  "windBlast": {
+    "name": "风刃爆破",
+    "description": "对敌方单体造成6次0.5倍攻击力的风属性伤害，CD5回合",
+    "type": "magic",
+    "power": 1.0,
+    "cost": 0,
+    "fixed": false,
+    "cooldown": 5,
+    "effectType": "damage",
+    "targetType": "enemy",
+    "effects": [
+      {
+        "type": "multi_attack",
+        "count": 6,
+        "multiplier": 0.5,
+        "element": "wind"
+      }
+    ]
+  },
+  "earthBlast": {
+    "name": "土石爆破",
+    "description": "对敌方单体造成2.8倍攻击力的土属性伤害，CD5回合",
+    "type": "magic",
+    "power": 1.0,
+    "cost": 0,
+    "fixed": false,
+    "cooldown": 5,
+    "effectType": "damage",
+    "targetType": "enemy",
+    "effects": [
+      {
+        "type": "damage",
+        "multiplier": 2.8,
+        "element": "earth"
+      }
+    ]
+  },
+  "lightBlast": {
+    "name": "光明爆破",
+    "description": "对敌方单体造成2.7倍攻击力的光属性伤害，CD5回合",
+    "type": "magic",
+    "power": 1.0,
+    "cost": 0,
+    "fixed": false,
+    "cooldown": 5,
+    "effectType": "damage",
+    "targetType": "enemy",
+    "effects": [
+      {
+        "type": "damage",
+        "multiplier": 2.7,
+        "element": "light"
+      }
+    ]
+  },
+  "darkBlast": {
+    "name": "暗影爆破",
+    "description": "对敌方单体造成8次0.35倍攻击力的暗属性伤害，CD5回合",
+    "type": "magic",
+    "power": 1.0,
+    "cost": 0,
+    "fixed": false,
+    "cooldown": 5,
+    "effectType": "damage",
+    "targetType": "enemy",
+    "effects": [
+      {
+        "type": "multi_attack",
+        "count": 8,
+        "multiplier": 0.35,
+        "element": "dark"
+      }
+    ]
+  },
+  "fireShield": {
+    "name": "火焰护盾",
+    "description": "为自身提供800点护盾，持续3回合，CD6回合",
+    "type": "defense",
+    "power": 0.8,
+    "cost": 0,
+    "fixed": false,
+    "cooldown": 6,
+    "effectType": "buff",
+    "targetType": "self",
+    "duration": 3,
+    "effects": [
+      {
+        "type": "shield",
+        "value": 800,
+        "duration": 3,
+        "stackable": false,
+        "dispellable": true,
+        "name": "火焰护盾",
+        "description": "火属性护盾",
+        "icon": "🔥🛡️"
+      }
+    ]
+  },
+  "waterShield": {
+    "name": "水流护盾",
+    "description": "为自身提供防御力+25%buff，持续3回合，CD6回合",
+    "type": "defense",
+    "power": 0.8,
+    "cost": 0,
+    "fixed": false,
+    "cooldown": 6,
+    "effectType": "buff",
+    "targetType": "self",
+    "duration": 3,
+    "effects": [
+      {
+        "type": "defenseUp",
+        "value": 25,
+        "duration": 3,
+        "stackable": true,
+        "dispellable": true,
+        "name": "水流护盾",
+        "description": "提高防御力",
+        "icon": "💧🛡️"
+      }
+    ]
+  },
+  "windShield": {
+    "name": "风之护盾",
+    "description": "为自身提供DA+20%buff，持续3回合，CD6回合",
+    "type": "buff",
+    "power": 0.8,
+    "cost": 0,
+    "fixed": false,
+    "cooldown": 6,
+    "effectType": "buff",
+    "targetType": "self",
+    "duration": 3,
+    "effects": [
+      {
+        "type": "daBoost",
+        "value": 0.2,
+        "duration": 3,
+        "stackable": true,
+        "dispellable": true,
+        "name": "风之加护",
+        "description": "提高双重攻击率",
+        "icon": "🌪️⚔️⚔️"
+      }
+    ]
+  },
+  "earthShield": {
+    "name": "土之护盾",
+    "description": "为自身提供900点护盾，持续3回合，CD6回合",
+    "type": "defense",
+    "power": 0.8,
+    "cost": 0,
+    "fixed": false,
+    "cooldown": 6,
+    "effectType": "buff",
+    "targetType": "self",
+    "duration": 3,
+    "effects": [
+      {
+        "type": "shield",
+        "value": 900,
+        "duration": 3,
+        "stackable": false,
+        "dispellable": true,
+        "name": "土之护盾",
+        "description": "土属性护盾",
+        "icon": "🌋🛡️"
+      }
+    ]
+  },
+  "lightHeal": {
+    "name": "光明治愈",
+    "description": "为全体队友恢复800点生命值，CD5回合",
+    "type": "heal",
+    "power": 0.8,
+    "cost": 0,
+    "fixed": false,
+    "cooldown": 5,
+    "effectType": "heal",
+    "targetType": "all_allies",
+    "effects": [
+      {
+        "type": "heal",
+        "value": 800
+      }
+    ]
+  },
+  "darkBoost": {
+    "name": "暗影增幅",
+    "description": "为自身提供暴击率+20%buff，持续3回合，CD6回合",
+    "type": "buff",
+    "power": 0.8,
+    "cost": 0,
+    "fixed": false,
+    "cooldown": 6,
+    "effectType": "buff",
+    "targetType": "self",
+    "duration": 3,
+    "effects": [
+      {
+        "type": "critRateUp",
+        "value": 0.2,
+        "duration": 3,
+        "stackable": true,
+        "dispellable": true,
+        "name": "暗影之力",
+        "description": "提高暴击率",
+        "icon": "🌑⚡"
+      }
+    ]
+  },
+  "fireStrike": {
+    "name": "火焰打击",
+    "description": "对敌方单体造成2.6倍攻击力的火属性伤害并施加攻击力-15%debuff，持续2回合，CD5回合",
+    "type": "attack",
+    "power": 1.0,
+    "cost": 0,
+    "fixed": false,
+    "cooldown": 5,
+    "effectType": "damage_and_debuff",
+    "targetType": "enemy",
+    "duration": 2,
+    "effects": [
+      {
+        "type": "damage",
+        "multiplier": 2.6,
+        "element": "fire"
+      },
+      {
+        "type": "attackDown",
+        "value": 0.15,
+        "duration": 2,
+        "stackable": true,
+        "dispellable": true,
+        "name": "灼烧",
+        "description": "降低攻击力",
+        "icon": "🔥⬇️"
+      }
+    ]
+  },
+  "waterStrike": {
+    "name": "水流打击",
+    "description": "对敌方单体造成3次0.7倍攻击力的水属性伤害并施加防御力-15%debuff，持续2回合，CD5回合",
+    "type": "attack",
+    "power": 1.0,
+    "cost": 0,
+    "fixed": false,
+    "cooldown": 5,
+    "effectType": "damage_and_debuff",
+    "targetType": "enemy",
+    "duration": 2,
+    "effects": [
+      {
+        "type": "multi_attack",
+        "count": 3,
+        "multiplier": 0.7,
+        "element": "water"
+      },
+      {
+        "type": "defenseDown",
+        "value": 15,
+        "duration": 2,
+        "stackable": true,
+        "dispellable": true,
+        "name": "浸湿",
+        "description": "降低防御力",
+        "icon": "💧⬇️"
+      }
+    ]
+  },
+  "windStrike": {
+    "name": "风刃打击",
+    "description": "对敌方单体造成6次0.45倍攻击力的风属性伤害，CD5回合",
+    "type": "attack",
+    "power": 1.0,
+    "cost": 0,
+    "fixed": false,
+    "cooldown": 5,
+    "effectType": "damage",
+    "targetType": "enemy",
+    "effects": [
+      {
+        "type": "multi_attack",
+        "count": 6,
+        "multiplier": 0.45,
+        "element": "wind"
+      }
+    ]
+  },
+  "earthStrike": {
+    "name": "土石打击",
+    "description": "对敌方单体造成2.9倍攻击力的土属性伤害，CD5回合",
+    "type": "attack",
+    "power": 1.0,
+    "cost": 0,
+    "fixed": false,
+    "cooldown": 5,
+    "effectType": "damage",
+    "targetType": "enemy",
+    "effects": [
+      {
+        "type": "damage",
+        "multiplier": 2.9,
+        "element": "earth"
+      }
+    ]
+  },
+  "lightStrike": {
+    "name": "光明打击",
+    "description": "对敌方单体造成2.5倍攻击力的光属性伤害并施加黑暗debuff[命中率-20%]，持续2回合，CD5回合",
+    "type": "attack",
+    "power": 1.0,
+    "cost": 0,
+    "fixed": false,
+    "cooldown": 5,
+    "effectType": "damage_and_debuff",
+    "targetType": "enemy",
+    "duration": 2,
+    "effects": [
+      {
+        "type": "damage",
+        "multiplier": 2.5,
+        "element": "light"
+      },
+      {
+        "type": "missRate",
+        "value": 0.2,
+        "duration": 2,
+        "stackable": true,
+        "dispellable": true,
+        "name": "目眩",
+        "description": "降低命中率",
+        "icon": "✨👁️❌"
+      }
+    ]
+  },
+  "darkStrike": {
+    "name": "暗影打击",
+    "description": "对敌方单体造成8次0.33倍攻击力的暗属性伤害，CD5回合",
+    "type": "attack",
+    "power": 1.0,
+    "cost": 0,
+    "fixed": false,
+    "cooldown": 5,
+    "effectType": "damage",
+    "targetType": "enemy",
+    "effects": [
+      {
+        "type": "multi_attack",
+        "count": 8,
+        "multiplier": 0.33,
+        "element": "dark"
+      }
+    ]
+  },
+  "fireBoost": {
+    "name": "火焰增幅",
+    "description": "为自身提供攻击力+15%buff，持续3回合，CD6回合",
+    "type": "buff",
+    "power": 0.8,
+    "cost": 0,
+    "fixed": false,
+    "cooldown": 6,
+    "effectType": "buff",
+    "targetType": "self",
+    "duration": 3,
+    "effects": [
+      {
+        "type": "attackUp",
+        "value": 0.15,
+        "duration": 3,
+        "stackable": true,
+        "dispellable": true,
+        "name": "火焰之力",
+        "description": "提高攻击力",
+        "icon": "🔥⚔️"
+      }
+    ]
+  },
+  "waterBoost": {
+    "name": "水流增幅",
+    "description": "为自身提供DA+15%buff，持续3回合，CD6回合",
+    "type": "buff",
+    "power": 0.8,
+    "cost": 0,
+    "fixed": false,
+    "cooldown": 6,
+    "effectType": "buff",
+    "targetType": "self",
+    "duration": 3,
+    "effects": [
+      {
+        "type": "daBoost",
+        "value": 0.15,
+        "duration": 3,
+        "stackable": true,
+        "dispellable": true,
+        "name": "水流之力",
+        "description": "提高双重攻击率",
+        "icon": "💧⚔️⚔️"
+      }
+    ]
+  },
+  "windBoost": {
+    "name": "风之增幅",
+    "description": "为自身提供TA+15%buff，持续3回合，CD6回合",
+    "type": "buff",
+    "power": 0.8,
+    "cost": 0,
+    "fixed": false,
+    "cooldown": 6,
+    "effectType": "buff",
+    "targetType": "self",
+    "duration": 3,
+    "effects": [
+      {
+        "type": "taBoost",
+        "value": 0.15,
+        "duration": 3,
+        "stackable": true,
+        "dispellable": true,
+        "name": "风之力量",
+        "description": "提高三重攻击率",
+        "icon": "🌪️⚔️⚔️⚔️"
+      }
+    ]
+  },
+  "earthBoost": {
+    "name": "大地增幅",
+    "description": "为自身提供敌对心+80%buff，持续3回合，CD6回合",
+    "type": "defense",
+    "power": 0.8,
+    "cost": 0,
+    "fixed": false,
+    "cooldown": 6,
+    "effectType": "buff",
+    "targetType": "self",
+    "duration": 3,
+    "effects": [
+      {
+        "type": "threatUp",
+        "value": 80,
+        "duration": 3,
+        "stackable": true,
+        "dispellable": true,
+        "name": "大地之力",
+        "description": "提高敌对心",
+        "icon": "🌋👁️"
+      }
+    ]
+  }
+}

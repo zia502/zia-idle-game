@@ -1,0 +1,902 @@
+{
+  "r_01": {
+    "id": "character_101",
+    "name": "火焰学徒",
+    "attribute": "fire",
+    "type": "special",
+    "baseStats": {
+      "hp": 139,
+      "maxHp": 1852,
+      "attack": 987,
+      "maxAttack": 5264,
+      "defense": 10,
+      "critRate": 0.03,
+      "critDamage": 1.3,
+      "daRate": 0.06,
+      "taRate": 0.03
+    },
+    "skills": ["fireBlast"]
+  },
+  "r_02": {
+    "id": "character_102",
+    "name": "水流学徒",
+    "attribute": "water",
+    "type": "special",
+    "baseStats": {
+      "hp": 144,
+      "maxHp": 1911,
+      "attack": 966,
+      "maxAttack": 5145,
+      "defense": 10,
+      "critRate": 0.03,
+      "critDamage": 1.3,
+      "daRate": 0.06,
+      "taRate": 0.03
+    },
+    "skills": ["waterBlast"]
+  },
+  "r_03": {
+    "id": "character_103",
+    "name": "风之学徒",
+    "attribute": "wind",
+    "type": "special",
+    "baseStats": {
+      "hp": 131,
+      "maxHp": 1743,
+      "attack": 1015,
+      "maxAttack": 5404,
+      "defense": 10,
+      "critRate": 0.03,
+      "critDamage": 1.3,
+      "daRate": 0.06,
+      "taRate": 0.03
+    },
+    "skills": ["windBlast"]
+  },
+  "r_04": {
+    "id": "character_104",
+    "name": "土之学徒",
+    "attribute": "earth",
+    "type": "special",
+    "baseStats": {
+      "hp": 154,
+      "maxHp": 2051,
+      "attack": 903,
+      "maxAttack": 4816,
+      "defense": 10,
+      "critRate": 0.03,
+      "critDamage": 1.3,
+      "daRate": 0.06,
+      "taRate": 0.03
+    },
+    "skills": ["earthBlast"]
+  },
+  "r_05": {
+    "id": "character_105",
+    "name": "光明学徒",
+    "attribute": "light",
+    "type": "healing",
+    "baseStats": {
+      "hp": 151,
+      "maxHp": 2002,
+      "attack": 959,
+      "maxAttack": 5110,
+      "defense": 10,
+      "critRate": 0.03,
+      "critDamage": 1.3,
+      "daRate": 0.06,
+      "taRate": 0.03
+    },
+    "skills": ["lightHeal"]
+  },
+  "r_06": {
+    "id": "character_106",
+    "name": "暗影学徒",
+    "attribute": "dark",
+    "type": "special",
+    "baseStats": {
+      "hp": 137,
+      "maxHp": 1820,
+      "attack": 1001,
+      "maxAttack": 5334,
+      "defense": 10,
+      "critRate": 0.03,
+      "critDamage": 1.3,
+      "daRate": 0.06,
+      "taRate": 0.03
+    },
+    "skills": ["darkBlast"]
+  },
+  "r_07": {
+    "id": "character_107",
+    "name": "火焰战士",
+    "attribute": "fire",
+    "type": "attack",
+    "baseStats": {
+      "hp": 161,
+      "maxHp": 2142,
+      "attack": 896,
+      "maxAttack": 4774,
+      "defense": 10,
+      "critRate": 0.03,
+      "critDamage": 1.3,
+      "daRate": 0.06,
+      "taRate": 0.03
+    },
+    "skills": ["fireStrike"]
+  },
+  "r_08": {
+    "id": "character_108",
+    "name": "水流战士",
+    "attribute": "water",
+    "type": "attack",
+    "baseStats": {
+      "hp": 133,
+      "maxHp": 1771,
+      "attack": 1022,
+      "maxAttack": 5446,
+      "defense": 10,
+      "critRate": 0.03,
+      "critDamage": 1.3,
+      "daRate": 0.06,
+      "taRate": 0.03
+    },
+    "skills": ["waterStrike"]
+  },
+  "r_09": {
+    "id": "character_109",
+    "name": "风之战士",
+    "attribute": "wind",
+    "type": "attack",
+    "baseStats": {
+      "hp": 140,
+      "maxHp": 1862,
+      "attack": 980,
+      "maxAttack": 5222,
+      "defense": 10,
+      "critRate": 0.03,
+      "critDamage": 1.3,
+      "daRate": 0.06,
+      "taRate": 0.03
+    },
+    "skills": ["windStrike"]
+  },
+  "r_10": {
+    "id": "character_110",
+    "name": "土之战士",
+    "attribute": "earth",
+    "type": "attack",
+    "baseStats": {
+      "hp": 147,
+      "maxHp": 1960,
+      "attack": 945,
+      "maxAttack": 5040,
+      "defense": 10,
+      "critRate": 0.03,
+      "critDamage": 1.3,
+      "daRate": 0.06,
+      "taRate": 0.03
+    },
+    "skills": ["earthStrike"]
+  },
+  "r_11": {
+    "id": "character_111",
+    "name": "光明战士",
+    "attribute": "light",
+    "type": "attack",
+    "baseStats": {
+      "hp": 158,
+      "maxHp": 2100,
+      "attack": 917,
+      "maxAttack": 4886,
+      "defense": 10,
+      "critRate": 0.03,
+      "critDamage": 1.3,
+      "daRate": 0.06,
+      "taRate": 0.03
+    },
+    "skills": ["lightStrike"]
+  },
+  "r_12": {
+    "id": "character_112",
+    "name": "暗影战士",
+    "attribute": "dark",
+    "type": "attack",
+    "baseStats": {
+      "hp": 130,
+      "maxHp": 1729,
+      "attack": 1036,
+      "maxAttack": 5516,
+      "defense": 10,
+      "critRate": 0.03,
+      "critDamage": 1.3,
+      "daRate": 0.06,
+      "taRate": 0.03
+    },
+    "skills": ["darkStrike"]
+  },
+  "r_13": {
+    "id": "character_113",
+    "name": "火焰守卫",
+    "attribute": "fire",
+    "type": "defense",
+    "baseStats": {
+      "hp": 165,
+      "maxHp": 2198,
+      "attack": 882,
+      "maxAttack": 4697,
+      "defense": 10,
+      "critRate": 0.03,
+      "critDamage": 1.3,
+      "daRate": 0.06,
+      "taRate": 0.03
+    },
+    "skills": ["fireShield"]
+  },
+  "r_14": {
+    "id": "character_114",
+    "name": "水流守卫",
+    "attribute": "water",
+    "type": "defense",
+    "baseStats": {
+      "hp": 159,
+      "maxHp": 2121,
+      "attack": 903,
+      "maxAttack": 4809,
+      "defense": 10,
+      "critRate": 0.03,
+      "critDamage": 1.3,
+      "daRate": 0.06,
+      "taRate": 0.03
+    },
+    "skills": ["waterShield"]
+  },
+  "r_15": {
+    "id": "character_115",
+    "name": "风之守卫",
+    "attribute": "wind",
+    "type": "defense",
+    "baseStats": {
+      "hp": 152,
+      "maxHp": 2030,
+      "attack": 924,
+      "maxAttack": 4921,
+      "defense": 10,
+      "critRate": 0.03,
+      "critDamage": 1.3,
+      "daRate": 0.06,
+      "taRate": 0.03
+    },
+    "skills": ["windShield"]
+  },
+  "r_16": {
+    "id": "character_116",
+    "name": "土之守卫",
+    "attribute": "earth",
+    "type": "defense",
+    "baseStats": {
+      "hp": 168,
+      "maxHp": 2240,
+      "attack": 868,
+      "maxAttack": 4627,
+      "defense": 10,
+      "critRate": 0.03,
+      "critDamage": 1.3,
+      "daRate": 0.06,
+      "taRate": 0.03
+    },
+    "skills": ["earthShield"]
+  },
+  "r_17": {
+    "id": "character_117",
+    "name": "光明祭司",
+    "attribute": "light",
+    "type": "healing",
+    "baseStats": {
+      "hp": 155,
+      "maxHp": 2065,
+      "attack": 910,
+      "maxAttack": 4851,
+      "defense": 10,
+      "critRate": 0.03,
+      "critDamage": 1.3,
+      "daRate": 0.06,
+      "taRate": 0.03
+    },
+    "skills": ["lightHeal"]
+  },
+  "r_18": {
+    "id": "character_118",
+    "name": "暗影祭司",
+    "attribute": "dark",
+    "type": "special",
+    "baseStats": {
+      "hp": 142,
+      "maxHp": 1890,
+      "attack": 952,
+      "maxAttack": 5075,
+      "defense": 10,
+      "critRate": 0.03,
+      "critDamage": 1.3,
+      "daRate": 0.06,
+      "taRate": 0.03
+    },
+    "skills": ["darkBoost"]
+  },
+  "r_19": {
+    "id": "character_119",
+    "name": "火焰术士",
+    "attribute": "fire",
+    "type": "special",
+    "baseStats": {
+      "hp": 143,
+      "maxHp": 1904,
+      "attack": 945,
+      "maxAttack": 5040,
+      "defense": 10,
+      "critRate": 0.03,
+      "critDamage": 1.3,
+      "daRate": 0.06,
+      "taRate": 0.03
+    },
+    "skills": ["fireBoost"]
+  },
+  "r_20": {
+    "id": "character_120",
+    "name": "水流术士",
+    "attribute": "water",
+    "type": "special",
+    "baseStats": {
+      "hp": 146,
+      "maxHp": 1946,
+      "attack": 931,
+      "maxAttack": 4963,
+      "defense": 10,
+      "critRate": 0.03,
+      "critDamage": 1.3,
+      "daRate": 0.06,
+      "taRate": 0.03
+    },
+    "skills": ["waterBoost"]
+  },
+  "r_21": {
+    "id": "character_121",
+    "name": "风之术士",
+    "attribute": "wind",
+    "type": "special",
+    "baseStats": {
+      "hp": 138,
+      "maxHp": 1834,
+      "attack": 966,
+      "maxAttack": 5145,
+      "defense": 10,
+      "critRate": 0.03,
+      "critDamage": 1.3,
+      "daRate": 0.06,
+      "taRate": 0.03
+    },
+    "skills": ["windBoost"]
+  },
+  "r_22": {
+    "id": "character_122",
+    "name": "土之术士",
+    "attribute": "earth",
+    "type": "special",
+    "baseStats": {
+      "hp": 150,
+      "maxHp": 1995,
+      "attack": 917,
+      "maxAttack": 4886,
+      "defense": 10,
+      "critRate": 0.03,
+      "critDamage": 1.3,
+      "daRate": 0.06,
+      "taRate": 0.03
+    },
+    "skills": ["earthBoost"]
+  },
+  "r_23": {
+    "id": "character_123",
+    "name": "火焰弓手",
+    "attribute": "fire",
+    "type": "attack",
+    "baseStats": {
+      "hp": 135,
+      "maxHp": 1799,
+      "attack": 973,
+      "maxAttack": 5187,
+      "defense": 10,
+      "critRate": 0.03,
+      "critDamage": 1.3,
+      "daRate": 0.06,
+      "taRate": 0.03
+    },
+    "skills": ["fireStrike"]
+  },
+  "r_24": {
+    "id": "character_124",
+    "name": "水流弓手",
+    "attribute": "water",
+    "type": "attack",
+    "baseStats": {
+      "hp": 141,
+      "maxHp": 1876,
+      "attack": 959,
+      "maxAttack": 5110,
+      "defense": 10,
+      "critRate": 0.03,
+      "critDamage": 1.3,
+      "daRate": 0.06,
+      "taRate": 0.03
+    },
+    "skills": ["waterStrike"]
+  },
+  "r_25": {
+    "id": "character_125",
+    "name": "风之弓手",
+    "attribute": "wind",
+    "type": "attack",
+    "baseStats": {
+      "hp": 132,
+      "maxHp": 1757,
+      "attack": 994,
+      "maxAttack": 5299,
+      "defense": 10,
+      "critRate": 0.03,
+      "critDamage": 1.3,
+      "daRate": 0.06,
+      "taRate": 0.03
+    },
+    "skills": ["windStrike"]
+  },
+  "r_26": {
+    "id": "character_126",
+    "name": "土之弓手",
+    "attribute": "earth",
+    "type": "attack",
+    "baseStats": {
+      "hp": 149,
+      "maxHp": 1981,
+      "attack": 924,
+      "maxAttack": 4921,
+      "defense": 10,
+      "critRate": 0.03,
+      "critDamage": 1.3,
+      "daRate": 0.06,
+      "taRate": 0.03
+    },
+    "skills": ["earthStrike"]
+  },
+  "r_27": {
+    "id": "character_127",
+    "name": "光明弓手",
+    "attribute": "light",
+    "type": "attack",
+    "baseStats": {
+      "hp": 145,
+      "maxHp": 1932,
+      "attack": 938,
+      "maxAttack": 5005,
+      "defense": 10,
+      "critRate": 0.03,
+      "critDamage": 1.3,
+      "daRate": 0.06,
+      "taRate": 0.03
+    },
+    "skills": ["lightStrike"]
+  },
+  "r_28": {
+    "id": "character_128",
+    "name": "暗影弓手",
+    "attribute": "dark",
+    "type": "attack",
+    "baseStats": {
+      "hp": 134,
+      "maxHp": 1785,
+      "attack": 980,
+      "maxAttack": 5222,
+      "defense": 10,
+      "critRate": 0.03,
+      "critDamage": 1.3,
+      "daRate": 0.06,
+      "taRate": 0.03
+    },
+    "skills": ["darkStrike"]
+  },
+  "r_29": {
+    "id": "character_129",
+    "name": "火焰骑士",
+    "attribute": "fire",
+    "type": "defense",
+    "baseStats": {
+      "hp": 160,
+      "maxHp": 2128,
+      "attack": 889,
+      "maxAttack": 4739,
+      "defense": 10,
+      "critRate": 0.03,
+      "critDamage": 1.3,
+      "daRate": 0.06,
+      "taRate": 0.03
+    },
+    "skills": ["fireShield"]
+  },
+  "r_30": {
+    "id": "character_130",
+    "name": "水流骑士",
+    "attribute": "water",
+    "type": "defense",
+    "baseStats": {
+      "hp": 156,
+      "maxHp": 2079,
+      "attack": 910,
+      "maxAttack": 4851,
+      "defense": 10,
+      "critRate": 0.03,
+      "critDamage": 1.3,
+      "daRate": 0.06,
+      "taRate": 0.03
+    },
+    "skills": ["waterShield"]
+  },
+  "r_31": {
+    "id": "character_131",
+    "name": "风之骑士",
+    "attribute": "wind",
+    "type": "defense",
+    "baseStats": {
+      "hp": 148,
+      "maxHp": 1974,
+      "attack": 931,
+      "maxAttack": 4963,
+      "defense": 10,
+      "critRate": 0.03,
+      "critDamage": 1.3,
+      "daRate": 0.06,
+      "taRate": 0.03
+    },
+    "skills": ["windShield"]
+  },
+  "r_32": {
+    "id": "character_132",
+    "name": "土之骑士",
+    "attribute": "earth",
+    "type": "defense",
+    "baseStats": {
+      "hp": 163,
+      "maxHp": 2170,
+      "attack": 875,
+      "maxAttack": 4662,
+      "defense": 10,
+      "critRate": 0.03,
+      "critDamage": 1.3,
+      "daRate": 0.06,
+      "taRate": 0.03
+    },
+    "skills": ["earthShield"]
+  },
+  "r_33": {
+    "id": "character_133",
+    "name": "光明骑士",
+    "attribute": "light",
+    "type": "defense",
+    "baseStats": {
+      "hp": 157,
+      "maxHp": 2093,
+      "attack": 903,
+      "maxAttack": 4809,
+      "defense": 10,
+      "critRate": 0.03,
+      "critDamage": 1.3,
+      "daRate": 0.06,
+      "taRate": 0.03
+    },
+    "skills": ["lightStrike"]
+  },
+  "r_34": {
+    "id": "character_134",
+    "name": "暗影骑士",
+    "attribute": "dark",
+    "type": "defense",
+    "baseStats": {
+      "hp": 153,
+      "maxHp": 2037,
+      "attack": 917,
+      "maxAttack": 4886,
+      "defense": 10,
+      "critRate": 0.03,
+      "critDamage": 1.3,
+      "daRate": 0.06,
+      "taRate": 0.03
+    },
+    "skills": ["darkStrike"]
+  },
+  "r_35": {
+    "id": "character_135",
+    "name": "火焰医师",
+    "attribute": "fire",
+    "type": "healing",
+    "baseStats": {
+      "hp": 147,
+      "maxHp": 1960,
+      "attack": 938,
+      "maxAttack": 5005,
+      "defense": 10,
+      "critRate": 0.03,
+      "critDamage": 1.3,
+      "daRate": 0.06,
+      "taRate": 0.03
+    },
+    "skills": ["fireBoost"]
+  },
+  "r_36": {
+    "id": "character_136",
+    "name": "水流医师",
+    "attribute": "water",
+    "type": "healing",
+    "baseStats": {
+      "hp": 151,
+      "maxHp": 2002,
+      "attack": 917,
+      "maxAttack": 4886,
+      "defense": 10,
+      "critRate": 0.03,
+      "critDamage": 1.3,
+      "daRate": 0.06,
+      "taRate": 0.03
+    },
+    "skills": ["waterBoost"]
+  },
+  "r_37": {
+    "id": "character_137",
+    "name": "风之医师",
+    "attribute": "wind",
+    "type": "healing",
+    "baseStats": {
+      "hp": 144,
+      "maxHp": 1911,
+      "attack": 938,
+      "maxAttack": 5005,
+      "defense": 10,
+      "critRate": 0.03,
+      "critDamage": 1.3,
+      "daRate": 0.06,
+      "taRate": 0.03
+    },
+    "skills": ["windBoost"]
+  },
+  "r_38": {
+    "id": "character_138",
+    "name": "土之医师",
+    "attribute": "earth",
+    "type": "healing",
+    "baseStats": {
+      "hp": 154,
+      "maxHp": 2051,
+      "attack": 910,
+      "maxAttack": 4851,
+      "defense": 10,
+      "critRate": 0.03,
+      "critDamage": 1.3,
+      "daRate": 0.06,
+      "taRate": 0.03
+    },
+    "skills": ["earthBoost"]
+  },
+  "r_39": {
+    "id": "character_139",
+    "name": "光明医师",
+    "attribute": "light",
+    "type": "healing",
+    "baseStats": {
+      "hp": 152,
+      "maxHp": 2030,
+      "attack": 924,
+      "maxAttack": 4921,
+      "defense": 10,
+      "critRate": 0.03,
+      "critDamage": 1.3,
+      "daRate": 0.06,
+      "taRate": 0.03
+    },
+    "skills": ["lightHeal"]
+  },
+  "r_40": {
+    "id": "character_140",
+    "name": "暗影医师",
+    "attribute": "dark",
+    "type": "healing",
+    "baseStats": {
+      "hp": 146,
+      "maxHp": 1946,
+      "attack": 945,
+      "maxAttack": 5040,
+      "defense": 10,
+      "critRate": 0.03,
+      "critDamage": 1.3,
+      "daRate": 0.06,
+      "taRate": 0.03
+    },
+    "skills": ["darkBoost"]
+  },
+  "r_41": {
+    "id": "character_141",
+    "name": "火焰刺客",
+    "attribute": "fire",
+    "type": "attack",
+    "baseStats": {
+      "hp": 136,
+      "maxHp": 1813,
+      "attack": 987,
+      "maxAttack": 5264,
+      "defense": 10,
+      "critRate": 0.03,
+      "critDamage": 1.3,
+      "daRate": 0.06,
+      "taRate": 0.03
+    },
+    "skills": ["fireStrike"]
+  },
+  "r_42": {
+    "id": "character_142",
+    "name": "水流刺客",
+    "attribute": "water",
+    "type": "attack",
+    "baseStats": {
+      "hp": 140,
+      "maxHp": 1862,
+      "attack": 966,
+      "maxAttack": 5145,
+      "defense": 10,
+      "critRate": 0.03,
+      "critDamage": 1.3,
+      "daRate": 0.06,
+      "taRate": 0.03
+    },
+    "skills": ["waterStrike"]
+  },
+  "r_43": {
+    "id": "character_143",
+    "name": "风之刺客",
+    "attribute": "wind",
+    "type": "attack",
+    "baseStats": {
+      "hp": 133,
+      "maxHp": 1771,
+      "attack": 1001,
+      "maxAttack": 5334,
+      "defense": 10,
+      "critRate": 0.03,
+      "critDamage": 1.3,
+      "daRate": 0.06,
+      "taRate": 0.03
+    },
+    "skills": ["windStrike"]
+  },
+  "r_44": {
+    "id": "character_144",
+    "name": "土之刺客",
+    "attribute": "earth",
+    "type": "attack",
+    "baseStats": {
+      "hp": 145,
+      "maxHp": 1932,
+      "attack": 938,
+      "maxAttack": 5005,
+      "defense": 10,
+      "critRate": 0.03,
+      "critDamage": 1.3,
+      "daRate": 0.06,
+      "taRate": 0.03
+    },
+    "skills": ["earthStrike"]
+  },
+  "r_45": {
+    "id": "character_145",
+    "name": "光明刺客",
+    "attribute": "light",
+    "type": "attack",
+    "baseStats": {
+      "hp": 142,
+      "maxHp": 1890,
+      "attack": 952,
+      "maxAttack": 5075,
+      "defense": 10,
+      "critRate": 0.03,
+      "critDamage": 1.3,
+      "daRate": 0.06,
+      "taRate": 0.03
+    },
+    "skills": ["lightStrike"]
+  },
+  "r_46": {
+    "id": "character_146",
+    "name": "暗影刺客",
+    "attribute": "dark",
+    "type": "attack",
+    "baseStats": {
+      "hp": 135,
+      "maxHp": 1799,
+      "attack": 987,
+      "maxAttack": 5264,
+      "defense": 10,
+      "critRate": 0.03,
+      "critDamage": 1.3,
+      "daRate": 0.06,
+      "taRate": 0.03
+    },
+    "skills": ["darkStrike"]
+  },
+  "r_47": {
+    "id": "character_147",
+    "name": "火焰舞者",
+    "attribute": "fire",
+    "type": "special",
+    "baseStats": {
+      "hp": 141,
+      "maxHp": 1876,
+      "attack": 959,
+      "maxAttack": 5110,
+      "defense": 10,
+      "critRate": 0.03,
+      "critDamage": 1.3,
+      "daRate": 0.06,
+      "taRate": 0.03
+    },
+    "skills": ["fireBlast"]
+  },
+  "r_48": {
+    "id": "character_148",
+    "name": "水流舞者",
+    "attribute": "water",
+    "type": "special",
+    "baseStats": {
+      "hp": 143,
+      "maxHp": 1904,
+      "attack": 945,
+      "maxAttack": 5040,
+      "defense": 10,
+      "critRate": 0.03,
+      "critDamage": 1.3,
+      "daRate": 0.06,
+      "taRate": 0.03
+    },
+    "skills": ["waterBlast"]
+  },
+  "r_49": {
+    "id": "character_149",
+    "name": "风之舞者",
+    "attribute": "wind",
+    "type": "special",
+    "baseStats": {
+      "hp": 137,
+      "maxHp": 1820,
+      "attack": 973,
+      "maxAttack": 5187,
+      "defense": 10,
+      "critRate": 0.03,
+      "critDamage": 1.3,
+      "daRate": 0.06,
+      "taRate": 0.03
+    },
+    "skills": ["windBlast"]
+  },
+  "r_50": {
+    "id": "character_150",
+    "name": "土之舞者",
+    "attribute": "earth",
+    "type": "special",
+    "baseStats": {
+      "hp": 148,
+      "maxHp": 1974,
+      "attack": 931,
+      "maxAttack": 4963,
+      "defense": 10,
+      "critRate": 0.03,
+      "critDamage": 1.3,
+      "daRate": 0.06,
+      "taRate": 0.03
+    },
+    "skills": ["earthBlast"]
+  }
+}

@@ -102,11 +102,13 @@ const Character = {
         // 初始化可招募角色数组
         this.recruitableCharacters = [];
 
-        // 初始化SR和SSR角色数组
+        // 初始化R、SR和SSR角色数组
+        this.rCharacters = [];
         this.srCharacters = [];
         this.ssrCharacters = [];
 
-        // 加载SR和SSR角色数据
+        // 加载R、SR和SSR角色数据
+        this.loadCharacterData('r', 'src/data/r.json');
         this.loadCharacterData('sr', 'src/data/sr.json');
         this.loadCharacterData('ssr', 'src/data/ssr.json');
     },
@@ -130,7 +132,10 @@ const Character = {
             })
             .then(data => {
                 console.log(`成功加载${type.toUpperCase()}角色数据:`, data);
-                if (type === 'sr') {
+                if (type === 'r') {
+                    this.rCharacters = Object.values(data);
+                    console.log(`加载了 ${this.rCharacters.length} 个R角色`);
+                } else if (type === 'sr') {
                     this.srCharacters = Object.values(data);
                     console.log(`加载了 ${this.srCharacters.length} 个SR角色`);
                 } else if (type === 'ssr') {
@@ -142,21 +147,62 @@ const Character = {
                 if (typeof Events !== 'undefined') {
                     Events.emit(`${type}Characters:loaded`, {
                         type: type,
-                        count: type === 'sr' ? this.srCharacters.length : this.ssrCharacters.length
+                        count: type === 'r' ? this.rCharacters.length :
+                               type === 'sr' ? this.srCharacters.length : this.ssrCharacters.length
                     });
                 }
 
-                return type === 'sr' ? this.srCharacters : this.ssrCharacters;
+                if (type === 'r') {
+                    return this.rCharacters;
+                } else if (type === 'sr') {
+                    return this.srCharacters;
+                } else {
+                    return this.ssrCharacters;
+                }
             })
             .catch(error => {
                 console.error(`加载${type.toUpperCase()}角色数据失败:`, error);
-                if (type === 'sr') {
+                if (type === 'r') {
+                    this.rCharacters = []; // 设置为空数组
+                } else if (type === 'sr') {
                     this.srCharacters = []; // 设置为空数组
                 } else if (type === 'ssr') {
                     this.ssrCharacters = []; // 设置为空数组
                 }
                 throw error; // 重新抛出错误以便调用者可以捕获
             });
+    },
+
+    /**
+     * 确保R角色数据已加载
+     * @returns {Promise} 加载完成的Promise
+     */
+    ensureRCharactersLoaded() {
+        // 如果R角色数据已加载，直接返回
+        if (Array.isArray(this.rCharacters) && this.rCharacters.length > 0) {
+            console.log('R角色数据已加载，共 ' + this.rCharacters.length + ' 个角色');
+            return Promise.resolve(this.rCharacters);
+        }
+
+        // 否则加载R角色数据
+        console.log('R角色数据未加载，开始加载...');
+        return this.loadCharacterData('r', 'src/data/r.json');
+    },
+
+    /**
+     * 确保SR角色数据已加载
+     * @returns {Promise} 加载完成的Promise
+     */
+    ensureSRCharactersLoaded() {
+        // 如果SR角色数据已加载，直接返回
+        if (Array.isArray(this.srCharacters) && this.srCharacters.length > 0) {
+            console.log('SR角色数据已加载，共 ' + this.srCharacters.length + ' 个角色');
+            return Promise.resolve(this.srCharacters);
+        }
+
+        // 否则加载SR角色数据
+        console.log('SR角色数据未加载，开始加载...');
+        return this.loadCharacterData('sr', 'src/data/sr.json');
     },
 
     /**
@@ -443,7 +489,6 @@ const Character = {
                 break;
             }
 
-            const oldLevel = character.level;
             character.level++;
             console.log("升级前基础:", character.baseStats);
 
@@ -651,6 +696,42 @@ const Character = {
             const roll = Math.random();
             if (roll < 0.75) { // 75%概率
                 rarity = 'rare';
+
+                // 如果是稀有角色，从R角色数据中随机选择一个
+                if (this.rCharacters && this.rCharacters.length > 0) {
+                    const rIndex = Math.floor(Math.random() * this.rCharacters.length);
+                    const rTemplate = this.rCharacters[rIndex];
+
+                    // 复制模板并调整ID和稀有度
+                    const rCharacter = {
+                        ...rTemplate,
+                        id: `r_${Date.now()}_${i}`,
+                        rarity: 'rare',
+                        isRecruited: true,
+                        level: 1,
+                        exp: 0,
+                        nextLevelExp: this.calculateNextLevelExp(1),
+                        maxLevel: this.rarities['rare'].maxLevel,
+                        nextAttackCritical: false,
+                        shield: 0,
+                        bonusMultiplier: 0,
+                        currentStats: {...rTemplate.baseStats},
+                        traitUnlockLevels: {
+                            second: 65,
+                            third: 90
+                        },
+                        stats: {
+                            totalDamage: 0,
+                            totalHealing: 0,
+                            mvpCount: 0,
+                            battlesParticipated: 0
+                        }
+                    };
+
+                    result.push(rCharacter);
+                    continue; // 跳过其余的角色创建步骤
+                }
+                // 如果没有R角色数据，继续使用随机生成的方式
             } else if (roll < 0.90) { // 15%概率
                 rarity = 'epic';
 

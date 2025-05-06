@@ -270,9 +270,7 @@ const MainUI = {
                 `;
 
                 // 检查JobSystem是否已就绪
-                const jobSystemReady = typeof JobSystem !== 'undefined' &&
-                                      typeof JobSkillsTemplate !== 'undefined' &&
-                                      JobSkillsTemplate.templates;
+                const jobSystemReady = typeof JobSystem !== 'undefined';
 
                 // 如果JobSystem未就绪，显示加载中消息
                 if (!jobSystemReady) {
@@ -407,10 +405,12 @@ const MainUI = {
                     }
 
                     // 如果角色没有当前状态的最大HP
+                    console.log(character);
                     if (!character.currentStats.maxHp && character.weaponBonusStats){
                         character.currentStats = character.weaponBonusStats;
                     }else{
-                        character.currentStats = character.baseStats.hp;
+                        character.currentStats = character.baseStats;
+                        character.currentStats.maxHp = character.baseStats.hp;
                     }
                     const hpPercent = character.currentStats && character.currentStats.maxHp ?
                         Math.floor((character.currentStats.hp / character.currentStats.maxHp) * 100) : 100;
@@ -444,9 +444,7 @@ const MainUI = {
                         html += '<div class="member-skills">';
 
                         // 检查JobSystem是否已就绪
-                        const jobSystemReady = typeof JobSystem !== 'undefined' &&
-                                              typeof JobSkillsTemplate !== 'undefined' &&
-                                              JobSkillsTemplate.templates;
+                        const jobSystemReady = typeof JobSystem !== 'undefined';
 
                         if (!jobSystemReady) {
                             // 如果JobSystem未就绪，显示加载中的技能点

@@ -296,22 +296,36 @@ const JobSystem = {
      * @returns {object|null} 技能信息
      */
     getSkill(skillId) {
+        // 首先尝试从RSkillsTemplate获取
+        if (typeof RSkillsTemplate !== 'undefined' && RSkillsTemplate.templates && RSkillsTemplate.templates[skillId]) {
+            return RSkillsTemplate.templates[skillId];
+        }
+
+        // 然后尝试从SRSkillsTemplate获取
+        if (typeof SRSkillsTemplate !== 'undefined' && SRSkillsTemplate.templates && SRSkillsTemplate.templates[skillId]) {
+            return SRSkillsTemplate.templates[skillId];
+        }
+
+        // 然后尝试从JobSkillsTemplate获取
+        if (typeof JobSkillsTemplate !== 'undefined' && JobSkillsTemplate.templates && JobSkillsTemplate.templates[skillId]) {
+            return JobSkillsTemplate.templates[skillId];
+        }
+
+        // 如果模板系统未加载，尝试从window全局变量获取
+        // 首先尝试从R角色技能中获取
+        if (typeof window !== 'undefined' && window.r_skills && window.r_skills[skillId]) {
+            return window.r_skills[skillId];
+        }
+
+        // 然后尝试从SR角色技能中获取
+        if (typeof window !== 'undefined' && window.sr_skills && window.sr_skills[skillId]) {
+            return window.sr_skills[skillId];
+        }
+
         // 检查技能模板是否已加载
-        if (typeof JobSkillsTemplate === 'undefined') {
-            console.warn(`JobSkillsTemplate未定义，无法获取技能: ${skillId}`);
+        if (typeof JobSkillsTemplate === 'undefined' && typeof RSkillsTemplate === 'undefined' && typeof SRSkillsTemplate === 'undefined') {
+            console.warn(`技能模板系统未定义，无法获取技能: ${skillId}`);
             return this.getFallbackSkill(skillId);
-        }
-
-        // 检查templates属性是否存在
-        if (!JobSkillsTemplate.templates) {
-            console.warn(`JobSkillsTemplate.templates未定义，可能技能模板尚未加载，无法获取技能: ${skillId}`);
-            return this.getFallbackSkill(skillId);
-        }
-
-        // 从JobSkillsTemplate获取技能信息
-        const templateSkill = JobSkillsTemplate.templates[skillId];
-        if (templateSkill) {
-            return templateSkill;
         }
 
         // 如果找不到技能，返回备用技能

@@ -94,16 +94,28 @@ const SkillTooltip = {
         // 尝试从JobSystem获取技能信息
         if (typeof JobSystem !== 'undefined' && typeof JobSystem.getSkill === 'function') {
             skillInfo = JobSystem.getSkill(skillId);
-        }
-
-        // 如果是R角色技能，尝试从r_skills.json获取
-        if (!skillInfo && typeof window.r_skills !== 'undefined' && window.r_skills[skillId]) {
-            skillInfo = window.r_skills[skillId];
-        }
-
-        // 如果是SR角色技能，尝试从sr_skills.json获取
-        if (!skillInfo && typeof window.sr_skills !== 'undefined' && window.sr_skills[skillId]) {
-            skillInfo = window.sr_skills[skillId];
+        } else {
+            // 如果JobSystem不可用，尝试直接从模板获取
+            // 尝试从RSkillsTemplate获取
+            if (typeof RSkillsTemplate !== 'undefined' && RSkillsTemplate.templates && RSkillsTemplate.templates[skillId]) {
+                skillInfo = RSkillsTemplate.templates[skillId];
+            }
+            // 尝试从SRSkillsTemplate获取
+            else if (typeof SRSkillsTemplate !== 'undefined' && SRSkillsTemplate.templates && SRSkillsTemplate.templates[skillId]) {
+                skillInfo = SRSkillsTemplate.templates[skillId];
+            }
+            // 尝试从JobSkillsTemplate获取
+            else if (typeof JobSkillsTemplate !== 'undefined' && JobSkillsTemplate.templates && JobSkillsTemplate.templates[skillId]) {
+                skillInfo = JobSkillsTemplate.templates[skillId];
+            }
+            // 如果是R角色技能，尝试从r_skills.json获取
+            else if (typeof window.r_skills !== 'undefined' && window.r_skills[skillId]) {
+                skillInfo = window.r_skills[skillId];
+            }
+            // 如果是SR角色技能，尝试从sr_skills.json获取
+            else if (typeof window.sr_skills !== 'undefined' && window.sr_skills[skillId]) {
+                skillInfo = window.sr_skills[skillId];
+            }
         }
 
         if (!skillInfo) {

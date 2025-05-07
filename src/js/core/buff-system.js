@@ -42,24 +42,6 @@ const BuffSystem = {
             stackable: true
         },
 
-        // 速度相关
-        speedUp: {
-            name: '速度提升',
-            description: '提高速度',
-            icon: '💨',
-            isPositive: true,
-            canDispel: true,
-            stackable: true
-        },
-        speedDown: {
-            name: '速度下降',
-            description: '降低速度',
-            icon: '💨❌',
-            isPositive: false,
-            canDispel: true,
-            stackable: true
-        },
-
         // 暴击相关
         critRate: {
             name: '暴击率提升',

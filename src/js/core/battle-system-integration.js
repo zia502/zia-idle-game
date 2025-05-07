@@ -76,15 +76,6 @@ function integrateBattleSystemUpdates() {
             stackable: true
         },
 
-        // 全属性提升
-        allStatsUp: {
-            name: '全属性提升',
-            description: '提高所有属性',
-            icon: '⬆️✨',
-            isPositive: true,
-            canDispel: true,
-            stackable: true
-        },
 
         // 回合结束效果
         endOfTurn: {
@@ -114,6 +105,16 @@ function integrateBattleSystemUpdates() {
             isPositive: true, // 对输出职业来说是正面效果
             canDispel: true,
             stackable: true
+        },
+
+        // 追击(echo)效果
+        echo: {
+            name: '追击效果',
+            description: '攻击后额外造成一定比例伤害',
+            icon: '🔄',
+            isPositive: true,
+            canDispel: false,
+            stackable: false
         }
     });
 
@@ -1016,6 +1017,21 @@ function integrateAdditionalBattleSystemUpdates() {
         }
     };
 
+    // 添加追击(echo)效果处理
+    function applyEchoEffect(source, target, damage, battleStats) {
+        if (!source.buffs) return 0;
+        
+        const echoBuffs = source.buffs.filter(buff => buff.type === 'echo');
+        let totalEchoDamage = 0;
+        
+        for (const buff of echoBuffs) {
+            const echoDamage = Math.floor(damage * buff.value);
+            totalEchoDamage += this.applyDamageToTarget(source, target, echoDamage);
+        }
+        
+        return totalEchoDamage;
+    }
+
     console.log('额外的战斗系统更新已应用');
 }
 
@@ -1028,4 +1044,43 @@ function initBattleSystemUpdates() {
     integrateAdditionalBattleSystemUpdates();
 
     console.log('战斗系统更新已应用');
+}
+
+// 更新BuffSystem中的applyBuff方法，处理永久效果
+function applyBuff(target, buff) {
+    // 原有代码...
+    
+    // 处理永久效果
+    if (buff.permanent) {
+        buff.duration = -1; // 永久效果使用-1表示
+    }
+    
+    // 应用BUFF效果
+    this.applyBuffEffect(target, buff);
+    
+    return true;
+}
+
+// 优化驱散效果处理
+function processDispelEffect(source, target, count, dispelPositive) {
+  if (!target || !target.buffs) return 0;
+  
+  // 筛选可驱散的指定类型BUFF
+  const dispellableBuffs = target.buffs.filter(buff => 
+    buff.canDispel && buff.isPositive === dispelPositive
+  );
+  
+  // 获取最新添加的BUFF (后添加的BUFF在数组末尾)
+  // 不需要排序，直接取末尾元素
+  const buffsToDispel = dispellableBuffs.slice(-count); // 注意这里使用负索引取末尾元素
+  
+  // 驱散BUFF
+  const dispelledBuffs = [];
+  for (const buff of buffsToDispel) {
+    if (BuffSystem.removeBuff(target, buff.id)) {
+      dispelledBuffs.push(buff);
+    }
+  }
+  
+  return dispelledBuffs.length;
 }

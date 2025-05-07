@@ -1316,106 +1316,148 @@ const Battle = {
     processAttackProcEffects(source, target, _battleStats) {
         if (!source || !source.skills) return;
 
-        // 遍历角色的所有技能
         for (const skillId of source.skills) {
-            // 获取技能定义
-            let skill = null;
+            let skillData = null;
+            // 优先从SSR, SR, R技能数据中查找
+            if (window.ssr_skills && window.ssr_skills[skillId]) skillData = window.ssr_skills[skillId];
+            else if (window.sr_skills && window.sr_skills[skillId]) skillData = window.sr_skills[skillId];
+            else if (window.r_skills && window.r_skills[skillId]) skillData = window.r_skills[skillId];
+            else if (typeof JobSystem !== 'undefined' && typeof JobSystem.getSkill === 'function') skillData = JobSystem.getSkill(skillId);
+            else if (typeof JobSkillsTemplate !== 'undefined' && JobSkillsTemplate.templates && JobSkillsTemplate.templates[skillId]) skillData = JobSkillsTemplate.templates[skillId];
 
-            // 从JobSystem获取技能
-            if (typeof JobSystem !== 'undefined' && typeof JobSystem.getSkill === 'function') {
-                skill = JobSystem.getSkill(skillId);
-            }
-
-            // 如果JobSystem中没有找到，尝试从JobSkillsTemplate获取
-            if (!skill && typeof JobSkillsTemplate !== 'undefined' && JobSkillsTemplate.templates && JobSkillsTemplate.templates[skillId]) {
-                skill = JobSkillsTemplate.templates[skillId];
-            }
-
-            // 如果找到了技能，并且是被动技能
-            if (skill && skill.passive && skill.effects) {
-                for (const effect of skill.effects) {
-                    if (effect.type === 'proc' && effect.onAttack) {
-                        // 检查触发概率
-                        const roll = Math.random();
-                        if (roll < (effect.chance || 0.3)) {
-
-                            // 处理伤害效果
-                            if (effect.effect && effect.effect.type === 'damage') {
-                                const procMultiplier = effect.effect.multiplier || 1.0;
-
-                                // 计算原始伤害
-                                const rawDamage = source.currentStats.attack * procMultiplier;
-
-                                // 使用JobSkills.applyDamageToTarget方法计算实际伤害
-                                let actualDamage = 0;
-
-                                if (typeof JobSkills !== 'undefined' && typeof JobSkills.applyDamageToTarget === 'function') {
-                                    // 使用JobSkills.applyDamageToTarget方法，添加skipCritical选项
-                                    const damageResult = JobSkills.applyDamageToTarget(source, target, rawDamage, {
-                                        skipCritical: true, // 跳过暴击计算
-                                        isSpecialAttack: true // 标记为特殊攻击
-                                    });
-
-                                    // 确保damageResult是一个对象，并且有damage属性
-                                    if (typeof damageResult === 'object' && 'damage' in damageResult) {
-                                        actualDamage = damageResult.damage;
-                                    } else {
-                                        // 如果返回值不是预期的对象，使用简单的伤害计算
-                                        actualDamage = Math.floor(rawDamage / (1 + target.currentStats.defense));
-                                    }
-                                } else {
-                                    // 如果JobSkills.applyDamageToTarget不可用，使用Character.calculateDamage方法
-                                    if (typeof Character !== 'undefined' && typeof Character.calculateDamage === 'function') {
-                                        // 确保Character.characters中有source和target
-                                        if (typeof Character.characters !== 'undefined') {
-                                            Character.characters[source.id] = source;
-                                            Character.characters[target.id] = target;
-                                        }
-                                        // 计算伤害，设置isSpecialAttack=true，skipCritical=true，确保不触发暴击
-                                        const damageResult = Character.calculateDamage(source.id, target.id, true, {
-                                            skipCritical: true, // 跳过暴击计算
-                                            isSpecialAttack: true // 标记为特殊攻击
-                                        });
-
-                                        // 确保damageResult是一个对象，并且有damage属性
-                                        if (typeof damageResult === 'object' && 'damage' in damageResult) {
-                                            actualDamage = damageResult.damage;
-                                        } else {
-                                            // 如果返回值不是预期的对象，使用简单的伤害计算
-                                            actualDamage = Math.floor(rawDamage / (1 + target.currentStats.defense));
-                                        }
-                                    } else {
-                                        // 如果都不可用，使用简单的伤害计算
-                                        actualDamage = Math.floor(rawDamage / (1 + target.currentStats.defense));
-                                    }
-                                }
-
-                                // 应用伤害
-                                const damage = actualDamage.damage || actualDamage;
-
-                                // 确保伤害是有效数字
-                                if (isNaN(damage) || damage === undefined) {
-                                    console.error("伤害值为NaN或undefined，设置为0");
-                                    damage = 0;
-                                }
-
-                                // 应用伤害到目标HP
-                                target.currentStats.hp = Math.max(0, target.currentStats.hp - damage);
-
-                                // 更新伤害统计
-                                source.stats.totalDamage += damage;
-
-                                // 记录被动技能伤害
-                                if (skillId === 'whirlwind') {
-                                    this.logBattle(`${source.name} 的旋风斩对 ${target.name} 造成了 ${damage} 点伤害！`, true); // 强制记录，不过滤
-                                } else {
-                                    this.logBattle(`${source.name} 的 ${skill.name}触发了！ 对 ${target.name} 造成了 ${damage} 点伤害！`, true); // 强制记录，不过滤
-                                }
+            if (skillData && skillData.effects) { // 检查顶级effects数组
+                for (const effectDef of skillData.effects) {
+                    // 检查是否是onAttack类型的proc
+                    if (effectDef.type === 'proc' && effectDef.trigger === 'onAttack' && effectDef.procEffects) {
+                        for (const proc of effectDef.procEffects) { // procEffects应该是一个数组
+                             if (Math.random() < (proc.chance || 1.0)) {
+                                this.logBattle(`${source.name} 的技能 ${skillData.name} 的被动效果触发了 ${proc.type}！`);
+                                this.executeSingleProcEffect(source, target, proc, skillData);
+                            }
+                        }
+                    }
+                    // 也直接检查顶级效果中是否有onAttack的proc定义 (兼容旧格式或特定格式)
+                    else if (effectDef.onAttack && Array.isArray(effectDef.onAttack)) {
+                         for (const proc of effectDef.onAttack) {
+                            if (Math.random() < (proc.chance || 1.0)) {
+                                this.logBattle(`${source.name} 的技能 ${skillData.name} 触发了 ${proc.type} 效果！`);
+                                this.executeSingleProcEffect(source, target, proc, skillData);
                             }
                         }
                     }
                 }
             }
+            // 兼容旧的 skill.passive && skill.effects 结构
+            else if (skillData && skillData.passive && skillData.effects) {
+                 for (const effect of skillData.effects) {
+                    if (effect.type === 'proc' && effect.onAttack && Array.isArray(effect.onAttack)) { // 确保onAttack是数组
+                        for (const procDetail of effect.onAttack){ // 遍历onAttack数组中的每个proc定义
+                            if (Math.random() < (procDetail.chance || 0.3)) { // 使用procDetail中的chance
+                                this.logBattle(`${source.name} 的技能 ${skillData.name} (被动)触发了 ${procDetail.type} 效果！`);
+                                this.executeSingleProcEffect(source, target, procDetail, skillData);
+                            }
+                        }
+                    }
+                 }
+            }
+        }
+    },
+
+    /**
+     * 执行单个proc效果，并处理其后续效果（如果定义）
+     * @param {object} source - 效果来源
+     * @param {object} target - 效果目标
+     * @param {object} procEffectDef - proc效果定义 (e.g., { type: 'damage', value: 100, followUp: { type: 'dispel', ... } })
+     * @param {object} parentSkill - 父技能信息，用于日志等
+     * @param {boolean} isFollowUpExecution - 标记这是否是后续效果的执行
+     */
+    executeSingleProcEffect(source, target, procEffectDef, parentSkill, isFollowUpExecution = false) {
+        const logPrefix = isFollowUpExecution ? `后续效果(${procEffectDef.type})` : `Proc效果(${procEffectDef.type})`;
+        this.logBattle(`${source.name} 的技能 ${parentSkill.name} ${logPrefix} 对 ${target.name || '目标'} 生效!`);
+
+        switch (procEffectDef.type) {
+            case 'damage':
+                let rawDamage = 0;
+                if (procEffectDef.valueType === 'percent_of_attack') {
+                    rawDamage = source.currentStats.attack * procEffectDef.value;
+                } else if (procEffectDef.valueType === 'fixed') {
+                    rawDamage = procEffectDef.value;
+                } else if (procEffectDef.value && typeof procEffectDef.value === 'number') { // 兼容直接value
+                    rawDamage = procEffectDef.value;
+                } else if (procEffectDef.multiplier) { // 兼容旧的multiplier
+                    rawDamage = source.currentStats.attack * procEffectDef.multiplier;
+                }
+
+                if (rawDamage > 0) {
+                    const damageResult = JobSkills.applyDamageToTarget(source, target, rawDamage, {
+                        skipCritical: procEffectDef.skipCritical !== undefined ? procEffectDef.skipCritical : true,
+                        isSpecialAttack: true, // Proc伤害通常视为特殊攻击
+                        damageType: procEffectDef.damageType // 如 'skill_damage', 'plain_damage'
+                    });
+                    this.logBattle(`${target.name} 因 ${logPrefix} 受到了 ${damageResult.damage} 点伤害.`);
+                    if (target.currentStats.hp <= 0) {
+                        this.logBattle(`${target.name} 已被击败！`);
+                        // 这里可以添加处理角色/怪物阵亡的逻辑，如移出战斗队列等
+                    }
+                }
+                break;
+            case 'heal':
+                const healAmount = procEffectDef.value;
+                if (healAmount > 0) {
+                    const healTarget = procEffectDef.target === 'target' ? target : source; // 默认治疗自己
+                    const actualHeal = Math.min(healAmount, healTarget.currentStats.maxHp - healTarget.currentStats.hp);
+                    healTarget.currentStats.hp += actualHeal;
+                    this.logBattle(`${healTarget.name} 因 ${logPrefix} 恢复了 ${actualHeal} 点HP.`);
+                }
+                break;
+            case 'buff':
+            case 'debuff':
+                const buffTarget = procEffectDef.target === 'target' ? target : source; // 默认对自己
+                const buffObject = BuffSystem.createBuff(procEffectDef.buffType, procEffectDef.buffValue, procEffectDef.buffDuration, source);
+                if (buffObject) {
+                    BuffSystem.applyBuff(buffTarget, buffObject);
+                    this.logBattle(`${buffTarget.name} ${procEffectDef.type === 'buff' ? '获得了' : '受到了'} ${buffObject.name} (来自${logPrefix}).`);
+                }
+                break;
+            case 'dispel':
+                const dispelTarget = procEffectDef.target === 'self' ? source : target; // 默认驱散对方
+                const isPositiveDispel = procEffectDef.dispelType === 'buff'; // true驱散增益(isPositive=true)，false驱散减益(isPositive=false)
+                const dispelCount = procEffectDef.count || 1;
+                const dispelled = BuffSystem.dispelBuffs(dispelTarget, isPositiveDispel, dispelCount);
+                if (dispelled.length > 0) {
+                    this.logBattle(`${source.name} 的 ${logPrefix} 驱散了 ${dispelTarget.name} 的 ${dispelled.map(b => b.name).join(', ')}.`);
+                } else {
+                    this.logBattle(`${source.name} 的 ${logPrefix} 尝试驱散 ${dispelTarget.name}，但没有可驱散的BUFF.`);
+                }
+                break;
+            // 可以添加更多proc效果类型, e.g. 'triggerSkill'
+            case 'triggerSkill':
+                if (procEffectDef.skillId && typeof JobSkills !== 'undefined' && JobSkills.useSkill) {
+                    this.logBattle(`${logPrefix} 触发了技能 ${procEffectDef.skillId}!`);
+                    // 注意：这里的teamMembers和monster可能需要从当前战斗上下文中获取
+                    // JobSkills.useSkill(source.id, procEffectDef.skillId, this.currentBattle.teamMembers, this.currentBattle.monster);
+                    // 简化：直接调用技能效果应用，如果适用
+                     const triggeredSkillData = SkillLoader.getSkillInfo(procEffectDef.skillId);
+                    if (triggeredSkillData) {
+                         this.logBattle(`执行被触发的技能 ${triggeredSkillData.name}`);
+                         // 假设 JobSkills.applySkillEffects 可以处理
+                         // JobSkills.applySkillEffects(source, triggeredSkillData, this.currentBattle.teamMembers, this.currentBattle.monster);
+                         // 或者更通用的效果执行逻辑
+                         // this.executeEffect(source, target, triggeredSkillData.effects[0], triggeredSkillData);
+                         // TODO: 实现更通用的技能触发逻辑，可能需要传入当前战斗的完整上下文
+                         console.warn("Proc触发技能的完整实现待定，需要战斗上下文。");
+                    }
+                }
+                break;
+
+            default:
+                this.logBattle(`未知的 ${logPrefix} 类型: ${procEffectDef.type}`);
+        }
+
+        // 检查并执行后续效果
+        if (procEffectDef.followUp && !isFollowUpExecution) { // 防止无限递归后续自身
+            this.logBattle(`...${parentSkill.name} 的 ${procEffectDef.type} 效果接着触发后续效果!`);
+            this.executeSingleProcEffect(source, target, procEffectDef.followUp, parentSkill, true);
         }
     },
 

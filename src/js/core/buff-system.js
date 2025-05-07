@@ -258,6 +258,46 @@ const BuffSystem = {
             stackable: true
         },
 
+        // 背水/浑身
+        staminaUp: {
+            name: '背水/浑身',
+            description: '根据HP百分比提升属性',
+            icon: '💪',
+            isPositive: true,
+            canDispel: true,
+            stackable: true // 通常同名效果会覆盖或取最高，但具体实现看游戏逻辑
+        },
+
+        // 元素伤害转换
+        elementConversion: {
+            name: '元素伤害转换',
+            description: '将受到的伤害转换为特定元素',
+            icon: '🔄',
+            isPositive: true, // 通常是增益，但也可能被视为特殊机制
+            canDispel: true, // 通常不可驱散，但根据游戏设定
+            stackable: false // 通常不叠加，新效果覆盖旧效果
+        },
+
+        // EX攻击提升
+        exAttackUp: {
+            name: 'EX攻击提升',
+            description: '独立乘区的攻击力提升',
+            icon: '⚔️⭐',
+            isPositive: true,
+            canDispel: true,
+            stackable: true
+        },
+
+        // DoT易伤
+        dot_vulnerability: {
+            name: 'DoT易伤',
+            description: '增加受到的持续伤害',
+            icon: '☠️➕',
+            isPositive: false, // 对目标是负面效果
+            canDispel: true,
+            stackable: true
+        },
+
         // 复合BUFF类型
         compositeBuff: {
             name: '复合BUFF',
@@ -344,7 +384,7 @@ const BuffSystem = {
      * @param {object} buff - BUFF对象
      * @returns {boolean} 是否成功应用
      */
-    applyBuff(target, buff) {
+    applyBuff(target, buff, isSubBuff = false) {
         if (!target || !buff) return false;
 
         // 初始化目标的BUFF数组
@@ -352,22 +392,67 @@ const BuffSystem = {
             target.buffs = [];
         }
 
+        // 如果是子BUFF，它总是可叠加的（因为它属于一个父BUFF）
+        // 并且它的持续时间等属性由父BUFF管理
+        if (isSubBuff) {
+            // 为了区分，给子BUFF一个标记
+            buff.isSubBuff = true;
+            // parentBuffId 应该在创建子buff时由 applyCompositeBuff 设置好
+            // buff.parentBuffId = buff.source?.id;
+        }
+
         // 检查是否可以叠加
-        if (buff.stackable) {
-            // 可叠加BUFF，直接添加
+        if (buff.stackable || isSubBuff) {
+            const existingBuffOfSameTypeAndSource = target.buffs.find(
+                b => b.type === buff.type &&
+                (b.source?.id === buff.source?.id || (isSubBuff && b.parentBuffId === buff.parentBuffId)) && // 子buff通过parentBuffId匹配
+                b.name === buff.name && // 确保是完全相同的BUFF
+                b.isSubBuff === isSubBuff // 区分主副BUFF
+            );
+
+            if (existingBuffOfSameTypeAndSource) {
+                const currentStacks = existingBuffOfSameTypeAndSource.currentStacks || 1;
+                const maxStacks = existingBuffOfSameTypeAndSource.maxStacks || buff.maxStacks || 1; // 优先用已存在BUFF的maxStacks
+
+                if (currentStacks < maxStacks) {
+                    existingBuffOfSameTypeAndSource.currentStacks = currentStacks + 1;
+                    existingBuffOfSameTypeAndSource.duration = Math.max(existingBuffOfSameTypeAndSource.duration, buff.duration);
+                    // 对于叠加层数的BUFF，效果值如何变化需要具体定义，这里假设简单相加或取最大
+                    if (buff.stackingValueBehavior === 'add') {
+                        existingBuffOfSameTypeAndSource.value += buff.value;
+                    } else if (buff.stackingValueBehavior === 'max') {
+                        existingBuffOfSameTypeAndSource.value = Math.max(existingBuffOfSameTypeAndSource.value, buff.value);
+                    } else { // 默认替换或根据类型特定逻辑
+                        existingBuffOfSameTypeAndSource.value = buff.value;
+                    }
+                } else {
+                    // 已达到最大层数，刷新持续时间，并可能更新效果值（如取最大）
+                    existingBuffOfSameTypeAndSource.duration = Math.max(existingBuffOfSameTypeAndSource.duration, buff.duration);
+                    if (buff.stackingValueBehavior === 'max') {
+                         existingBuffOfSameTypeAndSource.value = Math.max(existingBuffOfSameTypeAndSource.value, buff.value);
+                    } else {
+                        existingBuffOfSameTypeAndSource.value = buff.value; // 默认刷新为新值
+                    }
+                }
+                this.applyBuffEffect(target, existingBuffOfSameTypeAndSource);
+                this.recalculateStatsWithBuffs(target);
+                return true;
+            }
+            // 如果没有找到完全匹配的，且是可叠加类型，则添加新的
             target.buffs.push(buff);
         } else {
-            // 不可叠加BUFF，检查是否已存在同类型BUFF
-            const existingBuff = target.buffs.find(b => b.type === buff.type);
+            // 不可叠加的主BUFF (isSubBuff 为 false 且 buff.stackable 为 false)
+            const existingBuff = target.buffs.find(b => b.type === buff.type && !b.isSubBuff);
             if (existingBuff) {
                 // 已存在同类型BUFF，更新持续时间和效果值
                 existingBuff.duration = Math.max(existingBuff.duration, buff.duration);
-                // 对于追击buff，只保留效果量最大的
                 if (buff.type === 'chase') {
                     existingBuff.value = Math.max(existingBuff.value, buff.value);
                 } else {
                     existingBuff.value = buff.value;
                 }
+                this.applyBuffEffect(target, existingBuff); // 重新应用效果
+                return true; // 替换了旧BUFF，所以返回
             } else {
                 // 不存在同类型BUFF，添加新BUFF
                 target.buffs.push(buff);
@@ -383,53 +468,114 @@ const BuffSystem = {
     /**
      * 应用复合BUFF到目标
      * @param {object} target - 目标对象
-     * @param {object} compositeBuff - 复合BUFF对象
+     * @param {object} compositeBuffData - 从技能JSON读取的复合BUFF定义
+     * @param {object} source - BUFF来源角色
      * @returns {boolean} 是否成功应用
      */
-    applyCompositeBuff(target, compositeBuff) {
-        if (!target || !compositeBuff) return false;
+    applyCompositeBuff(target, compositeBuffData, source) {
+        if (!target || !compositeBuffData) return false;
 
-        // 初始化目标的BUFF数组
         if (!target.buffs) {
             target.buffs = [];
         }
 
-        // 检查是否已存在同名复合BUFF
-        const existingBuff = target.buffs.find(b => b.type === 'compositeBuff' && b.name === compositeBuff.name);
-        if (existingBuff) {
-            // 如果BUFF可叠加且未达到最大层数
-            if (existingBuff.stackable && existingBuff.currentStacks < existingBuff.maxStacks) {
-                // 增加层数
-                existingBuff.currentStacks++;
-                // 更新持续时间为最新值
-                existingBuff.duration = Math.max(existingBuff.duration, compositeBuff.duration);
-                
-                // 应用新的子效果
-                for (const effect of compositeBuff.effects) {
-                    const subBuff = this.createBuff(effect.type, effect.value, compositeBuff.duration, compositeBuff.source);
+        let existingCompositeBuff = target.buffs.find(b => b.type === 'compositeBuff' && b.name === compositeBuffData.name && !b.isSubBuff);
+
+        if (existingCompositeBuff) {
+            // 复合BUFF已存在
+            const currentStacks = existingCompositeBuff.currentStacks || 1;
+            const maxStacks = existingCompositeBuff.maxStacks || compositeBuffData.maxStacks || 1;
+
+            if (existingCompositeBuff.stackable && currentStacks < maxStacks) {
+                existingCompositeBuff.currentStacks = currentStacks + 1;
+                existingCompositeBuff.duration = Math.max(existingCompositeBuff.duration, compositeBuffData.duration);
+                // 叠加子效果
+                for (const effect of compositeBuffData.effects) {
+                    // 创建子BUFF时，其source应该是父BUFF (existingCompositeBuff)
+                    const subBuff = this.createBuff(effect.type, effect.value, existingCompositeBuff.duration, existingCompositeBuff);
                     if (subBuff) {
-                        this.applyBuff(target, subBuff);
+                        subBuff.parentBuffId = existingCompositeBuff.id;
+                        subBuff.maxStacks = effect.maxStacks; // 子效果也可能有自己的maxStacks
+                        this.applyBuff(target, subBuff, true); // true表示是子BUFF
                     }
                 }
             } else {
-                // 如果不可叠加或已达到最大层数，更新持续时间和效果
-                existingBuff.duration = Math.max(existingBuff.duration, compositeBuff.duration);
-                existingBuff.effects = compositeBuff.effects;
-            }
-        } else {
-            // 添加新复合BUFF
-            target.buffs.push(compositeBuff);
-            
-            // 应用所有子效果
-            for (const effect of compositeBuff.effects) {
-                const subBuff = this.createBuff(effect.type, effect.value, compositeBuff.duration, compositeBuff.source);
-                if (subBuff) {
-                    this.applyBuff(target, subBuff);
+                // 刷新持续时间，并重新应用子效果 (先移除旧的子效果)
+                this.removeSubBuffsOf(target, existingCompositeBuff.id); // 移除所有旧的子BUFF
+                existingCompositeBuff.duration = Math.max(existingCompositeBuff.duration, compositeBuffData.duration);
+                existingCompositeBuff.effects = compositeBuffData.effects; // 更新效果定义
+                // 重新应用所有子效果
+                for (const effect of compositeBuffData.effects) {
+                    const subBuff = this.createBuff(effect.type, effect.value, existingCompositeBuff.duration, existingCompositeBuff);
+                    if (subBuff) {
+                        subBuff.parentBuffId = existingCompositeBuff.id;
+                        subBuff.maxStacks = effect.maxStacks;
+                        this.applyBuff(target, subBuff, true);
+                    }
                 }
             }
+        } else {
+            // 新建复合BUFF
+            const newCompositeBuff = this.createCompositeBuff(
+                compositeBuffData.name,
+                compositeBuffData.effects, // 这是效果定义数组
+                compositeBuffData.duration,
+                source, // 技能施放者
+                compositeBuffData.maxStacks || 1,
+                compositeBuffData.icon, // 从数据中获取图标
+                compositeBuffData.description // 从数据中获取描述
+            );
+            if (!newCompositeBuff) return false;
+
+            target.buffs.push(newCompositeBuff);
+            // 应用子效果
+            for (const effect of newCompositeBuff.effects) { // newCompositeBuff.effects 是子效果的定义
+                const subBuff = this.createBuff(effect.type, effect.value, newCompositeBuff.duration, newCompositeBuff); // source 是父BUFF
+                if (subBuff) {
+                    subBuff.parentBuffId = newCompositeBuff.id;
+                    subBuff.maxStacks = effect.maxStacks; // 子效果也可能有自己的maxStacks
+                    this.applyBuff(target, subBuff, true);
+                }
+            }
+            existingCompositeBuff = newCompositeBuff; // 用于后续处理
         }
+        
+        // 确保复合BUFF的子效果能正确更新角色属性
+        this.recalculateStatsWithBuffs(target);
 
         return true;
+    },
+
+    /**
+     * 移除指定父BUFF的所有子BUFF
+     * @param {object} target - 目标对象
+     * @param {string} parentBuffId - 父BUFF的ID
+     */
+    removeSubBuffsOf(target, parentBuffId) {
+        if (!target || !target.buffs || !parentBuffId) return;
+        const subBuffsToRemove = target.buffs.filter(b => b.isSubBuff && b.parentBuffId === parentBuffId);
+        for (const subBuff of subBuffsToRemove) {
+            this.removeBuffEffect(target, subBuff); // 先移除效果
+            const index = target.buffs.findIndex(b => b.id === subBuff.id);
+            if (index > -1) {
+                target.buffs.splice(index, 1);
+            }
+        }
+    },
+    
+    /**
+     * 重新计算应用BUFF后的属性（辅助函数，具体实现在Character或Battle中）
+     * @param {object} target - 目标对象
+     */
+    recalculateStatsWithBuffs(target) {
+        // 这个函数应该在Character.js或Battle.js中实现，
+        // 它会遍历所有非子BUFF和有效的子BUFF来更新currentStats
+        // console.log(`触发 ${target.name} 的属性重新计算（因复合BUFF变更）`);
+        if (typeof Character !== 'undefined' && typeof Character.updateCharacterStats === 'function') {
+            Character.updateCharacterStats(target.id || target); // 传入ID或对象
+        } else if (typeof Battle !== 'undefined' && typeof Battle.updateEntityStats === 'function') {
+            Battle.updateEntityStats(target);
+        }
     },
 
     /**
@@ -463,64 +609,67 @@ const BuffSystem = {
         const buffIndex = target.buffs.findIndex(buff => buff.id === buffId);
         if (buffIndex === -1) return false;
 
-        const buff = target.buffs[buffIndex];
+        const buffToRemove = target.buffs[buffIndex];
+
+        // 如果移除的是复合BUFF，也移除其所有子BUFF
+        if (buffToRemove.type === 'compositeBuff' && !buffToRemove.isSubBuff) {
+            this.removeSubBuffsOf(target, buffToRemove.id);
+        }
 
         // 移除BUFF效果
-        this.removeBuffEffect(target, buff);
+        this.removeBuffEffect(target, buffToRemove);
 
         // 从数组中移除BUFF
         target.buffs.splice(buffIndex, 1);
+        
+        this.recalculateStatsWithBuffs(target); // 属性可能变化
 
         return true;
     },
 
     /**
-     * 移除复合BUFF
+     * 移除复合BUFF（或其一层）
      * @param {object} target - 目标对象
-     * @param {string} buffId - BUFF ID
+     * @param {string} buffId - 复合BUFF的ID
      * @returns {boolean} 是否成功移除
      */
     removeCompositeBuff(target, buffId) {
         if (!target || !target.buffs || !buffId) return false;
 
-        const buffIndex = target.buffs.findIndex(buff => buff.id === buffId);
+        const buffIndex = target.buffs.findIndex(b => b.id === buffId && b.type === 'compositeBuff' && !b.isSubBuff);
         if (buffIndex === -1) return false;
 
-        const buff = target.buffs[buffIndex];
+        const compositeBuff = target.buffs[buffIndex];
 
-        // 如果是可叠加BUFF且当前层数大于1
-        if (buff.stackable && buff.currentStacks > 1) {
-            // 减少层数
-            buff.currentStacks--;
-            
-            // 移除一层子效果
-            for (const effect of buff.effects) {
-                const subBuffs = this.getBuffsByType(target, effect.type);
-                if (subBuffs.length > 0) {
-                    // 移除最新的一个子效果
-                    this.removeBuff(target, subBuffs[subBuffs.length - 1].id);
-                }
-            }
-        } else {
-            // 移除所有子效果
-            for (const effect of buff.effects) {
-                const subBuffs = this.getBuffsByType(target, effect.type);
-                for (const subBuff of subBuffs) {
-                    if (subBuff.source && subBuff.source.id === buff.source.id) {
-                        this.removeBuff(target, subBuff.id);
+        if (compositeBuff.currentStacks && compositeBuff.currentStacks > 1) {
+            compositeBuff.currentStacks--;
+            // 移除对应的一层子效果。这里简化处理：移除与最新一层相关的子BUFF。
+            // 一个更健壮的方法是标记子BUFF属于第几层。
+            // 当前简单实现：找到每个子效果类型的一个实例并移除。
+            if (compositeBuff.effects && Array.isArray(compositeBuff.effects)) {
+                for (const effectDef of compositeBuff.effects) {
+                    const subBuffToRemove = target.buffs.find(
+                        b => b.isSubBuff && b.parentBuffId === compositeBuff.id && b.type === effectDef.type
+                    );
+                    if (subBuffToRemove) {
+                        this.removeBuff(target, subBuffToRemove.id); // 使用通用的removeBuff
                     }
                 }
             }
-
-            // 从数组中移除复合BUFF
+        } else {
+            // 层数减到0或本身不可叠加，直接移除整个复合BUFF及其所有子BUFF
+            this.removeSubBuffsOf(target, compositeBuff.id);
+            this.removeBuffEffect(target, compositeBuff); // 移除复合BUFF自身的效果（如果有）
             target.buffs.splice(buffIndex, 1);
         }
+        
+        this.recalculateStatsWithBuffs(target);
 
         return true;
     },
 
     /**
-     * 移除BUFF效果
+     * 移除BUFF效果（例如从属性上减去加成）
      * @param {object} target - 目标对象
      * @param {object} buff - BUFF对象
      */
@@ -530,146 +679,182 @@ const BuffSystem = {
         // 根据BUFF类型移除不同效果
         switch (buff.type) {
             case 'shield':
-                // 移除护盾效果
-                target.shield = Math.max(0, (target.shield || 0) - buff.value);
+                // 护盾效果在被消耗时减少，这里移除是指BUFF消失时，护盾值也消失
+                // 如果护盾值是加到角色属性上的，这里需要减去
+                // 假设 target.shield 是一个临时值，在BUFF消失时清零或重算
+                // 如果buff.value是这个特定护盾buff提供的量，则减去它
+                // target.shield = Math.max(0, (target.shield || 0) - buff.value);
+                // 更安全的做法是，在recalculateStatsWithBuffs中处理护盾总值
                 break;
-
-            // 其他BUFF效果在计算伤害时应用，无需在此移除
+            // 其他属性类BUFF的移除，通常在recalculateStatsWithBuffs中通过重新计算currentStats实现
         }
+        // 触发一次属性重算，以确保移除的效果正确反映
+        this.recalculateStatsWithBuffs(target);
     },
 
+
     /**
-     * 驱散目标的BUFF
+     * 驱散BUFF
      * @param {object} target - 目标对象
-     * @param {boolean} isPositive - 是否驱散正面BUFF
-     * @param {number} count - 驱散数量，默认为1
-     * @returns {array} 被驱散的BUFF数组
+     * @param {boolean} isPositive - true驱散增益，false驱散减益
+     * @param {number} count - 驱散数量
+     * @returns {array} 被驱散的BUFF列表
      */
     dispelBuffs(target, isPositive, count = 1) {
         if (!target || !target.buffs) return [];
 
-        // 筛选可驱散的指定类型BUFF
-        const dispellableBuffs = target.buffs.filter(buff =>
-            buff.canDispel && buff.isPositive === isPositive
+        const buffsToDispel = [];
+        const dispelledBuffsOutput = []; // 用于记录被驱散的BUFF信息
+
+        // 筛选出可驱散的、符合类型的BUFF（非子BUFF）
+        const candidateBuffs = target.buffs.filter(buff =>
+            buff.canDispel &&
+            buff.isPositive === isPositive &&
+            !buff.isSubBuff // 不直接驱散子BUFF，它们随父BUFF管理
         );
 
-        // 按持续时间排序，优先驱散持续时间短的
-        dispellableBuffs.sort((a, b) => a.duration - b.duration);
+        // 按创建时间排序，优先驱散旧的 (可选策略)
+        candidateBuffs.sort((a, b) => a.createdAt - b.createdAt);
 
-        // 获取要驱散的BUFF
-        const buffsToDispel = dispellableBuffs.slice(0, count);
-
-        // 驱散BUFF
-        const dispelledBuffs = [];
-        for (const buff of buffsToDispel) {
-            if (this.removeBuff(target, buff.id)) {
-                dispelledBuffs.push(buff);
+        for (let i = 0; i < count && candidateBuffs.length > 0; i++) {
+            const buffToDispel = candidateBuffs.shift(); // 取出最早创建的
+            if (buffToDispel) {
+                buffsToDispel.push(buffToDispel.id);
+                dispelledBuffsOutput.push({ name: buffToDispel.name, type: buffToDispel.type });
+                // 如果是复合BUFF，其子BUFF也应被移除
+                if (buffToDispel.type === 'compositeBuff') {
+                    this.removeSubBuffsOf(target, buffToDispel.id);
+                }
             }
         }
 
-        return dispelledBuffs;
+        // 移除选中的BUFF
+        buffsToDispel.forEach(buffId => {
+            this.removeBuff(target, buffId); // removeBuff内部会处理子BUFF和属性重算
+        });
+        
+        console.log(`驱散了 ${target.name} 的 ${dispelledBuffsOutput.length} 个 ${isPositive ? '增益' : '减益'} BUFF:`, dispelledBuffsOutput.map(b => b.name));
+        return dispelledBuffsOutput;
     },
 
     /**
-     * 更新BUFF持续时间
+     * 更新目标身上所有BUFF的持续时间
      * @param {object} target - 目标对象
-     * @returns {array} 已过期的BUFF数组
      */
     updateBuffDurations(target) {
-        if (!target || !target.buffs) return [];
+        if (!target || !target.buffs) return;
 
-        const expiredBuffs = [];
-
-        // 更新每个BUFF的持续时间
+        const expiredBuffIds = [];
+        // 从后向前遍历，因为我们会修改数组
         for (let i = target.buffs.length - 1; i >= 0; i--) {
             const buff = target.buffs[i];
-            
-            // 永续BUFF（duration为-1）不减少持续时间
+            // 子BUFF的持续时间由父BUFF决定，不单独减少
+            if (buff.isSubBuff) {
+                const parentBuff = target.buffs.find(b => b.id === buff.parentBuffId && !b.isSubBuff);
+                if (parentBuff) {
+                    buff.duration = parentBuff.duration; // 同步持续时间
+                    if (parentBuff.duration === 0) { // 父BUFF已过期
+                        expiredBuffIds.push(buff.id);
+                    }
+                } else { // 孤儿自BUFF，也让它过期
+                    expiredBuffIds.push(buff.id);
+                }
+                continue;
+            }
+
             if (buff.duration > 0) {
                 buff.duration--;
             }
 
-            // 检查BUFF是否已过期
             if (buff.duration === 0) {
-                // 移除BUFF效果
-                this.removeBuffEffect(target, buff);
-
-                // 从数组中移除BUFF
-                target.buffs.splice(i, 1);
-
-                // 添加到已过期BUFF数组
-                expiredBuffs.push(buff);
+                expiredBuffIds.push(buff.id);
+                // 如果是复合BUFF过期，其子BUFF也应被移除
+                if (buff.type === 'compositeBuff') {
+                    this.removeSubBuffsOf(target, buff.id);
+                }
             }
         }
 
-        return expiredBuffs;
+        // 移除所有过期的BUFF
+        expiredBuffIds.forEach(buffId => {
+            const buffIndex = target.buffs.findIndex(b => b.id === buffId);
+            if (buffIndex > -1) {
+                const expiredBuff = target.buffs[buffIndex];
+                this.removeBuffEffect(target, expiredBuff); // 移除效果
+                target.buffs.splice(buffIndex, 1);
+                console.log(`${target.name} 的BUFF ${expiredBuff.name} 已过期并移除。`);
+            }
+        });
+        
+        if (expiredBuffIds.length > 0) {
+            this.recalculateStatsWithBuffs(target);
+        }
     },
 
     /**
-     * 处理回合开始时的BUFF效果
+     * 处理目标在回合开始时的BUFF效果（如DoT, HoT）
      * @param {object} target - 目标对象
-     * @returns {object} 处理结果
      */
     processBuffsAtTurnStart(target) {
-        if (!target || !target.buffs) return { damage: 0, healing: 0 };
+        if (!target || !target.buffs) return;
 
-        let totalDamage = 0;
-        let totalHealing = 0;
+        // 只处理非子BUFF的DoT/HoT，因为子BUFF的效果是直接应用到属性上的
+        const activeBuffs = target.buffs.filter(buff => !buff.isSubBuff);
 
-        // 处理持续伤害和治疗BUFF
-        for (const buff of target.buffs) {
-            if (buff.type === 'dot') {
-                // 持续伤害
-                const damage = Math.floor(buff.value);
-                target.currentStats.hp = Math.max(0, target.currentStats.hp - damage);
-                totalDamage += damage;
-            } else if (buff.type === 'hot') {
-                // 持续治疗
-                const healing = Math.floor(buff.value);
-                target.currentStats.hp = Math.min(target.currentStats.maxHp, target.currentStats.hp + healing);
-                totalHealing += healing;
+        for (const buff of activeBuffs) {
+            switch (buff.type) {
+                case 'dot':
+                    const dotDamage = buff.value;
+                    target.currentStats.hp = Math.max(0, target.currentStats.hp - dotDamage);
+                    console.log(`${target.name} 受到持续伤害 ${dotDamage} 点 (来自 ${buff.name})，剩余HP: ${target.currentStats.hp}`);
+                    // Battle.logBattle(`${target.name} 受到持续伤害 ${dotDamage} 点 (来自 ${buff.name})`);
+                    break;
+                case 'hot':
+                    const hotHeal = buff.value;
+                    target.currentStats.hp = Math.min(target.currentStats.maxHp, target.currentStats.hp + hotHeal);
+                    console.log(`${target.name} 受到持续治疗 ${hotHeal} 点 (来自 ${buff.name})，当前HP: ${target.currentStats.hp}`);
+                    // Battle.logBattle(`${target.name} 受到持续治疗 ${hotHeal} 点 (来自 ${buff.name})`);
+                    break;
             }
         }
-
-        return { damage: totalDamage, healing: totalHealing };
     },
 
     /**
-     * 获取目标的所有BUFF
+     * 获取目标身上的所有BUFF（只包括主BUFF，不包括子BUFF）
      * @param {object} target - 目标对象
      * @returns {array} BUFF数组
      */
     getBuffs(target) {
         if (!target || !target.buffs) return [];
-        return [...target.buffs];
+        return target.buffs.filter(buff => !buff.isSubBuff);
     },
 
+
     /**
-     * 获取目标的指定类型BUFF
+     * 获取目标身上指定类型的所有BUFF（只包括主BUFF）
      * @param {object} target - 目标对象
      * @param {string} type - BUFF类型
-     * @returns {array} 指定类型的BUFF数组
+     * @returns {array} BUFF数组
      */
     getBuffsByType(target, type) {
         if (!target || !target.buffs) return [];
-        return target.buffs.filter(buff => buff.type === type);
+        return target.buffs.filter(buff => buff.type === type && !buff.isSubBuff);
     },
 
     /**
-     * 清除目标的所有BUFF
+     * 清除目标身上所有BUFF和子BUFF
      * @param {object} target - 目标对象
      */
     clearAllBuffs(target) {
-        if (!target) return;
-
-        // 移除所有BUFF效果
-        if (target.buffs) {
-            for (const buff of target.buffs) {
-                this.removeBuffEffect(target, buff);
-            }
+        if (!target || !target.buffs) return;
+        // 在移除前，先移除所有BUFF的效果
+        for (const buff of [...target.buffs]) { // 遍历副本，因为数组会被修改
+            this.removeBuffEffect(target, buff);
         }
-
-        // 清空BUFF数组
         target.buffs = [];
+        console.log(`清除了 ${target.name} 的所有BUFF。`);
+        this.recalculateStatsWithBuffs(target);
     }
+    // Removed erroneous code block that was causing syntax errors.
+    // The BuffSystem object definition ends here.
 };

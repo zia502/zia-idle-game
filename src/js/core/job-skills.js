@@ -75,22 +75,78 @@ const JobSkills = {
             case 'damage_and_buff':
                 result = this.applyDamageAndBuffEffects(character, template, teamMembers, monster);
                 break;
+            case 'triggerSkill': // 新增：处理触发其他技能的效果
+                result = this.applyTriggerSkillEffect(character, template, teamMembers, monster);
+                break;
             default:
                 return { success: false, message: `未知的技能类型: ${template.effectType}` };
         }
 
-        // 设置技能冷却
-        if (!character.skillCooldowns) {
-            character.skillCooldowns = {};
+        // 只有在主技能成功执行且不是被触发的技能时，才设置主技能的冷却
+        // 被触发的技能的冷却由其自身定义和 useSkill 调用处理
+        if (result && result.success && !template.isTriggeredSkill) {
+            if (!character.skillCooldowns) {
+                character.skillCooldowns = {};
+            }
+            // 处理 nextCooldown
+            if (template.nextCooldown !== undefined && character.skillUsedOnce && character.skillUsedOnce[skillId]) {
+                character.skillCooldowns[skillId] = template.nextCooldown;
+            } else {
+                character.skillCooldowns[skillId] = template.cooldown || 5;
+            }
+
+            if (!character.skillUsedOnce) {
+                character.skillUsedOnce = {};
+            }
+            character.skillUsedOnce[skillId] = true;
         }
-        character.skillCooldowns[skillId] = template.cooldown || 5; // 默认5回合冷却
+
         return {
-            success: true,
-            message: result.message,
-            effects: result.effects
+            success: result ? result.success : false,
+            message: result ? result.message : "技能执行失败或无返回信息。",
+            effects: result ? result.effects : {}
         };
     },
 
+    /**
+     * 应用触发其他技能的效果
+     * @param {object} character - 角色对象
+     * @param {object} template - 技能模板 (包含 triggerSkillId)
+     * @param {array} teamMembers - 队伍成员
+     * @param {object} monster - 怪物对象
+     * @returns {object} 技能效果结果
+     */
+    applyTriggerSkillEffect(character, template, teamMembers, monster) {
+        const triggeredSkillId = template.triggerSkillId;
+        if (!triggeredSkillId) {
+            return { success: false, message: `技能 ${template.name} 配置错误：缺少 triggerSkillId` };
+        }
+
+        const triggeredSkillTemplate = JobSkillsTemplate.getTemplate(triggeredSkillId);
+        if (!triggeredSkillTemplate) {
+            // 尝试从全局技能列表获取 (如SSR技能)
+            const globalSkill = SkillLoader.getSkillInfo(triggeredSkillId);
+            if (!globalSkill || !globalSkill.effects) { // 假设全局技能也有effects定义
+                 return { success: false, message: `要触发的技能 ${triggeredSkillId} 不存在或无效果定义` };
+            }
+            // 构造一个临时的template-like对象给applySkillEffects
+            const tempTemplate = { ...globalSkill, effectType: globalSkill.effects[0]?.type, effects: globalSkill.effects, isTriggeredSkill: true };
+             Battle.logBattle(`${character.name} 的技能 ${template.name} 触发了技能 ${globalSkill.name}!`);
+            // 直接应用效果，不走完整的useSkill流程（避免冷却等问题）
+            return this.applySkillEffects(character, tempTemplate, teamMembers, monster);
+        } else {
+             Battle.logBattle(`${character.name} 的技能 ${template.name} 触发了职业技能 ${triggeredSkillTemplate.name}!`);
+            // 标记为被触发的技能，以避免重复冷却设置
+            triggeredSkillTemplate.isTriggeredSkill = true;
+            // 对于职业技能，我们可能仍希望通过useSkill来处理，因为它有完整的逻辑
+            // 但要注意避免无限递归和冷却问题。
+            // 简化：直接应用效果，如果 useSkill 导致问题
+            // return this.useSkill(character.id, triggeredSkillId, teamMembers, monster);
+            // 修正：直接调用效果应用，避免冷却和重复日志
+            return this.applySkillEffects(character, triggeredSkillTemplate, teamMembers, monster);
+        }
+    },
+    
     /**
      * 应用技能效果
      * @param {object} character - 角色对象
@@ -100,30 +156,91 @@ const JobSkills = {
      * @returns {object} 技能效果结果
      */
     applySkillEffects(character, template, teamMembers, monster) {
-        // 根据技能效果类型应用不同效果
-        switch (template.effectType) {
-            case 'buff':
-                return this.applyBuffEffects(character, template, teamMembers, monster);
-            case 'debuff':
-                return this.applyDebuffEffects(character, template, teamMembers, monster);
-            case 'damage':
-                return this.applyDamageEffects(character, template, teamMembers, monster);
-            case 'heal':
-                return this.applyHealEffects(character, template, teamMembers, monster);
-            case 'dispel':
-                return this.applyDispelEffects(character, template, teamMembers, monster);
-            case 'revive':
-                return this.applyReviveEffects(character, template, teamMembers, monster);
-            case 'damage_and_debuff':
-                return this.applyDamageAndDebuffEffects(character, template, teamMembers, monster);
-            case 'damage_and_buff':
-                return this.applyDamageAndBuffEffects(character, template, teamMembers, monster);
-            default:
-                return {
-                    message: `${character.name} 使用了【${template.name}】，但没有效果。`,
-                    effects: {}
-                };
+        let message = "";
+        let effectsOutput = {};
+
+        // 确保 template.effects 是一个数组
+        if (!Array.isArray(template.effects)) {
+            // Battle.logBattle(`技能 ${template.name} 的效果定义不是数组。`);
+            // 尝试从 template.effect (单数) 获取
+            if (template.effect && typeof template.effect === 'object') {
+                template.effects = [template.effect]; //包装成数组
+            } else {
+                 Battle.logBattle(`技能 ${template.name} 没有有效的效果定义。`);
+                return { message: `${character.name} 使用了【${template.name}】，但技能效果配置错误。`, effects: {} };
+            }
         }
+
+
+        // 遍历技能定义中的所有效果
+        // 注意：原版 switch(template.effectType) 是基于技能模板只有一个主效果类型。
+        // 如果一个技能可以有多种类型的效果（例如一个效果是伤害，另一个是buff），需要迭代处理 template.effects
+        
+        let combinedResults = { messages: [], effectsApplied: [] };
+
+        for (const effectDetail of template.effects) {
+            let currentEffectResult = { message: "", effects: {} };
+            // effectDetail.type 是子效果的类型, template.effectType 可能是父技能的主类型
+            const actualEffectType = effectDetail.type || template.effectType;
+
+            switch (actualEffectType) {
+                case 'buff':
+                    currentEffectResult = this.applyBuffEffects(character, { ...template, ...effectDetail, effects: [effectDetail] }, teamMembers, monster);
+                    break;
+                case 'debuff':
+                    currentEffectResult = this.applyDebuffEffects(character, { ...template, ...effectDetail, effects: [effectDetail] }, teamMembers, monster);
+                    break;
+                case 'damage':
+                    currentEffectResult = this.applyDamageEffects(character, { ...template, ...effectDetail, effects: [effectDetail] }, teamMembers, monster);
+                    break;
+                case 'heal':
+                    currentEffectResult = this.applyHealEffects(character, { ...template, ...effectDetail, effects: [effectDetail] }, teamMembers, monster);
+                    break;
+                case 'dispel':
+                    currentEffectResult = this.applyDispelEffects(character, { ...template, ...effectDetail, effects: [effectDetail] }, teamMembers, monster);
+                    break;
+                case 'revive':
+                    currentEffectResult = this.applyReviveEffects(character, { ...template, ...effectDetail, effects: [effectDetail] }, teamMembers, monster);
+                    break;
+                case 'damage_and_debuff': // 这类复合类型可能需要特殊处理或拆分
+                    currentEffectResult = this.applyDamageAndDebuffEffects(character, { ...template, ...effectDetail, effects: [effectDetail] }, teamMembers, monster);
+                    break;
+                case 'damage_and_buff':
+                    currentEffectResult = this.applyDamageAndBuffEffects(character, { ...template, ...effectDetail, effects: [effectDetail] }, teamMembers, monster);
+                    break;
+                case 'triggerSkill': // 新增：处理触发其他技能的效果
+                     currentEffectResult = this.applyTriggerSkillEffect(character, { ...template, ...effectDetail }, teamMembers, monster);
+                     break;
+                // Proc效果内的 additionalEffects 数组和 maxStacks
+                case 'proc':
+                    // proc 效果通常在攻击时由 battle.js 处理，这里可能是主动技能直接触发一个proc定义
+                    // Battle.logBattle(`技能 ${template.name} 包含一个 proc 定义，通常由攻击触发。`);
+                    // 如果proc定义中有 additionalEffects，需要在这里处理
+                    if (effectDetail.additionalEffects && Array.isArray(effectDetail.additionalEffects)) {
+                        for (const additionalEffect of effectDetail.additionalEffects) {
+                            const tempSubTemplate = { ...template, ...additionalEffect, effects: [additionalEffect], name: `${template.name} (附加效果)` };
+                            const subEffectResult = this.applySkillEffects(character, tempSubTemplate, teamMembers, monster);
+                            combinedResults.messages.push(subEffectResult.message);
+                            combinedResults.effectsApplied.push(subEffectResult.effects);
+                        }
+                    }
+                    // maxStacks for buffs applied by proc would be handled by BuffSystem
+                    currentEffectResult.message = `${character.name} 的技能 ${template.name} 包含proc定义。`;
+                    break;
+                default:
+                    currentEffectResult = {
+                        message: `${character.name} 使用了【${template.name}】中的未知效果类型: ${actualEffectType}。`,
+                        effects: {}
+                    };
+            }
+            if (currentEffectResult && currentEffectResult.message) combinedResults.messages.push(currentEffectResult.message);
+            if (currentEffectResult && currentEffectResult.effects) combinedResults.effectsApplied.push(currentEffectResult.effects);
+        }
+
+        return {
+            message: combinedResults.messages.join(' \n') || `${character.name} 使用了【${template.name}】。`,
+            effects: combinedResults.effectsApplied.length > 0 ? combinedResults.effectsApplied : {}
+        };
     },
 
     /**
@@ -407,60 +524,109 @@ const JobSkills = {
         let finalDamage = rawDamage;
         let isCritical = false;
         let attributeBonus = 0;
+        const sourceOriginalAttribute = source.attribute; // 保存原始攻击属性
+
+        // 0. 如果攻击者有元素转换，先转换攻击属性 (这通常不常见，常见的是受到的伤害被转换)
+        // let effectiveAttackAttribute = sourceOriginalAttribute;
+        // const attackConversionBuff = source.buffs?.find(b => b.type === 'elementConversionAttack' && !b.isSubBuff);
+        // if (attackConversionBuff && attackConversionBuff.convertToElement) {
+        //     effectiveAttackAttribute = attackConversionBuff.convertToElement;
+        //     this.logBattle(`${source.name}的攻击属性临时转为 ${effectiveAttackAttribute}`);
+        // }
+
+        // 1. 应用 EX 攻击提升 (独立乘区)
+        let exAttackMultiplier = 1.0;
+        if (source.buffs) {
+            const exAttackBuffs = source.buffs.filter(b => b.type === 'exAttackUp' && !b.isSubBuff);
+            exAttackBuffs.forEach(buff => {
+                exAttackMultiplier *= (1 + buff.value); // buff.value是百分比, e.g., 0.1 for 10%
+            });
+        }
+        if (exAttackMultiplier > 1.0) {
+            finalDamage *= exAttackMultiplier;
+            Battle.logBattle(`${source.name} 的EX攻击提升 ${((exAttackMultiplier - 1) * 100).toFixed(0)}%, 伤害变为: ${finalDamage.toFixed(0)}`);
+        }
+        
+        // 2. 应用 背水/浑身 (staminaUp) 效果
+        let staminaMultiplier = 1.0;
+        if (source.buffs) {
+            const staminaBuffs = source.buffs.filter(b => b.type === 'staminaUp' && !b.isSubBuff);
+            staminaBuffs.forEach(buff => {
+                const hpPercent = source.currentStats.hp / source.currentStats.maxHp;
+                // 假设buff.details包含 { type: 'enmity'/'stamina', minBonus: 0.1, maxBonus: 0.9, lowHpThreshold:0.25, highHpThreshold:0.75 }
+                // 或者 buff.value 是一个更简单的结构或直接是乘数（如果效果不依赖HP）
+                if (buff.details) {
+                    const { staminaType, maxBonus = 0, minBonus = 0, lowHpThreshold = 0.25, highHpThreshold = 0.75 } = buff.details;
+                    if (staminaType === 'enmity') { // 背水：HP越低，加成越高
+                        if (hpPercent <= lowHpThreshold) staminaMultiplier *= (1 + maxBonus);
+                        else if (hpPercent < 1) staminaMultiplier *= (1 + minBonus + (maxBonus - minBonus) * (1 - (hpPercent - lowHpThreshold) / (1 - lowHpThreshold)) );
+                        else staminaMultiplier *= (1 + minBonus); // 满血时最小加成
+                    } else if (staminaType === 'stamina') { // 浑身：HP越高，加成越高
+                        if (hpPercent >= highHpThreshold) staminaMultiplier *= (1 + maxBonus);
+                        else if (hpPercent > 0) staminaMultiplier *= (1 + minBonus + (maxBonus - minBonus) * (hpPercent / highHpThreshold) );
+                        else staminaMultiplier *= (1 + minBonus); // 空血时最小加成
+                    }
+                } else if (typeof buff.value === 'number') { // 兼容简单乘数
+                    staminaMultiplier *= (1 + buff.value);
+                }
+            });
+        }
+        if (staminaMultiplier > 1.001) { // 避免浮点数误差显示1.0的情况
+            finalDamage *= staminaMultiplier;
+            Battle.logBattle(`${source.name} 的背水/浑身效果 ${((staminaMultiplier - 1) * 100).toFixed(0)}%, 伤害变为: ${finalDamage.toFixed(0)}`);
+        }
 
         // 记录是否跳过暴击计算
         if (options.skipCritical) {
-            console.log(`跳过暴击计算（技能伤害）`);
-            if (typeof window !== 'undefined' && window.log) {
-                window.log(`跳过暴击计算（技能伤害）`);
-            }
+            // Battle.logBattle(`跳过暴击计算（技能伤害）`);
         } else {
-            // 计算暴击
-            const critRate = source.currentStats?.critRate || 0.05; // 默认5%暴击率
-            const critDamage = source.currentStats?.critDamage || 1.5; // 默认1.5倍暴击伤害
+            const critRate = source.currentStats?.critRate || 0.05;
+            const critDamageMultiplier = source.currentStats?.critDamage || 1.5;
             if (Math.random() < critRate) {
                 isCritical = true;
-                finalDamage *= critDamage;
-                console.log(`触发暴击！伤害提升至${critDamage}倍`);
-                if (typeof window !== 'undefined' && window.log) {
-                    window.log(`触发暴击！伤害提升至${critDamage}倍`);
-                }
+                finalDamage *= critDamageMultiplier;
+                Battle.logBattle(`${source.name} 触发暴击！伤害x${critDamageMultiplier.toFixed(2)}`);
             }
         }
 
-        // 应用随机波动 (0.95~1.05)，如果options中没有指定已应用随机波动
         if (!options.randomApplied) {
             const randomFactor = 0.95 + (Math.random() * 0.1);
-            console.log(`随机波动因子: ${randomFactor.toFixed(4)}`);
-            if (typeof window !== 'undefined' && window.log) {
-                window.log(`随机波动因子: ${randomFactor.toFixed(4)}`);
-            }
-
-            const oldDamage = finalDamage;
             finalDamage *= randomFactor;
-            console.log(`应用随机波动后的伤害: ${oldDamage} * ${randomFactor.toFixed(4)} = ${finalDamage.toFixed(2)}`);
-            if (typeof window !== 'undefined' && window.log) {
-                window.log(`应用随机波动后的伤害: ${oldDamage} * ${randomFactor.toFixed(4)} = ${finalDamage.toFixed(2)}`);
-            }
         }
 
-        // 检查目标的debuff效果
-        let tempDefense = target.currentStats.defense;
+        // 检查目标的debuff效果 (防御下降)
+        let targetEffectiveDefense = target.currentStats.defense || 0; // 这是防御值，不是减伤比例
         if (target.buffs) {
-            console.log(`检查到目标debuff`);
-            
-            // 检查防御力降低debuff
-            const defenseDownBuffs = target.buffs.filter(buff => buff.type === 'defenseDown');
-            let totalDefenseDown = 0;
-            for (const buff of defenseDownBuffs) {
-                totalDefenseDown += buff.value;
+            const defenseDownBuffs = target.buffs.filter(buff => buff.type === 'defenseDown' && !buff.isSubBuff);
+            let totalDefenseReductionPercent = 0;
+            defenseDownBuffs.forEach(buff => {
+                totalDefenseReductionPercent += buff.value; // e.g., 0.2 for 20% defense down
+            });
+            totalDefenseReductionPercent = Math.min(totalDefenseReductionPercent, 0.5); // 防御下降上限50%
+            if (totalDefenseReductionPercent > 0) {
+                 Battle.logBattle(`${target.name} 防御力降低了 ${(totalDefenseReductionPercent * 100).toFixed(0)}%`);
+                targetEffectiveDefense *= (1 - totalDefenseReductionPercent);
             }
-            // 限制总防御力降低不超过50
-            totalDefenseDown = Math.min(totalDefenseDown, 50);
-            console.log(`应用防御力降低${totalDefenseDown}%`);
-            // 临时降低防御力，确保不会小于0
-            tempDefense = Math.max(0, tempDefense - totalDefenseDown);
         }
+        
+        // 元素伤害转换 (在属性克制计算前)
+        let actualDamageElement = sourceOriginalAttribute; // 伤害计算用的实际元素
+        let finalDamageDisplayElement = sourceOriginalAttribute; // 最终显示给用户的伤害元素
+        const conversionBuff = target.buffs?.find(b => b.type === 'elementConversion' && !b.isSubBuff);
+        if (conversionBuff && conversionBuff.convertToElement && options.originalDamageType) {
+            // options.originalDamageType 应该是攻击方原始的攻击属性
+            // 转换的是“受到伤害的属性”
+            // 这意味着，如果受到火属性攻击，但有转水buff，那么计算克制时，目标视为受到水属性攻击
+            // 但攻击方仍然是火属性攻击。
+            // 这里的逻辑需要调整：转换的是目标“受到”的伤害属性，而不是攻击方的攻击属性。
+            // 因此，属性克制判断时，source.attribute 仍是其原始属性，
+            // target "被视为" 受到 conversionBuff.convertToElement 属性的攻击。
+            // 为了简化，我们先假设转换会改变最终伤害的标签，实际克制计算仍用原始。
+            // 正确的实现是：属性克制判断时，用 conversionBuff.convertToElement 作为 target 的“临时被攻击属性”
+            finalDamageDisplayElement = conversionBuff.convertToElement;
+            Battle.logBattle(`${target.name} 受到的 ${options.originalDamageType || sourceOriginalAttribute} 伤害将被视为 ${finalDamageDisplayElement} 属性伤害。`);
+        }
+
 
         // 应用属性克制
         if (source.attribute && target.attribute) {
@@ -495,42 +661,101 @@ const JobSkills = {
                 }
             }
 
-            const oldDamage = finalDamage;
-            finalDamage *= (1 + attributeBonus);
-            console.log(`应用属性克制后的伤害: ${oldDamage.toFixed(2)} * (1 + ${attributeBonus}) = ${finalDamage.toFixed(2)}`);
-            if (typeof window !== 'undefined' && window.log) {
-                window.log(`应用属性克制后的伤害: ${oldDamage.toFixed(2)} * (1 + ${attributeBonus}) = ${finalDamage.toFixed(2)}`);
-            }
-        }
-
-        // 计算"受到伤害"
-        // 受到伤害= 造成伤害 / （1+防御力%）*（1-伤害降低%）*（1-属性伤害减轻%）
-        console.log(`开始计算"受到伤害"公式`);
-        if (typeof window !== 'undefined' && window.log) {
-            window.log(`开始计算"受到伤害"公式`);
-        }
-
-        // 应用防御力减伤
-        if (target.currentStats && typeof tempDefense === 'number') {
-            const oldDamage = finalDamage;
-            // 始终将防御力视为整数，计算时转换为百分比
-            const defenseValue = tempDefense / 100;
-
-            console.log(`目标防御力: ${tempDefense} (${(defenseValue * 100).toFixed(1)}%)`);
-            if (typeof window !== 'undefined' && window.log) {
-                window.log(`目标防御力: ${tempDefense} (${(defenseValue * 100).toFixed(1)}%)`);
+            const oldDamageWithAttrs = finalDamage;
+            // 属性克制判断：攻击方属性 vs (目标被转换后的受击属性 或 目标原始属性)
+            let targetElementForResistanceCheck = target.attribute;
+            if (conversionBuff && conversionBuff.convertToElement) {
+                targetElementForResistanceCheck = conversionBuff.convertToElement;
             }
 
-            finalDamage = finalDamage / (1 + defenseValue);
-            console.log(`应用防御力减伤后的伤害: ${oldDamage.toFixed(2)} / (1 + ${defenseValue}) = ${finalDamage.toFixed(2)}`);
-            if (typeof window !== 'undefined' && window.log) {
-                window.log(`应用防御力减伤后的伤害: ${oldDamage.toFixed(2)} / (1 + ${defenseValue}) = ${finalDamage.toFixed(2)}`);
+            if (attributes[sourceOriginalAttribute] && attributes[sourceOriginalAttribute].strengths &&
+                attributes[sourceOriginalAttribute].strengths.includes(targetElementForResistanceCheck)) {
+                attributeBonus = 0.5; // 有利属性
+            } else if (attributes[targetElementForResistanceCheck] && attributes[targetElementForResistanceCheck].strengths &&
+                       attributes[targetElementForResistanceCheck].strengths.includes(sourceOriginalAttribute)) {
+                attributeBonus = -0.25; // 不利属性
+            }
+
+            if (attributeBonus !== 0) {
+                finalDamage *= (1 + attributeBonus);
+                Battle.logBattle(`属性克制 (${sourceOriginalAttribute} vs ${targetElementForResistanceCheck}): ${attributeBonus > 0 ? '+' : ''}${(attributeBonus * 100).toFixed(0)}%, 伤害变为: ${finalDamage.toFixed(0)}`);
             }
         }
+        
+        // 应用目标防御减伤
+        // targetEffectiveDefense 已经考虑了 defenseDown buff 的影响
+        // 假设 targetEffectiveDefense 是一个防御“值” (例如 0 到 几百)
+        // 防御公式示例: DamageMultiplier = 1 / (1 + DefenseValue / ScalingFactor)
+        // ScalingFactor 可以根据游戏平衡调整，例如 200, 500, 1000
+        const defenseScalingFactor = 500; // 可调整的防御系数
+        const defenseDamageMultiplier = 1 / (1 + Math.max(0, targetEffectiveDefense) / defenseScalingFactor);
+        
+        if (defenseDamageMultiplier < 1.0) {
+            const oldDmg = finalDamage;
+            finalDamage *= defenseDamageMultiplier;
+            Battle.logBattle(`${target.name} 的防御效果 (乘数 ${defenseDamageMultiplier.toFixed(3)}), 伤害变为: ${finalDamage.toFixed(0)}`);
+        }
 
-        // 考虑目标的伤害减免BUFF
+        // 考虑目标的伤害减免BUFF (damageReduction)
         if (target.buffs) {
-            const damageReductionBuffs = target.buffs.filter(buff => buff.type === 'damageReduction');
+            const damageReductionBuffs = target.buffs.filter(buff => buff.type === 'damageReduction' && !buff.isSubBuff);
+            let totalDamageReductionPercent = 0;
+            damageReductionBuffs.forEach(buff => {
+                totalDamageReductionPercent += buff.value; // buff.value是减伤百分比 (0.1 for 10%)
+            });
+            totalDamageReductionPercent = Math.min(totalDamageReductionPercent, 0.8); // 上限80%
+
+            if (totalDamageReductionPercent > 0) {
+                const oldDmg = finalDamage;
+                finalDamage *= (1 - totalDamageReductionPercent);
+                Battle.logBattle(`${target.name} 的伤害减免BUFF生效 (-${(totalDamageReductionPercent * 100).toFixed(0)}%), 伤害变为: ${finalDamage.toFixed(0)}`);
+            }
+        }
+        
+        // DoT易伤 (dot_vulnerability) - 如果当前伤害是DoT类型 (通过options传入)
+        if (options.isDoTDamage && target.buffs) {
+            const dotVulnerabilityBuffs = target.buffs.filter(b => b.type === 'dot_vulnerability' && !b.isSubBuff);
+            let totalVulnerabilityIncrease = 0;
+            dotVulnerabilityBuffs.forEach(buff => {
+                totalVulnerabilityIncrease += buff.value; // e.g., 0.2 for 20% more DoT damage
+            });
+            if (totalVulnerabilityIncrease > 0) {
+                const oldDmg = finalDamage;
+                finalDamage *= (1 + totalVulnerabilityIncrease);
+                Battle.logBattle(`${target.name} 受到DoT易伤效果 (+${(totalVulnerabilityIncrease*100).toFixed(0)}%), DoT伤害变为: ${finalDamage.toFixed(0)}`);
+            }
+        }
+
+        // 最终伤害取整
+        finalDamage = Math.max(1, Math.floor(finalDamage));
+
+        // 更新目标HP
+        target.currentStats.hp = Math.max(0, target.currentStats.hp - finalDamage);
+        Battle.logBattle(`${source.name} 对 ${target.name} 造成 ${finalDamage} 点 ${finalDamageDisplayElement} 伤害。 ${target.name} 剩余HP: ${target.currentStats.hp}/${target.currentStats.maxHp}`);
+
+        // 更新伤害统计
+        if (source.stats) {
+            source.stats.totalDamage = (source.stats.totalDamage || 0) + finalDamage;
+        }
+        if (isCritical && source.stats) {
+            source.stats.critCount = (source.stats.critCount || 0) + 1;
+        }
+
+        return {
+            damage: finalDamage,
+            isCritical: isCritical,
+            attributeBonus: attributeBonus,
+            finalDamageElement: finalDamageDisplayElement // 返回最终伤害的元素类型
+        };
+    },
+
+    /**
+        }
+
+
+        // 考虑目标的伤害减免BUFF (damageReduction)
+        if (target.buffs) {
+            const damageReductionBuffs = target.buffs.filter(buff => buff.type === 'damageReduction' && !buff.isSubBuff);
             for (const buff of damageReductionBuffs) {
                 const oldDamage = finalDamage;
                 console.log(`伤害减免BUFF: ${buff.name || 'Unknown'} (${(buff.value * 100).toFixed(1)}%)`);
@@ -1250,40 +1475,65 @@ const JobSkills = {
      */
     getTargets(character, targetType, teamMembers, monster) {
         console.log(`获取目标，目标类型: ${targetType}`);
+        let targets = [];
+
         switch (targetType) {
             case 'self':
-                return [character];
+                targets = [character];
+                break;
             case 'ally':
-                // 默认选择生命值最低的队友
-                const aliveMembers = teamMembers.filter(member => member.currentStats.hp > 0);
-                if (aliveMembers.length === 0) return [];
-                aliveMembers.sort((a, b) => a.currentStats.hp / a.currentStats.maxHp - b.currentStats.hp / b.currentStats.maxHp);
-                return [aliveMembers[0]];
+                // 选择HP百分比最低的非自身存活队友
+                const otherAliveAllies = teamMembers.filter(member => member.id !== character.id && member.currentStats.hp > 0);
+                if (otherAliveAllies.length > 0) {
+                    otherAliveAllies.sort((a, b) => (a.currentStats.hp / a.currentStats.maxHp) - (b.currentStats.hp / b.currentStats.maxHp));
+                    targets = [otherAliveAllies[0]];
+                } else {
+                    targets = [character]; // 没有其他队友则选自己
+                }
+                break;
             case 'ally_lowest_hp':
-                // 选择生命值最低的队友（包括施法者自身）
-                const allMembers = teamMembers.filter(member => member.currentStats.hp > 0);
-                if (allMembers.length === 0) return [];
-
-                // 排序所有成员（包括施法者）按生命值百分比
-                allMembers.sort((a, b) => (a.currentStats.hp / a.currentStats.maxHp) - (b.currentStats.hp / b.currentStats.maxHp));
-
-                // 输出所有成员的生命值状态
-                allMembers.forEach(member => {
-                    console.log(`成员: ${member.name}, HP: ${member.currentStats.hp}/${member.currentStats.maxHp}, 百分比: ${(member.currentStats.hp / member.currentStats.maxHp * 100).toFixed(1)}%`);
-                });
-
-                // 返回生命值最低的成员
-                return [allMembers[0]];
+                 // 选择生命值最低的队友（包括施法者自身）
+                const allAliveMembers = teamMembers.filter(member => member.currentStats.hp > 0);
+                if (allAliveMembers.length > 0) {
+                    allAliveMembers.sort((a, b) => (a.currentStats.hp / a.currentStats.maxHp) - (b.currentStats.hp / b.currentStats.maxHp));
+                    targets = [allAliveMembers[0]];
+                }
+                break;
             case 'all_allies':
-                return teamMembers;
+                targets = teamMembers.filter(member => member.currentStats.hp > 0);
+                break;
             case 'enemy':
-                return [monster];
+                 if (monster && monster.currentStats.hp > 0) {
+                    targets = [monster];
+                 }
+                break;
             case 'all_enemies':
-                return [monster]; // 当前只有一个怪物
+                 if (monster && monster.currentStats.hp > 0) {
+                    targets = [monster]; // 当前只有一个怪物
+                 }
+                break;
             default:
-                console.log(`未知的目标类型: ${targetType}，返回空数组`);
-                return [];
+                // 检查是否是特定元素的目标类型
+                if (targetType && typeof targetType === 'string') {
+                    if (targetType.startsWith('all_allies_')) {
+                        const element = targetType.substring('all_allies_'.length);
+                        targets = teamMembers.filter(member => member.currentStats.hp > 0 && member.attribute === element);
+                        if (targets.length === 0) Battle.logBattle(`技能目标 ${targetType} 未找到符合条件的队友。`);
+                    } else if (targetType.startsWith('all_enemies_')) {
+                        const element = targetType.substring('all_enemies_'.length);
+                        if (monster && monster.currentStats.hp > 0 && monster.attribute === element) {
+                            targets = [monster];
+                        }
+                        if (targets.length === 0) Battle.logBattle(`技能目标 ${targetType} 未找到符合条件的敌人。`);
+                    } else {
+                        console.log(`未知的目标类型: ${targetType}，返回空数组`);
+                    }
+                } else {
+                     console.log(`未知的目标类型: ${targetType}，返回空数组`);
+                }
         }
+        // 最后统一过滤一次，确保返回的都是存活且有效的对象
+        return targets.filter(t => t && t.currentStats && t.currentStats.hp > 0);
     },
 
     /**

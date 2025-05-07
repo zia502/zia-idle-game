@@ -1,0 +1,474 @@
+{
+  "albesSpear": {
+    "name": "阿尔贝斯之枪",
+    "description": "对敌方单体造成3-4倍攻击力伤害。自身获得TA+100%，持续1回合。CD5回合",
+    "type": "attack",
+    "fixed": false,
+    "cooldown": 5,
+    "effectType": "damage_and_buff",
+    "targetType": "enemy",
+    "duration": 1,
+    "effects": [
+      {
+        "type": "damage",
+        "minMultiplier": 3.0,
+        "maxMultiplier": 4.0
+      },
+      {
+        "type": "taBoost",
+        "value": 1.0,
+        "duration": 1,
+        "stackable": true,
+        "dispellable": true,
+        "targetType": "self"
+      }
+    ]
+  },
+  "rhapsody": {
+    "name": "狂想曲",
+    "description": "自身获得以下强化:攻击力+250%，持续一回合。CD6回合",
+    "type": "buff",
+    "fixed": false,
+    "cooldown": 6,
+    "effectType": "buff",
+    "targetType": "self",
+    "duration": 1,
+    "effects": [
+      {
+        "type": "attackUp",
+        "value": 2.5,
+        "duration": 1,
+        "stackable": true,
+        "dispellable": true
+      }
+    ]
+  },
+  "albesContractor": {
+    "name": "阿尔贝斯的契约者",
+    "description": "[被动]自身发动TA时，3次攻击均进行追击20%效果，并驱散敌方一个BUFF。",
+    "type": "attack",
+    "fixed": false,
+    "passive": true,
+    "effectType": "buff",
+    "targetType": "self",
+    "effects": [
+      {
+        "type": "proc",
+        "onTripleAttack": true,
+        "effect": {
+          "type": "echo",
+          "value": 0.2,
+          "followUp": {
+            "type": "dispel",
+            "count": 1,
+            "dispelPositive": true,
+            "targetType": "enemy"
+          }
+        }
+      }
+    ]
+  },
+  "fortitude": {
+    "name": "刚毅",
+    "description": "自身获得以下强化：[晓之誇炎]，持续4回合。CD6回合",
+    "type": "defense",
+    "fixed": false,
+    "cooldown": 6,
+    "effectType": "buff",
+    "targetType": "self",
+    "duration": 4,
+    "effects": [
+      {
+        "type": "cover",
+        "value": 1.0,
+        "duration": 4,
+        "stackable": false,
+        "dispellable": false,
+        "name": "晓之誇炎",
+        "description": "替代其他角色承担单体攻击"
+      },
+      {
+        "type": "defenseUp",
+        "value": 50,
+        "duration": 4,
+        "stackable": false,
+        "dispellable": false,
+        "name": "晓之誇炎",
+        "description": "增加防御力"
+      },
+      {
+        "type": "damageCap",
+        "value": 2000,
+        "elementType": "wind",
+        "duration": 4,
+        "stackable": false,
+        "dispellable": false,
+        "name": "晓之誇炎",
+        "description": "限制受到的风属性伤害"
+      }
+    ]
+  },
+  "transform": {
+    "name": "转坛",
+    "description": "对敌方单体造成3-5倍攻击力的伤害。自身获得以下强化：TA+100%，持续1回合，背水+10%，持续3回合。CD5回合。",
+    "type": "attack",
+    "fixed": false,
+    "cooldown": 5,
+    "effectType": "damage_and_buff",
+    "targetType": "enemy",
+    "effects": [
+      {
+        "type": "damage",
+        "minMultiplier": 3.0,
+        "maxMultiplier": 5.0
+      },
+      {
+        "type": "taBoost",
+        "value": 1.0,
+        "duration": 1,
+        "stackable": true,
+        "dispellable": true,
+        "targetType": "self"
+      },
+      {
+        "type": "staminaUp",
+        "value": 10,
+        "duration": 3,
+        "stackable": true,
+        "dispellable": true,
+        "targetType": "self"
+      }
+    ]
+  },
+  "magnanimous": {
+    "name": "豪放磊落",
+    "description": "[被动] 自身受到敌对心+100%，防御力+30.",
+    "type": "defense",
+    "fixed": false,
+    "passive": true,
+    "effectType": "buff",
+    "targetType": "self",
+    "effects": [
+      {
+        "type": "threatUp",
+        "value": 100,
+        "passive": true
+      },
+      {
+        "type": "defenseUp",
+        "value": 30,
+        "passive": true
+      }
+    ]
+  },
+  "divineShieldAegis": {
+    "name": "神盾埃奎斯",
+    "description": "我方全体获得以下强化，CD7回合 - 风属性伤害减轻40%,持续一回合 - 受到伤害转为风属性，持续3回合 - HP回复800，持续3回合",
+    "type": "defense",
+    "fixed": false,
+    "cooldown": 7,
+    "effectType": "buff",
+    "targetType": "all_allies",
+    "effects": [
+      {
+        "type": "elementalResistance",
+        "elementType": "wind",
+        "value": 0.4,
+        "duration": 1,
+        "stackable": true,
+        "dispellable": true
+      },
+      {
+        "type": "elementConversion",
+        "elementType": "wind",
+        "duration": 3,
+        "stackable": false,
+        "dispellable": true
+      },
+      {
+        "type": "regen",
+        "value": 800,
+        "duration": 3,
+        "stackable": true,
+        "dispellable": true
+      }
+    ]
+  },
+  "tetragrammaton": {
+    "name": "四德拉克马",
+    "description": "对敌方随机目标造成5次1倍攻击力伤害，并对敌方全体施加 防御力降低20 DEBUFF，持续3回合。CD 5回合",
+    "type": "attack",
+    "fixed": false,
+    "cooldown": 5,
+    "effectType": "damage_and_debuff",
+    "targetType": "random_enemy",
+    "duration": 3,
+    "effects": [
+      {
+        "type": "multi_attack",
+        "count": 5,
+        "multiplier": 1.0
+      },
+      {
+        "type": "defenseDown",
+        "value": 20,
+        "duration": 3,
+        "stackable": true,
+        "dispellable": true,
+        "targetType": "all_enemies"
+      }
+    ]
+  },
+  "protectingValkyrie": {
+    "name": "守护的女武神",
+    "description": "受到攻击后30%概率触发四德拉克马。",
+    "type": "defense",
+    "fixed": false,
+    "passive": true,
+    "effectType": "counter",
+    "targetType": "self",
+    "effects": [
+      {
+        "type": "proc",
+        "chance": 0.3,
+        "onDamaged": true,
+        "effect": {
+          "type": "skill",
+          "skillId": "tetragrammaton"
+        }
+      }
+    ]
+  },
+  "trident": {
+    "name": "三叉戟",
+    "description": "对敌方单体造成8倍攻击力伤害，并施加[恶灭之炎]。CD 7回合",
+    "type": "attack",
+    "fixed": false,
+    "cooldown": 7,
+    "effectType": "damage_and_debuff",
+    "targetType": "enemy",
+    "effects": [
+      {
+        "type": "damage",
+        "multiplier": 8.0
+      },
+      {
+        "type": "attackDown",
+        "value": 0.1,
+        "permanent": true,
+        "stackable": false,
+        "dispellable": false,
+        "name": "恶灭之炎",
+        "description": "降低攻击力"
+      },
+      {
+        "type": "defenseDown",
+        "value": 10,
+        "permanent": true,
+        "stackable": false,
+        "dispellable": false,
+        "name": "恶灭之炎",
+        "description": "降低防御力"
+      }
+    ]
+  },
+  "brahmanaRudra": {
+    "name": "梵·楼陀罗",
+    "description": "我方全体获得 [炎火之导],持续5回合。CD11回合",
+    "type": "buff",
+    "fixed": false,
+    "cooldown": 11,
+    "effectType": "buff",
+    "targetType": "all_allies",
+    "duration": 5,
+    "effects": [
+      {
+        "type": "attackUp",
+        "value": 0.15,
+        "duration": 5,
+        "stackable": false,
+        "dispellable": false,
+        "name": "炎火之导",
+        "description": "提高攻击力"
+      },
+      {
+        "type": "regen",
+        "value": 1000,
+        "duration": 5,
+        "stackable": false,
+        "dispellable": false,
+        "name": "炎火之导",
+        "description": "持续回复HP"
+      },
+      {
+        "type": "damageReduction",
+        "value": 0.2,
+        "duration": 5,
+        "stackable": false,
+        "dispellable": false,
+        "name": "炎火之导",
+        "description": "减少受到的伤害"
+      },
+      {
+        "type": "damageCap",
+        "value": 0.1,
+        "isIncrease": true,
+        "duration": 5,
+        "stackable": false,
+        "dispellable": false,
+        "name": "炎火之导",
+        "description": "提高伤害上限"
+      }
+    ]
+  },
+  "crownMoonBlessing": {
+    "name": "冠月赐福",
+    "description": "对敌方全体造成10次1倍攻击力伤害。初始CD10回合，后续99回合。我方全体HP回复100%。自身获得[冠月].",
+    "type": "attack",
+    "fixed": false,
+    "cooldown": 10,
+    "nextCooldown": 99,
+    "effectType": "damage_and_buff",
+    "targetType": "all_enemies",
+    "effects": [
+      {
+        "type": "multi_attack",
+        "count": 10,
+        "multiplier": 1.0,
+        "targetType": "all_enemies"
+      },
+      {
+        "type": "heal",
+        "ratio": 1.0,
+        "targetType": "all_allies"
+      },
+      {
+        "type": "echo",
+        "value": 0.5,
+        "permanent": true,
+        "stackable": false,
+        "dispellable": false,
+        "name": "冠月",
+        "description": "追击效果",
+        "targetType": "self"
+      }
+    ]
+  },
+  "worshippedDeity": {
+    "name": "崇拜的尊神",
+    "description": "[被动] 我方全体火属性角色获得 攻击力+30%，自身攻击时有10%概率同时获得TA+10%,攻击力+10%，防御力+10%的永续BUFF（最高10层）。",
+    "type": "buff",
+    "fixed": false,
+    "passive": true,
+    "effectType": "buff",
+    "targetType": "all_allies_fire",
+    "effects": [
+      {
+        "type": "attackUp",
+        "value": 0.3,
+        "passive": true,
+        "elementType": "fire"
+      },
+      {
+        "type": "proc",
+        "chance": 0.1,
+        "onAttack": true,
+        "maxStacks": 10,
+        "effect": {
+          "type": "taBoost",
+          "value": 0.1,
+          "permanent": true,
+          "stackable": true,
+          "dispellable": false,
+          "targetType": "self"
+        },
+        "additionalEffects": [
+          {
+            "type": "attackUp",
+            "value": 0.1,
+            "permanent": true,
+            "stackable": true,
+            "dispellable": false,
+            "targetType": "self"
+          },
+          {
+            "type": "defenseUp",
+            "value": 10,
+            "permanent": true,
+            "stackable": true,
+            "dispellable": false,
+            "targetType": "self"
+          }
+        ]
+      }
+    ]
+  },
+  "explosiveBurst": {
+    "name": "爆裂破",
+    "description": "对敌方单体造成4~5倍攻击力伤害,并驱散1个BUFF，CD 6回合",
+    "type": "attack",
+    "fixed": false,
+    "cooldown": 6,
+    "effectType": "damage_and_dispel",
+    "targetType": "enemy",
+    "effects": [
+      {
+        "type": "damage",
+        "minMultiplier": 4.0,
+        "maxMultiplier": 5.0
+      },
+      {
+        "type": "dispel",
+        "count": 1,
+        "dispelPositive": true
+      }
+    ]
+  },
+  "dragonHeart": {
+    "name": "龙之心",
+    "description": "自身获得以下强化，持续3回合。CD 6回合：-追击 30% -暴击率 +50%",
+    "type": "buff",
+    "fixed": false,
+    "cooldown": 6,
+    "effectType": "buff",
+    "targetType": "self",
+    "duration": 3,
+    "effects": [
+      {
+        "type": "echo",
+        "value": 0.3,
+        "duration": 3,
+        "stackable": true,
+        "dispellable": true
+      },
+      {
+        "type": "criticalRate",
+        "value": 0.5,
+        "duration": 3,
+        "stackable": true,
+        "dispellable": true
+      }
+    ]
+  },
+  "fireMantra": {
+    "name": "炎術式",
+    "description": "[被动] 攻击力+50%， TA +100%",
+    "type": "buff",
+    "fixed": false,
+    "passive": true,
+    "effectType": "buff",
+    "targetType": "self",
+    "effects": [
+      {
+        "type": "attackUp",
+        "value": 0.5,
+        "passive": true
+      },
+      {
+        "type": "taBoost",
+        "value": 1.0,
+        "passive": true
+      }
+    ]
+  }
+}

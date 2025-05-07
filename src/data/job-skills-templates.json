@@ -436,15 +436,15 @@
         "target": "all_enemies"
       },
       {
-        "type": "allStatsUp",
-        "minValue": 0.1,
-        "maxValue": 0.2,
+        "type": "staminaUp",
+        "minValue": 10,
+        "maxValue": 20,
         "duration": 3,
         "stackable": true,
         "dispellable": false,
         "target": "all_allies",
         "name": "樵夫之歌",
-        "description": "提高所有属性"
+        "description": "获得强壮效果"
       },
       {
         "type": "regen",

@@ -10,7 +10,7 @@
 
     // 招募价格
     const SINGLE_RECRUIT_COST = 2000; // 单抽价格
-    const MULTI_RECRUIT_COST = 9000;  // 五连抽价格
+    const MULTI_RECRUIT_COST = 90;  // 五连抽价格
     const MULTI_RECRUIT_COUNT = 5;    // 五连抽数量
     const SR_RECRUIT_COST = 10000;    // 必得SR抽卡价格
     const SSR_RECRUIT_COST = 20000;   // 必得SSR抽卡价格

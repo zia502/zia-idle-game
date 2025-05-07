@@ -742,22 +742,31 @@ const BuffSystem = {
      * @param {object} target - 目标对象
      */
     updateBuffDurations(target) {
-        if (!target || !target.buffs) return;
+        if (!target || !target.buffs) return []; // 如果没有buffs，返回空数组
 
-        const expiredBuffIds = [];
+        const expiredBuffsToReturn = []; // 用于收集实际过期的BUFF对象
+        const expiredBuffIds = []; // 用于收集过期BUFF的ID，方便移除
+
         // 从后向前遍历，因为我们会修改数组
         for (let i = target.buffs.length - 1; i >= 0; i--) {
             const buff = target.buffs[i];
+            let isExpired = false;
+
             // 子BUFF的持续时间由父BUFF决定，不单独减少
             if (buff.isSubBuff) {
                 const parentBuff = target.buffs.find(b => b.id === buff.parentBuffId && !b.isSubBuff);
                 if (parentBuff) {
                     buff.duration = parentBuff.duration; // 同步持续时间
                     if (parentBuff.duration === 0) { // 父BUFF已过期
-                        expiredBuffIds.push(buff.id);
+                        isExpired = true;
                     }
                 } else { // 孤儿自BUFF，也让它过期
+                    isExpired = true;
+                }
+                if (isExpired) {
                     expiredBuffIds.push(buff.id);
+                    // 注意：子buff通常不直接返回给battle.js用于显示过期，除非有特殊需求
+                    expiredBuffsToReturn.push({...buff}); // 如果需要返回子buff信息
                 }
                 continue;
             }
@@ -767,19 +776,32 @@ const BuffSystem = {
             }
 
             if (buff.duration === 0) {
+                isExpired = true;
                 expiredBuffIds.push(buff.id);
+                expiredBuffsToReturn.push({...buff}); // 收集过期的主BUFF信息
+
                 // 如果是复合BUFF过期，其子BUFF也应被移除
                 if (buff.type === 'compositeBuff') {
+                    // 收集此复合BUFF下的子BUFF，如果它们也需要显示过期
+                    target.buffs.forEach(subBuff => {
+                        if (subBuff.isSubBuff && subBuff.parentBuffId === buff.id) {
+                            expiredBuffsToReturn.push({...subBuff}); // 按需添加
+                        }
+                    });
                     this.removeSubBuffsOf(target, buff.id);
                 }
             }
         }
 
         // 移除所有过期的BUFF
+        // 创建一个临时的已移除buff的集合，避免重复添加（如果expiredBuffsToReturn已包含）
+        const removedBuffsForReturn = [];
         expiredBuffIds.forEach(buffId => {
             const buffIndex = target.buffs.findIndex(b => b.id === buffId);
             if (buffIndex > -1) {
                 const expiredBuff = target.buffs[buffIndex];
+                // 确保我们只添加那些在expiredBuffsToReturn中尚不存在的、且确实被移除的buff
+                // 但由于expiredBuffsToReturn是在判断duration === 0时添加的，这里主要是处理移除逻辑
                 this.removeBuffEffect(target, expiredBuff); // 移除效果
                 target.buffs.splice(buffIndex, 1);
                 console.log(`${target.name} 的BUFF ${expiredBuff.name} 已过期并移除。`);
@@ -789,6 +811,7 @@ const BuffSystem = {
         if (expiredBuffIds.length > 0) {
             this.recalculateStatsWithBuffs(target);
         }
+        return expiredBuffsToReturn; // 返回收集到的过期BUFF对象数组
     },
 
     /**
@@ -796,27 +819,29 @@ const BuffSystem = {
      * @param {object} target - 目标对象
      */
     processBuffsAtTurnStart(target) {
-        if (!target || !target.buffs) return;
+        if (!target || !target.buffs) {
+            return { damage: 0, healing: 0 };
+        }
 
-        // 只处理非子BUFF的DoT/HoT，因为子BUFF的效果是直接应用到属性上的
+        let totalDamage = 0;
+        let totalHealing = 0;
+
+        // 只处理非子BUFF的DoT/HoT
         const activeBuffs = target.buffs.filter(buff => !buff.isSubBuff);
 
         for (const buff of activeBuffs) {
             switch (buff.type) {
                 case 'dot':
-                    const dotDamage = buff.value;
-                    target.currentStats.hp = Math.max(0, target.currentStats.hp - dotDamage);
-                    console.log(`${target.name} 受到持续伤害 ${dotDamage} 点 (来自 ${buff.name})，剩余HP: ${target.currentStats.hp}`);
-                    // Battle.logBattle(`${target.name} 受到持续伤害 ${dotDamage} 点 (来自 ${buff.name})`);
+                    totalDamage += buff.value;
+                    // console.log(`${target.name} 将计算持续伤害 ${buff.value} 点 (来自 ${buff.name})`);
                     break;
                 case 'hot':
-                    const hotHeal = buff.value;
-                    target.currentStats.hp = Math.min(target.currentStats.maxHp, target.currentStats.hp + hotHeal);
-                    console.log(`${target.name} 受到持续治疗 ${hotHeal} 点 (来自 ${buff.name})，当前HP: ${target.currentStats.hp}`);
-                    // Battle.logBattle(`${target.name} 受到持续治疗 ${hotHeal} 点 (来自 ${buff.name})`);
+                    totalHealing += buff.value;
+                    // console.log(`${target.name} 将计算持续治疗 ${buff.value} 点 (来自 ${buff.name})`);
                     break;
             }
         }
+        return { damage: totalDamage, healing: totalHealing };
     },
 
     /**

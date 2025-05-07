@@ -394,7 +394,7 @@ const Character = {
             maxLevel: rarityData.maxLevel, // 设置角色等级上限
             nextAttackCritical: false,
             shield: 0,
-            bonusMultiplier: data.bonusMultiplier || 0,
+            // bonusMultiplier: data.bonusMultiplier || 0, // 已移除传说加成
             stats: {
                 totalDamage: 0,
                 totalHealing: 0,
@@ -406,22 +406,10 @@ const Character = {
                 level: 1,
                 history: ['novice'],
             }) : null,
-            multiCount: data.multiCount || 1,
-            // originalBaseStats 不再需要
+            multiCount: data.multiCount || 1
         };
 
-        // 如果是传说角色，其 bonusMultiplier 应用于纯粹的 baseStats
-        if (character.rarity === 'legendary' && character.bonusMultiplier > 0) {
-            const multiplier = 1 + character.bonusMultiplier;
-            for (const stat in character.baseStats) {
-                if (typeof character.baseStats[stat] === 'number') {
-                    character.baseStats[stat] = Math.floor(character.baseStats[stat] * multiplier);
-                }
-            }
-            // weaponBonusStats 和 currentStats 也需要反映这个初始变化
-            character.weaponBonusStats = { ...character.baseStats };
-            character.currentStats = { ...character.baseStats };
-        }
+        // 已移除传说加成 bonusMultiplier 的直接应用
         
         // 如果角色在创建时就有 multiCount > 1 且 multiBonusStats 未提供，则计算初始的 multiBonusStats
         if (character.multiCount > 1 && !data.multiBonusStats) {
@@ -613,65 +601,12 @@ const Character = {
         // 检查传说角色是否已招募过
         if (isLegendary) {
             const existingLegendary = Object.values(this.characters).find(
-                char => char.id.includes(template.id) && char.rarity === 'legendary'
+                char => char.id.includes(template.id) && char.rarity === 'legendary' && char.isRecruited // 确保是已招募的
             );
 
             if (existingLegendary) {
-                // 已有该传说角色，增加其属性加成
-                if (existingLegendary.bonusMultiplier < 0.2) { // 加成上限20%
-                    existingLegendary.bonusMultiplier += 0.01; // 每次加1%
-
-                    // 更新基础属性 (bonusMultiplier 应用于纯粹的 baseStats)
-                    // 需要获取该传说角色最初的、未被 bonusMultiplier 影响的原始 baseStats
-                    // 假设 legendaryCharacters 存储的是模板，其 baseStats 是原始的
-                    let originalLegendaryTemplate = null;
-                    if (Array.isArray(this.legendaryCharacters)) {
-                         originalLegendaryTemplate = this.legendaryCharacters.find(c => c.id === template.id || c.name === template.name); // 通过id或name查找原始模板
-                    }
-
-                    if (originalLegendaryTemplate && originalLegendaryTemplate.baseStats) {
-                        const multiplier = 1 + existingLegendary.bonusMultiplier;
-                        for (const stat in originalLegendaryTemplate.baseStats) {
-                            if (existingLegendary.baseStats.hasOwnProperty(stat)) {
-                                existingLegendary.baseStats[stat] = Math.floor(originalLegendaryTemplate.baseStats[stat] * multiplier);
-                            }
-                        }
-                        // 确保 maxHp 和 maxAttack 更新
-                        if (existingLegendary.baseStats.hasOwnProperty('hp')) existingLegendary.baseStats.maxHp = existingLegendary.baseStats.hp;
-                        if (existingLegendary.baseStats.hasOwnProperty('attack')) existingLegendary.baseStats.maxAttack = existingLegendary.baseStats.attack;
-                    } else {
-                        // 如果找不到原始模板，这是一个潜在问题，可能导致加成计算不准确
-                        console.warn(`无法找到传说角色 ${template.name} 的原始模板以应用 bonusMultiplier。`);
-                        // 作为回退，可以尝试基于现有 baseStats 和旧的 multiplier 来反推，但这不理想
-                    }
-                    
-                    let teamId = null;
-                    if (typeof Team !== 'undefined' && Team.findTeamByMember) {
-                        const team = Team.findTeamByMember(existingLegendary.id);
-                        if (team) teamId = team.id;
-                    }
-                    this._updateCharacterEffectiveStats(existingLegendary.id, teamId);
-                    UI.showNotification(`已增强 ${existingLegendary.name} 的属性 (加成: ${Math.floor(existingLegendary.bonusMultiplier * 100)}%)`);
-
-                } else {
-                    // 已达到20%上限，直接加固定值到 baseStats
-                    for (const stat in existingLegendary.baseStats) {
-                        if (typeof existingLegendary.baseStats[stat] === 'number') {
-                             existingLegendary.baseStats[stat] += 1;
-                        }
-                    }
-                     // 确保 maxHp 和 maxAttack 更新
-                    if (existingLegendary.baseStats.hasOwnProperty('hp')) existingLegendary.baseStats.maxHp = existingLegendary.baseStats.hp;
-                    if (existingLegendary.baseStats.hasOwnProperty('attack')) existingLegendary.baseStats.maxAttack = existingLegendary.baseStats.attack;
-
-                    let teamId = null;
-                    if (typeof Team !== 'undefined' && Team.findTeamByMember) {
-                        const team = Team.findTeamByMember(existingLegendary.id);
-                        if (team) teamId = team.id;
-                    }
-                    this._updateCharacterEffectiveStats(existingLegendary.id, teamId);
-                    UI.showNotification(`已增强 ${existingLegendary.name} 的全部属性 +1`);
-                }
+                // 已有该传说角色，不再进行 bonusMultiplier 增强，直接提示或返回
+                UI.showNotification(`${existingLegendary.name} 已经是传说中的伙伴了！`);
                 return existingLegendary.id;
             }
         }
@@ -726,7 +661,7 @@ const Character = {
             level: 1,
             exp: 0,
             isRecruited: true,
-            bonusMultiplier: template.bonusMultiplier || 0,
+            // bonusMultiplier: template.bonusMultiplier || 0, // 已移除传说加成
             multiCount: 1 // 新添加的属性，初始值为1表示第一次获得
         };
 
@@ -1340,7 +1275,7 @@ const Character = {
                 maxLevel: this.rarities[rarity].maxLevel,
                 nextAttackCritical: false,
                 shield: 0,
-                bonusMultiplier: 0,
+                // bonusMultiplier: 0, // 已移除传说加成
                 traitUnlockLevels: {
                     second: 65,
                     third: 90
@@ -1450,11 +1385,16 @@ const Character = {
         
         // 确保 augmentedStats 完整性并取整
         this._ensureStatsIntegrity(augmentedStats, sourceBaseStats);
+        // 移除主要属性的 Math.floor()，但保留百分比属性的特殊处理和非负值约束
         for (const stat in augmentedStats) {
-            if (typeof augmentedStats[stat] === 'number' && !['critRate', 'daRate', 'taRate', 'exAttack'].includes(stat)) {
-                augmentedStats[stat] = Math.max(0, Math.floor(augmentedStats[stat]));
-            } else if (typeof augmentedStats[stat] === 'number') {
-                 augmentedStats[stat] = Math.max(0, augmentedStats[stat]);
+            if (typeof augmentedStats[stat] === 'number') {
+                if (!['critRate', 'daRate', 'taRate', 'exAttack'].includes(stat)) {
+                    // 对于非百分比类数值属性，不再向下取整，但确保非负
+                    augmentedStats[stat] = Math.max(0, augmentedStats[stat]);
+                } else {
+                    // 对于百分比类属性，确保非负 (原逻辑已是 Math.max(0, value))
+                    augmentedStats[stat] = Math.max(0, augmentedStats[stat]);
+                }
             }
         }
         return augmentedStats;
@@ -1837,8 +1777,8 @@ const Character = {
      */
     getSaveData() {
         return {
-            characters: this.characters,
-            legendaryCharacters: this.legendaryCharacters
+            characters: this.characters
+            // legendaryCharacters: this.legendaryCharacters // 已移除 bonusMultiplier，不再需要单独保存
         };
     },
 
@@ -1855,15 +1795,25 @@ const Character = {
             this.characters = data.characters;
             console.log(`加载了 ${Object.keys(this.characters).length} 个角色`);
 
-            // 调试输出所有角色的招募状态
+            // 清理旧存档数据并调试输出
             Object.values(this.characters).forEach(character => {
+                if (character.hasOwnProperty('bonusMultiplier')) {
+                    delete character.bonusMultiplier;
+                }
+                // 确保 delete character.originalBaseStats; 能够有效移除旧存档中的此字段
+                if (character.hasOwnProperty('originalBaseStats')) {
+                    delete character.originalBaseStats;
+                }
+                // 确保 multiBonusStats 存在且结构正确
+                character.multiBonusStats = character.multiBonusStats || { hp: 0, attack: 0, defense: 0 };
+
                 console.log(`加载角色 ${character.name} (ID: ${character.id}) - 招募状态: ${character.isRecruited}, 主角: ${character.isMainCharacter}`);
             });
         }
 
-        if (data.legendaryCharacters) {
-            this.legendaryCharacters = data.legendaryCharacters;
-        }
+        // if (data.legendaryCharacters) { // 已移除 bonusMultiplier，不再需要单独加载
+        //     this.legendaryCharacters = data.legendaryCharacters;
+        // }
 
         // 确保R、SR和SSR角色数据已加载
         if (!this.rCharacters || this.rCharacters.length === 0) {

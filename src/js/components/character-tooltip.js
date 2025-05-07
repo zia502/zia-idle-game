@@ -229,8 +229,6 @@ const CharacterTooltip = {
         const maxHp = stats.maxHp !== undefined ? Math.round(stats.maxHp) : (stats.hp !== undefined ? Math.round(stats.hp) : 'N/A');
         const attack = stats.attack !== undefined ? Math.round(stats.attack) : 'N/A';
         const defense = stats.defense !== undefined ? Math.round(stats.defense) : 'N/A';
-        const speed = stats.speed !== undefined ? Math.round(stats.speed) : 'N/A';
-        
         let jobName = '无';
         if (character.job && character.job.current && typeof JobSystem !== 'undefined' && JobSystem.getJobDetails) {
             const jobDetails = JobSystem.getJobDetails(character.job.current);
@@ -255,7 +253,6 @@ const CharacterTooltip = {
                 <div><span class="skill-tooltip-stat-icon">❤️</span> HP: ${hp} / ${maxHp}</div>
                 <div><span class="skill-tooltip-stat-icon">⚔️</span> 攻击: ${attack}</div>
                 <div><span class="skill-tooltip-stat-icon">🛡️</span> 防御: ${defense}</div>
-                <div><span class="skill-tooltip-stat-icon">💨</span> 速度: ${speed}</div>
             </div>
         `;
 
@@ -294,11 +291,9 @@ const CharacterTooltip = {
             const wbMaxHp = wbs.maxHp !== undefined ? Math.round(wbs.maxHp) : (wbs.hp !== undefined ? Math.round(wbs.hp) : 'N/A');
             const wbAttack = wbs.attack !== undefined ? Math.round(wbs.attack) : 'N/A';
             const wbDefense = wbs.defense !== undefined ? Math.round(wbs.defense) : 'N/A';
-            const wbSpeed = wbs.speed !== undefined ? Math.round(wbs.speed) : 'N/A';
             html += `<div><span class="skill-tooltip-stat-icon">❤️</span> HP: ${wbHp} / ${wbMaxHp}</div>`;
             html += `<div><span class="skill-tooltip-stat-icon">⚔️</span> 攻击: ${wbAttack}</div>`;
             html += `<div><span class="skill-tooltip-stat-icon">🛡️</span> 防御: ${wbDefense}</div>`;
-            html += `<div><span class="skill-tooltip-stat-icon">💨</span> 速度: ${wbSpeed}</div>`;
             html += '</div>';
         }
 

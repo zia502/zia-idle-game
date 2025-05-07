@@ -326,10 +326,10 @@
                         <div style="font-weight:bold; margin-bottom:5px;">防御力</div>
                         <div>${jobInfo.baseStats?.defense || 0}</div>
                     </div>
-                    <div style="flex:1; padding:5px; border:1px solid #eee; text-align:center;">
+                    {/* <div style="flex:1; padding:5px; border:1px solid #eee; text-align:center;">
                         <div style="font-weight:bold; margin-bottom:5px;">速度</div>
                         <div>${jobInfo.baseStats?.speed || 0}</div>
-                    </div>
+                    </div> */}
                 </div>
 
                 ${skillsHtml}

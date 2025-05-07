@@ -91,50 +91,50 @@
   },
   "ssr_26": {
     "id": "character_026",
-    "name": "冰霜法师",
+    "name": "莉莉",
     "attribute": "water",
-    "type": "special",
+    "type": "healing",
     "baseStats": {
       "hp": 264,
-      "maxHp": 3520,
+      "maxHp": 3876,
       "attack": 1650,
-      "maxAttack": 9600,
+      "maxAttack": 7720,
       "defense": 10,
       "critRate": 0.05,
       "critDamage": 1.5,
-      "daRate": 0.1,
-      "taRate": 0.05
+      "daRate": 0.04,
+      "taRate": 0.01
     },
     "skills": ["frostBolt", "iceShield", "blizzard"]
   },
   "ssr_27": {
     "id": "character_027",
-    "name": "雷霆战士",
-    "attribute": "light",
-    "type": "attack",
+    "name": "银之军师",
+    "attribute": "water",
+    "type": "special",
     "baseStats": {
       "hp": 264,
-      "maxHp": 3520,
+      "maxHp": 3900,
       "attack": 1650,
-      "maxAttack": 9600,
+      "maxAttack": 9500,
       "defense": 10,
       "critRate": 0.05,
       "critDamage": 1.5,
-      "daRate": 0.1,
-      "taRate": 0.05
+      "daRate": 0.07,
+      "taRate": 0.03
     },
     "skills": ["thunderStrike", "lightningSpeed", "thunderStorm"]
   },
   "ssr_28": {
     "id": "character_028",
-    "name": "暗影法师",
-    "attribute": "dark",
-    "type": "special",
+    "name": "尤达拉哈",
+    "attribute": "water",
+    "type": "attack",
     "baseStats": {
       "hp": 264,
-      "maxHp": 3520,
+      "maxHp": 3366,
       "attack": 1650,
-      "maxAttack": 9600,
+      "maxAttack": 11380,
       "defense": 10,
       "critRate": 0.05,
       "critDamage": 1.5,
@@ -145,37 +145,37 @@
   },
   "ssr_29": {
     "id": "character_029",
-    "name": "圣光牧师",
-    "attribute": "light",
+    "name": "[水星的美姬]欧罗巴·L",
+    "attribute": "water",
     "type": "healing",
     "baseStats": {
       "hp": 264,
-      "maxHp": 3520,
+      "maxHp": 4372,
       "attack": 1650,
-      "maxAttack": 9600,
+      "maxAttack": 8090,
       "defense": 10,
       "critRate": 0.05,
       "critDamage": 1.5,
-      "daRate": 0.1,
-      "taRate": 0.05
+      "daRate": 0.04,
+      "taRate": 0.01
     },
     "skills": ["holyLight", "divineHeal", "heavenlyBlessing"]
   },
   "ssr_30": {
     "id": "character_030",
-    "name": "火焰战士",
-    "attribute": "fire",
-    "type": "attack",
+    "name": "安",
+    "attribute": "water",
+    "type": "defense",
     "baseStats": {
       "hp": 264,
-      "maxHp": 3520,
+      "maxHp": 3930,
       "attack": 1650,
-      "maxAttack": 9600,
+      "maxAttack": 9350,
       "defense": 10,
       "critRate": 0.05,
       "critDamage": 1.5,
-      "daRate": 0.1,
-      "taRate": 0.05
+      "daRate": 0.07,
+      "taRate": 0.03
     },
     "skills": ["fireStrike", "flameGuard", "inferno"]
   },

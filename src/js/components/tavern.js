@@ -309,6 +309,8 @@
         currentRecruitResults.forEach(character => {
             const resultItem = document.createElement('div');
             resultItem.className = `recruit-result-item ${character.rarity}`;
+            // 添加 data-character-id 用于 tooltip，招募结果通常是角色模板ID
+            resultItem.dataset.characterId = character.id;
             //console.log(character);
 
             // 获取类型和属性的中文名称
@@ -432,6 +434,10 @@
             // 创建角色卡片
             const card = document.createElement('div');
             card.className = `character-card ${character.rarity}`;
+            // 添加 data-character-id 和 data-character-instance-id 用于 tooltip
+            // 对于已招募列表，instanceId 通常就是 character.id
+            card.dataset.characterId = character.id;
+            card.dataset.characterInstanceId = character.id;
 
             // 获取类型和属性的中文名称
             const typeDisplay = Character.types[character.type]?.name || character.type;

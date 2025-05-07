@@ -180,6 +180,71 @@
     color: #0288d1;
 }
 
+/* 角色 Tooltip 特定样式 */
+.character-tooltip .skill-tooltip-name { /* 复用 skill-tooltip-name 但允许颜色覆盖 */
+    /* 颜色由 JS 内联设置 */
+}
+
+.character-tooltip-info {
+    margin-bottom: 10px;
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+.character-tooltip-info div {
+    margin-bottom: 4px;
+}
+
+.character-tooltip-info strong {
+    color: #555;
+}
+
+.character-tooltip-stats div {
+    font-size: 13px; /* 统一角色属性字体大小 */
+    background-color: rgba(0, 0, 0, 0.03); /* 稍微调整背景色以区分 */
+    padding: 4px 7px;
+}
+
+.skill-tooltip-level {
+    font-size: 13px;
+    color: #666;
+}
+
+.skill-tooltip-subheader {
+    font-weight: bold;
+    margin-top: 12px;
+    margin-bottom: 6px;
+    padding-bottom: 3px;
+    border-bottom: 1px solid rgba(0,0,0,0.08);
+    font-size: 14px;
+    color: #333;
+}
+
+.character-tooltip-skills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.character-tooltip-skill-item {
+    background-color: #e9e9e9;
+    padding: 3px 7px;
+    border-radius: 3px;
+    font-size: 12px;
+    cursor: default; /* 如果未来要添加点击查看技能详情，可以改为 pointer */
+    color: #333;
+}
+/* 可以在这里为不同稀有度的角色 tooltip 添加特定边框或背景 */
+.character-tooltip.rare {
+    border-left: 3px solid #2196f3; /* R */
+}
+.character-tooltip.epic {
+    border-left: 3px solid #9c27b0; /* SR */
+}
+.character-tooltip.legendary {
+    border-left: 3px solid #ff9800; /* SSR */
+}
+
 .effect-type-dispel {
     color: #7b1fa2;
 }

@@ -247,7 +247,7 @@
                                     }
 
                                     return `
-                                        <div class="team-member ${member.rarity}">
+                                        <div class="team-member ${member.rarity}" data-character-id="${member.id}" data-character-instance-id="${member.id}">
                                             <div class="member-position">#${index + 1}</div>
                                             <div class="member-info">
                                                 <h4>${member.name}</h4>
@@ -294,7 +294,7 @@
                                         }
 
                                         return `
-                                            <div class="team-member ${member.rarity}">
+                                            <div class="team-member ${member.rarity}" data-character-id="${member.id}" data-character-instance-id="${member.id}">
                                                 <div class="member-position">#${index + 5}</div>
                                                 <div class="member-info">
                                                     <h4>${member.name}</h4>
@@ -446,6 +446,10 @@
             // 创建角色卡片
             const card = document.createElement('div');
             card.className = `character-card ${character.rarity}`;
+            card.dataset.characterId = character.id; // 添加 data-character-id 用于 tooltip
+            // 对于可用角色列表，通常是模板角色，所以 instanceId 可以与 id 相同或不设置
+            // 如果这些角色在游戏中是唯一实例，则需要设置正确的 instanceId
+            card.dataset.characterInstanceId = character.id;
 
             // 获取类型和属性的中文名称
             const typeDisplay = Character.types[character.type]?.name || character.type;
@@ -464,9 +468,20 @@
             }
 
             // 设置卡片内容
+            // 添加多重抽取显示
+            let multiCountDisplay = '';
+            if (character.multiCount && character.multiCount > 1) {
+                // 检查是否达到多重上限
+                if (character.multiCount >= 20) {
+                    multiCountDisplay = `<span class="multi-count-badge">+${character.multiCount - 1}</span><span class="multi-count-max">(已达上限)</span>`;
+                } else {
+                    multiCountDisplay = `<span class="multi-count-badge">+${character.multiCount - 1}</span>`;
+                }
+            }
+
             card.innerHTML = `
                 <div class="character-info">
-                    <h4>${character.name}</h4>
+                    <h4>${character.name}${multiCountDisplay}</h4>
                     ${rarityBadge}
                     <p>
                         LV: ${character.level || 1}

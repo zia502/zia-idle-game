@@ -678,10 +678,19 @@ const Character = {
             existingCharacter.multiCount += 1;
 
             // 计算并更新多重加成属性
-            this.updateMultiBonusStats(existingCharacter);
-
-            // 显示通知
-            UI.showNotification(`已增强 ${existingCharacter.name} (重复 +${existingCharacter.multiCount - 1})`);
+            const refundInfo = this.updateMultiBonusStats(existingCharacter);
+            
+            // 处理超过上限返还金币的情况
+            if (refundInfo) {
+                // 增加金币
+                if (typeof Game !== 'undefined' && typeof Game.addGold === 'function') {
+                    Game.addGold(refundInfo.refundAmount);
+                    UI.showNotification(`${existingCharacter.name} 已达到多重上限(20)，返还 ${refundInfo.refundAmount} 金币`);
+                }
+            } else {
+                // 显示正常通知
+                UI.showNotification(`已增强 ${existingCharacter.name} (重复 +${existingCharacter.multiCount - 1})`);
+            }
             
             return existingCharacter.id; // 返回现有角色ID
         }
@@ -713,6 +722,7 @@ const Character = {
     /**
      * 更新角色的多重加成属性
      * @param {object} character - 角色对象
+     * @returns {object|null} 如果超过上限返回金币补偿信息，否则返回null
      */
     updateMultiBonusStats(character) {
         if (!character || !character.multiCount || character.multiCount <= 1) {
@@ -720,7 +730,32 @@ const Character = {
             if (character) {
                 character.multiBonusStats = null;
             }
-            return;
+            return null;
+        }
+
+        // 多重抽取上限为20次
+        const MULTI_LIMIT = 20;
+        
+        // 检查是否超过上限
+        if (character.multiCount > MULTI_LIMIT) {
+            // 根据稀有度决定返还金币数量
+            let refundAmount = 0;
+            if (character.rarity === 'rare') {
+                refundAmount = 10; // R角色返还10金币
+            } else if (character.rarity === 'epic') {
+                refundAmount = 100; // SR角色返还100金币
+            } else if (character.rarity === 'legendary') {
+                refundAmount = 1000; // SSR角色返还1000金币
+            }
+            
+            // 保持multiCount不超过上限
+            character.multiCount = MULTI_LIMIT;
+            
+            // 返回金币补偿信息
+            return {
+                refundAmount: refundAmount,
+                characterName: character.name
+            };
         }
 
         // 计算多重加成的数值 (多重次数-1，因为第一次获得不计入加成)
@@ -748,6 +783,8 @@ const Character = {
         this.applyMultiBonusToStats(character);
         
         console.log(`更新了 ${character.name} 的多重加成: +${bonusCount}`, character.multiBonusStats);
+        
+        return null;
     },
     
     /**
@@ -856,10 +893,20 @@ const Character = {
                         existingCharacter.multiCount += 1;
                         
                         // 更新多重加成属性
-                        this.updateMultiBonusStats(existingCharacter);
+                        const refundInfo = this.updateMultiBonusStats(existingCharacter);
                         
                         // 创建一个副本用于显示结果
                         const rCharacterCopy = {...existingCharacter};
+                        
+                        // 添加返还金币信息
+                        if (refundInfo) {
+                            rCharacterCopy.refundInfo = refundInfo;
+                            // 增加金币
+                            if (typeof Game !== 'undefined' && typeof Game.addGold === 'function') {
+                                Game.addGold(refundInfo.refundAmount);
+                            }
+                        }
+                        
                         result.push(rCharacterCopy);
                         continue;
                     }
@@ -918,10 +965,20 @@ const Character = {
                         existingCharacter.multiCount += 1;
                         
                         // 更新多重加成属性
-                        this.updateMultiBonusStats(existingCharacter);
+                        const refundInfo = this.updateMultiBonusStats(existingCharacter);
                         
                         // 创建一个副本用于显示结果
                         const srCharacterCopy = {...existingCharacter};
+                        
+                        // 添加返还金币信息
+                        if (refundInfo) {
+                            srCharacterCopy.refundInfo = refundInfo;
+                            // 增加金币
+                            if (typeof Game !== 'undefined' && typeof Game.addGold === 'function') {
+                                Game.addGold(refundInfo.refundAmount);
+                            }
+                        }
+                        
                         result.push(srCharacterCopy);
                         continue;
                     }
@@ -980,10 +1037,20 @@ const Character = {
                         existingCharacter.multiCount += 1;
                         
                         // 更新多重加成属性
-                        this.updateMultiBonusStats(existingCharacter);
+                        const refundInfo = this.updateMultiBonusStats(existingCharacter);
                         
                         // 创建一个副本用于显示结果
                         const ssrCharacterCopy = {...existingCharacter};
+                        
+                        // 添加返还金币信息
+                        if (refundInfo) {
+                            ssrCharacterCopy.refundInfo = refundInfo;
+                            // 增加金币
+                            if (typeof Game !== 'undefined' && typeof Game.addGold === 'function') {
+                                Game.addGold(refundInfo.refundAmount);
+                            }
+                        }
+                        
                         result.push(ssrCharacterCopy);
                         continue;
                     }
@@ -1038,10 +1105,20 @@ const Character = {
                         existingCharacter.multiCount += 1;
                         
                         // 更新多重加成属性
-                        this.updateMultiBonusStats(existingCharacter);
+                        const refundInfo = this.updateMultiBonusStats(existingCharacter);
                         
                         // 创建一个副本用于显示结果
                         const srCharacterCopy = {...existingCharacter};
+                        
+                        // 添加返还金币信息
+                        if (refundInfo) {
+                            srCharacterCopy.refundInfo = refundInfo;
+                            // 增加金币
+                            if (typeof Game !== 'undefined' && typeof Game.addGold === 'function') {
+                                Game.addGold(refundInfo.refundAmount);
+                            }
+                        }
+                        
                         result.push(srCharacterCopy);
                         continue;
                     }
@@ -1114,12 +1191,22 @@ const Character = {
                             existingCharacter.multiCount += 1;
                             
                             // 更新多重加成属性
-                            this.updateMultiBonusStats(existingCharacter);
+                            const refundInfo = this.updateMultiBonusStats(existingCharacter);
                             
                             // 创建一个副本用于显示结果
                             const ssrCharacterCopy = {...existingCharacter};
+                            
+                            // 添加返还金币信息
+                            if (refundInfo) {
+                                ssrCharacterCopy.refundInfo = refundInfo;
+                                // 增加金币
+                                if (typeof Game !== 'undefined' && typeof Game.addGold === 'function') {
+                                    Game.addGold(refundInfo.refundAmount);
+                                }
+                            }
+                            
                             result.push(ssrCharacterCopy);
-                            continue;
+                            continue; // 跳过其余的角色创建步骤
                         }
 
                         // 复制模板并调整ID和稀有度
@@ -1172,12 +1259,22 @@ const Character = {
                             existingCharacter.multiCount += 1;
                             
                             // 更新多重加成属性
-                            this.updateMultiBonusStats(existingCharacter);
+                            const refundInfo = this.updateMultiBonusStats(existingCharacter);
                             
                             // 创建一个副本用于显示结果
                             const srCharacterCopy = {...existingCharacter};
+                            
+                            // 添加返还金币信息
+                            if (refundInfo) {
+                                srCharacterCopy.refundInfo = refundInfo;
+                                // 增加金币
+                                if (typeof Game !== 'undefined' && typeof Game.addGold === 'function') {
+                                    Game.addGold(refundInfo.refundAmount);
+                                }
+                            }
+                            
                             result.push(srCharacterCopy);
-                            continue;
+                            continue; // 跳过其余的角色创建步骤
                         }
 
                         // 复制模板并调整ID和稀有度

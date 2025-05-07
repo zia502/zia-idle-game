@@ -411,26 +411,27 @@ const Game = {
 
 
     /**
-     * 添加金币
-     * @param {number} amount 金币数量
+     * 添加金币到游戏中
+     * @param {number} amount - 要添加的金币数量
+     * @returns {boolean} 是否添加成功
      */
     addGold(amount) {
+        if (!amount || amount <= 0) return false;
+        
+        const oldAmount = this.state.gold;
         this.state.gold += amount;
-
+        
+        // 触发金币更新事件
         if (typeof Events !== 'undefined') {
-            Events.emit('player:goldChanged', {
-                gold: this.state.gold,
+            Events.emit('gold:updated', {
+                oldAmount: oldAmount,
+                newAmount: this.state.gold,
                 change: amount
             });
         }
-
-        // 更新UI显示
-        const goldElement = document.getElementById('gold-display');
-        if (goldElement) {
-            goldElement.textContent = `金币: ${this.state.gold}`;
-        }
-
-        return this.state.gold;
+        
+        console.log(`添加了 ${amount} 金币，当前金币: ${this.state.gold}`);
+        return true;
     },
 
     /**

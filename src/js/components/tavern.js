@@ -329,6 +329,16 @@
                 multiCountInfo = `<span class="multi-count-badge">+${character.multiCount - 1}</span>`;
             }
 
+            // 显示返还金币信息
+            let refundInfo = '';
+            if (character.refundInfo) {
+                refundInfo = `
+                    <div class="refund-info">
+                        <p>已达到突破上限，返还 ${character.refundInfo.refundAmount} 金币</p>
+                    </div>
+                `;
+            }
+
             resultItem.innerHTML = `
                 <div class="recruit-result-info">
                     <h4>${character.name}${multiCountInfo}</h4>
@@ -339,6 +349,7 @@
                         属性: ${attributeDisplay} <span class="attribute-circle ${character.attribute}"></span>
                     </p>
                     <p>${character.description || ''}</p>
+                    ${refundInfo}
                 </div>
             `;
 
@@ -441,7 +452,12 @@
             // 添加多重抽取显示
             let multiCountDisplay = '';
             if (character.multiCount && character.multiCount > 1) {
-                multiCountDisplay = `<span class="multi-count-badge">+${character.multiCount - 1}</span>`;
+                // 检查是否达到多重上限
+                if (character.multiCount >= 20) {
+                    multiCountDisplay = `<span class="multi-count-badge">+${character.multiCount - 1}</span><span class="multi-count-max">(已达上限)</span>`;
+                } else {
+                    multiCountDisplay = `<span class="multi-count-badge">+${character.multiCount - 1}</span>`;
+                }
             }
 
             // 设置卡片内容

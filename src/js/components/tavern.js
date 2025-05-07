@@ -323,9 +323,15 @@
                 rarityDisplay = 'SSR';
             }
 
+            // 显示多重抽取信息
+            let multiCountInfo = '';
+            if (character.multiCount && character.multiCount > 1) {
+                multiCountInfo = `<span class="multi-count-badge">+${character.multiCount - 1}</span>`;
+            }
+
             resultItem.innerHTML = `
                 <div class="recruit-result-info">
-                    <h4>${character.name}</h4>
+                    <h4>${character.name}${multiCountInfo}</h4>
                     <span class="rarity-badge ${character.rarity}">${rarityDisplay}</span>
                     <p>
                         类型: ${typeDisplay}
@@ -432,10 +438,16 @@
                 rarityBadge = `<span class="rarity-badge ${character.rarity}">${rarityDisplay}</span>`;
             }
 
+            // 添加多重抽取显示
+            let multiCountDisplay = '';
+            if (character.multiCount && character.multiCount > 1) {
+                multiCountDisplay = `<span class="multi-count-badge">+${character.multiCount - 1}</span>`;
+            }
+
             // 设置卡片内容
             card.innerHTML = `
                 <div class="character-info">
-                    <h4>${character.name}</h4>
+                    <h4>${character.name}${multiCountDisplay}</h4>
                     ${rarityBadge}
                     <p>
                         LV: ${character.level || 1}

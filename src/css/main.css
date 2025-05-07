@@ -1,0 +1,27 @@
+/* 添加多重抽取角色显示相关的样式 */
+.multi-count-badge {
+    display: inline-block;
+    background-color: #2ecc71;
+    color: white;
+    padding: 2px 6px;
+    border-radius: 8px;
+    font-size: 0.8em;
+    margin-left: 5px;
+    font-weight: bold;
+}
+
+.bonus-stats {
+    font-size: 0.85em;
+    color: #2ecc71;
+    margin-top: 5px;
+    font-weight: bold;
+}
+
+.multi-bonus-info {
+    margin-top: 5px;
+    font-size: 0.8em;
+    color: #2ecc71;
+    background-color: rgba(46, 204, 113, 0.1);
+    padding: 4px 8px;
+    border-radius: 4px;
+} 

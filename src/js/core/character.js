@@ -421,7 +421,10 @@ const Character = {
                 current: 'novice',  // 当前职业
                 level: 1,           // 职业等级
                 history: ['novice'], // 历史职业
-            }) : null
+            }) : null,
+            // 多重抽取相关属性
+            multiCount: data.multiCount || 1,
+            multiBonusStats: data.multiBonusStats || null
         };
 
         // 如果是传说角色，应用bonusMultiplier
@@ -432,6 +435,13 @@ const Character = {
                 character.baseStats[stat] = Math.floor(character.baseStats[stat] * multiplier);
                 character.currentStats[stat] = character.baseStats[stat];
             }
+        }
+        
+        // 如果有多重加成，应用到属性
+        if (character.multiCount > 1 && !character.multiBonusStats) {
+            this.updateMultiBonusStats(character);
+        } else if (character.multiBonusStats) {
+            this.applyMultiBonusToStats(character);
         }
 
         return character;
@@ -597,7 +607,7 @@ const Character = {
     },
 
     /**
-     * 招募角色
+     * 角色招募
      * @param {string} templateId - 角色模板ID
      * @returns {string|null} 新角色ID或null
      */
@@ -649,6 +659,33 @@ const Character = {
             }
         }
 
+        // 检查非传奇角色是否已经招募（通过角色名称和稀有度检查）
+        // 注意: 这里需要先获取角色完整信息
+        let existingCharacter = null;
+        if (!isLegendary && template.name) {
+            existingCharacter = Object.values(this.characters).find(
+                character => character.name === template.name && 
+                             character.rarity === template.rarity &&
+                             character.isRecruited
+            );
+        }
+
+        if (existingCharacter) {
+            // 角色已存在，增加多重加成计数
+            if (!existingCharacter.multiCount) {
+                existingCharacter.multiCount = 1; // 初始值
+            }
+            existingCharacter.multiCount += 1;
+
+            // 计算并更新多重加成属性
+            this.updateMultiBonusStats(existingCharacter);
+
+            // 显示通知
+            UI.showNotification(`已增强 ${existingCharacter.name} (重复 +${existingCharacter.multiCount - 1})`);
+            
+            return existingCharacter.id; // 返回现有角色ID
+        }
+
         // 创建新角色ID
         const uniqueId = `${template.id}_${Date.now()}`;
 
@@ -659,7 +696,8 @@ const Character = {
             level: 1,
             exp: 0,
             isRecruited: true,
-            bonusMultiplier: template.bonusMultiplier || 0
+            bonusMultiplier: template.bonusMultiplier || 0,
+            multiCount: 1 // 新添加的属性，初始值为1表示第一次获得
         };
 
         // 添加角色
@@ -670,6 +708,84 @@ const Character = {
         }
 
         return newCharacterId;
+    },
+
+    /**
+     * 更新角色的多重加成属性
+     * @param {object} character - 角色对象
+     */
+    updateMultiBonusStats(character) {
+        if (!character || !character.multiCount || character.multiCount <= 1) {
+            // 如果没有多重加成(multiCount <= 1)，则清除多重加成属性
+            if (character) {
+                character.multiBonusStats = null;
+            }
+            return;
+        }
+
+        // 计算多重加成的数值 (多重次数-1，因为第一次获得不计入加成)
+        const bonusCount = character.multiCount - 1;
+        
+        // 初始化多重加成属性
+        if (!character.multiBonusStats) {
+            character.multiBonusStats = {};
+        }
+        
+        // 计算HP加成: 最大HP的1%乘以多重次数
+        if (character.baseStats.maxHp) {
+            character.multiBonusStats.hp = Math.floor(character.baseStats.maxHp * 0.01 * bonusCount);
+        }
+        
+        // 计算攻击力加成: 最大攻击力的1%乘以多重次数
+        if (character.baseStats.maxAttack) {
+            character.multiBonusStats.attack = Math.floor(character.baseStats.maxAttack * 0.01 * bonusCount);
+        }
+        
+        // 防御力加成: 每次+1
+        character.multiBonusStats.defense = bonusCount;
+        
+        // 应用加成到基础属性和当前属性
+        this.applyMultiBonusToStats(character);
+        
+        console.log(`更新了 ${character.name} 的多重加成: +${bonusCount}`, character.multiBonusStats);
+    },
+    
+    /**
+     * 将多重加成应用到角色属性
+     * @param {object} character - 角色对象
+     */
+    applyMultiBonusToStats(character) {
+        if (!character || !character.multiBonusStats) return;
+        
+        // 先去除之前可能已应用的加成
+        // 这需要在角色对象中维护原始基础属性
+        if (!character.originalBaseStats) {
+            // 首次应用时保存原始属性
+            character.originalBaseStats = {...character.baseStats};
+        } else {
+            // 恢复到原始属性
+            character.baseStats = {...character.originalBaseStats};
+        }
+        
+        // 应用HP加成
+        if (character.multiBonusStats.hp) {
+            character.baseStats.hp += character.multiBonusStats.hp;
+            character.baseStats.maxHp += character.multiBonusStats.hp;
+        }
+        
+        // 应用攻击力加成
+        if (character.multiBonusStats.attack) {
+            character.baseStats.attack += character.multiBonusStats.attack;
+            character.baseStats.maxAttack += character.multiBonusStats.attack;
+        }
+        
+        // 应用防御力加成
+        if (character.multiBonusStats.defense) {
+            character.baseStats.defense += character.multiBonusStats.defense;
+        }
+        
+        // 更新当前属性
+        character.currentStats = {...character.baseStats};
     },
 
     /**
@@ -725,6 +841,29 @@ const Character = {
                     const rIndex = Math.floor(Math.random() * this.rCharacters.length);
                     const rTemplate = this.rCharacters[rIndex];
 
+                    // 在添加新角色前，检查是否已存在该角色
+                    const existingCharacter = Object.values(this.characters).find(
+                        character => character.name === rTemplate.name && 
+                                     character.rarity === 'rare' &&
+                                     character.isRecruited
+                    );
+
+                    if (existingCharacter) {
+                        // 角色已存在，增加多重抽取计数
+                        if (!existingCharacter.multiCount) {
+                            existingCharacter.multiCount = 1;
+                        }
+                        existingCharacter.multiCount += 1;
+                        
+                        // 更新多重加成属性
+                        this.updateMultiBonusStats(existingCharacter);
+                        
+                        // 创建一个副本用于显示结果
+                        const rCharacterCopy = {...existingCharacter};
+                        result.push(rCharacterCopy);
+                        continue;
+                    }
+
                     // 复制模板并调整ID和稀有度
                     const rCharacter = {
                         ...rTemplate,
@@ -748,7 +887,8 @@ const Character = {
                             totalHealing: 0,
                             mvpCount: 0,
                             battlesParticipated: 0
-                        }
+                        },
+                        multiCount: 1
                     };
 
                     result.push(rCharacter);
@@ -762,6 +902,29 @@ const Character = {
                 if (this.srCharacters && this.srCharacters.length > 0) {
                     const srIndex = Math.floor(Math.random() * this.srCharacters.length);
                     const srTemplate = this.srCharacters[srIndex];
+
+                    // 在添加新角色前，检查是否已存在该角色
+                    const existingCharacter = Object.values(this.characters).find(
+                        character => character.name === srTemplate.name && 
+                                     character.rarity === 'epic' &&
+                                     character.isRecruited
+                    );
+
+                    if (existingCharacter) {
+                        // 角色已存在，增加多重抽取计数
+                        if (!existingCharacter.multiCount) {
+                            existingCharacter.multiCount = 1;
+                        }
+                        existingCharacter.multiCount += 1;
+                        
+                        // 更新多重加成属性
+                        this.updateMultiBonusStats(existingCharacter);
+                        
+                        // 创建一个副本用于显示结果
+                        const srCharacterCopy = {...existingCharacter};
+                        result.push(srCharacterCopy);
+                        continue;
+                    }
 
                     // 复制模板并调整ID和稀有度
                     const srCharacter = {
@@ -786,7 +949,8 @@ const Character = {
                             totalHealing: 0,
                             mvpCount: 0,
                             battlesParticipated: 0
-                        }
+                        },
+                        multiCount: 1
                     };
 
                     result.push(srCharacter);
@@ -800,6 +964,29 @@ const Character = {
                 if (this.ssrCharacters && this.ssrCharacters.length > 0) {
                     const ssrIndex = Math.floor(Math.random() * this.ssrCharacters.length);
                     const ssrTemplate = this.ssrCharacters[ssrIndex];
+
+                    // 在添加新角色前，检查是否已存在该角色
+                    const existingCharacter = Object.values(this.characters).find(
+                        character => character.name === ssrTemplate.name && 
+                                     character.rarity === 'legendary' &&
+                                     character.isRecruited
+                    );
+
+                    if (existingCharacter) {
+                        // 角色已存在，增加多重抽取计数
+                        if (!existingCharacter.multiCount) {
+                            existingCharacter.multiCount = 1;
+                        }
+                        existingCharacter.multiCount += 1;
+                        
+                        // 更新多重加成属性
+                        this.updateMultiBonusStats(existingCharacter);
+                        
+                        // 创建一个副本用于显示结果
+                        const ssrCharacterCopy = {...existingCharacter};
+                        result.push(ssrCharacterCopy);
+                        continue;
+                    }
 
                     // 复制模板并调整ID和稀有度
                     const ssrCharacter = {
@@ -824,7 +1011,8 @@ const Character = {
                             totalHealing: 0,
                             mvpCount: 0,
                             battlesParticipated: 0
-                        }
+                        },
+                        multiCount: 1
                     };
 
                     result.push(ssrCharacter);
@@ -834,6 +1022,29 @@ const Character = {
                 else if (this.srCharacters && this.srCharacters.length > 0) {
                     const srIndex = Math.floor(Math.random() * this.srCharacters.length);
                     const srTemplate = this.srCharacters[srIndex];
+
+                    // 在添加新角色前，检查是否已存在该角色
+                    const existingCharacter = Object.values(this.characters).find(
+                        character => character.name === srTemplate.name && 
+                                     character.rarity === 'epic' &&
+                                     character.isRecruited
+                    );
+
+                    if (existingCharacter) {
+                        // 角色已存在，增加多重抽取计数
+                        if (!existingCharacter.multiCount) {
+                            existingCharacter.multiCount = 1;
+                        }
+                        existingCharacter.multiCount += 1;
+                        
+                        // 更新多重加成属性
+                        this.updateMultiBonusStats(existingCharacter);
+                        
+                        // 创建一个副本用于显示结果
+                        const srCharacterCopy = {...existingCharacter};
+                        result.push(srCharacterCopy);
+                        continue;
+                    }
 
                     // 复制模板并调整ID和稀有度
                     const srCharacter = {
@@ -858,7 +1069,8 @@ const Character = {
                             totalHealing: 0,
                             mvpCount: 0,
                             battlesParticipated: 0
-                        }
+                        },
+                        multiCount: 1
                     };
 
                     result.push(srCharacter);
@@ -875,7 +1087,8 @@ const Character = {
                     // 复制模板并调整ID
                     const legendCharacter = {
                         ...legendTemplate,
-                        id: `generated_legend_${Date.now()}_${i}`
+                        id: `generated_legend_${Date.now()}_${i}`,
+                        multiCount: 1
                     };
 
                     result.push(legendCharacter);
@@ -885,6 +1098,29 @@ const Character = {
                     if (this.ssrCharacters && this.ssrCharacters.length > 0) {
                         const ssrIndex = Math.floor(Math.random() * this.ssrCharacters.length);
                         const ssrTemplate = this.ssrCharacters[ssrIndex];
+
+                        // 在添加新角色前，检查是否已存在该角色
+                        const existingCharacter = Object.values(this.characters).find(
+                            character => character.name === ssrTemplate.name && 
+                                         character.rarity === 'legendary' &&
+                                         character.isRecruited
+                        );
+
+                        if (existingCharacter) {
+                            // 角色已存在，增加多重抽取计数
+                            if (!existingCharacter.multiCount) {
+                                existingCharacter.multiCount = 1;
+                            }
+                            existingCharacter.multiCount += 1;
+                            
+                            // 更新多重加成属性
+                            this.updateMultiBonusStats(existingCharacter);
+                            
+                            // 创建一个副本用于显示结果
+                            const ssrCharacterCopy = {...existingCharacter};
+                            result.push(ssrCharacterCopy);
+                            continue;
+                        }
 
                         // 复制模板并调整ID和稀有度
                         const ssrCharacter = {
@@ -909,7 +1145,8 @@ const Character = {
                                 totalHealing: 0,
                                 mvpCount: 0,
                                 battlesParticipated: 0
-                            }
+                            },
+                            multiCount: 1
                         };
 
                         result.push(ssrCharacter);
@@ -919,6 +1156,29 @@ const Character = {
                     else if (this.srCharacters && this.srCharacters.length > 0) {
                         const srIndex = Math.floor(Math.random() * this.srCharacters.length);
                         const srTemplate = this.srCharacters[srIndex];
+
+                        // 在添加新角色前，检查是否已存在该角色
+                        const existingCharacter = Object.values(this.characters).find(
+                            character => character.name === srTemplate.name && 
+                                         character.rarity === 'epic' &&
+                                         character.isRecruited
+                        );
+
+                        if (existingCharacter) {
+                            // 角色已存在，增加多重抽取计数
+                            if (!existingCharacter.multiCount) {
+                                existingCharacter.multiCount = 1;
+                            }
+                            existingCharacter.multiCount += 1;
+                            
+                            // 更新多重加成属性
+                            this.updateMultiBonusStats(existingCharacter);
+                            
+                            // 创建一个副本用于显示结果
+                            const srCharacterCopy = {...existingCharacter};
+                            result.push(srCharacterCopy);
+                            continue;
+                        }
 
                         // 复制模板并调整ID和稀有度
                         const srCharacter = {
@@ -943,7 +1203,8 @@ const Character = {
                                 totalHealing: 0,
                                 mvpCount: 0,
                                 battlesParticipated: 0
-                            }
+                            },
+                            multiCount: 1
                         };
 
                         result.push(srCharacter);
@@ -1016,7 +1277,8 @@ const Character = {
                     totalHealing: 0,
                     mvpCount: 0,
                     battlesParticipated: 0
-                }
+                },
+                multiCount: 1
             };
 
             result.push(character);
@@ -1438,6 +1700,7 @@ const Character = {
             scores: mvpScores
         };
     },
+
 
 
     /**

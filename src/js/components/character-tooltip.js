@@ -141,13 +141,39 @@ const CharacterTooltip = {
         }
         
         // 对于从模板获取的角色，其 currentStats 可能不存在，需要处理
-        if (!character.currentStats && character.baseStats) {
-            character.currentStats = JSON.parse(JSON.stringify(character.baseStats));
+        // 同时确保 baseStats, weaponBonusStats, multiBonusStats 也存在，至少是空对象，以避免后续访问 undefined
+        character.baseStats = character.baseStats || {};
+        character.weaponBonusStats = character.weaponBonusStats || {};
+        character.multiBonusStats = character.multiBonusStats || {};
+        
+        if (!character.currentStats) {
+            // 如果 currentStats 不存在，尝试基于其他属性计算或至少初始化
+            // 这里的逻辑可能需要根据 character.js 中的最终计算方式调整
+            // 简单回退到 baseStats + multiBonusStats (如果 weaponBonusStats 应该包含 baseStats)
+            // 或者直接使用 baseStats 作为基础
+            let tempCurrentStats = JSON.parse(JSON.stringify(character.weaponBonusStats || character.baseStats || {}));
+            if (character.multiBonusStats) {
+                for (const key in character.multiBonusStats) {
+                    if (tempCurrentStats.hasOwnProperty(key)) {
+                        tempCurrentStats[key] += character.multiBonusStats[key];
+                    } else {
+                        tempCurrentStats[key] = character.multiBonusStats[key];
+                    }
+                }
+            }
+            character.currentStats = tempCurrentStats;
         }
-        // 确保 maxHp 存在
-        if (character.currentStats && typeof character.currentStats.maxHp === 'undefined' && character.currentStats.hp) {
-            character.currentStats.maxHp = character.currentStats.hp;
-        }
+
+        // 确保 maxHp 存在于所有相关属性对象中，如果只有 hp
+        const ensureMaxHp = (statsObj) => {
+            if (statsObj && typeof statsObj.maxHp === 'undefined' && statsObj.hp !== undefined) {
+                statsObj.maxHp = statsObj.hp;
+            }
+        };
+        ensureMaxHp(character.baseStats);
+        ensureMaxHp(character.weaponBonusStats);
+        ensureMaxHp(character.multiBonusStats); // 虽然 multiBonus 通常是增量，但以防万一
+        ensureMaxHp(character.currentStats);
 
 
         this.tooltipElement.innerHTML = this.generateTooltipContent(character);
@@ -209,6 +235,7 @@ const CharacterTooltip = {
      * @returns {string} HTML内容
      */
     generateTooltipContent(character) {
+        console.log('generateTooltipContent', character);
         if (!character) return '角色信息不可用';
 
         const name = character.name || '未知角色';
@@ -223,12 +250,6 @@ const CharacterTooltip = {
             ? Character.types[character.type]
             : { name: character.type || '未知' };
 
-        // 优先使用 currentStats，如果不存在则使用 baseStats
-        const stats = character.currentStats || character.baseStats || {};
-        const hp = stats.hp !== undefined ? Math.round(stats.hp) : 'N/A';
-        const maxHp = stats.maxHp !== undefined ? Math.round(stats.maxHp) : (stats.hp !== undefined ? Math.round(stats.hp) : 'N/A');
-        const attack = stats.attack !== undefined ? Math.round(stats.attack) : 'N/A';
-        const defense = stats.defense !== undefined ? Math.round(stats.defense) : 'N/A';
         let jobName = '无';
         if (character.job && character.job.current && typeof JobSystem !== 'undefined' && JobSystem.getJobDetails) {
             const jobDetails = JobSystem.getJobDetails(character.job.current);
@@ -236,7 +257,6 @@ const CharacterTooltip = {
         } else if (character.job && character.job.current) {
             jobName = character.job.current;
         }
-
 
         let html = `
             <div class="skill-tooltip-header">
@@ -249,12 +269,91 @@ const CharacterTooltip = {
                 <div><strong>类型:</strong> ${typeData.name}</div>
                 ${character.job ? `<div><strong>职业:</strong> ${jobName} (Lv. ${character.job.level || 1})</div>` : ''}
             </div>
-            <div class="skill-tooltip-stats character-tooltip-stats">
-                <div><span class="skill-tooltip-stat-icon">❤️</span> HP: ${hp} / ${maxHp}</div>
-                <div><span class="skill-tooltip-stat-icon">⚔️</span> 攻击: ${attack}</div>
-                <div><span class="skill-tooltip-stat-icon">🛡️</span> 防御: ${defense}</div>
-            </div>
         `;
+
+        // Helper function to format stat values
+        const formatStatValue = (value, isPercent = false) => {
+            if (value === undefined || value === null) return 'N/A';
+            if (isPercent) return `${(value * 100).toFixed(1)}%`;
+            return Math.round(value);
+        };
+
+        // Helper function to generate HTML for a stats block
+        const generateSingleStatsBlock = (statsObject, title) => {
+            if (!statsObject || Object.keys(statsObject).length === 0) return ''; // Do not display if statsObject is empty
+            
+            let blockHtml = `<div class="skill-tooltip-subheader">${title}:</div>`;
+            blockHtml += '<div class="skill-tooltip-stats character-tooltip-stats">';
+            
+            const hp = formatStatValue(statsObject.hp);
+            // Ensure maxHp is derived correctly if not present
+            const maxHpToDisplay = statsObject.maxHp !== undefined ? formatStatValue(statsObject.maxHp) : (statsObject.hp !== undefined ? formatStatValue(statsObject.hp) : 'N/A');
+
+            const attack = formatStatValue(statsObject.attack);
+            const defense = formatStatValue(statsObject.defense);
+            const crit = formatStatValue(statsObject.crit, true);
+            const critDmg = formatStatValue(statsObject.critDmg, true);
+            // Add other stats like speed, effectHit, effectResist if they exist in statsObject
+            // const speed = formatStatValue(statsObject.speed);
+
+            blockHtml += `<div><span class="skill-tooltip-stat-icon">❤️</span> HP: ${hp}${maxHpToDisplay !== 'N/A' && hp !== maxHpToDisplay ? ' / ' + maxHpToDisplay : (hp !== 'N/A' && maxHpToDisplay === 'N/A' ? ' / ' + hp : (hp !== 'N/A' ? ' / ' + maxHpToDisplay : ''))}</div>`;
+            if (statsObject.attack !== undefined) blockHtml += `<div><span class="skill-tooltip-stat-icon">⚔️</span> 攻击: ${attack}</div>`;
+            if (statsObject.defense !== undefined) blockHtml += `<div><span class="skill-tooltip-stat-icon">🛡️</span> 防御: ${defense}</div>`;
+            if (statsObject.crit !== undefined) blockHtml += `<div><span class="skill-tooltip-stat-icon">🎯</span> 暴击: ${crit}</div>`;
+            if (statsObject.critDmg !== undefined) blockHtml += `<div><span class="skill-tooltip-stat-icon">💥</span> 暴伤: ${critDmg}</div>`;
+            // if (statsObject.speed !== undefined) blockHtml += `<div><span class="skill-tooltip-stat-icon">💨</span> 速度: ${speed}</div>`;
+            blockHtml += '</div>';
+            return blockHtml;
+        };
+
+        let statsHtml = '';
+
+        // 1. 原始基础属性 (character.baseStats)
+        if (character.baseStats && Object.keys(character.baseStats).length > 0) {
+            statsHtml += generateSingleStatsBlock(character.baseStats, '基础属性');
+        }
+
+        // 2. 武器盘加成后的属性 (character.weaponBonusStats)
+        // Only show if different from baseStats or if baseStats is not shown (e.g. not available)
+        if (character.weaponBonusStats && Object.keys(character.weaponBonusStats).length > 0 &&
+            (!character.baseStats || Object.keys(character.baseStats).length === 0 || JSON.stringify(character.weaponBonusStats) !== JSON.stringify(character.baseStats))) {
+            statsHtml += generateSingleStatsBlock(character.weaponBonusStats, '武器盘加成后');
+        }
+
+        // 3. 突破系统附加值 (character.multiBonusStats)
+        if (character.multiBonusStats && Object.keys(character.multiBonusStats).length > 0) {
+            const hasActualMultiBonus = Object.values(character.multiBonusStats).some(val => val !== 0 && val !== undefined && val !== null);
+            if (hasActualMultiBonus) {
+                statsHtml += generateSingleStatsBlock(character.multiBonusStats, '突破系统加成');
+            }
+        }
+        
+        // 4. 最终显示的总属性 (character.currentStats)
+        // Determine the last significant stat block shown for comparison
+        let lastShownStats = null;
+        if (character.multiBonusStats && Object.values(character.multiBonusStats).some(val => val !== 0 && val !== undefined && val !== null)) {
+            // If multiBonus was shown, currentStats should be compared to weaponBonusStats (or baseStats if weaponBonus wasn't shown)
+            // This logic is tricky because multiBonus is an *addition* to weaponBonusStats.
+            // So currentStats = weaponBonusStats + multiBonusStats.
+            // We want to show currentStats if it's meaningfully different from weaponBonusStats (i.e., multiBonus had an effect).
+            lastShownStats = character.weaponBonusStats;
+        } else if (character.weaponBonusStats && Object.keys(character.weaponBonusStats).length > 0 &&
+                   (!character.baseStats || Object.keys(character.baseStats).length === 0 || JSON.stringify(character.weaponBonusStats) !== JSON.stringify(character.baseStats))) {
+            lastShownStats = character.weaponBonusStats;
+        } else if (character.baseStats && Object.keys(character.baseStats).length > 0) {
+            lastShownStats = character.baseStats;
+        }
+
+        if (character.currentStats && Object.keys(character.currentStats).length > 0) {
+            if (!lastShownStats || JSON.stringify(character.currentStats) !== JSON.stringify(lastShownStats)) {
+                statsHtml += generateSingleStatsBlock(character.currentStats, '最终属性 (总计)');
+            } else if (statsHtml.trim() === "" && character.baseStats && JSON.stringify(character.currentStats) === JSON.stringify(character.baseStats)) {
+                // If only base stats exist and currentStats is same as baseStats, and no other blocks were shown, show it as "最终属性"
+                 statsHtml += generateSingleStatsBlock(character.currentStats, '最终属性 (总计)');
+            }
+        }
+        
+        html += statsHtml;
 
         // 技能信息
         if (character.skills && character.skills.length > 0) {
@@ -262,42 +361,18 @@ const CharacterTooltip = {
             html += '<div class="character-tooltip-skills">';
             character.skills.forEach(skillId => {
                 let skillName = skillId;
-                let skillDescription = '点击查看详情'; // 默认描述
-                // 尝试从 SkillLoader 或 JobSystem 获取技能详细信息
                 if (typeof SkillLoader !== 'undefined' && SkillLoader.getSkillById) {
                     const skillData = SkillLoader.getSkillById(skillId);
-                    if (skillData) {
-                        skillName = skillData.name;
-                        skillDescription = skillData.description || skillDescription;
-                    }
+                    if (skillData) skillName = skillData.name;
                 } else if (typeof JobSystem !== 'undefined' && JobSystem.getSkill) {
                      const skillData = JobSystem.getSkill(skillId);
-                     if (skillData) {
-                        skillName = skillData.name;
-                        skillDescription = skillData.description || skillDescription;
-                    }
+                     if (skillData) skillName = skillData.name;
                 }
                 html += `<div class="character-tooltip-skill-item" data-skill-id="${skillId}">${skillName}</div>`;
             });
             html += '</div>';
         }
         
-        // 如果有武器盘加成，显示加成后的属性
-        if (character.weaponBonusStats && JSON.stringify(character.weaponBonusStats) !== JSON.stringify(character.baseStats)) {
-            html += '<div class="skill-tooltip-subheader">武器盘加成后属性:</div>';
-            html += '<div class="skill-tooltip-stats character-tooltip-stats">';
-            const wbs = character.weaponBonusStats;
-            const wbHp = wbs.hp !== undefined ? Math.round(wbs.hp) : 'N/A';
-            const wbMaxHp = wbs.maxHp !== undefined ? Math.round(wbs.maxHp) : (wbs.hp !== undefined ? Math.round(wbs.hp) : 'N/A');
-            const wbAttack = wbs.attack !== undefined ? Math.round(wbs.attack) : 'N/A';
-            const wbDefense = wbs.defense !== undefined ? Math.round(wbs.defense) : 'N/A';
-            html += `<div><span class="skill-tooltip-stat-icon">❤️</span> HP: ${wbHp} / ${wbMaxHp}</div>`;
-            html += `<div><span class="skill-tooltip-stat-icon">⚔️</span> 攻击: ${wbAttack}</div>`;
-            html += `<div><span class="skill-tooltip-stat-icon">🛡️</span> 防御: ${wbDefense}</div>`;
-            html += '</div>';
-        }
-
-
         return html;
     }
 };

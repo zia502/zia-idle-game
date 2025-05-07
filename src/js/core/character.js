@@ -267,33 +267,25 @@ const Character = {
                 window.log(`成功获取角色: ${character.name} (ID: ${characterId})`);
             }
 
-            // 检查是否存在异常状态：有dungeonOriginalStats但不在地下城中
-            const abnormalState = character.dungeonOriginalStats &&
-                                 (!Dungeon || !Dungeon.currentRun);
+            // 检查角色是否在地下城中
+            const inDungeon = typeof Dungeon !== 'undefined' &&
+                              Dungeon.currentRun &&
+                              character.dungeonOriginalStats;
 
-            if (abnormalState) {
-                console.log(`检测到角色 ${character.name} 存在异常状态：有dungeonOriginalStats但不在地下城中，清除它`);
-
-                // 重置currentStats为baseStats的深拷贝
-                character.currentStats = JSON.parse(JSON.stringify(character.baseStats));
-
-                // 清除地下城原始属性
-                delete character.dungeonOriginalStats;
-
-                // 清除地下城已应用的被动技能记录
-                if (character.dungeonAppliedPassives) {
-                    delete character.dungeonAppliedPassives;
-                    console.log(`清除 ${character.name} 的地下城已应用被动技能记录`);
+            // 如果角色不在地下城中，或者其地下城状态异常 (例如有 dungeonOriginalStats 但游戏认为不在地下城)
+            // 则需要确保其 currentStats 和 weaponBonusStats 是基于其最新的 baseStats 和 multiBonusStats 计算的。
+            // 假设角色此时不属于任何特定队伍，因此 teamId 为 null。
+            if (!inDungeon || (character.dungeonOriginalStats && (!Dungeon || !Dungeon.currentRun))) {
+                if (character.dungeonOriginalStats && (!Dungeon || !Dungeon.currentRun)) {
+                    console.log(`检测到角色 ${character.name} 存在异常地下城状态，清除 dungeonOriginalStats。属性将在需要时重新计算。`);
+                    delete character.dungeonOriginalStats;
+                     // 清除地下城相关的被动和BUFF
+                    if (character.dungeonAppliedPassives) delete character.dungeonAppliedPassives;
+                    if (typeof BuffSystem !== 'undefined') BuffSystem.clearAllBuffs(character);
+                    else if (character.buffs) character.buffs = [];
                 }
-
-                // 清除所有BUFF
-                if (typeof BuffSystem !== 'undefined') {
-                    BuffSystem.clearAllBuffs(character);
-                    console.log(`清除 ${character.name} 的所有BUFF`);
-                } else if (character.buffs) {
-                    character.buffs = [];
-                    console.log(`清除 ${character.name} 的所有BUFF（直接清除buffs数组）`);
-                }
+                // console.log(`角色 ${character.name} 不在地下城中或状态异常。注意：属性更新已从此函数移除，应在其他适当位置调用。`);
+                // 移除: this._updateCharacterEffectiveStats(characterId, null);
             }
         }
 
@@ -322,38 +314,25 @@ const Character = {
                               Dungeon.currentRun &&
                               mainCharacter.dungeonOriginalStats;
 
-            // 检查是否存在异常状态：有dungeonOriginalStats但不在地下城中
-            const abnormalState = mainCharacter.dungeonOriginalStats &&
-                                 (!Dungeon || !Dungeon.currentRun);
-
-            if (inDungeon) {
-                // 在地下城中，保留当前状态
-                console.log('主角在地下城中，保留当前状态');
-                return mainCharacter;
-            } else {
-                // 不在地下城中，重置currentStats为baseStats的深拷贝
-                mainCharacter.currentStats = JSON.parse(JSON.stringify(mainCharacter.baseStats));
-
-                // 如果有dungeonOriginalStats但不在地下城中，清除它
-                if (abnormalState) {
-                    console.log('检测到异常状态：有dungeonOriginalStats但不在地下城中，清除它');
+            // 如果主角不在地下城中，或者其地下城状态异常
+            if (!inDungeon || (mainCharacter.dungeonOriginalStats && (!Dungeon || !Dungeon.currentRun))) {
+                if (mainCharacter.dungeonOriginalStats && (!Dungeon || !Dungeon.currentRun)) {
+                    console.log(`检测到主角 ${mainCharacter.name} 存在异常地下城状态，清除 dungeonOriginalStats 并重新计算属性。`);
                     delete mainCharacter.dungeonOriginalStats;
-
-                    // 清除地下城已应用的被动技能记录
-                    if (mainCharacter.dungeonAppliedPassives) {
-                        delete mainCharacter.dungeonAppliedPassives;
-                        console.log(`清除 ${mainCharacter.name} 的地下城已应用被动技能记录`);
-                    }
-
-                    // 清除所有BUFF
-                    if (typeof BuffSystem !== 'undefined') {
-                        BuffSystem.clearAllBuffs(mainCharacter);
-                        console.log(`清除 ${mainCharacter.name} 的所有BUFF`);
-                    } else if (mainCharacter.buffs) {
-                        mainCharacter.buffs = [];
-                        console.log(`清除 ${mainCharacter.name} 的所有BUFF（直接清除buffs数组）`);
+                    if (mainCharacter.dungeonAppliedPassives) delete mainCharacter.dungeonAppliedPassives;
+                    if (typeof BuffSystem !== 'undefined') BuffSystem.clearAllBuffs(mainCharacter);
+                    else if (mainCharacter.buffs) mainCharacter.buffs = [];
+                }
+                // console.log(`主角 ${mainCharacter.name} 不在地下城中或状态异常，更新其有效属性。`);
+                // 尝试获取主角当前所在的队伍ID
+                let teamId = null;
+                if (typeof Team !== 'undefined' && Team.findTeamByMember) {
+                    const team = Team.findTeamByMember(mainCharacter.id);
+                    if (team) {
+                        teamId = team.id;
                     }
                 }
+                this._updateCharacterEffectiveStats(mainCharacter.id, teamId);
             }
         }
 
@@ -376,14 +355,23 @@ const Character = {
         const characterId = data.id || `char_${Date.now()}`;
 
         // 使用传入的baseStats或创建一个默认的基础属性对象
-        const baseStats = data.baseStats;
-        baseStats.maxHp = baseStats.hp;
+        const baseStats = { ...data.baseStats }; // 创建深拷贝，确保原始数据不被修改
+        if (!baseStats.maxHp) baseStats.maxHp = baseStats.hp; // 确保maxHp存在
+        if (!baseStats.maxAttack) baseStats.maxAttack = baseStats.attack; // 确保maxAttack存在, 假设基础攻击力也是最大攻击力
+
         const rarity = data.rarity || 'rare'; // 默认稀有度为rare
         const rarityData = this.rarities[rarity] || this.rarities.rare;
 
         // 对于主角，特性系统已被技能系统取代
         const isMainCharacter = data.isMainCharacter || false;
 
+        // 初始化 multiBonusStats
+        const initialMultiBonusStats = {
+            hp: 0,
+            attack: 0,
+            defense: 0,
+            // 根据需要添加其他可被突破加成的属性
+        };
 
         // 创建角色对象
         const character = {
@@ -395,54 +383,53 @@ const Character = {
             exp: data.exp || 0,
             nextLevelExp: this.calculateNextLevelExp(data.level || 1),
             skills: data.skills || [],
-            baseStats: baseStats,
-            currentStats: {...baseStats},
-            // 新增：武器盘加成后的属性，仅用于界面显示
-            weaponBonusStats: {...baseStats},
-            growthRates: {...typeData.growthRates},
+            baseStats: baseStats, // 纯粹原始基础属性
+            weaponBonusStats: { ...baseStats }, // 初始时，武器盘加成属性等于基础属性
+            multiBonusStats: data.multiBonusStats ? { ...data.multiBonusStats } : initialMultiBonusStats,
+            currentStats: { ...baseStats }, // 初始currentStats，后续会由专门函数更新
+            growthRates: { ...typeData.growthRates },
             isMainCharacter: isMainCharacter,
             isRecruited: data.isRecruited || false,
             rarity: rarity,
             maxLevel: rarityData.maxLevel, // 设置角色等级上限
-            // 战斗相关的临时状态
-            nextAttackCritical: false, // 是否必定暴击
-            shield: 0, // 护盷值
-            // 传说角色的属性加成
+            nextAttackCritical: false,
+            shield: 0,
             bonusMultiplier: data.bonusMultiplier || 0,
-            // 记录战斗表现
             stats: {
                 totalDamage: 0,
                 totalHealing: 0,
                 mvpCount: 0,
                 battlesParticipated: 0
             },
-            // 职业系统（主角专用）
             job: isMainCharacter ? (data.job || {
-                current: 'novice',  // 当前职业
-                level: 1,           // 职业等级
-                history: ['novice'], // 历史职业
+                current: 'novice',
+                level: 1,
+                history: ['novice'],
             }) : null,
-            // 多重抽取相关属性
             multiCount: data.multiCount || 1,
-            multiBonusStats: data.multiBonusStats || null
+            // originalBaseStats 不再需要
         };
 
-        // 如果是传说角色，应用bonusMultiplier
+        // 如果是传说角色，其 bonusMultiplier 应用于纯粹的 baseStats
         if (character.rarity === 'legendary' && character.bonusMultiplier > 0) {
-            // 应用全属性加成
             const multiplier = 1 + character.bonusMultiplier;
             for (const stat in character.baseStats) {
-                character.baseStats[stat] = Math.floor(character.baseStats[stat] * multiplier);
-                character.currentStats[stat] = character.baseStats[stat];
+                if (typeof character.baseStats[stat] === 'number') {
+                    character.baseStats[stat] = Math.floor(character.baseStats[stat] * multiplier);
+                }
             }
+            // weaponBonusStats 和 currentStats 也需要反映这个初始变化
+            character.weaponBonusStats = { ...character.baseStats };
+            character.currentStats = { ...character.baseStats };
         }
         
-        // 如果有多重加成，应用到属性
-        if (character.multiCount > 1 && !character.multiBonusStats) {
-            this.updateMultiBonusStats(character);
-        } else if (character.multiBonusStats) {
-            this.applyMultiBonusToStats(character);
+        // 如果角色在创建时就有 multiCount > 1 且 multiBonusStats 未提供，则计算初始的 multiBonusStats
+        if (character.multiCount > 1 && !data.multiBonusStats) {
+            this.updateMultiBonusStats(character); // updateMultiBonusStats 将填充 character.multiBonusStats
         }
+        // 注意：创建角色后，应调用一个统一的函数来计算最终的 currentStats，
+        // 例如 this._updateCharacterEffectiveStats(character);
+        // 但根据指令，这里只做属性定义和初始计算相关的修改。
 
         return character;
     },
@@ -513,8 +500,8 @@ const Character = {
         const character = this.getCharacter(characterId);
         if (!character) return;
 
+        let statsChanged = false;
         for (let i = 0; i < levels; i++) {
-            // 检查是否已达到最高等级
             if (character.level >= character.maxLevel) {
                 if (typeof UI !== 'undefined' && typeof UI.showMessage === 'function') {
                     UI.showMessage(`${character.name} 已达到最高等级 ${character.maxLevel}`);
@@ -523,56 +510,55 @@ const Character = {
             }
 
             character.level++;
-            console.log("升级前基础:", character.baseStats);
+            statsChanged = true;
+            // console.log("升级前纯粹 baseStats:", JSON.parse(JSON.stringify(character.baseStats)));
 
-            // 如果是主角且有职业，使用职业属性
+            // 等级提升直接修改纯粹的 baseStats
             if (character.isMainCharacter && character.job && typeof JobSystem !== 'undefined') {
-                // 获取当前职业信息
                 const jobId = character.job.current;
                 const job = JobSystem.getJob(jobId);
-
                 if (job && job.baseStats && job.maxStats) {
-                    // 根据职业等级在baseStats和maxStats之间进行插值
-                    const jobLevel = character.job.level || 1;
-                    const levelRatio = (jobLevel - 1) / 19; // 1级为0，20级为1
-
-                    // 更新基础属性
+                    const jobLevel = character.job.level || 1; // 假设职业等级与角色等级同步或有自己的逻辑
+                    const levelRatio = Math.min(1, Math.max(0, (jobLevel - 1) / 19));
                     for (const stat in job.baseStats) {
-                        if (job.maxStats[stat]) {
+                        if (job.maxStats[stat] && character.baseStats.hasOwnProperty(stat)) {
                             const baseValue = job.baseStats[stat];
                             const maxValue = job.maxStats[stat];
-                            const newValue = Math.floor(baseValue + (maxValue - baseValue) * levelRatio);
-
-                            console.log("更新角色属性1");
-                            console.log(newValue);
-                            // 更新角色属性
-                            character.baseStats[stat] = newValue;
+                            character.baseStats[stat] = Math.floor(baseValue + (maxValue - baseValue) * levelRatio);
                         }
                     }
-
-                    console.log(`根据职业 ${job.name} (等级 ${jobLevel}) 更新角色属性 ${jobLevel}`);
-                } else {
-                    // 如果没有职业信息，使用默认成长率
-                    character.baseStats.hp += character.growthRates.hp;
-                    character.baseStats.attack += character.growthRates.attack;
+                } else { // 回退到成长率
+                    character.baseStats.hp = (character.baseStats.hp || 0) + (character.growthRates.hp || 0);
+                    character.baseStats.attack = (character.baseStats.attack || 0) + (character.growthRates.attack || 0);
+                    // 其他属性...
                 }
             } else {
-                // 非主角或没有职业，使用默认成长率
-                character.baseStats.hp += character.growthRates.hp;
-                character.baseStats.attack += character.growthRates.attack;
+                character.baseStats.hp = (character.baseStats.hp || 0) + (character.growthRates.hp || 0);
+                character.baseStats.attack = (character.baseStats.attack || 0) + (character.growthRates.attack || 0);
+                // 其他属性...
             }
+            
+            // 确保 maxHp 和 maxAttack 更新
+            if (character.baseStats.hasOwnProperty('hp')) character.baseStats.maxHp = character.baseStats.hp;
+            if (character.baseStats.hasOwnProperty('attack')) character.baseStats.maxAttack = character.baseStats.attack;
 
 
-            console.log('升级后的基础属性:', character.baseStats);
-            // TODO 可能需要触发一次 切换武器 来更新weaponBonusStats和currentStats
-
-            // 更新下一级所需经验
             character.nextLevelExp = this.calculateNextLevelExp(character.level);
-
-            console.log(`${character.name} 升级到 ${character.level} 级`,character);
+            // console.log(`${character.name} 升级到 ${character.level} 级, 更新后纯粹 baseStats:`, JSON.parse(JSON.stringify(character.baseStats)));
         }
 
-        // 如果是主角，同步更新主角等级
+        if (statsChanged) {
+            // 确定角色当前所属的队伍ID，如果角色不在任何队伍中，teamId 可以是 null
+            let teamId = null;
+            if (typeof Team !== 'undefined' && Team.findTeamByMember) {
+                const team = Team.findTeamByMember(characterId);
+                if (team) {
+                    teamId = team.id;
+                }
+            }
+            this._updateCharacterEffectiveStats(characterId, teamId);
+        }
+
         if (character.isMainCharacter) {
             Game.state.playerLevel = character.level;
         }
@@ -635,27 +621,58 @@ const Character = {
                 if (existingLegendary.bonusMultiplier < 0.2) { // 加成上限20%
                     existingLegendary.bonusMultiplier += 0.01; // 每次加1%
 
-                    // 更新基础属性
-                    for (const stat in existingLegendary.baseStats) {
-                        const baseValue = this.types[existingLegendary.type].baseStats[stat] || 0;
-                        existingLegendary.baseStats[stat] = Math.floor(
-                            baseValue * (1 + existingLegendary.bonusMultiplier)
-                        );
-                        existingLegendary.currentStats[stat] = existingLegendary.baseStats[stat];
+                    // 更新基础属性 (bonusMultiplier 应用于纯粹的 baseStats)
+                    // 需要获取该传说角色最初的、未被 bonusMultiplier 影响的原始 baseStats
+                    // 假设 legendaryCharacters 存储的是模板，其 baseStats 是原始的
+                    let originalLegendaryTemplate = null;
+                    if (Array.isArray(this.legendaryCharacters)) {
+                         originalLegendaryTemplate = this.legendaryCharacters.find(c => c.id === template.id || c.name === template.name); // 通过id或name查找原始模板
                     }
 
+                    if (originalLegendaryTemplate && originalLegendaryTemplate.baseStats) {
+                        const multiplier = 1 + existingLegendary.bonusMultiplier;
+                        for (const stat in originalLegendaryTemplate.baseStats) {
+                            if (existingLegendary.baseStats.hasOwnProperty(stat)) {
+                                existingLegendary.baseStats[stat] = Math.floor(originalLegendaryTemplate.baseStats[stat] * multiplier);
+                            }
+                        }
+                        // 确保 maxHp 和 maxAttack 更新
+                        if (existingLegendary.baseStats.hasOwnProperty('hp')) existingLegendary.baseStats.maxHp = existingLegendary.baseStats.hp;
+                        if (existingLegendary.baseStats.hasOwnProperty('attack')) existingLegendary.baseStats.maxAttack = existingLegendary.baseStats.attack;
+                    } else {
+                        // 如果找不到原始模板，这是一个潜在问题，可能导致加成计算不准确
+                        console.warn(`无法找到传说角色 ${template.name} 的原始模板以应用 bonusMultiplier。`);
+                        // 作为回退，可以尝试基于现有 baseStats 和旧的 multiplier 来反推，但这不理想
+                    }
+                    
+                    let teamId = null;
+                    if (typeof Team !== 'undefined' && Team.findTeamByMember) {
+                        const team = Team.findTeamByMember(existingLegendary.id);
+                        if (team) teamId = team.id;
+                    }
+                    this._updateCharacterEffectiveStats(existingLegendary.id, teamId);
                     UI.showNotification(`已增强 ${existingLegendary.name} 的属性 (加成: ${Math.floor(existingLegendary.bonusMultiplier * 100)}%)`);
-                } else {
-                    // 已达到20%上限，直接加固定值
-                    for (const stat in existingLegendary.baseStats) {
-                        existingLegendary.baseStats[stat] += 1;
-                        existingLegendary.currentStats[stat] += 1;
-                    }
 
+                } else {
+                    // 已达到20%上限，直接加固定值到 baseStats
+                    for (const stat in existingLegendary.baseStats) {
+                        if (typeof existingLegendary.baseStats[stat] === 'number') {
+                             existingLegendary.baseStats[stat] += 1;
+                        }
+                    }
+                     // 确保 maxHp 和 maxAttack 更新
+                    if (existingLegendary.baseStats.hasOwnProperty('hp')) existingLegendary.baseStats.maxHp = existingLegendary.baseStats.hp;
+                    if (existingLegendary.baseStats.hasOwnProperty('attack')) existingLegendary.baseStats.maxAttack = existingLegendary.baseStats.attack;
+
+                    let teamId = null;
+                    if (typeof Team !== 'undefined' && Team.findTeamByMember) {
+                        const team = Team.findTeamByMember(existingLegendary.id);
+                        if (team) teamId = team.id;
+                    }
+                    this._updateCharacterEffectiveStats(existingLegendary.id, teamId);
                     UI.showNotification(`已增强 ${existingLegendary.name} 的全部属性 +1`);
                 }
-
-                return existingLegendary.id; // 返回现有角色ID
+                return existingLegendary.id;
             }
         }
 
@@ -677,22 +694,26 @@ const Character = {
             }
             existingCharacter.multiCount += 1;
 
-            // 计算并更新多重加成属性
+            // 计算并更新 multiBonusStats (纯增量)
             const refundInfo = this.updateMultiBonusStats(existingCharacter);
             
-            // 处理超过上限返还金币的情况
+            // 更新角色的 currentStats 和 weaponBonusStats
+            let teamId = null;
+            if (typeof Team !== 'undefined' && Team.findTeamByMember) {
+                const team = Team.findTeamByMember(existingCharacter.id);
+                if (team) teamId = team.id;
+            }
+            this._updateCharacterEffectiveStats(existingCharacter.id, teamId);
+
             if (refundInfo) {
-                // 增加金币
                 if (typeof Game !== 'undefined' && typeof Game.addGold === 'function') {
                     Game.addGold(refundInfo.refundAmount);
-                    UI.showNotification(`${existingCharacter.name} 已达到多重上限(20)，返还 ${refundInfo.refundAmount} 金币`);
+                    UI.showNotification(`${existingCharacter.name} 已达到多重上限(${MULTI_LIMIT})，返还 ${refundInfo.refundAmount} 金币`);
                 }
             } else {
-                // 显示正常通知
                 UI.showNotification(`已增强 ${existingCharacter.name} (重复 +${existingCharacter.multiCount - 1})`);
             }
-            
-            return existingCharacter.id; // 返回现有角色ID
+            return existingCharacter.id;
         }
 
         // 创建新角色ID
@@ -712,118 +733,73 @@ const Character = {
         // 添加角色
         const newCharacterId = this.addCharacter(characterData);
         if (newCharacterId) {
+            // 新创建的角色，其 currentStats 和 weaponBonusStats 在 createCharacter 中已基于 baseStats 初始化。
+            // 如果需要立即应用队伍的武器盘（如果角色直接加入队伍），则需要调用 _updateCharacterEffectiveStats
+            // 假设新招募的角色暂时不属于任何队伍，其 weaponBonusStats 等于 baseStats。
+            // 如果有默认队伍或立即分配队伍的逻辑，这里需要调整。
+            this._updateCharacterEffectiveStats(newCharacterId, null); // 假设初始不在队伍
             UI.showNotification(`成功招募 ${template.name}`);
             Game.stats.charactersRecruited++;
         }
-
         return newCharacterId;
     },
 
     /**
-     * 更新角色的多重加成属性
+     * 更新角色的多重加成属性 (multiBonusStats) - 这些是纯粹的增量值
      * @param {object} character - 角色对象
      * @returns {object|null} 如果超过上限返回金币补偿信息，否则返回null
      */
     updateMultiBonusStats(character) {
-        if (!character || !character.multiCount || character.multiCount <= 1) {
-            // 如果没有多重加成(multiCount <= 1)，则清除多重加成属性
+        if (!character || !character.multiCount) {
             if (character) {
-                character.multiBonusStats = null;
+                 character.multiBonusStats = character.multiBonusStats || { hp: 0, attack: 0, defense: 0 };
             }
             return null;
         }
 
-        // 多重抽取上限为20次
-        const MULTI_LIMIT = 20;
-        
-        // 检查是否超过上限
-        if (character.multiCount > MULTI_LIMIT) {
-            // 根据稀有度决定返还金币数量
-            let refundAmount = 0;
-            if (character.rarity === 'rare') {
-                refundAmount = 10; // R角色返还10金币
-            } else if (character.rarity === 'epic') {
-                refundAmount = 100; // SR角色返还100金币
-            } else if (character.rarity === 'legendary') {
-                refundAmount = 1000; // SSR角色返还1000金币
-            }
-            
-            // 保持multiCount不超过上限
-            character.multiCount = MULTI_LIMIT;
-            
-            // 返回金币补偿信息
-            return {
-                refundAmount: refundAmount,
-                characterName: character.name
-            };
+        // 确保 multiBonusStats 对象存在且有基本结构
+        character.multiBonusStats = character.multiBonusStats || { hp: 0, attack: 0, defense: 0 };
+
+
+        if (character.multiCount <= 1) {
+            character.multiBonusStats.hp = 0;
+            character.multiBonusStats.attack = 0;
+            character.multiBonusStats.defense = 0;
+            // 重置其他可能的突破属性
+            return null;
         }
 
-        // 计算多重加成的数值 (多重次数-1，因为第一次获得不计入加成)
-        const bonusCount = character.multiCount - 1;
-        
-        // 初始化多重加成属性
-        if (!character.multiBonusStats) {
-            character.multiBonusStats = {};
+        const MULTI_LIMIT = 20;
+        let effectiveMultiCountForBonus = character.multiCount;
+        let refundInfo = null;
+
+        if (character.multiCount > MULTI_LIMIT) {
+            let refundAmount = 0;
+            if (character.rarity === 'rare') refundAmount = 10;
+            else if (character.rarity === 'epic') refundAmount = 100;
+            else if (character.rarity === 'legendary') refundAmount = 1000;
+            
+            refundInfo = {
+                refundAmount: refundAmount * (character.multiCount - MULTI_LIMIT),
+                characterName: character.name
+            };
+            effectiveMultiCountForBonus = MULTI_LIMIT;
         }
+
+        const bonusCount = effectiveMultiCountForBonus - 1; // 实际产生加成的次数
         
-        // 计算HP加成: 最大HP的1%乘以多重次数
-        if (character.baseStats.maxHp) {
-            character.multiBonusStats.hp = Math.floor(character.baseStats.maxHp * 0.01 * bonusCount);
-        }
-        
-        // 计算攻击力加成: 最大攻击力的1%乘以多重次数
-        if (character.baseStats.maxAttack) {
-            character.multiBonusStats.attack = Math.floor(character.baseStats.maxAttack * 0.01 * bonusCount);
-        }
-        
-        // 防御力加成: 每次+1
+        // 使用角色的纯粹 baseStats 来计算增量
+        const pureBaseStats = character.baseStats; // 假设此刻 baseStats 是纯净的
+
+        character.multiBonusStats.hp = Math.floor((pureBaseStats.maxHp || pureBaseStats.hp || 0) * 0.01 * bonusCount);
+        character.multiBonusStats.attack = Math.floor((pureBaseStats.maxAttack || pureBaseStats.attack || 0) * 0.01 * bonusCount);
         character.multiBonusStats.defense = bonusCount;
         
-        // 应用加成到基础属性和当前属性
-        this.applyMultiBonusToStats(character);
-        
-        console.log(`更新了 ${character.name} 的多重加成: +${bonusCount}`, character.multiBonusStats);
-        
-        return null;
+        // console.log(`更新了 ${character.name} 的 multiBonusStats (纯增量): ${bonusCount} 次突破`, character.multiBonusStats);
+        return refundInfo;
     },
     
-    /**
-     * 将多重加成应用到角色属性
-     * @param {object} character - 角色对象
-     */
-    applyMultiBonusToStats(character) {
-        if (!character || !character.multiBonusStats) return;
-        
-        // 先去除之前可能已应用的加成
-        // 这需要在角色对象中维护原始基础属性
-        if (!character.originalBaseStats) {
-            // 首次应用时保存原始属性
-            character.originalBaseStats = {...character.baseStats};
-        } else {
-            // 恢复到原始属性
-            character.baseStats = {...character.originalBaseStats};
-        }
-        
-        // 应用HP加成
-        if (character.multiBonusStats.hp) {
-            character.baseStats.hp += character.multiBonusStats.hp;
-            character.baseStats.maxHp += character.multiBonusStats.hp;
-        }
-        
-        // 应用攻击力加成
-        if (character.multiBonusStats.attack) {
-            character.baseStats.attack += character.multiBonusStats.attack;
-            character.baseStats.maxAttack += character.multiBonusStats.attack;
-        }
-        
-        // 应用防御力加成
-        if (character.multiBonusStats.defense) {
-            character.baseStats.defense += character.multiBonusStats.defense;
-        }
-        
-        // 更新当前属性
-        character.currentStats = {...character.baseStats};
-    },
+    // applyMultiBonusToStats 已废弃
 
     /**
      * 获取角色招募成本
@@ -1389,177 +1365,178 @@ const Character = {
      * @param {string} teamId - 队伍ID
      */
     updateTeamWeaponBonusStats(teamId) {
-        console.log(`更新队伍 ${teamId} 中所有角色的武器盘加成属性`);
-
+        // console.log(`更新队伍 ${teamId} 中所有角色的武器盘加成属性及最终属性`);
         const team = Team.getTeam(teamId);
         if (!team || !team.members || team.members.length === 0) {
-            console.log('队伍不存在或没有成员');
+            // console.log('队伍不存在或没有成员，无法更新属性');
             return;
         }
-
-        // 遍历队伍中的所有角色
         for (const characterId of team.members) {
-            // 获取角色完整属性并更新weaponBonusStats
-            this.getCharacterFullStats(characterId, teamId, true);
+            this._updateCharacterEffectiveStats(characterId, teamId);
+        }
+        // console.log(`队伍 ${teamId} 中所有角色的属性已更新`);
+    },
+
+    _ensureStatsIntegrity(statsObject, baseReferenceStats) {
+        if (!statsObject) return;
+        if (statsObject.hasOwnProperty('hp')) {
+            statsObject.maxHp = statsObject.hp;
+        } else if (baseReferenceStats && baseReferenceStats.hasOwnProperty('hp')) {
+            statsObject.hp = baseReferenceStats.hp;
+            statsObject.maxHp = baseReferenceStats.hp;
         }
 
-        console.log(`队伍 ${teamId} 中所有角色的武器盘加成属性已更新`);
+        if (statsObject.hasOwnProperty('attack')) {
+            statsObject.maxAttack = statsObject.attack; // 假设攻击力也是最大攻击力
+        } else if (baseReferenceStats && baseReferenceStats.hasOwnProperty('attack')) {
+            statsObject.attack = baseReferenceStats.attack;
+            statsObject.maxAttack = baseReferenceStats.attack;
+        }
+        // 可以为其他属性添加类似逻辑
+    },
+    
+    // 新的私有辅助函数，用于计算 (纯粹 baseStats + 武器盘加成)
+    _calculateWeaponAugmentedStats(character, teamId) {
+        if (!character) return null;
+
+        const inDungeon = typeof Dungeon !== 'undefined' && Dungeon.currentRun && character.dungeonOriginalStats;
+        let sourceBaseStats = inDungeon ? { ...character.dungeonOriginalStats } : { ...character.baseStats };
+        
+        // 确保 sourceBaseStats 完整性
+        this._ensureStatsIntegrity(sourceBaseStats, character.baseStats);
+
+
+        let augmentedStats = { ...sourceBaseStats };
+
+        const team = teamId ? Team.getTeam(teamId) : null;
+        const weaponBoard = team && team.weaponBoardId ? Weapon.getWeaponBoard(team.weaponBoardId) : null;
+
+        if (weaponBoard) {
+            const boardStats = Weapon.calculateWeaponBoardStats(team.weaponBoardId);
+            // console.log(`角色 ${character.name} 的武器盘 ${team.weaponBoardId} 加成:`, boardStats);
+
+            if (boardStats) {
+                // 应用固定值加成
+                if (boardStats.base) {
+                    for (const [stat, value] of Object.entries(boardStats.base)) {
+                        augmentedStats[stat] = (augmentedStats[stat] || 0) + value;
+                    }
+                }
+                // 应用百分比加成 (作用于固定值加成之后的基础属性)
+                if (boardStats.percentage) {
+                    for (const [stat, value] of Object.entries(boardStats.percentage)) {
+                        // 百分比加成通常作用于原始基础攻击力/HP等，而不是已累加固定值的部分
+                        // 但当前 Weapon.calculateWeaponBoardStats 似乎已处理好，这里直接乘
+                        augmentedStats[stat] = (augmentedStats[stat] || 0) * (1 + value);
+                    }
+                }
+                // 应用元素属性加成
+                if (boardStats.elementStats && character.attribute) {
+                    const elementBonus = boardStats.elementStats[character.attribute];
+                    if (elementBonus) {
+                        if (elementBonus.attack) augmentedStats.attack = (augmentedStats.attack || 0) + Math.floor(sourceBaseStats.attack * (elementBonus.attack / 100));
+                        if (elementBonus.hp) augmentedStats.hp = (augmentedStats.hp || 0) + Math.floor(sourceBaseStats.hp * (elementBonus.hp / 100));
+                        if (elementBonus.critRate) augmentedStats.critRate = (augmentedStats.critRate || 0.05) + (elementBonus.critRate / 100);
+                        if (elementBonus.daRate) augmentedStats.daRate = (augmentedStats.daRate || 0.1) + (elementBonus.daRate / 100);
+                        if (elementBonus.taRate) augmentedStats.taRate = (augmentedStats.taRate || 0.05) + (elementBonus.taRate / 100);
+                        if (elementBonus.exAttack) augmentedStats.exAttack = (augmentedStats.exAttack || 0) + (elementBonus.exAttack / 100);
+                        if (elementBonus.defense) augmentedStats.defense = (augmentedStats.defense || 0) + elementBonus.defense;
+                        if (elementBonus.stamina) augmentedStats.stamina = (augmentedStats.stamina || 0) + elementBonus.stamina;
+                        if (elementBonus.enmity) augmentedStats.enmity = (augmentedStats.enmity || 0) + elementBonus.enmity;
+                    }
+                }
+            }
+        }
+        
+        // 确保 augmentedStats 完整性并取整
+        this._ensureStatsIntegrity(augmentedStats, sourceBaseStats);
+        for (const stat in augmentedStats) {
+            if (typeof augmentedStats[stat] === 'number' && !['critRate', 'daRate', 'taRate', 'exAttack'].includes(stat)) {
+                augmentedStats[stat] = Math.max(0, Math.floor(augmentedStats[stat]));
+            } else if (typeof augmentedStats[stat] === 'number') {
+                 augmentedStats[stat] = Math.max(0, augmentedStats[stat]);
+            }
+        }
+        return augmentedStats;
     },
 
     /**
-     * 获取角色完整状态（包括装备加成）
+     * 获取角色最终的、用于战斗和显示的属性。
+     * (纯粹 baseStats + 武器盘加成) + multiBonusStats
+     * 此函数也会用 (纯粹 baseStats + 武器盘加成) 更新 character.weaponBonusStats
      * @param {string} characterId - 角色ID
-     * @param {string} teamId - 队伍ID
-     * @param {boolean} updateWeaponBonusStats - 是否更新角色的weaponBonusStats属性
-     * @returns {object} 角色完整状态
+     * @param {string | null} teamId - 角色所在队伍的ID，如果不在队伍中则为null
+     * @returns {object | null} 角色最终属性对象，或在角色不存在时返回null
      */
-    getCharacterFullStats(characterId, teamId, updateWeaponBonusStats = false) {
+    getCharacterFullStats(characterId, teamId) {
+        const character = this.characters[characterId]; // 直接从集合中获取角色
+        if (!character) {
+            console.error(`[getCharacterFullStats] 无法通过ID直接从 this.characters 获取角色: ${characterId}`);
+            return null;
+        }
+
+        // 1. 计算 (纯粹 baseStats + 武器盘加成)
+        const statsAfterWeapon = this._calculateWeaponAugmentedStats(character, teamId);
+        if (!statsAfterWeapon) return { ...character.baseStats }; // 回退
+
+        // 2. 更新角色对象上的 weaponBonusStats
+        character.weaponBonusStats = { ...statsAfterWeapon };
+        this._ensureStatsIntegrity(character.weaponBonusStats, character.baseStats);
+
+
+        // 3. 在 statsAfterWeapon 的基础上应用 multiBonusStats (纯粹增量)
+        let finalStats = { ...statsAfterWeapon };
+        if (character.multiBonusStats) {
+            for (const stat in character.multiBonusStats) {
+                if (character.multiBonusStats.hasOwnProperty(stat) && typeof character.multiBonusStats[stat] === 'number') {
+                    finalStats[stat] = (finalStats[stat] || 0) + character.multiBonusStats[stat];
+                }
+            }
+        }
+
+        // 4. 确保最终属性的完整性 (如 maxHp) 并取整
+        this._ensureStatsIntegrity(finalStats, character.baseStats); // finalStats.hp 更新后，maxHp 也应更新
+        for (const stat in finalStats) {
+            if (typeof finalStats[stat] === 'number' && !['critRate', 'daRate', 'taRate', 'exAttack'].includes(stat)) {
+                finalStats[stat] = Math.max(0, Math.floor(finalStats[stat]));
+            } else if (typeof finalStats[stat] === 'number') {
+                finalStats[stat] = Math.max(0, finalStats[stat]);
+            }
+        }
+        
+        // console.log(`角色 ${character.name} 的最终属性:`, finalStats);
+        return finalStats;
+    },
+
+    /**
+     * 更新指定角色的 weaponBonusStats 和 currentStats。
+     * 这是在角色属性可能发生变化的各种情景下调用的核心函数。
+     * @param {string} characterId - 角色ID
+     * @param {string | null} teamId - 角色所在队伍的ID，如果不在队伍中则为null
+     */
+    _updateCharacterEffectiveStats(characterId, teamId = null) {
         const character = this.getCharacter(characterId);
-        if (!character) return null;
-
-        const team = Team.getTeam(teamId);
-        if (!team) return character.currentStats;
-
-        // 获取武器盘
-        const weaponBoard = Weapon.getWeaponBoard(team.weaponBoardId);
-        if (!weaponBoard) return character.currentStats;
-
-        // 检查角色是否在地下城中
-        const inDungeon = typeof Dungeon !== 'undefined' &&
-                          Dungeon.currentRun &&
-                          character.dungeonOriginalStats;
-
-        // 开始计算完整状态 - 始终使用baseStats或dungeonOriginalStats作为基础，避免重复计算
-        let baseStats;
-
-        if (inDungeon) {
-            // 在地下城中，使用dungeonOriginalStats作为基础计算武器盘加成
-            console.log('角色在地下城中，使用dungeonOriginalStats作为基础计算武器盘加成');
-            baseStats = {...character.dungeonOriginalStats};
-
-            // 添加地下城中的BUFF效果，但不包括武器盘加成
-            // 这里可以添加地下城特有的效果处理，如果有的话
+        if (!character) {
+            // console.error(`_updateCharacterEffectiveStats: 角色 ${characterId} 未找到`);
+            return;
+        }
+        
+        // getCharacterFullStats 内部会更新 character.weaponBonusStats
+        // 并返回最终的 (base + weapon + multi) 属性
+        const finalEffectiveStats = this.getCharacterFullStats(characterId, teamId);
+        
+        if (finalEffectiveStats) {
+            character.currentStats = finalEffectiveStats;
+            // console.log(`角色 ${character.name} 的 currentStats 已更新:`, character.currentStats);
+            // console.log(`角色 ${character.name} 的 weaponBonusStats 已更新:`, character.weaponBonusStats);
         } else {
-            // 不在地下城中，使用baseStats作为基础
-            console.log('角色不在地下城中，使用baseStats作为基础');
-            baseStats = {...character.baseStats};
+            // console.error(`_updateCharacterEffectiveStats: 无法计算角色 ${characterId} 的最终属性`);
+            // 作为回退，至少确保 currentStats 是 baseStats 的拷贝
+            character.currentStats = { ...character.baseStats };
+            this._ensureStatsIntegrity(character.currentStats, character.baseStats);
+            character.weaponBonusStats = { ...character.baseStats }; // weaponBonusStats 也回退
+             this._ensureStatsIntegrity(character.weaponBonusStats, character.baseStats);
         }
-
-        const fullStats = {...baseStats};
-
-        // 确保所有需要的属性都存在
-        if (fullStats.critRate === undefined) fullStats.critRate = 0.05; // 默认5%暴击率
-        if (fullStats.daRate === undefined) fullStats.daRate = 0.1; // 默认10%双攻率
-        if (fullStats.taRate === undefined) fullStats.taRate = 0.05; // 默认5%三攻率
-        if (fullStats.exAttack === undefined) fullStats.exAttack = 0; // 默认0%EX攻击加成
-        if (fullStats.stamina === undefined) fullStats.stamina = 0; // 默认0浑身值
-        if (fullStats.enmity === undefined) fullStats.enmity = 0; // 默认0背水值
-
-        console.log('计算角色完整属性，基础属性:', baseStats);
-
-        // 应用武器盘加成
-        const boardStats = Weapon.calculateWeaponBoardStats(team.weaponBoardId);
-        console.log('武器盘加成:', boardStats);
-
-        // 确保boardStats和其属性存在
-        if (boardStats && boardStats.base) {
-            // 合并基本属性
-            for (const [stat, value] of Object.entries(boardStats.base)) {
-                if (fullStats[stat] !== undefined) {
-                    fullStats[stat] += value;
-                }
-            }
-        }
-
-        // 确保boardStats和其percentage属性存在
-        if (boardStats && boardStats.percentage) {
-            // 应用百分比加成
-            for (const [stat, value] of Object.entries(boardStats.percentage)) {
-                if (fullStats[stat] !== undefined) {
-                    fullStats[stat] *= (1 + value);
-                }
-            }
-        }
-
-        // 应用元素属性加成
-        if (boardStats && boardStats.elementStats) {
-            const characterElement = character.attribute || 'fire'; // 默认为火属性
-            const elementBonus = boardStats.elementStats[characterElement];
-
-            if (elementBonus) {
-                console.log(`应用${characterElement}元素属性加成:`, elementBonus);
-
-                // 应用攻击力百分比加成
-                if (elementBonus.attack && fullStats.attack !== undefined) {
-                    // 元素攻击力是百分比加成
-                    fullStats.attack += Math.floor(fullStats.attack * (elementBonus.attack / 100));
-                }
-
-                fullStats.maxHp = fullStats.hp;
-                // 应用HP百分比加成
-                if (elementBonus.hp && fullStats.hp !== undefined) {
-                    // 元素HP是百分比加成
-                    fullStats.hp += Math.floor(fullStats.hp * (elementBonus.hp / 100));
-                    fullStats.maxHp = fullStats.hp;
-                }
-
-                // 应用暴击率加成
-                if (elementBonus.critRate) {
-                    fullStats.critRate += elementBonus.critRate / 100; // 转换为小数
-                }
-
-                // 应用DA率加成
-                if (elementBonus.daRate) {
-                    fullStats.daRate += elementBonus.daRate / 100; // 转换为小数
-                }
-
-                // 应用TA率加成
-                if (elementBonus.taRate) {
-                    fullStats.taRate += elementBonus.taRate / 100; // 转换为小数
-                }
-
-                // 应用EX攻击加成
-                if (elementBonus.exAttack) {
-                    fullStats.exAttack += elementBonus.exAttack / 100; // 转换为小数
-                }
-
-                // 应用防御力加成
-                if (elementBonus.defense && fullStats.defense !== undefined) {
-                    fullStats.defense += elementBonus.defense;
-                }
-
-                // 应用浑身加成
-                if (elementBonus.stamina) {
-                    fullStats.stamina += elementBonus.stamina;
-                }
-
-                // 应用背水加成
-                if (elementBonus.enmity) {
-                    fullStats.enmity += elementBonus.enmity;
-                }
-            }
-        }
-
-
-        // 确保属性为正数并取整（只对整数属性取整）
-        for (const stat in fullStats) {
-            if (stat === 'critRate' || stat === 'daRate' || stat === 'taRate' || stat === 'exAttack') {
-                // 这些是小数属性，不需要取整
-                fullStats[stat] = Math.max(0, fullStats[stat]);
-            } else {
-                // 其他属性取整
-                fullStats[stat] = Math.max(0, Math.floor(fullStats[stat]));
-            }
-        }
-
-        // 如果需要，更新角色的weaponBonusStats属性
-        if (updateWeaponBonusStats) {
-            console.log('更新角色的weaponBonusStats属性:', fullStats);
-            character.weaponBonusStats = {...fullStats};
-        }
-
-        console.log('计算完成的完整属性:', fullStats);
-        return fullStats;
     },
 
     /**
@@ -1834,12 +1811,21 @@ const Character = {
         character.job.history.push(newJobId);
 
         // 更新角色基础属性为新职业属性
-        character.baseStats = {...newJobData.baseStats};
+        character.baseStats = {...newJobData.baseStats}; // 这是纯粹的 baseStats
         character.growthRates = {...newJobData.growthRates};
+        
+        // 确保新 baseStats 的完整性
+        this._ensureStatsIntegrity(character.baseStats, null); // 第二个参数为null，因为这是全新的base
 
+        // 转职后，属性发生变化，需要更新 weaponBonusStats 和 currentStats
+        let teamId = null;
+        if (typeof Team !== 'undefined' && Team.findTeamByMember) {
+            const team = Team.findTeamByMember(characterId);
+            if (team) teamId = team.id;
+        }
+        this._updateCharacterEffectiveStats(characterId, teamId);
 
         UI.showNotification(`${character.name} 已成功转职为 ${newJobData.name}！`);
-
         return true;
     },
 

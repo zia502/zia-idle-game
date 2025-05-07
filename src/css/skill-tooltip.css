@@ -270,3 +270,13 @@
 .effect-type-damageReduction {
     color: #0288d1;
 }
+
+.stat-multibonus-positive {
+    color: green;
+    font-weight: bold;
+}
+
+.stat-multibonus-negative {
+    color: red;
+    font-weight: bold;
+}

@@ -271,88 +271,95 @@ const CharacterTooltip = {
             </div>
         `;
 
-        // Helper function to format stat values
-        const formatStatValue = (value, isPercent = false) => {
-            if (value === undefined || value === null) return 'N/A';
-            if (isPercent) return `${(value * 100).toFixed(1)}%`;
-            return Math.round(value);
+        // 新的属性显示逻辑
+        let statsHtml = `<div class="skill-tooltip-subheader">属性:</div>`;
+        statsHtml += `<div class="skill-tooltip-stats character-tooltip-stats">`;
+
+        const weaponStats = character.weaponBonusStats || {};
+        const multiStats = character.multiBonusStats || {};
+        const currentStats = character.currentStats || {}; // 确保 currentStats 可用
+
+        // statDisplayConfig 定义了要显示的属性及其配置
+        // 注意：请根据 character.js 中的实际属性键名调整 'key'
+        const statDisplayConfig = [
+            { key: 'hp', name: '生命', icon: '❤️', isPercent: false, alwaysShow: true },
+            { key: 'attack', name: '攻击', icon: '⚔️', isPercent: false },
+            { key: 'defense', name: '防御', icon: '🛡️', isPercent: false },
+            { key: 'crit', name: '暴击率', icon: '🎯', isPercent: true }, // 假设原键名为 crit
+            { key: 'critDmg', name: '暴击伤害', icon: '💥', isPercent: true }, // 假设原键名为 critDmg
+            { key: 'daRate', name: '连击率', icon: '✨', isPercent: true }, // 假设键名
+            { key: 'taRate', name: '三连击率', icon: '🌟', isPercent: true }, // 假设键名
+            // { key: 'speed', name: '速度', icon: '💨', isPercent: false },
+            // { key: 'effectHit', name: '效果命中', icon: '🔗', isPercent: true },
+            // { key: 'effectResist', name: '效果抵抗', icon: '🛡️‍✨', isPercent: true },
+        ];
+
+        const formatDisplayValue = (value, isPercent) => {
+            if (value === undefined || value === null || isNaN(parseFloat(value))) return (isPercent ? '0.0%' : '0');
+            if (isPercent) return `${(parseFloat(value) * 100).toFixed(1)}%`;
+            return Math.round(parseFloat(value));
         };
-
-        // Helper function to generate HTML for a stats block
-        const generateSingleStatsBlock = (statsObject, title) => {
-            if (!statsObject || Object.keys(statsObject).length === 0) return ''; // Do not display if statsObject is empty
-            
-            let blockHtml = `<div class="skill-tooltip-subheader">${title}:</div>`;
-            blockHtml += '<div class="skill-tooltip-stats character-tooltip-stats">';
-            
-            const hp = formatStatValue(statsObject.hp);
-            // Ensure maxHp is derived correctly if not present
-            const maxHpToDisplay = statsObject.maxHp !== undefined ? formatStatValue(statsObject.maxHp) : (statsObject.hp !== undefined ? formatStatValue(statsObject.hp) : 'N/A');
-
-            const attack = formatStatValue(statsObject.attack);
-            const defense = formatStatValue(statsObject.defense);
-            const crit = formatStatValue(statsObject.crit, true);
-            const critDmg = formatStatValue(statsObject.critDmg, true);
-            // Add other stats like speed, effectHit, effectResist if they exist in statsObject
-            // const speed = formatStatValue(statsObject.speed);
-
-            blockHtml += `<div><span class="skill-tooltip-stat-icon">❤️</span> HP: ${hp}${maxHpToDisplay !== 'N/A' && hp !== maxHpToDisplay ? ' / ' + maxHpToDisplay : (hp !== 'N/A' && maxHpToDisplay === 'N/A' ? ' / ' + hp : (hp !== 'N/A' ? ' / ' + maxHpToDisplay : ''))}</div>`;
-            if (statsObject.attack !== undefined) blockHtml += `<div><span class="skill-tooltip-stat-icon">⚔️</span> 攻击: ${attack}</div>`;
-            if (statsObject.defense !== undefined) blockHtml += `<div><span class="skill-tooltip-stat-icon">🛡️</span> 防御: ${defense}</div>`;
-            if (statsObject.crit !== undefined) blockHtml += `<div><span class="skill-tooltip-stat-icon">🎯</span> 暴击: ${crit}</div>`;
-            if (statsObject.critDmg !== undefined) blockHtml += `<div><span class="skill-tooltip-stat-icon">💥</span> 暴伤: ${critDmg}</div>`;
-            // if (statsObject.speed !== undefined) blockHtml += `<div><span class="skill-tooltip-stat-icon">💨</span> 速度: ${speed}</div>`;
-            blockHtml += '</div>';
-            return blockHtml;
-        };
-
-        let statsHtml = '';
-
-        // 1. 原始基础属性 (character.baseStats)
-        if (character.baseStats && Object.keys(character.baseStats).length > 0) {
-            statsHtml += generateSingleStatsBlock(character.baseStats, '基础属性');
-        }
-
-        // 2. 武器盘加成后的属性 (character.weaponBonusStats)
-        // Only show if different from baseStats or if baseStats is not shown (e.g. not available)
-        if (character.weaponBonusStats && Object.keys(character.weaponBonusStats).length > 0 &&
-            (!character.baseStats || Object.keys(character.baseStats).length === 0 || JSON.stringify(character.weaponBonusStats) !== JSON.stringify(character.baseStats))) {
-            statsHtml += generateSingleStatsBlock(character.weaponBonusStats, '武器盘加成后');
-        }
-
-        // 3. 突破系统附加值 (character.multiBonusStats)
-        if (character.multiBonusStats && Object.keys(character.multiBonusStats).length > 0) {
-            const hasActualMultiBonus = Object.values(character.multiBonusStats).some(val => val !== 0 && val !== undefined && val !== null);
-            if (hasActualMultiBonus) {
-                statsHtml += generateSingleStatsBlock(character.multiBonusStats, '突破系统加成');
-            }
-        }
         
-        // 4. 最终显示的总属性 (character.currentStats)
-        // Determine the last significant stat block shown for comparison
-        let lastShownStats = null;
-        if (character.multiBonusStats && Object.values(character.multiBonusStats).some(val => val !== 0 && val !== undefined && val !== null)) {
-            // If multiBonus was shown, currentStats should be compared to weaponBonusStats (or baseStats if weaponBonus wasn't shown)
-            // This logic is tricky because multiBonus is an *addition* to weaponBonusStats.
-            // So currentStats = weaponBonusStats + multiBonusStats.
-            // We want to show currentStats if it's meaningfully different from weaponBonusStats (i.e., multiBonus had an effect).
-            lastShownStats = character.weaponBonusStats;
-        } else if (character.weaponBonusStats && Object.keys(character.weaponBonusStats).length > 0 &&
-                   (!character.baseStats || Object.keys(character.baseStats).length === 0 || JSON.stringify(character.weaponBonusStats) !== JSON.stringify(character.baseStats))) {
-            lastShownStats = character.weaponBonusStats;
-        } else if (character.baseStats && Object.keys(character.baseStats).length > 0) {
-            lastShownStats = character.baseStats;
-        }
+        statDisplayConfig.forEach(config => {
+            const statKey = config.key;
+            const baseValue = parseFloat(weaponStats[statKey]); // 可能为 NaN
+            const multiValue = parseFloat(multiStats[statKey]); // 可能为 NaN
+            
+            let shouldShow = weaponStats.hasOwnProperty(statKey) ||
+                             (multiStats.hasOwnProperty(statKey) && !isNaN(multiValue) && multiValue !== 0) ||
+                             config.alwaysShow;
 
-        if (character.currentStats && Object.keys(character.currentStats).length > 0) {
-            if (!lastShownStats || JSON.stringify(character.currentStats) !== JSON.stringify(lastShownStats)) {
-                statsHtml += generateSingleStatsBlock(character.currentStats, '最终属性 (总计)');
-            } else if (statsHtml.trim() === "" && character.baseStats && JSON.stringify(character.currentStats) === JSON.stringify(character.baseStats)) {
-                // If only base stats exist and currentStats is same as baseStats, and no other blocks were shown, show it as "最终属性"
-                 statsHtml += generateSingleStatsBlock(character.currentStats, '最终属性 (总计)');
+            if (!shouldShow && currentStats.hasOwnProperty(statKey) && !multiStats.hasOwnProperty(statKey)) {
+                // 特殊情况：属性在 currentStats 中，但不在 multiStats 中（意味着不受 multiBonus 影响）
+                const currentValue = parseFloat(currentStats[statKey]);
+                let statLine = `<div><span class="skill-tooltip-stat-icon">${config.icon}</span> ${config.name}: ${formatDisplayValue(currentValue, config.isPercent)}`;
+                if (statKey === 'hp') {
+                    const currentMaxHp = parseFloat(currentStats.maxHp) || currentValue;
+                    statLine += ` / ${formatDisplayValue(currentMaxHp, false)}`;
+                }
+                statLine += `</div>`;
+                statsHtml += statLine;
+                return;
             }
-        }
-        
+            
+            if (!shouldShow) return;
+
+            const actualBaseValue = isNaN(baseValue) ? 0 : baseValue;
+            const actualMultiValue = isNaN(multiValue) ? 0 : multiValue;
+
+            let baseValueDisplayStr = formatDisplayValue(actualBaseValue, config.isPercent);
+            let multiValueDisplayStr = "";
+
+            if (actualMultiValue > 0) {
+                multiValueDisplayStr = ` <span class="stat-multibonus-positive">+${formatDisplayValue(actualMultiValue, config.isPercent)}</span>`;
+            } else if (actualMultiValue < 0) {
+                multiValueDisplayStr = ` <span class="stat-multibonus-negative">${formatDisplayValue(actualMultiValue, config.isPercent)}</span>`;
+            }
+
+            let statLine = `<div><span class="skill-tooltip-stat-icon">${config.icon}</span> ${config.name}: ${baseValueDisplayStr}${multiValueDisplayStr}`;
+
+            if (statKey === 'hp') {
+                const weaponMaxHp = parseFloat(weaponStats.maxHp);
+                const multiMaxHpVal = parseFloat(multiStats.maxHp);
+
+                const actualBaseMaxHp = isNaN(weaponMaxHp) ? actualBaseValue : weaponMaxHp;
+                const actualMultiMaxHp = isNaN(multiMaxHpVal) ? 0 : multiMaxHpVal;
+                
+                let maxHpBaseDisplayStr = formatDisplayValue(actualBaseMaxHp, false);
+                let maxHpMultiDisplayStr = "";
+
+                if (actualMultiMaxHp > 0) {
+                    maxHpMultiDisplayStr = ` <span class="stat-multibonus-positive">+${formatDisplayValue(actualMultiMaxHp, false)}</span>`;
+                } else if (actualMultiMaxHp < 0) {
+                    maxHpMultiDisplayStr = ` <span class="stat-multibonus-negative">${formatDisplayValue(actualMultiMaxHp, false)}</span>`;
+                }
+                statLine += ` / ${maxHpBaseDisplayStr}${maxHpMultiDisplayStr}`;
+            }
+            statLine += `</div>`;
+            statsHtml += statLine;
+        });
+
+        statsHtml += `</div>`;
         html += statsHtml;
 
         // 技能信息

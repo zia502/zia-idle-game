@@ -55,3 +55,17 @@ UI 调整将影响 `test-battle-new.html` 的角色创建/编辑流程。
 *   **文件更新:**
     *   [`ssr.json`](src/data/ssr.json:1): 仅更新明确技能的ID到对应角色的 `skills` 数组。
     *   [`ssr_skill.json`](src/data/ssr_skill.json:1): 为明确技能创建或更新条目，键为新的英文ID，值为技能的中文名和描述。其他复杂字段（`type`, `effects`等）暂时留空或使用默认值，待后续完善。
+---
+### Decision
+[2025-05-08 20:46:00] - 采纳标准化的技能 `effectType` 列表以统一技能定义。
+
+**Rationale:**
+规范编写器模式分析发现，当前技能文件（尤其是 [`ssr_skill.json`](src/data/ssr_skill.json)）中的顶层 `effectType` 用法不统一，主要起描述作用，而核心逻辑依赖于 `effects` 数组内的原子 `type`。为了提高数据一致性、可维护性，并为未来的技能逻辑处理提供更清晰的分类，决定采纳一套标准化的 `effectType`。这套标准基于规范编写器的建议，并结合了对现有技能多样性的考虑。
+
+**Implications/Details:**
+*   **标准列表采纳:** 最终采纳的 `effectType` 列表为：`damage`, `buff`, `debuff`, `heal`, `dispel`, `multi_effect`, `passive`, `trigger`。其详细定义已记录在 [`memory-bank/systemPatterns.md`](memory-bank/systemPatterns.md)。
+*   **文件修改:**
+    *   需要修改技能数据文件，如 [`ssr_skill.json`](src/data/ssr_skill.json), [`sr_skills.json`](src/data/sr_skills.json), [`r_skills.json`](src/data/r_skills.json)，将其中的 `effectType` 值更新为新的标准值。
+    *   可能需要调整技能处理逻辑，例如在 [`src/js/core/job-skills.js`](src/js/core/job-skills.js) 或其他相关模块中，如果存在基于旧 `effectType` 的 `switch` 语句或条件判断，需要更新以适应新的标准。
+*   **数据一致性:** 确保所有技能定义都遵循新的 `effectType` 标准。
+*   **未来扩展:** 新的 `effectType` 为未来添加更复杂的技能逻辑提供了基础。

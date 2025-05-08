@@ -9,6 +9,10 @@ const Battle = {
     currentBattle: null, // 保存当前战斗信息
     dungeonTurn: 0, // 地下城回合数
 
+    // 战斗常量
+    BASE_DAMAGE_CAP: 199999,
+    BASE_SKILL_DAMAGE_CAP: 899999, // Can be different if skills have a separate base cap
+
     /**
      * 初始化战斗系统
      */
@@ -61,6 +65,7 @@ const Battle = {
 
         // 重置当前战斗的回合数
         this.currentTurn = 0;
+this.resetProcCounts(); // 重置技能Proc触发计数
         // 不再清空战斗日志，保留之前的记录
         // this.battleLog = [];
 
@@ -422,35 +427,67 @@ const Battle = {
             // 处理队伍成员和怪物的行动顺序（玩家永远先手，按照队伍1,2,3,4的顺序行动）
             // 不再使用速度排序，而是保持队伍成员的原始顺序，然后将怪物放在最后
             const allEntities = [...teamMembers, monster];
+            const extraTurnQueue = [];
 
-            // 处理每个实体的行动
+            // 处理每个实体的行动 (Main Pass)
             for (const entity of allEntities) {
-                // 检查战斗是否已结束
-                if (this.isBattleOver(teamMembers, monster)) {
-                    break;
-                }
-
-                // 检查实体是否存活
-                if (entity.currentStats.hp <= 0) {
-                    continue;
-                }
-
-                // 检查实体是否被眩晕
+                if (this.isBattleOver(teamMembers, monster)) break;
+                if (entity.currentStats.hp <= 0) continue;
                 if (this.isStunned(entity)) {
                     this.logBattle(`${entity.name} 被眩晕，无法行动！`);
                     continue;
                 }
 
-                // 处理实体行动
                 if (entity === monster) {
-                    // 怪物行动
                     this.processMonsterAction(monster, teamMembers, battleStats);
-                } else {
+                } else { // Player Character
                     this.processCharacterAction(entity, monster, battleStats);
+
+                    // 检查再攻击 BUFF
+                    if (entity.currentStats.hp > 0 && !this.isStunned(entity) && typeof BuffSystem !== 'undefined') {
+                        const extraTurnBuffs = BuffSystem.getBuffsByType(entity, 'extraAttackTurn');
+                        if (extraTurnBuffs && extraTurnBuffs.length > 0) {
+                            const activeExtraTurnBuff = extraTurnBuffs.find(b => b.duration > 0); // Find first active one
+                            if (activeExtraTurnBuff) {
+                                this.logBattle(`${entity.name} 触发了 [再攻击]，将进行一次额外行动!`);
+                                BuffSystem.removeBuff(entity, activeExtraTurnBuff.id); // 消耗BUFF
+                                extraTurnQueue.push(entity); // 加入额外行动队列
+                            }
+                        }
+                    }
                 }
+                if (this.isBattleOver(teamMembers, monster)) break;
             }
 
-            // 更新BUFF持续时间
+            // 处理额外行动队列
+            let safetyExtraTurnCounter = 0;
+            const maxExtraTurnsPerRound = allEntities.length * 2; // 安全上限
+
+            while (extraTurnQueue.length > 0 && safetyExtraTurnCounter < maxExtraTurnsPerRound) {
+                if (this.isBattleOver(teamMembers, monster)) break;
+                
+                const entityForExtraTurn = extraTurnQueue.shift(); // 取出队列中的第一个
+                safetyExtraTurnCounter++;
+
+                if (entityForExtraTurn.currentStats.hp <= 0 || this.isStunned(entityForExtraTurn)) {
+                    continue;
+                }
+
+                this.logBattle(`--- ${entityForExtraTurn.name} 开始额外行动 (第 ${safetyExtraTurnCounter} 次额外行动) ---`);
+                this.processCharacterAction(entityForExtraTurn, monster, battleStats); // 执行额外行动
+
+                // 重要：通常额外行动不应再触发“再攻击”从而无限循环。
+                // 由于我们消耗了原BUFF，此处的额外行动不会因同一个BUFF再次触发。
+                // 如果新BUFF在此额外行动中被施加，它将在下一轮主行动或下一轮额外行动队列处理时考虑（如果队列逻辑允许动态添加）。
+                // 当前设计：额外行动不检查新的再攻击buff以加入当前轮次的extraTurnQueue。
+                if (this.isBattleOver(teamMembers, monster)) break;
+            }
+            if (safetyExtraTurnCounter >= maxExtraTurnsPerRound && extraTurnQueue.length > 0) {
+                this.logBattle(`警告：额外行动次数达到上限 (${maxExtraTurnsPerRound})，剩余 ${extraTurnQueue.length} 个额外行动未执行。`);
+            }
+
+
+            // 更新BUFF持续时间 (在所有主行动和额外行动之后)
             this.updateBuffDurations(teamMembers, monster);
 
 
@@ -990,11 +1027,17 @@ const Battle = {
                 this.handleProcTrigger(character, 'beforeAttack', { target: monster, attackIndex: i, battleStats });
 
                 const rawDamage = Character.calculateAttackPower(character); // 假设这个函数存在且正确
-                const damageResult = this.applyDamageToTarget(character, monster, rawDamage, { // 使用 Battle 内的 applyDamageToTarget
-                    skipCritical: false, // 允许暴击
+                const damageResult = this.applyDamageToTarget(character, monster, rawDamage, {
+                    skipCritical: false,
                     isMultiAttack: attackCount > 1,
                     attackIndex: i + 1,
-                    totalAttacks: attackCount
+                    totalAttacks: attackCount,
+                    attackType: 'single', // Normal attacks are single target
+                    isSkillDamage: false,
+                    playerTeam: this.currentBattle && this.currentBattle.teamMembers ? this.currentBattle.teamMembers : [character], // Provide team context
+                    enemyTeam: [monster], // Provide enemy context
+                    battleStats: battleStats,
+                    // damageElementType: character.currentStats.attackElement || null // If normal attacks can have elements
                 });
 
                 totalDamageDealt += damageResult.damage;
@@ -1048,6 +1091,18 @@ const Battle = {
                  this.handleProcTrigger(character, 'onDoubleAttack', { target: monster, totalDamage: totalDamageDealt, battleStats });
             }
         }
+// --- End of Turn Triggers for the current character ---
+    if (character.currentStats.hp > 0) { // Only for living characters
+        // Standard onTurnEnd proc
+        this.handleProcTrigger(character, 'onTurnEnd', { battleStats });
+
+        // Specific HP-based onTurnEnd proc
+        const hpPercent = character.currentStats.hp / character.currentStats.maxHp;
+        if (hpPercent < 0.25) {
+            this.logBattle(`${character.name} HP (${(hpPercent*100).toFixed(1)}%) 低于25%，检查特定回合结束触发...`);
+            this.handleProcTrigger(character, 'onTurnEndHpBelow25Percent', { battleStats });
+        }
+    }
     },
 
     /**
@@ -1593,97 +1648,291 @@ const Battle = {
                  return specificTarget && specificTarget.currentStats.hp > 0 ? [specificTarget] : [];
         }
     },
+reviveCharacter(character, hpPercentToRestore, teamData) { // teamData is e.g. Game.playerTeam
+        if (!character || !teamData || !teamData.members) {
+            console.error("Revive failed: Invalid character or team data provided for revival.");
+            this.logBattle(`对 ${character ? character.name : '未知角色'} 的复活操作失败: 缺少参数。`);
+            return false;
+        }
+
+        if (character.currentStats.hp > 0) {
+            this.logBattle(`${character.name} 还活着，不需要复活。`);
+            return false; // Already alive
+        }
+
+        // 1. Restore HP
+        const hpRestored = Math.floor(character.currentStats.maxHp * hpPercentToRestore);
+        character.currentStats.hp = Math.max(1, hpRestored); // Ensure at least 1 HP
+        
+        this.logBattle(`${character.name} 被复活了，恢复了 ${character.currentStats.hp}点HP!`);
+
+        // 2. Clear any death-related statuses/buffs
+        // Example: remove a "Death" debuff if your system uses one
+        if (typeof BuffSystem !== 'undefined' && character.buffs) {
+            const deathDebuff = character.buffs.find(b => b.type === 'deathStatus' || b.name === '死亡');
+            if (deathDebuff) {
+                BuffSystem.removeBuff(character, deathDebuff.id);
+            }
+        }
+        // character.isDead = false; // If using a direct flag
+
+        // 3. Team Reordering
+        const memberId = character.id;
+        const currentIndex = teamData.members.indexOf(memberId);
+
+        if (currentIndex > -1) {
+            teamData.members.splice(currentIndex, 1); 
+            teamData.members.push(memberId);      
+            this.logBattle(`${character.name} 在队伍中的顺序已移至末尾。`);
+
+            // Notify UI or other systems if necessary
+            // This part is highly dependent on how UI and global state are managed.
+            // Example:
+            if (typeof Game !== 'undefined' && Game.playerTeam && Game.playerTeam.id === teamData.id) {
+                 // If direct Game.playerTeam was modified, UI might auto-update or need a signal
+                 if (typeof UI !== 'undefined' && typeof UI.renderTeam === 'function') {
+                    // UI.renderTeam(Game.playerTeam); // This might be too direct, an event is better
+                 }
+                 if (typeof Events !== 'undefined' && Events.emit) {
+                    Events.emit('team:orderChanged', { teamId: teamData.id, newOrder: teamData.members });
+                 }
+            } else {
+                console.warn("Team data provided for revive reorder might not be the main player team. UI update might be manual.");
+            }
+        } else {
+            console.error(`Revived character ${memberId} not found in the provided teamData.members list for reordering.`);
+            // Potentially add to end if they should be in team but weren't?
+            // teamData.members.push(memberId); // Risky if character shouldn't be in this specific team list
+        }
+        
+        // Trigger 'onRevive' procs
+        this.handleProcTrigger(character, 'onRevive', { battleStats: (this.currentBattle ? this.currentBattle.battleStats : {}) });
+
+        return true;
+    },
 
      // --- Helper Method for Damage Application (Refined) ---
      // This assumes the core damage calculation logic (defense reduction, crits, elemental advantage)
      // might be complex and potentially better placed within Character or a dedicated DamageCalculator module.
      // For now, this method handles applying the calculated damage and checks like shield/invincible.
      applyDamageToTarget(attacker, target, rawDamage, options = {}) {
+         // options may include: { isProc, attackType: 'single'/'aoe', playerTeam, enemyTeam, battleStats }
          if (!target || target.currentStats.hp <= 0 || rawDamage <= 0) {
-             return { damage: 0, isCritical: false, missed: false, isProc: options.isProc };
+             return { damage: 0, isCritical: false, missed: false, isProc: options.isProc, actualTarget: target };
          }
+
+         let actualTarget = target;
+         const originalTarget = target;
+         const battleStats = options.battleStats || {}; // Ensure battleStats exists
+
+         // --- Cover Logic ---
+         // Cover applies if:
+         // 1. Attack is single target.
+         // 2. Original target has living allies on their team.
+         // 3. One of those allies has an active 'cover' buff.
+         if (options.attackType === 'single' && typeof BuffSystem !== 'undefined') {
+             let alliesOfOriginalTarget = [];
+             const playerTeam = options.playerTeam || [];
+             const enemyTeam = options.enemyTeam || [];
+
+             const originalTargetIsPlayer = playerTeam.some(p => p.id === originalTarget.id);
+             const originalTargetIsEnemy = enemyTeam.some(e => e.id === originalTarget.id);
+
+             if (originalTargetIsPlayer) {
+                 alliesOfOriginalTarget = playerTeam.filter(member => member.id !== originalTarget.id && member.currentStats.hp > 0);
+             } else if (originalTargetIsEnemy) {
+                 alliesOfOriginalTarget = enemyTeam.filter(enemy => enemy.id !== originalTarget.id && enemy.currentStats.hp > 0);
+             }
+
+             if (alliesOfOriginalTarget.length > 0) {
+                 const potentialCoverers = [];
+                 for (const ally of alliesOfOriginalTarget) {
+                     const coverBuffs = BuffSystem.getBuffsByType(ally, 'cover'); // Assumes BuffSystem is globally available
+                     if (coverBuffs && coverBuffs.length > 0) {
+                         // Assuming the first active cover buff is chosen. Add more complex priority later if needed.
+                         potentialCoverers.push({ coverer: ally, buff: coverBuffs[0] });
+                     }
+                 }
+
+                 if (potentialCoverers.length > 0) {
+                     // TODO: Implement priority logic if multiple coverers (e.g., position, specific skill priority)
+                     // For now, take the first one found.
+                     // A more robust selection would involve sorting or checking specific cover conditions.
+                     const selectedCovererInfo = potentialCoverers[0]; // Simplistic choice
+                     actualTarget = selectedCovererInfo.coverer;
+                     this.logBattle(`${actualTarget.name} 援护了 ${originalTarget.name}!`);
+                 }
+             }
+         }
+         // All subsequent calculations use 'actualTarget'
 
          let finalDamage = rawDamage;
          let isCritical = false;
          let missed = false;
 
-         // TODO: Implement Hit/Evasion check
-         // if (Math.random() < calculateMissChance(attacker, target)) { missed = true; finalDamage = 0; }
+         // TODO: Implement Hit/Evasion check against actualTarget
+         // if (Math.random() < calculateMissChance(attacker, actualTarget)) { missed = true; finalDamage = 0; }
 
          if (!missed) {
-             // TODO: Implement Critical Hit check & damage bonus
-             // if (!options.skipCritical && Math.random() < calculateCritChance(attacker, target)) {
+             // TODO: Implement Critical Hit check & damage bonus (attacker vs actualTarget)
+             // if (!options.skipCritical && Math.random() < calculateCritChance(attacker, actualTarget)) {
              //     isCritical = true;
-             //     finalDamage *= calculateCritMultiplier(attacker, target);
+             //     finalDamage *= calculateCritMultiplier(attacker, actualTarget);
              // }
 
-             // TODO: Implement Defense reduction
-             // finalDamage *= calculateDefenseReduction(attacker, target);
+             // TODO: Implement Defense reduction (actualTarget's defense)
+             // finalDamage *= calculateDefenseReduction(attacker, actualTarget);
 
-             // TODO: Implement Elemental Advantage/Disadvantage bonus/penalty
-             // finalDamage *= calculateElementMultiplier(attacker, target, options.elementType);
+             // TODO: Implement Elemental Advantage/Disadvantage bonus/penalty (attacker vs actualTarget)
+             // finalDamage *= calculateElementMultiplier(attacker, actualTarget, options.elementType);
 
-             // TODO: Implement other damage modifiers (buffs/debuffs on attacker/target)
+             // TODO: Implement other damage modifiers (buffs/debuffs on attacker/actualTarget)
+
+             // --- New Defense Calculation ---
+             const targetEffectiveDefense = Math.max(0, (actualTarget.currentStats.def || 0) - (attacker.currentStats.ignoreDefense || 0));
+             // console.log(`Battle.js: Target Effective Defense: ${targetEffectiveDefense} (Target Def: ${actualTarget.currentStats.def}, Attacker Ignore Def: ${attacker.currentStats.ignoreDefense})`);
+             const defensePercent = targetEffectiveDefense / 100.0;
+             if (1 + defensePercent > 0) { // Avoid division by zero or negative if defensePercent is -1 or less
+               finalDamage = finalDamage / (1 + defensePercent);
+               // console.log(`Battle.js: Damage after new defense (${defensePercent*100}%): ${finalDamage}`);
+             } else {
+               // console.log(`Battle.js: Defense percent resulted in non-positive divisor (1 + ${defensePercent}). Skipping defense application.`);
+             }
+             // --- End New Defense Calculation ---
 
              finalDamage = Math.max(1, Math.floor(finalDamage)); // Minimum 1 damage unless missed
 
-             // --- Apply Target's Defensive Measures ---
+             // --- Apply Attacker's Damage Cap Up (General and Skill-Specific) ---
+             let currentDamageCap = Battle.BASE_DAMAGE_CAP || 999999; // Default base cap
+             let capAppliedBy = "基础"; // For logging
+
+             if (attacker && attacker.buffs && typeof BuffSystem !== 'undefined') {
+                 if (options.isSkillDamage) {
+                     let totalSkillDamageCapUpBonus = 0;
+                     const skillCapBuffs = BuffSystem.getBuffsByType(attacker, 'skillDamageCapUp');
+                     if (skillCapBuffs) {
+                         skillCapBuffs.forEach(buff => {
+                             if (buff.duration > 0 && buff.value) {
+                                 totalSkillDamageCapUpBonus += buff.value;
+                             }
+                         });
+                     }
+                     if (totalSkillDamageCapUpBonus > 0) {
+                         const baseForSkillCap = Battle.BASE_SKILL_DAMAGE_CAP || Battle.BASE_DAMAGE_CAP || 999999;
+                         currentDamageCap = baseForSkillCap * (1 + totalSkillDamageCapUpBonus);
+                         capAppliedBy = `技能伤害上限提升 (${totalSkillDamageCapUpBonus*100}%)`;
+                     }
+                 }
+                 
+                 // If not a skill, or if skill cap wasn't applied (no skillDamageCapUp buff), check for general damageCapUp
+                 // Or, if general damage cap can further increase skill cap (more complex, not implementing now)
+                 // Current logic: Skill cap takes precedence. If no skill cap applied, check general.
+                 if (capAppliedBy === "基础" || options.applyGeneralCapEvenWithSkillCap) { // Latter part for future flexibility
+                     let totalDamageCapUpBonus = 0;
+                     const damageCapBuffs = BuffSystem.getBuffsByType(attacker, 'damageCapUp');
+                     if (damageCapBuffs) {
+                         damageCapBuffs.forEach(buff => {
+                             if (buff.duration > 0 && buff.value) {
+                                 totalDamageCapUpBonus += buff.value;
+                             }
+                         });
+                     }
+                     if (totalDamageCapUpBonus > 0) {
+                         const generalCalculatedCap = (Battle.BASE_DAMAGE_CAP || 999999) * (1 + totalDamageCapUpBonus);
+                         // If skill cap was already set, only update if general cap is higher (or based on specific game rule)
+                         // For now, if skill cap was set, it's dominant. If not, general cap applies.
+                         if (capAppliedBy === "基础") {
+                            currentDamageCap = generalCalculatedCap;
+                            capAppliedBy = `伤害上限提升 (${totalDamageCapUpBonus*100}%)`;
+                         } else if (options.applyGeneralCapEvenWithSkillCap && generalCalculatedCap > currentDamageCap) {
+                            // Example: if general cap can exceed a specific skill cap
+                            // currentDamageCap = generalCalculatedCap;
+                            // capAppliedBy = `通用伤害上限提升 (${totalDamageCapUpBonus*100}%)`;
+                         }
+                     }
+                 }
+             }
+
+             if (finalDamage > currentDamageCap) {
+                 this.logBattle(`${attacker.name} 的 ${capAppliedBy} 触发，伤害从 ${Math.floor(finalDamage)} 限制到 ${Math.floor(currentDamageCap)}`);
+                 finalDamage = Math.floor(currentDamageCap);
+             }
+             finalDamage = Math.floor(finalDamage);
+
+             // --- Apply actualTarget's Defensive Measures ---
 
              // 1. Invincibility
-             if (target.buffs && target.buffs.some(b => b.type === 'invincible')) {
-                 this.logBattle(`${target.name} 无敌，免疫了伤害!`);
+             if (actualTarget.buffs && actualTarget.buffs.some(b => b.type === 'invincible' && b.duration > 0)) {
+                 this.logBattle(`${actualTarget.name} 无敌，免疫了伤害!`);
                  finalDamage = 0;
-                 // TODO: Consume invincible charges if applicable
              }
 
              // 2. EvasionAll
-             if (finalDamage > 0 && target.buffs && target.buffs.some(b => b.type === 'evasionAll')) {
-                 this.logBattle(`${target.name} 完全回避了伤害!`);
+             if (finalDamage > 0 && actualTarget.buffs && actualTarget.buffs.some(b => b.type === 'evasionAll' && b.duration > 0)) {
+                 this.logBattle(`${actualTarget.name} 完全回避了伤害!`);
                  finalDamage = 0;
-                 missed = true; // Treat as a miss for logging/triggers
-                 // TODO: Consume evasion charges if applicable
+                 missed = true;
              }
 
              // 3. Shield
-             if (finalDamage > 0 && target.shield && target.shield > 0) {
-                 const shieldDamage = Math.min(finalDamage, target.shield);
-                 target.shield -= shieldDamage;
+             if (finalDamage > 0 && actualTarget.shield && actualTarget.shield > 0) {
+                 const shieldDamage = Math.min(finalDamage, actualTarget.shield);
+                 actualTarget.shield -= shieldDamage;
                  finalDamage -= shieldDamage;
-                 this.logBattle(`${target.name} 的护盾吸收了 ${shieldDamage} 点伤害 (剩余 ${target.shield})`);
+                 this.logBattle(`${actualTarget.name} 的护盾吸收了 ${shieldDamage} 点伤害 (剩余 ${actualTarget.shield})`);
              }
 
-             // 4. Damage Cap (Elemental or All)
-             // TODO: Check for elementalDamageCap buffs based on damage element
-             // TODO: Check for general damageCap buffs
-             // finalDamage = Math.min(finalDamage, applicableDamageCap);
-
-             // 5. Damage Reduction (All Damage or Elemental)
-             let damageReduction = 0;
-             if (target.buffs) {
-                 target.buffs.forEach(buff => {
-                     if (buff.type === 'allDamageTakenReduction') {
-                         damageReduction += buff.value;
+             // 4. Damage Cap (Elemental or All) - Applied to actualTarget
+             if (actualTarget.buffs && options.damageElementType) {
+                 actualTarget.buffs.forEach(buff => {
+                     if (buff.type === 'elementalDamageCap' && buff.elementType === options.damageElementType && buff.duration > 0) {
+                         if (finalDamage > buff.value) {
+                             this.logBattle(`${actualTarget.name} 的${buff.elementType}属性伤害上限触发，伤害从 ${finalDamage} 降低到 ${buff.value}`);
+                             finalDamage = buff.value;
+                         }
                      }
-                     // TODO: Add elementalResistance check based on damage element
+                     // TODO: Implement general damageCapUp logic for actualTarget (this is for damage TAKEN cap, different from attacker's damageCapUp)
                  });
              }
-             finalDamage *= Math.max(0, 1 - damageReduction); // Apply reduction
+             finalDamage = Math.floor(finalDamage); // Ensure integer damage after cap
+
+             // 5. Damage Reduction (All Damage or Elemental) - Applied to actualTarget
+             let damageReduction = 0;
+             if (actualTarget.buffs) {
+                 actualTarget.buffs.forEach(buff => {
+                     if (buff.type === 'allDamageTakenReduction' && buff.duration > 0) {
+                         damageReduction += buff.value; // Assuming buff.value is a percentage like 0.2 for 20%
+                     }
+                     // TODO: Add elementalResistance check based on damage element for actualTarget
+                 });
+             }
+             finalDamage *= Math.max(0, 1 - damageReduction);
              finalDamage = Math.floor(finalDamage);
 
          } // End if (!missed)
 
-         // Apply final damage
-         target.currentStats.hp = Math.max(0, target.currentStats.hp - finalDamage);
-
-         // Trigger onDamaged proc for the target
-         if (finalDamage > 0) {
-             this.handleProcTrigger(target, 'onDamaged', { attacker, damageTaken: finalDamage, isCritical, isProc: options.isProc, battleStats });
-             if (attacker) { // If damage source is known
-                 this.handleProcTrigger(target, 'onDamagedByEnemy', { attacker, damageTaken: finalDamage, isCritical, isProc: options.isProc, battleStats });
+         // Apply final damage to actualTarget
+         actualTarget.currentStats.hp = Math.max(0, actualTarget.currentStats.hp - finalDamage);
+         if (attacker && attacker.stats && finalDamage > 0) { // Record attacker's damage dealt
+             attacker.stats.totalDamage = (attacker.stats.totalDamage || 0) + finalDamage;
+             if (battleStats.characterStats && battleStats.characterStats[attacker.id]) {
+                 battleStats.characterStats[attacker.id].totalDamage += finalDamage;
+             } else if (battleStats.monsterStats && attacker.id === options.enemyTeam?.[0]?.id) { // Basic monster damage tracking
+                 battleStats.monsterStats.totalDamage += finalDamage;
              }
          }
 
-         return { damage: finalDamage, isCritical, missed, isProc: options.isProc };
+
+         // Trigger onDamaged proc for the actualTarget that took damage
+         if (finalDamage > 0) {
+             this.handleProcTrigger(actualTarget, 'onDamaged', { attacker, damageTaken: finalDamage, isCritical, isProc: options.isProc, battleStats, originalTarget: originalTarget });
+             if (attacker) {
+                 this.handleProcTrigger(actualTarget, 'onDamagedByEnemy', { attacker, damageTaken: finalDamage, isCritical, isProc: options.isProc, battleStats, originalTarget: originalTarget });
+             }
+         }
+         // If original target was different and didn't take damage due to cover, maybe trigger 'onTargetedButCovered' proc? (Future enhancement)
+
+         return { damage: finalDamage, isCritical, missed, isProc: options.isProc, actualTarget: actualTarget, originalTarget: originalTarget };
      },
 
      // --- Helper Method for Character Defeat ---

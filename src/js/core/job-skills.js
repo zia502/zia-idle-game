@@ -69,17 +69,18 @@ const JobSkills = {
             case 'revive':
                 result = this.applyReviveEffects(character, template, teamMembers, monster);
                 break;
-            case 'damage_and_debuff':
-                result = this.applyDamageAndDebuffEffects(character, template, teamMembers, monster);
-                break;
-            case 'damage_and_buff':
-                result = this.applyDamageAndBuffEffects(character, template, teamMembers, monster);
-                break;
-            case 'triggerSkill': // 新增：处理触发其他技能的效果
-                result = this.applyTriggerSkillEffect(character, template, teamMembers, monster);
+            case 'multi_effect':
+            case 'trigger': // trigger 类型也通过 effects 数组定义其行为
+                result = this.applySkillEffects(character, template, teamMembers, monster);
                 break;
             default:
-                return { success: false, message: `未知的技能类型: ${template.effectType}` };
+                // 对于未明确列出的 effectType，如果它有 effects 数组，也尝试通用处理
+                if (template.effects && Array.isArray(template.effects) && template.effects.length > 0) {
+                    Battle.logBattle(`技能 ${template.name} 的 effectType "${template.effectType}" 不是标准主动类型，尝试通用效果处理。`);
+                    result = this.applySkillEffects(character, template, teamMembers, monster);
+                } else {
+                    return { success: false, message: `未知的技能类型 (${template.effectType}) 或无效果定义。` };
+                }
         }
 
         // 只有在主技能成功执行且不是被触发的技能时，才设置主技能的冷却
@@ -176,10 +177,67 @@ const JobSkills = {
         // 注意：原版 switch(template.effectType) 是基于技能模板只有一个主效果类型。
         // 如果一个技能可以有多种类型的效果（例如一个效果是伤害，另一个是buff），需要迭代处理 template.effects
         
-        let combinedResults = { messages: [], effectsApplied: [] };
+        let combinedResults = { messages: [], effectsApplied: [], success: true }; // 添加 success 标志
+
+        // 首先处理hpCostPercentageCurrent效果
+        for (const effectDetail of template.effects) {
+            if (effectDetail.type === 'hpCostPercentageCurrent') {
+                const costValue = parseFloat(effectDetail.value);
+                if (isNaN(costValue) || costValue <= 0) {
+                    Battle.logBattle(`技能 ${template.name} 的 hpCostPercentageCurrent 值无效: ${effectDetail.value}`);
+                    combinedResults.messages.push(`技能 ${template.name} 的HP消耗配置错误。`);
+                    combinedResults.success = false; // 标记为失败
+                    // return { // 如果配置错误，可以提前返回
+                    //     message: combinedResults.messages.join(' \n'),
+                    //     effects: combinedResults.effectsApplied.length > 0 ? combinedResults.effectsApplied : {},
+                    //     success: false
+                    // };
+                    continue; // 跳过此错误效果
+                }
+
+                const hpToCost = Math.floor(character.currentStats.hp * (costValue / 100));
+                
+                if (character.currentStats.hp - hpToCost < 1) {
+                    if (character.currentStats.hp > 1) { // 如果当前HP大于1，则至少保留1点HP
+                        const actualCost = character.currentStats.hp - 1;
+                        character.currentStats.hp = 1;
+                        Battle.logBattle(`${character.name} 使用技能 ${template.name} 消耗了 ${actualCost} HP (不足以支付全部, HP降至1)。`);
+                        combinedResults.messages.push(`${character.name} 消耗了 ${actualCost} HP (HP降至1)。`);
+                    } else { // 如果当前HP已经是1，则无法支付消耗
+                        Battle.logBattle(`${character.name} 尝试使用技能 ${template.name}，但HP不足以支付消耗 (当前HP: ${character.currentStats.hp})。`);
+                        combinedResults.messages.push(`${character.name} HP不足，无法支付技能 ${template.name} 的消耗。`);
+                        combinedResults.success = false; // 标记为失败
+                        // return { // 如果HP不足，技能发动失败
+                        //     message: combinedResults.messages.join(' \n'),
+                        //     effects: combinedResults.effectsApplied.length > 0 ? combinedResults.effectsApplied : {},
+                        //     success: false
+                        // };
+                        continue; // 跳过此效果，可能导致后续效果也不执行
+                    }
+                } else {
+                    character.currentStats.hp -= hpToCost;
+                    Battle.logBattle(`${character.name} 使用技能 ${template.name} 消耗了 ${hpToCost} HP。`);
+                    combinedResults.messages.push(`${character.name} 消耗了 ${hpToCost} HP。`);
+                }
+                // 更新UI等（如果需要）
+                if (typeof UI !== 'undefined' && UI.updateCharacterStatus) {
+                    UI.updateCharacterStatus(character.id);
+                }
+            }
+        }
+
+        // 如果HP消耗导致技能失败，则不执行后续效果
+        if (!combinedResults.success) {
+            return {
+                message: combinedResults.messages.join(' \n'),
+                effects: combinedResults.effectsApplied.length > 0 ? combinedResults.effectsApplied : {},
+                success: false
+            };
+        }
+
 
         for (const effectDetail of template.effects) {
-            let currentEffectResult = { message: "", effects: {} };
+            let currentEffectResult = { message: "", effects: {}, success: true };
             // effectDetail.type 是子效果的类型, template.effectType 可能是父技能的主类型
             const actualEffectType = effectDetail.type || template.effectType;
 
@@ -191,7 +249,8 @@ const JobSkills = {
                     currentEffectResult = this.applyDebuffEffects(character, { ...template, ...effectDetail, effects: [effectDetail] }, teamMembers, monster);
                     break;
                 case 'damage':
-                    currentEffectResult = this.applyDamageEffects(character, { ...template, ...effectDetail, effects: [effectDetail] }, teamMembers, monster);
+                case 'enmity': // 将 enmity 视为一种特殊的 damage 类型进行处理
+                    currentEffectResult = this.applyDamageEffects(character, { ...template, ...effectDetail, effects: [effectDetail], type: actualEffectType }, teamMembers, monster);
                     break;
                 case 'heal':
                     currentEffectResult = this.applyHealEffects(character, { ...template, ...effectDetail, effects: [effectDetail] }, teamMembers, monster);
@@ -211,6 +270,8 @@ const JobSkills = {
                 case 'triggerSkill': // 新增：处理触发其他技能的效果
                      currentEffectResult = this.applyTriggerSkillEffect(character, { ...template, ...effectDetail }, teamMembers, monster);
                      break;
+                case 'hpCostPercentageCurrent': // 此效果已在循环前处理，这里跳过
+                    continue;
                 // Proc效果内的 additionalEffects 数组和 maxStacks
                 case 'proc':
                     // proc 效果通常在攻击时由 battle.js 处理，这里可能是主动技能直接触发一个proc定义
@@ -219,9 +280,10 @@ const JobSkills = {
                     if (effectDetail.additionalEffects && Array.isArray(effectDetail.additionalEffects)) {
                         for (const additionalEffect of effectDetail.additionalEffects) {
                             const tempSubTemplate = { ...template, ...additionalEffect, effects: [additionalEffect], name: `${template.name} (附加效果)` };
-                            const subEffectResult = this.applySkillEffects(character, tempSubTemplate, teamMembers, monster);
-                            combinedResults.messages.push(subEffectResult.message);
-                            combinedResults.effectsApplied.push(subEffectResult.effects);
+                            const subEffectResult = this.applySkillEffects(character, tempSubTemplate, teamMembers, monster); // 递归调用
+                            if (subEffectResult.message) combinedResults.messages.push(subEffectResult.message);
+                            if (subEffectResult.effects) combinedResults.effectsApplied.push(subEffectResult.effects);
+                            if (subEffectResult.success === false) combinedResults.success = false; // 如果子效果失败，则整体失败
                         }
                     }
                     // maxStacks for buffs applied by proc would be handled by BuffSystem
@@ -230,16 +292,19 @@ const JobSkills = {
                 default:
                     currentEffectResult = {
                         message: `${character.name} 使用了【${template.name}】中的未知效果类型: ${actualEffectType}。`,
-                        effects: {}
+                        effects: {},
+                        success: false
                     };
             }
             if (currentEffectResult && currentEffectResult.message) combinedResults.messages.push(currentEffectResult.message);
             if (currentEffectResult && currentEffectResult.effects) combinedResults.effectsApplied.push(currentEffectResult.effects);
+            if (currentEffectResult && currentEffectResult.success === false) combinedResults.success = false; // 标记整体结果为失败
         }
 
         return {
             message: combinedResults.messages.join(' \n') || `${character.name} 使用了【${template.name}】。`,
-            effects: combinedResults.effectsApplied.length > 0 ? combinedResults.effectsApplied : {}
+            effects: combinedResults.effectsApplied.length > 0 ? combinedResults.effectsApplied : {},
+            success: combinedResults.success // 返回最终的成功状态
         };
     },
 

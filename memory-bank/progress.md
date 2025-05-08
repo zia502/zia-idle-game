@@ -13,6 +13,7 @@ This file tracks the project's progress using a task list format.
 * [2025-05-08 12:27:08] - 进一步调试 `test-battle-new.html`：为解决职业ID不匹配问题，修改了职业选项的value确保为字符串，并增强了职业数据查找的日志和健壮性。
 * [2025-05-08 12:37:35] - 解决 `test-battle-new.html` 角色和职业选择问题：通过在 `loadGameData` 中为R/SR/SSR角色动态添加 `rarity` 属性，并添加诊断日志，成功修复了无法选择R卡角色以及后续职业分配的问题。用户确认所有测试步骤均成功。
 * [2025-05-08 14:49:00] - 分析了 [`test-battle-new.html`](test-battle-new.html) 中角色数据加载、存储和访问架构，识别了 "ID 未找到" 错误的潜在原因，并提出了架构改进建议。更新了记忆银行的相关文件 ([`activeContext.md`](memory-bank/activeContext.md), [`decisionLog.md`](memory-bank/decisionLog.md))。
+* [2025-05-08 20:20:00] - 完成SSR技能效果实现：在 [`src/js/core/job-skills.js`](src/js/core/job-skills.js) 中成功添加了 `enmity` (背水伤害) 和 `hpCostPercentageCurrent` (当前HP百分比消耗) 两种技能效果的逻辑。
 
 ## Current Tasks
 
@@ -29,3 +30,6 @@ This file tracks the project's progress using a task list format.
 * [2025-05-08 16:59:25] - 根据用户确认，将所有先前待处理的 SSR 技能（包含特殊机制的技能）添加到了 [`ssr.json`](src/data/ssr.json:1) 和 [`ssr_skill.json`](src/data/ssr_skill.json:1) 中。技能ID使用建议的英文ID，描述按原样记录。
 * [2025-05-08 16:59:25] - SSR 技能更新流程已全部完成。
 * [2025-05-08 17:37:27] - 完成 [`src/data/ssr_skill.json`](src/data/ssr_skill.json:1) 文件中 SSR 角色技能效果的分析和补充：根据 [`src/data/ssrskill.txt`](src/data/ssrskill.txt:1) 的描述，全面更新了技能的 `type`, `cooldown`, `effectType`, `targetType` 和 `effects` 字段，确保了技能效果的清晰、具体和结构化。
+* [2025-05-08 20:27:18] - **Completed Task:** 修改了 [`src/js/core/battle.js`](src/js/core/battle.js:1) 中的伤害计算函数，调整了防御力对伤害的减免方式。新的公式为 `finalDamage / (1 + defensePercent)`，并确保其在正确的计算步骤中应用。
+* [2025-05-08 20:39:43] - **Completed Task:** 调整了 [`src/js/core/battle.js`](src/js/core/battle.js:1) 中的战斗伤害上限，普通攻击上限设置为 199999，技能伤害上限设置为 899999。
+* [2025-05-08 20:53:00] - **Completed Task:** 标准化项目中的技能 `effectType`。修改了相关的数据文件 ([`src/data/ssr_skill.json`](src/data/ssr_skill.json), [`src/data/sr_skills.json`](src/data/sr_skills.json), [`src/data/r_skills.json`](src/data/r_skills.json)) 和逻辑文件 ([`src/js/core/job-skills.js`](src/js/core/job-skills.js))。

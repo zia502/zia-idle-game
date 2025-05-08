@@ -263,7 +263,7 @@
     "cost": 0,
     "fixed": false,
     "cooldown": 5,
-    "effectType": "damage_and_debuff",
+    "effectType": "multi_effect",
     "targetType": "enemy",
     "duration": 2,
     "effects": [
@@ -316,7 +316,7 @@
     "cost": 0,
     "fixed": false,
     "cooldown": 5,
-    "effectType": "damage_and_debuff",
+    "effectType": "multi_effect",
     "targetType": "enemy",
     "duration": 2,
     "effects": [
@@ -455,7 +455,7 @@
     "cost": 0,
     "fixed": false,
     "cooldown": 5,
-    "effectType": "damage_and_debuff",
+    "effectType": "multi_effect",
     "targetType": "enemy",
     "duration": 2,
     "effects": [
@@ -735,7 +735,7 @@
     "cost": 0,
     "fixed": false,
     "cooldown": 5,
-    "effectType": "damage_and_debuff",
+    "effectType": "multi_effect",
     "targetType": "enemy",
     "duration": 2,
     "effects": [
@@ -764,7 +764,7 @@
     "cost": 0,
     "fixed": false,
     "cooldown": 5,
-    "effectType": "damage_and_debuff",
+    "effectType": "multi_effect",
     "targetType": "enemy",
     "duration": 2,
     "effects": [
@@ -793,7 +793,7 @@
     "cost": 0,
     "fixed": false,
     "cooldown": 5,
-    "effectType": "damage_and_debuff",
+    "effectType": "multi_effect",
     "targetType": "enemy",
     "duration": 2,
     "effects": [
@@ -823,7 +823,7 @@
     "cost": 0,
     "fixed": false,
     "cooldown": 5,
-    "effectType": "damage_and_debuff",
+    "effectType": "multi_effect",
     "targetType": "enemy",
     "duration": 2,
     "effects": [
@@ -927,7 +927,7 @@
     "cost": 0,
     "fixed": false,
     "cooldown": 5,
-    "effectType": "damage_and_debuff",
+    "effectType": "multi_effect",
     "targetType": "enemy",
     "duration": 2,
     "effects": [
@@ -956,7 +956,7 @@
     "cost": 0,
     "fixed": false,
     "cooldown": 5,
-    "effectType": "damage_and_debuff",
+    "effectType": "multi_effect",
     "targetType": "enemy",
     "duration": 2,
     "effects": [
@@ -1209,7 +1209,7 @@
     "cost": 0,
     "fixed": false,
     "cooldown": 5,
-    "effectType": "damage_and_debuff",
+    "effectType": "multi_effect",
     "targetType": "enemy",
     "duration": 1,
     "effects": [
@@ -1239,7 +1239,7 @@
     "cost": 0,
     "fixed": false,
     "cooldown": 5,
-    "effectType": "damage_and_debuff",
+    "effectType": "multi_effect",
     "targetType": "enemy",
     "duration": 2,
     "effects": [
@@ -1268,7 +1268,7 @@
     "cost": 0,
     "fixed": false,
     "cooldown": 5,
-    "effectType": "damage_and_debuff",
+    "effectType": "multi_effect",
     "targetType": "enemy",
     "duration": 2,
     "effects": [
@@ -1297,7 +1297,7 @@
     "cost": 0,
     "fixed": false,
     "cooldown": 5,
-    "effectType": "damage_and_debuff",
+    "effectType": "multi_effect",
     "targetType": "enemy",
     "duration": 2,
     "effects": [
@@ -1946,7 +1946,7 @@
     "cost": 0,
     "fixed": false,
     "cooldown": 6,
-    "effectType": "buff",
+    "effectType": "multi_effect",
     "targetType": "all_allies",
     "duration": 3,
     "effects": [

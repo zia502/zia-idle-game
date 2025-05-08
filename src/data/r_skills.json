@@ -255,7 +255,7 @@
     "cost": 0,
     "fixed": false,
     "cooldown": 5,
-    "effectType": "damage_and_debuff",
+    "effectType": "multi_effect",
     "targetType": "enemy",
     "duration": 2,
     "effects": [
@@ -284,7 +284,7 @@
     "cost": 0,
     "fixed": false,
     "cooldown": 5,
-    "effectType": "damage_and_debuff",
+    "effectType": "multi_effect",
     "targetType": "enemy",
     "duration": 2,
     "effects": [
@@ -351,7 +351,7 @@
     "cost": 0,
     "fixed": false,
     "cooldown": 5,
-    "effectType": "damage_and_debuff",
+    "effectType": "multi_effect",
     "targetType": "enemy",
     "duration": 2,
     "effects": [

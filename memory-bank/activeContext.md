@@ -38,4 +38,13 @@ This file tracks the project's current status, including recent changes, current
 * [2025-05-08 16:59:35] - **Recent Changes:** 用户确认了所有先前待处理的SSR技能的处理方式。这些技能已按照建议的英文ID添加至 [`ssr.json`](src/data/ssr.json:1) 的角色技能列表和 [`ssr_skill.json`](src/data/ssr_skill.json:1) 的技能详情中，描述按原样记录。
 * [2025-05-08 16:59:35] - **Current Focus:** SSR技能数据更新任务已完成。
 * [2025-05-08 17:37:27] - **Recent Changes:** 根据 [`ssrskill.txt`](src/data/ssrskill.txt:1) 的描述，全面更新了 [`src/data/ssr_skill.json`](src/data/ssr_skill.json:1) 文件，补充并结构化了所有SSR角色的技能效果，包括 `type`, `cooldown`, `effectType`, `targetType` 和具体的 `effects` 数组。
+* [2025-05-08 20:20:00] - 在 [`src/js/core/job-skills.js`](src/js/core/job-skills.js) 中实现了 `enmity` (背水伤害) 和 `hpCostPercentageCurrent` (当前HP百分比消耗) 技能效果。`enmity` 伤害会根据攻击者当前的HP百分比动态调整，`hpCostPercentageCurrent` 会扣除发动者当前HP的一定百分比作为代价，并确保HP至少保留1点。
 * [2025-05-08 17:37:27] - **Current Focus:** 完成了对 [`src/data/ssr_skill.json`](src/data/ssr_skill.json:1) 文件中SSR角色技能效果的分析和补充。
+* [2025-05-08 20:27:05] - **Recent Changes:** 修改了 [`src/js/core/battle.js`](src/js/core/battle.js:1) 中的 `applyDamageToTarget` 函数，实现了新的防御力减伤公式 (伤害 / (1 + 防御百分比))，替换了旧的占位符防御逻辑。
+* [2025-05-08 20:27:05] - **Current Focus:** 完成了对战斗系统中伤害计算公式的调整，特别是防御力对伤害减免的计算方式。
+* [2025-05-08 20:39:36] - **Recent Changes:** 修改了 [`src/js/core/battle.js`](src/js/core/battle.js:1) 中的战斗伤害上限。普通攻击上限调整为 199999，技能伤害上限调整为 899999。
+* [2025-05-08 20:39:36] - **Current Focus:** 完成了战斗伤害上限的调整。
+* [2025-05-08 20:52:00] - **Recent Changes:** 标准化了技能的 `effectType`。
+    *   修改了数据文件 [`src/data/ssr_skill.json`](src/data/ssr_skill.json), [`src/data/sr_skills.json`](src/data/sr_skills.json), 和 [`src/data/r_skills.json`](src/data/r_skills.json)，将其中的顶层 `effectType` 字段更新为标准化的8个类型之一 (`damage`, `buff`, `debuff`, `heal`, `dispel`, `multi_effect`, `passive`, `trigger`)。
+    *   修改了逻辑文件 [`src/js/core/job-skills.js`](src/js/core/job-skills.js) 中的 `useSkill` 函数，调整了 `switch` 语句以正确处理新的标准化 `effectType`，特别是 `multi_effect` 和 `trigger` 类型，确保它们通过 `applySkillEffects` 进行通用处理。
+* [2025-05-08 20:52:00] - **Current Focus:** 完成了技能 `effectType` 的标准化任务。

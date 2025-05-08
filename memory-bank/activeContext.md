@@ -13,6 +13,7 @@ This file tracks the project's current status, including recent changes, current
 * [2025-05-08 12:14:54] - 根据用户反馈处理 `test-battle-new.html` 中的错误：暂时注释掉未定义的武器盘函数调用，并为角色/职业选择逻辑添加了诊断日志，以解决无法选择角色和添加职业时报错的问题。等待用户提供新的日志信息。
 * [2025-05-08 12:18:42] - 进一步调试 `test-battle-new.html`：修改了 `updateCharacterJobSelect` 函数以改善下拉列表选项的显示和按钮状态更新逻辑。在 `handleAddCharacterToTeam` 函数中为职业数据获取过程添加了更详细的日志记录，以帮助定位潜在的职业ID不匹配问题。
 * [2025-05-08 12:37:35] - 解决了 `test-battle-new.html` 中因角色数据缺少 `rarity` 属性导致无法选择R卡角色的问题。通过修改 `loadGameData` 函数为R/SR/SSR角色动态添加 `rarity` 属性，确保了角色选择和后续职业分配功能恢复正常。添加了额外的诊断日志以辅助调试。
+* [2025-05-08 14:47:00] - 分析 [`test-battle-new.html`](test-battle-new.html) 中的角色数据加载、存储和访问架构，以解决 "ID 未找到" 错误。
 
 ## Recent Changes
 
@@ -29,3 +30,4 @@ This file tracks the project's current status, including recent changes, current
 * `test-battle-new.html` 中角色选择和职业添加功能在之前的测试中存在问题，新的修改和日志旨在解决这些问题。等待用户测试反馈。 **[已解决 2025-05-08 12:37:35]**
 * 武器盘相关函数 (`handleOpenWeaponSelectionModal` 等) 的定义缺失或未在此处考虑，导致相关事件监听器被临时注释。
 * [2025-05-08 12:26:54] - 调试 `test-battle-new.html`：为解决潜在的职业ID不匹配问题，修改了 `updateCharacterJobSelect` 函数以确保职业选项的 `value` 为字符串。同时，在 `handleAddCharacterToTeam` 函数中为职业数据查找逻辑添加了更健壮的日志记录和回退检查机制，以应对 `JobSystem.jobs` 中职业ID可能为数字或字符串的情况。 **[相关问题已通过rarity属性修复一并解决 2025-05-08 12:37:35]**
+* [2025-05-08 14:47:00] - 发现 [`test-battle-new.html`](test-battle-new.html) 中的 "ID 未找到" 错误（例如 `character_101`）很可能源于角色对象的内部 `id` 属性与其在 `allCharactersData` 集合中的键不一致。当UI使用内部 `id` 属性构建下拉选项，然后该值用于在 `allCharactersData` 中查找时，如果键名不同则会导致查找失败。

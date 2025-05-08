@@ -328,6 +328,7 @@
     <script src="src/js/core/job-system.js"></script>
     <script src="src/js/core/job-skills.js"></script>
     <script src="src/js/core/job-skills-template.js"></script>
+    <script src="src/js/core/skill-loader.js"></script>
 
 
     <!-- 游戏组件 -->
@@ -482,11 +483,21 @@
                     const processCharacterData = (data, rarity) => {
                         if (data && typeof data === 'object') {
                             return Object.fromEntries(
-                                Object.entries(data).map(([key, char]) => {
-                                    if (char && typeof char === 'object' && !char.rarity) { // 确保 char 是对象且没有 rarity
-                                        return [key, { ...char, rarity: rarity, isJob: char.isJob || false }]; // 保留 isJob 或设为 false
+                                Object.entries(data).map(([originalKey, char]) => {
+                                    // 确保 char 是一个有效的对象并且拥有 id 属性
+                                    if (char && typeof char === 'object' && char.id) {
+                                        const newKey = char.id; // 使用角色内部的 id 作为新的键
+                                        const updatedChar = { ...char, rarity: rarity, isJob: char.isJob || false };
+                                        // 如果原始对象中没有 rarity 属性，则添加它
+                                        if (!char.rarity) {
+                                            updatedChar.rarity = rarity;
+                                        }
+                                        return [newKey, updatedChar];
                                     }
-                                    return [key, char]; // 如果 char 不是对象或已有 rarity，则原样返回
+                                    // 如果 char 无效或没有 id，则尝试保留原始键或记录错误/跳过
+                                    // 为简单起见，这里我们保留原始键，但理想情况下应有更强的错误处理
+                                    logMessage(`警告: 角色数据 ${originalKey} 缺少 id 或格式不正确，将尝试使用原始键。`, 'warn');
+                                    return [originalKey, char];
                                 })
                             );
                         }
@@ -715,6 +726,7 @@
 
                     logMessage(`已为主角 ${mainCharacterData.name} 设置职业: ${jobData.name}。`, "success");
                     updateSelectedTeamDisplay(); // 更新队伍显示以反映职业变化
+                    checkSelections(); // 更新开始战斗按钮状态
 
                 } else {
                     // 处理添加角色的逻辑 (R, SR, SSR)
@@ -749,6 +761,7 @@
                     selectedPlayerTeamData.push(characterData);
                     logMessage(`${characterData.name} (等级: ${characterData.level}) 已添加到队伍。 (队伍: ${selectedPlayerTeamData.length}/${MAX_TEAM_SIZE})`, "success");
                     updateSelectedTeamDisplay();
+                    checkSelections(); // 更新开始战斗按钮状态
                 }
 
                 // 重置选择并禁用按钮
@@ -950,7 +963,11 @@
 
             // 检查选择状态，启用/禁用开始按钮
             function checkSelections() {
-                startBattleBtn.disabled = !(selectedPlayerTeamData.length > 0 && selectedBossData);
+                const teamHasMembers = selectedPlayerTeamData.length > 0;
+                const bossIsSelected = !!selectedBossData; // Ensure boolean conversion
+                const canStart = teamHasMembers && bossIsSelected;
+                startBattleBtn.disabled = !canStart;
+                logMessage(`checkSelections: Team Members: ${selectedPlayerTeamData.length}, Boss Selected: ${bossIsSelected}, Can Start: ${canStart}, Button Disabled: ${startBattleBtn.disabled}`, "debug");
             }
 
             // --- 事件监听 ---
@@ -1055,21 +1072,44 @@
 
                 // 初始化并开始战斗
                 try {
-                    const battle = new Battle();
-                    const playerTeamForBattle = new Team(playerTeamInstances);
-                    const enemyTeamForBattle = new Team([bossInstance]);
+                    // playerTeamInstances is an array of character objects from createGameCharacter
+                    // bossInstance is a single character object for the boss
+                    const playerTeamObject = { members: playerTeamInstances.map(p => p.id) };
+                    // bossInstance is already the character-like object expected by Battle.startBattle's 'monster' param
 
-                    // 设置战斗更新回调
-                    battle.initialize(playerTeamForBattle, enemyTeamForBattle, battleLog, (currentBattleState) => {
-                        // 这个回调会在战斗系统内部的某个点被调用，用来更新UI
-                        if (currentBattleState.playerTeam) updatePlayerTeamStatusDisplay(currentBattleState.playerTeam.members);
-                        if (currentBattleState.enemyTeam && currentBattleState.enemyTeam.members[0]) updateBossStatus(currentBattleState.enemyTeam.members[0]);
+                    Battle.battleLog = []; // Clear log from previous battle on the Battle object
+                    const battleResult = Battle.startBattle(playerTeamObject, bossInstance);
+
+                    // Display battle logs from Battle.battleLog using the local logMessage function
+                    // battleLog is the DOM element for logging in test-battle-new.html
+                    battleLog.innerHTML = ''; // Clear UI log area first
+                    Battle.battleLog.forEach(logEntryString => {
+                        // Assuming Battle.logBattle pushes simple strings.
+                        // logMessage in test-battle-new.html handles DOM insertion.
+                        logMessage(logEntryString, 'info'); // Defaulting to 'info' type
                     });
 
-                    battle.start(); // 启动战斗循环
+                    // Update final UI status based on the state of instances after battle
+                    // playerTeamInstances and bossInstance should have their .currentStats modified by Battle.startBattle
+                    updatePlayerTeamStatusDisplay(playerTeamInstances);
+                    updateBossStatus(bossInstance);
+
+                    // Determine winner and call handleBattleEnd to update UI and battle state flags
+                    let winnerTeamDetail = null;
+                    if (battleResult.victory) { // Player team won
+                        // Ensure we pass the actual team/boss objects for name extraction in handleBattleEnd
+                        winnerTeamDetail = { isPlayerTeam: true, members: playerTeamInstances };
+                    } else if (bossInstance && bossInstance.currentStats && bossInstance.currentStats.hp > 0) { // Boss won
+                        winnerTeamDetail = { isPlayerTeam: false, members: [bossInstance] };
+                    } else { // Draw or unknown, or player lost and boss also at 0 hp
+                         logMessage("战斗结束，但胜负未知或平局。", "warning");
+                    }
+                    // Pass the determined winner (or null) to handleBattleEnd
+                    handleBattleEnd({ detail: { winnerTeam: winnerTeamDetail } });
+
                 } catch (error) {
-                     logMessage(`战斗初始化或启动时出错: ${error}`, 'error');
-                     console.error("Battle start error:", error);
+                     logMessage(`战斗处理时出错: ${error.message}`, 'error');
+                     console.error("Battle processing error:", error);
                      resetBattle(); // 出错时重置
                 }
             }
@@ -1157,42 +1197,46 @@
                 }
 
                 // 创建 Character 实例
-                const characterInstance = new Character({
+                // MODIFIED: Use Character.createCharacter
+                const characterInstance = Character.createCharacter({
                     id: baseData.id,
                     name: baseData.name,
                     attribute: baseData.attribute || baseData.element,
                     type: baseData.type || (isPlayer ? 'player' : 'boss'),
-                    stats: calculatedStats, // 使用为目标等级计算的属性
-                    skills: [],
+                    baseStats: calculatedStats, // MODIFIED: Pass baseStats, createCharacter will handle currentStats
+                    skills: baseData.skills || [], // Pass skill IDs, createCharacter might process them or store as is
                     isPlayer: isPlayer,
                     jobId: baseData.isJob ? baseData.id : undefined,
                     rarity: rarityVal,
-                    level: targetLevel // 传递目标等级
+                    level: targetLevel,
+                    // Ensure all necessary fields for Character.createCharacter are provided
                 });
-
-                // 加载并实例化技能
-                const skillSource = (window.JobSystem && JobSystem.SKILLS) || {}; // 全局技能库
-                if (baseData.skills && Array.isArray(baseData.skills)) {
+                
+                // If Character.createCharacter doesn't process skills from baseData.skills,
+                // and skills should be just IDs or templates on the instance.
+                // Character.createCharacter initializes character.skills as an empty array.
+                if (characterInstance && baseData.skills && Array.isArray(baseData.skills)) {
                     baseData.skills.forEach(skillIdentifier => {
-                        // 查找技能模板
-                        const skillTemplate = skillSource[skillIdentifier] || bossSkills[skillIdentifier]; // 也检查 bossSkills
+                        const skillSource = (window.JobSystem && JobSystem.SKILLS) || {};
+                        const skillTemplate = skillSource[skillIdentifier] || (window.bossSkills && bossSkills[skillIdentifier]);
                         if (skillTemplate) {
-                            try {
-                                // 创建 Skill 实例
-                                const skillInstance = new Skill(skillTemplate, characterInstance, 1); // 默认等级1
-                                characterInstance.skills.push(skillInstance);
-                            } catch (skillError) {
-                                logMessage(`警告: 为 ${baseData.name} 创建技能 '${skillIdentifier}' 时出错: ${skillError}`, 'warning');
-                                console.error(`Skill creation error for ${skillIdentifier}:`, skillError);
+                            // MODIFIED: Store skillIdentifier instead of trying to create Skill instance
+                            if (characterInstance.skills && !characterInstance.skills.includes(skillIdentifier)) {
+                                characterInstance.skills.push(skillIdentifier);
                             }
                         } else {
                             logMessage(`警告: ${baseData.name} 的技能ID '${skillIdentifier}' 在技能库中未找到。`, 'warning');
                         }
                     });
                 }
-                // 初始化 buffs 和 debuffs 数组
-                characterInstance.buffs = [];
-                characterInstance.debuffs = [];
+                
+                // Ensure buffs and debuffs arrays are initialized if not done by Character.createCharacter
+                if (characterInstance && !characterInstance.buffs) {
+                    characterInstance.buffs = [];
+                }
+                if (characterInstance && !characterInstance.debuffs) {
+                    characterInstance.debuffs = [];
+                }
 
                 logMessage(`${isPlayer ? '角色' : 'BOSS'} ${characterInstance.name} (稀有度: ${rarityVal}) 创建成功。`);
                 return characterInstance;

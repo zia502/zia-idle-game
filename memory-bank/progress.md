@@ -29,10 +29,19 @@ This file tracks the project's progress using a task list format.
     *   角色现在每回合可以尝试使用所有冷却完毕的技能，直到没有可用技能或已执行过攻击性动作（基于 `damage`, `debuff`, `multi_effect`, `trigger` 类型的技能）。
     *   如果未执行攻击性技能，则角色会执行普通攻击。
     *   更新了相关的战斗日志记录。
+* [2025-05-08 23:26:36] - **Completed Task:** 调试怪物HP在战斗开始时显示不正确的问题。
+    *   在 [`src/js/core/battle.js`](src/js/core/battle.js) 中添加了诊断日志。
+    *   分析了日志，确认后端逻辑中怪物HP在回合1开始时是正确的。
+    *   推断问题主要在UI层面。
+    *   对 [`src/js/core/battle.js`](src/js/core/battle.js) 中的 `startBattle` 函数应用了预防性修复，以增强怪物HP初始化的健壮性。
+    *   更新了 [`memory-bank/activeContext.md`](memory-bank/activeContext.md)。
+
 ## Current Tasks
 * [2025-05-08 21:03:00] - 调试战斗中 TypeError (技能 warriorSlash 使用错误: TypeError: Cannot read properties of null (reading 'teamMembers') at battle.js:960).
 
 * [2025-05-08 14:49:00] - 准备向用户呈现关于 [`test-battle-new.html`](test-battle-new.html) "ID 未找到" 错误的分析、架构建议以及记忆银行更新的总结。
+* [2025-05-08 23:14:00] - **Investigating:** 怪物（月影狼王）HP在战斗开始UI显示时为1716/4000，但后端逻辑显示为4000/4000。
+    *   **Status:** 已添加诊断日志，分析了日志，应用了预防性修复到 `battle.js`。主要怀疑UI层面问题。等待用户确认UI层面的检查。
 
 ## Next Steps
 
@@ -59,3 +68,7 @@ This file tracks the project's progress using a task list format.
     *   Formulated recommendations for improvement (iteration, prioritization).
     *   Updated [`memory-bank/activeContext.md`](memory-bank/activeContext.md) with findings.
     *   Awaiting feedback/decision on implementing changes.
+* [2025-05-08 23:30:00] - **Completed Task:** Debugged `defenseDown` atomic effect and standardized `effectType` for "护甲破坏".
+        *   Confirmed `defenseDown` is handled by existing `debuff` logic in `JobSkills.applySkillEffects` ([`src/js/core/job-skills.js:394`](src/js/core/job-skills.js:394)) and `BuffSystem` ([`src/js/core/buff-system.js:35`](src/js/core/buff-system.js:35)). No code changes required for these files.
+        *   Modified `effectType` of "护甲破坏" (ID: `armorBreak`) in [`src/data/job-skills-templates.json`](src/data/job-skills-templates.json:598) from `"damage_and_debuff"` to `"multi_effect"`.
+        *   Updated [`memory-bank/activeContext.md`](memory-bank/activeContext.md).

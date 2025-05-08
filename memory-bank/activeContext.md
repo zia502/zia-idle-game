@@ -35,6 +35,7 @@ This file tracks the project's current status, including recent changes, current
 * [2025-05-08 12:18:42] - 再次修改 `test-battle-new.html`，调整了角色/职业选择下拉列表的更新逻辑和相关的按钮状态管理，并为职业数据获取添加了增强日志。
 * [{{YYYY-MM-DD HH:MM:SS}}] - 修改了 [`src/js/core/battle.js`](src/js/core/battle.js) 中的 `processCharacterAction` 函数，以实现新的多技能使用规则和攻击性动作判断逻辑。
 * [2025-05-08 12:37:35] - 修改 `test-battle-new.html`：在 `loadGameData` 中为从JSON加载的角色数据动态添加 `rarity` 属性。在 `init` 和 `addEventListeners` 函数中添加了诊断日志。
+* [2025-05-08 23:26:36] - 修改 [`src/js/core/battle.js`](src/js/core/battle.js) `startBattle` 函数，增强了怪物HP初始化的健壮性，优先使用JSON中的 `monster.hp` 作为 `maxHp`，并确保初始HP等于 `maxHp`。添加了诊断日志。
 
 ## Open Questions/Issues
 * [2025-05-08 21:25:00] - **New Issue:** 角色在战斗中不再使用技能。
@@ -66,7 +67,20 @@ This file tracks the project's current status, including recent changes, current
 * [2025-05-08 21:03:00] - **New Issue:** `TypeError: Cannot read properties of null (reading 'teamMembers')` at [`src/js/core/battle.js:960`](src/js/core/battle.js:960) in `processCharacterAction`.
     *   **Analysis:** The error occurs because `this.currentBattle` is `null` when `processCharacterAction` attempts to access `this.currentBattle.teamMembers`. `this.currentBattle` is fully populated at the end of the `startBattle` function, after `processBattle` (which calls `processCharacterAction`) has completed.
     *   **Proposed Fix:** Pass `teamMembers` obstáculos as an argument from `processBattle` to `processCharacterAction` and use this argument instead of `this.currentBattle.teamMembers` within `processCharacterAction`.
-
+* [2025-05-08 23:14:00] - **New Issue:** 怪物（月影狼王）HP在战斗开始UI显示时为1716/4000，但后端逻辑显示为4000/4000。
+    *   **Analysis:**
+        *   在 [`src/js/core/battle.js`](src/js/core/battle.js) 的 `startBattle` 和 `processBattle` 函数中添加了诊断日志。
+        *   日志显示，在 `processBattle` 的回合1开始时，以及在 `processTurnStartBuffs` 执行后，怪物的HP在后端逻辑中是4000/4000。
+        *   搜索了 `Events.on('battle:start')`，未发现监听器。
+        *   检查了怪物数据 [`src/data/monsters.json`](src/data/monsters.json)，月影狼王定义简单，无特殊技能或预设buff。
+    *   **Root Cause Hypothesis:** UI层面在战斗初始化时未能正确获取或显示怪物的满HP状态。实际战斗逻辑中的HP是正确的。
+    *   **Diagnostic Logs Added (to be removed after fix):**
+        *   In `startBattle` (after monster HP init): `console.log(\`[DEBUG] startBattle: 怪物 ${monsterCharacter.name} (ID: ${monsterCharacter.id}) HP 初始化后: ${monsterCharacter.currentStats.hp}/${monsterCharacter.currentStats.maxHp}\`);`
+        *   In `processBattle` (turn start): `console.log(\`[DEBUG] processBattle: 回合 ${this.currentTurn} 开始。怪物 ${monster.name} HP: ${monster.currentStats.hp}/${monster.currentStats.maxHp}\`);`
+        *   In `processBattle` (after `processTurnStartBuffs`): `console.log(\`[DEBUG] processBattle: 回合 ${this.currentTurn}，processTurnStartBuffs 后。怪物 ${monster.name} HP: ${monster.currentStats.hp}/${monster.currentStats.maxHp}\`);`
+    *   **Proposed Fix / Next Steps:**
+        1.  **UI Investigation (User Task):** 检查UI代码如何获取并首次显示怪物HP，确保在战斗数据完全准备好后渲染。
+        2.  **Preventive Fix (Applied):** 修改了 [`src/js/core/battle.js`](src/js/core/battle.js) 中 `startBattle` 函数的怪物HP初始化逻辑，使其更健壮，优先使用JSON中的 `monster.hp` 作为 `maxHp`，并确保初始HP等于 `maxHp`。
 * 需要更明确的主角指定机制，而不是简单地假定队伍中的第一个角色。
 * 职业赋予主角后，如果主角被从队伍中移除，职业状态如何处理。
 * `test-battle-new.html` 中角色选择和职业添加功能在之前的测试中存在问题，新的修改和日志旨在解决这些问题。等待用户测试反馈。 **[已解决 2025-05-08 12:37:35]**
@@ -104,7 +118,7 @@ This file tracks the project's current status, including recent changes, current
 * [2025-05-08 21:53:23] - **Issue Resolved:** `JobSkills.useSkill` incorrectly returning `success: false` for successfully applied skills (e.g., `warriorSlash`).
     *   **Analysis:** The root cause was in `JobSkills.applySkillEffects` ([`src/js/core/job-skills.js`](src/js/core/job-skills.js:1)). If a `multi_effect` skill contained an unknown child effect type, the `default` case in the child effect processing `switch` statement would set `currentEffectResult.success = false`. This propagated, causing `JobSkills.useSkill` to return `success: false` even if other child effects (like buffs) were successfully applied.
     *   **Fix Applied:**
-        *   Modified `JobSkills.applySkillEffects` in [`src/js/core/job-skills.js`](src/js/core/job-skills.js:418) (specifically the `default` case of the inner `switch` statement for `actualEffectType`): Changed `success: false` to `success: true` for `currentEffectResult` when an unknown child effect type is encountered. The message was also updated to indicate the effect was skipped. This prevents an unknown child effect from causing the entire `multi_effect` skill to be marked as failed.
+        *   Modified `JobSkills.applySkillEffects` in [`src/js/core/job-skills.js:418`](src/js/core/job-skills.js:418) (specifically the `default` case of the inner `switch` statement for `actualEffectType`): Changed `success: false` to `success: true` for `currentEffectResult` when an unknown child effect type is encountered. The message was also updated to indicate the effect was skipped. This prevents an unknown child effect from causing the entire `multi_effect` skill to be marked as failed.
         *   Commented out the `[DEBUG]` `console.log` statements previously added to `processCharacterAction` in [`src/js/core/battle.js`](src/js/core/battle.js) for diagnosing this issue.
     *   **Status:** Fix implemented and diagnostic logs adjusted. The skill system should now more accurately report success for partially successful multi-effect skills.
 * [2025-05-08 22:36:00] - **Issue Resolved & Refactored:** "角色在战斗中不再使用技能" (originally manifesting as `warriorSlash` not working).
@@ -123,3 +137,10 @@ This file tracks the project's current status, including recent changes, current
         4.  **Conditional Continuation:** If a skill is used, decide if the loop should continue (e.g., allow a buff then an attack) or break (e.g., after a major attack skill).
     *   **Next Step:** Awaiting user feedback or further instructions on how the skill selection logic should be modified. No code changes made yet due to the core nature of this logic.
     *   **Fix Applied:** Refactored skill loading per user request. Removed fallback logic and hardcoded templates. Unified skill data acquisition to `SkillLoader.getSkillInfo`. Ensured skill data is sourced strictly from JSON files (`job-skills-templates.json`, `r/sr/ssr_skills.json`). Kept `warriorSlash` as 【狂怒】 in JSON per user instruction. Corrected `applyBuffEffects` return logic. Diagnostic logs added during debugging were commented out.
+* [2025-05-08 23:30:00] - **Debug Task: `defenseDown` and `effectType` Standardization**
+        *   **Issue 1:** Atomic effect `defenseDown` in skill "护甲破坏" ([`src/data/job-skills-templates.json`](src/data/job-skills-templates.json:590)) was reported as unknown in `applySkillEffects` ([`src/js/core/job-skills.js`](src/js/core/job-skills.js:304)).
+            *   **Analysis:** Checked `applySkillEffects` ([`src/js/core/job-skills.js:390`](src/js/core/job-skills.js:390)). Found that `debuff` case ([`src/js/core/job-skills.js:394`](src/js/core/job-skills.js:394)) correctly calls `applyDebuffEffects` ([`src/js/core/job-skills.js:588`](src/js/core/job-skills.js:588)). Checked [`src/js/core/buff-system.js`](src/js/core/buff-system.js) and confirmed `defenseDown` is a defined `buffType` ([`src/js/core/buff-system.js:35`](src/js/core/buff-system.js:35)) and handled by generic buff/debuff application logic.
+            *   **Resolution:** No code changes needed for `job-skills.js` or `buff-system.js`. The `defenseDown` effect should be defined with `type: "defenseDown"` within the skill's `effects` array, and its parent `effectType` should be a standard one (e.g. `multi_effect` or `debuff`).
+        *   **Issue 2:** Skill "护甲破坏" had a top-level `effectType` of `"damage_and_debuff"` ([`src/data/job-skills-templates.json:598`](src/data/job-skills-templates.json:598)), which is not one of the 8 standard types.
+            *   **Analysis:** Located "护甲破坏" (ID: `armorBreak`) in [`src/data/job-skills-templates.json`](src/data/job-skills-templates.json:590).
+            *   **Resolution:** Changed `effectType` for `armorBreak` from `"damage_and_debuff"` to `"multi_effect"` in [`src/data/job-skills-templates.json`](src/data/job-skills-templates.json:598). The `effects` array already correctly defined the damage and `defenseDown` atomic effects.

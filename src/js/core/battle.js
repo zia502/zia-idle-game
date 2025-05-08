@@ -166,16 +166,39 @@ this.resetProcCounts(); // 重置技能Proc触发计数
         };
 
         // 确保怪物的HP和maxHp是有效数字
-        if (!monsterCharacter.currentStats.maxHp || isNaN(monsterCharacter.currentStats.maxHp)) {
-            console.error("怪物maxHp无效，设置为默认值10000");
-            monsterCharacter.currentStats.maxHp = 10000;
+        if (!monsterCharacter.currentStats) { // 如果 currentStats 不存在，则初始化
+            monsterCharacter.currentStats = {};
+            console.warn(`怪物 ${monsterCharacter.name} (ID: ${monsterCharacter.id}) 的 currentStats 未定义，已初始化为空对象。`);
         }
 
-        if (!monsterCharacter.currentStats.hp || isNaN(monsterCharacter.currentStats.hp)) {
-            console.error("怪物hp无效，设置为maxHp");
+        // 优先从 monster.hp (JSON原始数据) 设置 maxHp
+        // 然后确保 hp 等于 maxHp
+        const initialMaxHpFromJson = monster.hp; // 直接从传入的 monster 对象 (JSON 数据) 的顶层 hp 获取
+        
+        if (typeof initialMaxHpFromJson === 'number' && !isNaN(initialMaxHpFromJson) && initialMaxHpFromJson > 0) {
+            monsterCharacter.currentStats.maxHp = initialMaxHpFromJson;
+        } else {
+            console.error(`怪物 ${monsterCharacter.name} (ID: ${monsterCharacter.id}) 的原始 maxHp (${initialMaxHpFromJson}) 无效，将尝试使用 currentStats.maxHp (${monsterCharacter.currentStats.maxHp}) 或默认值 10000。`);
+            if (!(typeof monsterCharacter.currentStats.maxHp === 'number' && !isNaN(monsterCharacter.currentStats.maxHp) && monsterCharacter.currentStats.maxHp > 0)) {
+                monsterCharacter.currentStats.maxHp = 10000; // 最后的默认值
+            }
+        }
+
+        // 设置当前HP为maxHp
+        monsterCharacter.currentStats.hp = monsterCharacter.currentStats.maxHp;
+        
+        // 再次检查并确保hp和maxHp是有效数字，以防万一
+        if (isNaN(monsterCharacter.currentStats.maxHp)) {
+            console.error("怪物maxHp在最终检查时仍无效，强制设置为默认值10000");
+            monsterCharacter.currentStats.maxHp = 10000;
+        }
+        if (isNaN(monsterCharacter.currentStats.hp) || monsterCharacter.currentStats.hp > monsterCharacter.currentStats.maxHp) {
+            console.error("怪物hp在最终检查时无效或大于maxHp，强制设置为maxHp");
             monsterCharacter.currentStats.hp = monsterCharacter.currentStats.maxHp;
         }
 
+
+        console.log(`[DEBUG] startBattle: 怪物 ${monsterCharacter.name} (ID: ${monsterCharacter.id}) HP 初始化后: ${monsterCharacter.currentStats.hp}/${monsterCharacter.currentStats.maxHp}`);
         console.log(`怪物当前hp: ${monsterCharacter.currentStats.hp}, 怪物状态: `, monsterCharacter);
 
         // 触发战斗开始事件
@@ -416,6 +439,7 @@ this.resetProcCounts(); // 重置技能Proc触发计数
         // 战斗循环
         while (this.currentTurn < MAX_TURNS) {
             this.currentTurn++;
+            console.log(`[DEBUG] processBattle: 回合 ${this.currentTurn} 开始。怪物 ${monster.name} HP: ${monster.currentStats.hp}/${monster.currentStats.maxHp}`);
 
             // 如果在地下城中，增加地下城总回合数
             if (typeof Dungeon !== 'undefined' && Dungeon.currentRun) {
@@ -423,6 +447,7 @@ this.resetProcCounts(); // 重置技能Proc触发计数
             }
             // 处理回合开始时的BUFF效果
             this.processTurnStartBuffs(teamMembers, monster);
+            console.log(`[DEBUG] processBattle: 回合 ${this.currentTurn}，processTurnStartBuffs 后。怪物 ${monster.name} HP: ${monster.currentStats.hp}/${monster.currentStats.maxHp}`);
 
             // 处理队伍成员和怪物的行动顺序（玩家永远先手，按照队伍1,2,3,4的顺序行动）
             // 不再使用速度排序，而是保持队伍成员的原始顺序，然后将怪物放在最后

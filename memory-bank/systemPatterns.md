@@ -17,25 +17,100 @@ It is optional, but recommended to be updated as the project evolves.
 ---
 ### Skill System Patterns
 [2025-05-08 20:45:00] - Standardized Skill EffectTypes
+[2025-05-08 21:38:00] - Refined `effectType` guidance and mapping to atomic effects.
 
-**Standardized `effectType` List and Definitions:**
+**Standardized Top-Level `effectType` List and Definitions:**
 
-*   **`damage`**: 技能的主要效果是造成直接伤害。
-    *   *示例*：对目标造成100点火焰伤害。
-*   **`buff`**: 技能的主要效果是为友方目标施加增益状态。
-    *   *示例*：提升目标攻击力20%，持续3回合。
-*   **`debuff`**: 技能的主要效果是为敌方目标施加减益状态。
-    *   *示例*：降低目标防御力15%，持续2回合。
-*   **`heal`**: 技能的主要效果是恢复友方目标的生命值。
-    *   *示例*：为目标恢复500点生命值。
-*   **`dispel`**: 技能的主要效果是移除目标身上的一个或多个状态效果（可以是增益或减益）。
-    *   *示例*：驱散目标身上的所有减益效果。
-*   **`multi_effect`**: 技能包含多种不同类型的核心效果，这些效果在技能的 `effects` 数组中分别定义。顶层的 `effectType` 作为一个概括。
-    *   *示例*：一个技能同时造成伤害并为自身施加一个buff。
-*   **`passive`**: 技能的效果是被动触发的，通常在满足特定条件时自动生效，或者提供持续性的属性加成，不需要主动施放。
-    *   *示例*：当生命值低于30%时，提升自身防御力。
-*   **`trigger`**: 技能的效果是在特定事件发生时触发的。这与 `passive` 类似，但更强调事件驱动。
-    *   *示例*：当受到攻击时，有概率反弹部分伤害。
+The top-level `effectType` in skill JSON files provides a high-level classification. The actual skill execution relies on the `type` property within each object in the `effects` array, which corresponds to atomic or compound-atomic effects processed by `JobSkills.applySkillEffects`.
+
+*   **`damage`**:
+    *   **Description**: The primary effect of the skill is to inflict direct damage.
+    *   **Atomic Effect Mapping**: Corresponds to `damage` or `enmity` types in the `applySkillEffects` switch.
+    *   **Skill JSON (`effects` array)**: Must contain effect objects with `type: "damage"` or `type: "enmity"`.
+    *   *Example*: Deals 100 fire damage to the target.
+
+*   **`buff`**:
+    *   **Description**: The primary effect of the skill is to apply a beneficial status effect to friendly targets.
+    *   **Atomic Effect Mapping**: Corresponds to `buff` type in `applySkillEffects`.
+    *   **Skill JSON (`effects` array)**: Must contain effect objects with `type: "buff"`.
+    *   *Example*: Increases target's attack by 20% for 3 turns.
+
+*   **`debuff`**:
+    *   **Description**: The primary effect of the skill is to apply a detrimental status effect to enemy targets.
+    *   **Atomic Effect Mapping**: Corresponds to `debuff` type in `applySkillEffects`.
+    *   **Skill JSON (`effects` array)**: Must contain effect objects with `type: "debuff"`.
+    *   *Example*: Decreases target's defense by 15% for 2 turns.
+
+*   **`heal`**:
+    *   **Description**: The primary effect of the skill is to restore health to friendly targets.
+    *   **Atomic Effect Mapping**: Corresponds to `heal` type in `applySkillEffects`.
+    *   **Skill JSON (`effects` array)**: Must contain effect objects with `type: "heal"`.
+    *   *Example*: Heals the target for 500 HP.
+
+*   **`dispel`**:
+    *   **Description**: The primary effect of the skill is to remove one or more status effects (buffs or debuffs) from a target.
+    *   **Atomic Effect Mapping**: Corresponds to `dispel` type in `applySkillEffects`.
+    *   **Skill JSON (`effects` array)**: Must contain effect objects with `type: "dispel"`.
+    *   *Example*: Dispels all debuffs from the target.
+
+*   **`multi_effect`**:
+    *   **Description**: Used for skills that combine multiple distinct core effects, or include complex effects not covered by a single basic `effectType`. The top-level `multi_effect` serves as a general category, with specific atomic effects detailed within the `effects` array.
+    *   **Atomic Effect Mapping (Combinations)**: Can include any combination of atomic types processed by `applySkillEffects` (e.g., `damage`, `buff`, `debuff`, `heal`, `dispel`, `revive`, `triggerSkill`, `proc`, `damage_and_buff`, `damage_and_debuff`).
+    *   **Guidance**:
+        *   Use `multi_effect` if the skill's core function is not a singular `damage`, `buff`, `debuff`, `heal`, or `dispel`.
+        *   Use `multi_effect` if the skill includes effects like `revive`, `triggerSkill`, `proc`, or compound types like `damage_and_buff`.
+        *   Cost-type effects (e.g., `hpCostPercentageCurrent`) are usually paired with primary effects. The skill's top-level `effectType` should reflect the primary effect(s) (e.g., `damage` or `multi_effect`).
+    *   *Example*: A skill that deals damage and applies a buff to the caster.
+
+*   **`passive`**:
+    *   **Description**: The skill's effects are triggered passively, automatically activating under certain conditions or providing continuous stat bonuses without active casting.
+    *   **Processing Logic**: Typically handled outside the `useSkill` -> `applySkillEffects` pathway, often within other game logic parts (e.g., event callbacks, status checks).
+    *   **Skill JSON (`effects` array)**: Describes the specific parameters and nature of the passive effect.
+    *   *Example*: Increases defense when HP is below 30%.
+
+*   **`trigger`**:
+    *   **Description**: The skill's effects are actively triggered upon a specific event or condition (distinct from the continuous or auto-check nature of `passive`). The `useSkill` function routes these to `applySkillEffects`.
+    *   **Atomic Effect Mapping**: The `effects` array usually contains `type: "triggerSkill"` to activate another skill, or directly defines atomic effects like `damage` or `buff` as the triggered outcome.
+    *   **Skill JSON (`effects` array)**: Defines the specific atomic effects that occur upon triggering.
+    *   *Example*: Has a chance to counter-attack with damage when hit.
+
+**Important Clarifications on Atomic Effects vs. Top-Level `effectType`:**
+
+*   Atomic effect types like `revive`, `proc`, `enmity`, `damage_and_buff`, `damage_and_debuff`, and `triggerSkill` (which are handled in the `applySkillEffects` switch in [`src/js/core/job-skills.js`](src/js/core/job-skills.js:366)) should be represented at the top-level `effectType` as follows:
+    *   `enmity`: Can be classified under the top-level `damage` if it's the sole primary damage effect.
+    *   All others (`revive`, `proc`, `damage_and_buff`, `damage_and_debuff`, `triggerSkill`): Should be classified under the top-level `multi_effect`.
+    *   The specific atomic type (e.g., `"revive"`) is then specified in the `type` field of an object within the skill's `effects` array.
+*   Cost-inducing effects like `hpCostPercentageCurrent` are not primary effect types. They are defined within the `effects` array and are prioritized in `applySkillEffects`. The skill's top-level `effectType` is determined by its main beneficial/offensive effects.
+
+---
+### [2025-05-08 22:58:00] - Multi-Skill Attempt Loop Pattern
+
+**Context:** In [`src/js/core/battle.js`](src/js/core/battle.js:1) `processCharacterAction`, characters should attempt to use all available (off-cooldown) skills in a turn until an "offensive action" is performed or no more skills can be used.
+
+**Pattern:**
+
+1.  **`hasPerformedOffensiveActionThisTurn` Flag:** A boolean flag, initialized to `false` at the start of a character's turn.
+2.  **Skill Iteration:** Loop through the character's `availableSkills` list.
+    *   **Pre-check:** If `hasPerformedOffensiveActionThisTurn` is `true`, break the loop.
+    *   **Usability Check:** For each skill, call `Battle.canUseSkill`.
+    *   **Attempt Use:** If usable, call `JobSkills.useSkill`.
+    *   **Outcome:**
+        *   If successful:
+            *   Determine if the skill was "offensive" (e.g., based on `skill.effectType` like `damage`, `debuff`, or offensive `multi_effect`).
+            *   If offensive, set `hasPerformedOffensiveActionThisTurn = true`.
+            *   Log the skill usage.
+        *   If failed: Log the failure.
+3.  **Normal Attack Condition:** After the loop, if `hasPerformedOffensiveActionThisTurn` is still `false`, the character performs a normal attack. Otherwise, no normal attack is made.
+
+**"Offensive Action" Definition (Simplified for this pattern):**
+A skill is considered "offensive" if its `effectType` is one of:
+*   `damage`
+*   `debuff`
+*   `multi_effect` (if it contains offensive sub-effects, requires careful checking or a helper function)
+*   `trigger` (if its triggered effect is offensive)
+
+Skills with `effectType` like `buff`, `heal`, `dispel` are generally not considered "offensive" for the purpose of ending the skill usage phase immediately, allowing characters to potentially use a buff and then an attack skill. The exact definition of "offensive" might need refinement based on game balance.
+
 ## Testing Patterns
 
 *

@@ -14,6 +14,18 @@ This file tracks the project's current status, including recent changes, current
 * [2025-05-08 12:18:42] - 进一步调试 `test-battle-new.html`：修改了 `updateCharacterJobSelect` 函数以改善下拉列表选项的显示和按钮状态更新逻辑。在 `handleAddCharacterToTeam` 函数中为职业数据获取过程添加了更详细的日志记录，以帮助定位潜在的职业ID不匹配问题。
 * [2025-05-08 12:37:35] - 解决了 `test-battle-new.html` 中因角色数据缺少 `rarity` 属性导致无法选择R卡角色的问题。通过修改 `loadGameData` 函数为R/SR/SSR角色动态添加 `rarity` 属性，确保了角色选择和后续职业分配功能恢复正常。添加了额外的诊断日志以辅助调试。
 * [2025-05-08 14:47:00] - 分析 [`test-battle-new.html`](test-battle-new.html) 中的角色数据加载、存储和访问架构，以解决 "ID 未找到" 错误。
+* [2025-05-08 22:58:00] - **New Requirement:** 定义新的技能使用循环逻辑 for `processCharacterAction` in [`src/js/core/battle.js`](src/js/core/battle.js:1).
+    *   **Goal:** Allow characters to attempt all available skills until an "offensive action" is performed or no skills remain.
+    *   **"Offensive Action" Definition (Simplified):** A skill is offensive if its `effectType` is `damage`, `debuff`, or a `multi_effect`/`trigger` with offensive sub-components. Non-offensive skills (e.g., `buff`, `heal`) do not immediately end the skill phase.
+    *   **Logic:**
+        1.  Initialize `hasPerformedOffensiveActionThisTurn = false`.
+        2.  Loop through `availableSkills`.
+        3.  If `hasPerformedOffensiveActionThisTurn` is true, break.
+        4.  If `Battle.canUseSkill` is true, attempt `JobSkills.useSkill`.
+        5.  If skill used successfully and is offensive, set `hasPerformedOffensiveActionThisTurn = true`.
+        6.  After loop, if `hasPerformedOffensiveActionThisTurn` is false, perform normal attack.
+    *   **Status:** Pseudocode defined. Memory Bank ([`systemPatterns.md`](memory-bank/systemPatterns.md:1)) updated with this pattern.
+* [{{YYYY-MM-DD HH:MM:SS}}] - 在 [`src/js/core/battle.js`](src/js/core/battle.js) 的 `processCharacterAction` 函数中实现了新的多技能使用循环逻辑。角色现在每回合可以尝试使用所有冷却完毕的技能，直到没有可用技能或已执行过攻击性动作。
 
 ## Recent Changes
 
@@ -21,9 +33,33 @@ This file tracks the project's current status, including recent changes, current
 * [2025-05-08 11:48:58] - 修改了 `test-battle-new.html` 以更新角色和职业选择UI及相关JavaScript逻辑。
 * [2025-05-08 12:14:54] - 进一步修改 `test-battle-new.html` 以尝试修复错误并添加日志。
 * [2025-05-08 12:18:42] - 再次修改 `test-battle-new.html`，调整了角色/职业选择下拉列表的更新逻辑和相关的按钮状态管理，并为职业数据获取添加了增强日志。
+* [{{YYYY-MM-DD HH:MM:SS}}] - 修改了 [`src/js/core/battle.js`](src/js/core/battle.js) 中的 `processCharacterAction` 函数，以实现新的多技能使用规则和攻击性动作判断逻辑。
 * [2025-05-08 12:37:35] - 修改 `test-battle-new.html`：在 `loadGameData` 中为从JSON加载的角色数据动态添加 `rarity` 属性。在 `init` 和 `addEventListeners` 函数中添加了诊断日志。
 
 ## Open Questions/Issues
+* [2025-05-08 21:25:00] - **New Issue:** 角色在战斗中不再使用技能。
+    *   **Analysis:**
+        *   对 [`src/js/core/battle.js`](src/js/core/battle.js), [`src/js/core/skill-loader.js`](src/js/core/skill-loader.js), [`src/js/core/job-skills.js`](src/js/core/job-skills.js), [`src/js/core/job-system.js`](src/js/core/job-system.js), 和 [`src/js/core/job-skills-template.js`](src/js/core/job-skills-template.js) 的分析表明，根本原因在于 SSR 技能数据 ([`src/data/ssr_skill.json`](src/data/ssr_skill.json:1)) 没有被整合到核心的技能信息获取路径中。
+        *   `JobSystem.getSkill(skillId)` 和 `SkillLoader.getSkillInfo(skillId)` 目前都不会从 SSR特定的数据源（如 `window.ssr_skills` 或 `SSRSkillsTemplate`）查找技能。
+        *   这导致当角色尝试使用 SSR 技能时，系统获取到的是一个无效的“备用”技能对象，该对象无法成功执行。
+    *   **Proposed Fix:**
+        1.  修改 [`src/js/core/skill-loader.js`](src/js/core/skill-loader.js):
+            *   添加 `loadSSRSkills()` 方法从 [`src/data/ssr_skill.json`](src/data/ssr_skill.json:1) 加载数据到 `window.ssr_skills`。
+            *   在 `SkillLoader.init()` 中调用 `loadSSRSkills()`。
+            *   在 `SkillLoader.getSkillInfo()` 的查找顺序中加入对 `window.ssr_skills[skillId]` 的检查。
+        2.  修改 [`src/js/core/job-system.js`](src/js/core/job-system.js):
+            *   在 `JobSystem.getSkill()` 的查找顺序中加入对 `window.ssr_skills[skillId]` 的检查。
+*   **[2025-05-08 21:44:50] - Further Investigation (Protagonist ID: 124124):**
+        *   Focused on protagonist (ID: 124124) not using skills, despite `effectType` in skill data files being correct.
+        *   Read and analyzed [`src/js/core/battle.js`](src/js/core/battle.js), specifically the `processCharacterAction` function.
+        *   Added detailed diagnostic `console.log` statements within `processCharacterAction` in [`src/js/core/battle.js`](src/js/core/battle.js) to trace:
+            *   Current acting character ID and name.
+            *   Character's full skill list and current cooldown states.
+            *   Result of `getAvailableSkills(character)`.
+            *   Intermediate steps in skill selection logic and the final chosen skill (or why none was chosen).
+            *   Reason for resorting to a normal attack if a skill was not used.
+        *   These logs are temporary and will be removed once the root cause is identified and fixed.
+        *   Next step: Request user to run the game with these logs to capture output for analysis.
 * [2025-05-08 21:07:00] - **New Issue:** `ReferenceError: damageResult is not defined` at [`src/js/core/battle.js:1076`](src/js/core/battle.js:1076) in `processCharacterAction`.
     *   **Analysis:** The error occurs when attempting to access `damageResult.isCritical` after the attack loop. If the loop for normal attacks doesn't execute (e.g., if the monster is already defeated by a skill used earlier in the turn), `damageResult` remains undefined, leading to the ReferenceError. Additionally, the original logic for `critCount` only considered the last hit of a multi-attack.
     *   **Fix Applied:** Modified [`src/js/core/battle.js`](src/js/core/battle.js) to use a `criticalHits` counter that is correctly incremented within the attack loop for each critical hit. This `criticalHits` counter is then used to update `character.stats.critCount` and `battleStats.characterStats[character.id].critCount` after the loop. This resolves the ReferenceError and correctly counts all critical hits in a multi-attack.
@@ -54,3 +90,36 @@ This file tracks the project's current status, including recent changes, current
     *   修改了数据文件 [`src/data/ssr_skill.json`](src/data/ssr_skill.json), [`src/data/sr_skills.json`](src/data/sr_skills.json), 和 [`src/data/r_skills.json`](src/data/r_skills.json)，将其中的顶层 `effectType` 字段更新为标准化的8个类型之一 (`damage`, `buff`, `debuff`, `heal`, `dispel`, `multi_effect`, `passive`, `trigger`)。
     *   修改了逻辑文件 [`src/js/core/job-skills.js`](src/js/core/job-skills.js) 中的 `useSkill` 函数，调整了 `switch` 语句以正确处理新的标准化 `effectType`，特别是 `multi_effect` 和 `trigger` 类型，确保它们通过 `applySkillEffects` 进行通用处理。
 * [2025-05-08 20:52:00] - **Current Focus:** 完成了技能 `effectType` 的标准化任务。
+* [2025-05-08 21:16:00] - **Recent Changes:** Implemented detailed skill usage logging in combat.
+    *   Modified [`src/js/core/job-skills.js`](src/js/core/job-skills.js):
+        *   Added comprehensive logging logic at the end of the `useSkill` method to record skill usage details (caster, skill name, target(s), effects like damage/heal/buff/debuff, and target HP) using `Battle.logBattle`.
+        *   Updated `applyBuffEffects` and `applyDebuffEffects` to include the `name` of the buff/debuff in their returned effect details, facilitating more descriptive logs.
+* [2025-05-08 21:16:00] - **Current Focus:** Completed implementation of detailed skill usage logs. Preparing to update progress and finalize task.
+* [2025-05-08 21:40:00] - **Recent Changes:**
+    *   根据用户反馈和对 [`src/js/core/job-skills.js`](src/js/core/job-skills.js:1) 中 `applySkillEffects` 函数的分析，重新审视并明确了技能顶层 `effectType` 的标准。
+    *   决定继续使用现有的8个通用顶层 `effectType` (`damage`, `buff`, `debuff`, `heal`, `dispel`, `multi_effect`, `passive`, `trigger`)。
+    *   更新了 [`memory-bank/systemPatterns.md`](memory-bank/systemPatterns.md:1) 以包含详细的指导原则，说明这些通用顶层类型如何映射到 `applySkillEffects` 中处理的更具体的原子效果类型。
+    *   针对技能“霸装架式”的 `effectType: "self_buff_tradeoff"`，建议将其顶层 `effectType` 修改为 `multi_effect`，并在其 `effects` 数组中具体定义增益和代价效果。
+* [2025-05-08 21:40:00] - **Current Focus:** 完成对技能 `effectType` 标准的重新审视和文档更新。解决了用户关于 `effectType` 不一致的反馈。
+* [2025-05-08 21:53:23] - **Issue Resolved:** `JobSkills.useSkill` incorrectly returning `success: false` for successfully applied skills (e.g., `warriorSlash`).
+    *   **Analysis:** The root cause was in `JobSkills.applySkillEffects` ([`src/js/core/job-skills.js`](src/js/core/job-skills.js:1)). If a `multi_effect` skill contained an unknown child effect type, the `default` case in the child effect processing `switch` statement would set `currentEffectResult.success = false`. This propagated, causing `JobSkills.useSkill` to return `success: false` even if other child effects (like buffs) were successfully applied.
+    *   **Fix Applied:**
+        *   Modified `JobSkills.applySkillEffects` in [`src/js/core/job-skills.js`](src/js/core/job-skills.js:418) (specifically the `default` case of the inner `switch` statement for `actualEffectType`): Changed `success: false` to `success: true` for `currentEffectResult` when an unknown child effect type is encountered. The message was also updated to indicate the effect was skipped. This prevents an unknown child effect from causing the entire `multi_effect` skill to be marked as failed.
+        *   Commented out the `[DEBUG]` `console.log` statements previously added to `processCharacterAction` in [`src/js/core/battle.js`](src/js/core/battle.js) for diagnosing this issue.
+    *   **Status:** Fix implemented and diagnostic logs adjusted. The skill system should now more accurately report success for partially successful multi-effect skills.
+* [2025-05-08 22:36:00] - **Issue Resolved & Refactored:** "角色在战斗中不再使用技能" (originally manifesting as `warriorSlash` not working).
+    *   **Root Cause:** Incorrect skill data loading due to fallback logic (`JobSystem.getFallbackSkill`), hardcoded basic templates (`JobSkillsTemplate.loadBasicTemplates`), and conflicting definitions (`warriorSlash` defined as 【狂怒】 in JSON and basic templates).
+* [2025-05-08 22:42:00] - **New Issue Investigation:** Protagonist uses first available skill (e.g., "Rage") but not subsequent available skills (e.g., "Armor Break").
+    *   **Analysis of `src/js/core/battle.js` - `processCharacterAction`:**
+        *   The function retrieves a list of available skills using `this.getAvailableSkills(character)`.
+        *   It then explicitly attempts to use only the *first* skill in this list (`availableSkills[0]`).
+        *   There is no loop or further logic to iterate through or attempt other skills in the `availableSkills` list if the first one is attempted (regardless of success) or if there are multiple skills available.
+        *   Once a skill attempt is made (passes `canUseSkill` and enters `JobSkills.useSkill`), the character proceeds to the normal attack phase.
+    *   **Assessment:** This "use only the first available skill" logic is likely a simplified implementation and not the intended final behavior, as it can lead to suboptimal combat actions (e.g., using a buff and then not an available attack skill).
+    *   **Recommendation for Improvement (Conceptual):**
+        1.  **Iterate Through Available Skills:** Modify `processCharacterAction` to loop through all skills returned by `getAvailableSkills`.
+        2.  **Define Skill Usage Limits:** Determine game design rules for skill usage per turn (e.g., one major skill, or one buff + one attack).
+        3.  **Skill Prioritization (Optional Advanced):** Introduce skill priorities or categories (buff, debuff, damage) to make more intelligent choices within the loop.
+        4.  **Conditional Continuation:** If a skill is used, decide if the loop should continue (e.g., allow a buff then an attack) or break (e.g., after a major attack skill).
+    *   **Next Step:** Awaiting user feedback or further instructions on how the skill selection logic should be modified. No code changes made yet due to the core nature of this logic.
+    *   **Fix Applied:** Refactored skill loading per user request. Removed fallback logic and hardcoded templates. Unified skill data acquisition to `SkillLoader.getSkillInfo`. Ensured skill data is sourced strictly from JSON files (`job-skills-templates.json`, `r/sr/ssr_skills.json`). Kept `warriorSlash` as 【狂怒】 in JSON per user instruction. Corrected `applyBuffEffects` return logic. Diagnostic logs added during debugging were commented out.

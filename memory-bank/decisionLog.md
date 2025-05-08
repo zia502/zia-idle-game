@@ -69,3 +69,53 @@ UI 调整将影响 `test-battle-new.html` 的角色创建/编辑流程。
     *   可能需要调整技能处理逻辑，例如在 [`src/js/core/job-skills.js`](src/js/core/job-skills.js) 或其他相关模块中，如果存在基于旧 `effectType` 的 `switch` 语句或条件判断，需要更新以适应新的标准。
 *   **数据一致性:** 确保所有技能定义都遵循新的 `effectType` 标准。
 *   **未来扩展:** 新的 `effectType` 为未来添加更复杂的技能逻辑提供了基础。
+---
+### Decision (Debug)
+[2025-05-08 21:25:00] - Resolve "角色在战斗中不再使用技能" bug by integrating SSR skill data loading.
+
+**Rationale:**
+Analysis revealed that SSR skill data from [`src/data/ssr_skill.json`](src/data/ssr_skill.json:1) was not being loaded or accessed by `JobSystem.getSkill()` or `SkillLoader.getSkillInfo()`. This resulted in the system using fallback/empty skill objects for SSR skills, leading to failed skill executions.
+
+**Details:**
+The fix involves two main parts:
+1.  **Modify [`src/js/core/skill-loader.js`](src/js/core/skill-loader.js):**
+    *   Implement a `loadSSRSkills()` method to fetch data from [`src/data/ssr_skill.json`](src/data/ssr_skill.json:1) and store it in `window.ssr_skills`.
+    *   Call `loadSSRSkills()` within `SkillLoader.init()`.
+    *   Update `SkillLoader.getSkillInfo()` to include `window.ssr_skills` in its lookup sequence.
+2.  **Modify [`src/js/core/job-system.js`](src/js/core/job-system.js):**
+    *   Update `JobSystem.getSkill()` to include `window.ssr_skills` in its lookup sequence, ensuring consistency.
+---
+### Decision (Spec)
+[2025-05-08 21:40:00] - 重新审视并明确技能顶层 `effectType` 标准，维持通用类型并强化映射指导。
+
+**Rationale:**
+用户反馈技能 "霸装架式" 的 `effectType: "self_buff_tradeoff"` 不符合 [`src/js/core/job-skills.js`](src/js/core/job-skills.js:1) 中 `applySkillEffects` 函数处理的原子效果类型。这表明需要更清晰的 `effectType` 定义和使用指南。
+经过分析，决定继续使用先前在 [`memory-bank/systemPatterns.md`](memory-bank/systemPatterns.md:1) 中定义的8个通用顶层 `effectType` (`damage`, `buff`, `debuff`, `heal`, `dispel`, `multi_effect`, `passive`, `trigger`)。这种方法的好处是保持顶层分类的简洁性，同时通过技能的 `effects` 数组内部的 `type` 属性来指定具体的原子效果，这与 `applySkillEffects` 的现有处理逻辑一致。
+
+**Implications/Details:**
+*   **标准维持与强化:** 坚持使用8个通用顶层 `effectType`。
+*   **文档更新:**
+    *   [`memory-bank/systemPatterns.md`](memory-bank/systemPatterns.md:1) 已更新，为每个通用顶层 `effectType` 提供了详细的定义，并明确了它们如何映射到 `applySkillEffects` ([`src/js/core/job-skills.js:281`](src/js/core/job-skills.js:281)) 中处理的原子或复合原子效果类型（如 `damage`, `buff`, `debuff`, `heal`, `dispel`, `revive`, `enmity`, `damage_and_debuff`, `damage_and_buff`, `triggerSkill`, `proc`）。
+    *   特别强调 `multi_effect` 用于组合效果或包含 `revive`, `triggerSkill`, `proc` 等复杂原子效果的技能。
+*   **特定案例处理 ("霸装架式"):**
+    *   技能 "霸装架式" 的原 `effectType: "self_buff_tradeoff"` 应修改为顶层 `effectType: "multi_effect"`。
+    *   其 `effects` 数组应包含至少两个对象：一个 `type: "buff"` 用于描述增益，另一个用于描述 "tradeoff"（例如 `type: "debuff"` 或 `type: "hpCostPercentageCurrent"`）。
+*   **数据一致性:** 未来的技能定义和现有技能的审查应遵循此更新后的标准。
+*   **代码影响:** [`src/js/core/job-skills.js`](src/js/core/job-skills.js:1) 中的 `useSkill` ([`src/js/core/job-skills.js:20`](src/js/core/job-skills.js:20)) 和 `applySkillEffects` ([`src/js/core/job-skills.js:281`](src/js/core/job-skills.js:281)) 函数的现有逻辑与此方案兼容，主要依赖 `effects` 数组中的原子 `type` 进行分发。
+---
+### Decision (Debug)
+[2025-05-08 22:36:00] - Refactor Skill Loading &amp; Remove Fallbacks/Hardcoding
+
+**Rationale:**
+Identified root cause of skill usage failure (`warriorSlash` executing as 【狂怒】) as incorrect skill data being returned. This stemmed from multiple issues: incorrect fallback logic in `JobSystem.getFallbackSkill`, incorrect hardcoded definitions in `JobSkillsTemplate.loadBasicTemplates`, and an incorrect definition in `job-skills-templates.json` itself (which user instructed to keep as is, implying `warriorSlash` ID *should* map to 【狂怒】 based on the authoritative JSON). User explicitly requested removal of all fallback mechanisms and hardcoded basic templates, enforcing strict loading solely from JSON data files. Refactored skill acquisition to use a single unified function (`SkillLoader.getSkillInfo`) and removed redundant/fallback functions/logic (`JobSystem.getFallbackSkill`, `JobSkillsTemplate.getTemplate`, `JobSkillsTemplate.loadBasicTemplates`). Corrected `applyBuffEffects` return logic.
+
+**Details:**
+*   Unified skill data lookup to `SkillLoader.getSkillInfo`, searching templates and `window.r/sr/ssr_skills`.
+*   Removed `JobSystem.getFallbackSkill`.
+*   Removed `JobSkillsTemplate.getTemplate`.
+*   Removed `JobSkillsTemplate.loadBasicTemplates` and its call from `init`.
+*   Modified `JobSystem.getSkill` to call `SkillLoader.getSkillInfo`.
+*   Modified `JobSkills.useSkill` to call `SkillLoader.getSkillInfo` instead of `JobSystem.getSkill` and `JobSkillsTemplate.getTemplate`.
+*   Corrected return value of `JobSkills.applyBuffEffects` to include `success: true`.
+*   Reverted `warriorSlash` definition in `job-skills-templates.json` back to "狂怒" as per user instruction.
+*   Affected files: [`src/js/core/job-system.js`](src/js/core/job-system.js), [`src/js/core/skill-loader.js`](src/js/core/skill-loader.js), [`src/js/core/job-skills-template.js`](src/js/core/job-skills-template.js), [`src/js/core/job-skills.js`](src/js/core/job-skills.js), [`src/data/job-skills-templates.json`](src/data/job-skills-templates.json).

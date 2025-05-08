@@ -18,21 +18,40 @@ const JobSkills = {
      * @returns {object} 技能使用结果
      */
     useSkill(characterId, skillId, teamMembers, monster) {
+        // console.log(`[DEBUG] JobSkills.useSkill: CALLED - characterId: ${characterId}, skillId: ${skillId}, teamMembers: ${teamMembers.map(m => m.id + '(' + m.name + ')').join(', ')}, monster: ${monster.id}(${monster.name})`);
         const character = Character.getCharacter(characterId);
         if (!character) return { success: false, message: '角色不存在' };
 
-        const skill = JobSystem.getSkill(skillId);
-        if (!skill) return { success: false, message: '技能不存在' };
+        // 统一使用 SkillLoader.getSkillInfo 获取技能数据/模板
+        // const skill = JobSystem.getSkill(skillId); // Replaced
+        // if (!skill) {
+        //     console.log(`[DEBUG] JobSkills.useSkill: RETURNING (skill not found) - skillId: ${skillId}`);
+        //     return { success: false, message: '技能不存在' };
+        // }
+        // console.log(`[DEBUG] JobSkills.useSkill: Fetched skill - ID: ${skill.id || skillId}, Name: ${skillDisplayName}`);
 
-        // 获取技能模板
-        const template = JobSkillsTemplate.getTemplate(skillId);
-        if (!template) return { success: false, message: `技能 ${skill.name} 没有模板定义` };
+        // 获取技能模板 (现在统一为技能数据)
+        // const template = JobSkillsTemplate.getTemplate(skillId); // Replaced
+        const template = SkillLoader.getSkillInfo(skillId); // Use SkillLoader
+
+        if (!template) {
+            // console.log(`[DEBUG] JobSkills.useSkill: RETURNING (template/skillData not found) - skillId: ${skillId}, skillName: ${skill ? skillDisplayName : 'N/A'}`); // skill is no longer defined here
+            // console.log(`[DEBUG] JobSkills.useSkill: RETURNING (skillData not found via SkillLoader) - skillId: ${skillId}`);
+            // return { success: false, message: `技能 ${skill ? skillDisplayName : skillId} 没有模板定义` };
+            return { success: false, message: `技能 ${skillId} 没有定义` };
+        }
+        // console.log(`[DEBUG] JobSkills.useSkill: Fetched template - ID: ${template.id || 'N/A'}, Name: ${template.name}, EffectType: ${template.effectType}, TargetType: ${template.targetType}`);
+        // 使用 template.name 或 skillId 作为备用名
+        const skillDisplayName = template.name || skillId;
+        // console.log(`[DEBUG] JobSkills.useSkill: Fetched skillData (was template) - ID: ${template.id || skillId}, Name: ${skillDisplayName}, EffectType: ${template.effectType}, TargetType: ${template.targetType}`);
 
         // 检查技能是否在冷却中
         if (character.skillCooldowns && character.skillCooldowns[skillId] > 0) {
+            const returnMsg = `技能 ${skillDisplayName} 还在冷却中，剩余 ${character.skillCooldowns[skillId]} 回合`; // Use skillDisplayName
+            // console.log(`[DEBUG] JobSkills.useSkill: RETURNING (skill on cooldown) - ${returnMsg}`);
             return {
                 success: false,
-                message: `技能 ${skill.name} 还在冷却中，剩余 ${character.skillCooldowns[skillId]} 回合`
+                message: returnMsg
             };
         }
 
@@ -42,9 +61,11 @@ const JobSkills = {
                 character.skillCooldowns = {};
             }
             character.skillCooldowns[skillId] = template.initialCooldown;
+            const returnMsgInitial = `技能 ${skillDisplayName} 需要 ${template.initialCooldown} 回合后才能使用`; // Use skillDisplayName
+            // console.log(`[DEBUG] JobSkills.useSkill: RETURNING (skill on initial cooldown) - ${returnMsgInitial}`);
             return {
                 success: false,
-                message: `技能 ${skill.name} 需要 ${template.initialCooldown} 回合后才能使用`
+                message: returnMsgInitial
             };
         }
 
@@ -71,14 +92,19 @@ const JobSkills = {
                 break;
             case 'multi_effect':
             case 'trigger': // trigger 类型也通过 effects 数组定义其行为
+                // console.log(`[DEBUG] JobSkills.useSkill: BEFORE applySkillEffects - character: ${character.id}(${character.name}), template: ${template.id || skillId}(${template.name}), targetType: ${template.targetType}`);
                 result = this.applySkillEffects(character, template, teamMembers, monster);
+                // console.log(`[DEBUG] JobSkills.useSkill: AFTER applySkillEffects - result:`, JSON.parse(JSON.stringify(result)));
                 break;
             default:
                 // 对于未明确列出的 effectType，如果它有 effects 数组，也尝试通用处理
                 if (template.effects && Array.isArray(template.effects) && template.effects.length > 0) {
                     Battle.logBattle(`技能 ${template.name} 的 effectType "${template.effectType}" 不是标准主动类型，尝试通用效果处理。`);
+                    // console.log(`[DEBUG] JobSkills.useSkill (default case): BEFORE applySkillEffects - character: ${character.id}(${character.name}), template: ${template.id || skillId}(${template.name}), targetType: ${template.targetType}`);
                     result = this.applySkillEffects(character, template, teamMembers, monster);
+                    // console.log(`[DEBUG] JobSkills.useSkill (default case): AFTER applySkillEffects - result:`, JSON.parse(JSON.stringify(result)));
                 } else {
+                    // console.log(`[DEBUG] JobSkills.useSkill: RETURNING (unknown skill type or no effects) - success: false, message: 未知的技能类型 (${template.effectType}) 或无效果定义。`);
                     return { success: false, message: `未知的技能类型 (${template.effectType}) 或无效果定义。` };
                 }
         }
@@ -102,11 +128,136 @@ const JobSkills = {
             character.skillUsedOnce[skillId] = true;
         }
 
-        return {
-            success: result ? result.success : false,
+        // --- 详细技能使用日志 ---
+        if (result && result.success && typeof Battle !== 'undefined' && Battle.logBattle && !template.isTriggeredSkill) {
+            // console.log(`[DEBUG] JobSkills.useSkill: PREPARING DETAILED LOG - result:`, JSON.parse(JSON.stringify(result)), `template:`, JSON.parse(JSON.stringify(template)));
+            try {
+                let logParts = [];
+                logParts.push(`[技能][回合 ${Battle.currentTurn || 0}]`);
+                logParts.push(`${character.name} 使用 [${skillDisplayName}]`); // Use skillDisplayName
+
+                const getTargetObject = (name, char, mon, team) => {
+                    if (name === mon.name) return mon;
+                    return team.find(m => m.name === name);
+                };
+                
+                const getTargetString = (targetType, resEffects, char, mon, team) => {
+                    if (targetType === 'self') return "自身";
+                    if (targetType === 'all_allies') return "所有友方";
+                    if (targetType === 'all_enemies') return "所有敌人";
+                    if (targetType === 'enemy') return mon.name;
+                    if (targetType === 'ally') {
+                        if (resEffects && resEffects.effects && resEffects.effects.length > 0 && resEffects.effects[0].target) {
+                            return resEffects.effects[0].target;
+                        }
+                        // Attempt to find the first living ally that is not self if target is 'ally' but no specific target in effects
+                        const firstAlly = team.find(m => m.id !== char.id && m.currentStats.hp > 0);
+                        return firstAlly ? firstAlly.name : "某个友方";
+                    }
+                    // Fallback for other or complex targetings based on actual affected targets
+                    if (resEffects && resEffects.effects && Array.isArray(resEffects.effects) && resEffects.effects.length > 0) {
+                        const affectedNames = new Set(resEffects.effects.map(e => e.target).filter(t => t));
+                        if (affectedNames.size === 1) return affectedNames.values().next().value;
+                        if (affectedNames.size > 1) return Array.from(affectedNames).join(', ');
+                    }
+                    return "目标";
+                };
+
+                let targetStringDisplay = getTargetString(template.targetType, result.effects, character, monster, teamMembers);
+                logParts.push(`对 ${targetStringDisplay}`);
+
+                let mainEffectDescription = "";
+                let targetHpStrings = new Set(); // Use Set to avoid duplicate HP logs for same target
+
+                if (result.effects) {
+                    const resEffects = result.effects; // This is the object like { type: 'damage', totalDamage: X, effects: [...] }
+
+                    if (resEffects.type === 'damage' && resEffects.totalDamage !== undefined) {
+                        mainEffectDescription = `造成 ${resEffects.totalDamage} 点 ${template.attribute || '物理'} 伤害。`;
+                        if (resEffects.effects && Array.isArray(resEffects.effects)) {
+                            resEffects.effects.forEach(de => { // de is { target: name, actualDamage: X }
+                                const tObj = getTargetObject(de.target, character, monster, teamMembers);
+                                if (tObj && tObj.currentStats && typeof tObj.currentStats.hp !== 'undefined' && typeof tObj.currentStats.maxHp !== 'undefined') {
+                                    targetHpStrings.add(`${tObj.name} 剩余HP: ${Math.floor(tObj.currentStats.hp)}/${Math.floor(tObj.currentStats.maxHp)}。`);
+                                }
+                            });
+                        }
+                    } else if (resEffects.type === 'heal' && resEffects.totalHealing !== undefined) {
+                        mainEffectDescription = `为 ${targetStringDisplay} 恢复了 ${resEffects.totalHealing} 点 HP。`;
+                         if (resEffects.effects && Array.isArray(resEffects.effects)) {
+                            resEffects.effects.forEach(de => { // de is { target: name, healAmount: X }
+                                const tObj = getTargetObject(de.target, character, monster, teamMembers);
+                                if (tObj && tObj.currentStats && typeof tObj.currentStats.hp !== 'undefined' && typeof tObj.currentStats.maxHp !== 'undefined') {
+                                     targetHpStrings.add(`${tObj.name} 剩余HP: ${Math.floor(tObj.currentStats.hp)}/${Math.floor(tObj.currentStats.maxHp)}。`);
+                                }
+                            });
+                        }
+                    } else if (resEffects.type === 'buff' || resEffects.type === 'debuff') {
+                        if (resEffects.effects && Array.isArray(resEffects.effects) && resEffects.effects.length > 0) {
+                            // For buff/debuff, log the first one as representative for the main description
+                            const firstActualEffect = resEffects.effects[0]; // { target: name, type: 'attackUp', name: '攻击提升', duration: X }
+                            const effectName = firstActualEffect.name || template.effects.find(te => te.type === firstActualEffect.type)?.name || firstActualEffect.type;
+                            const duration = firstActualEffect.duration;
+                            mainEffectDescription = `施加了 [${effectName}] 效果${duration ? `(持续${duration}回合)` : ''}。`;
+                            
+                            resEffects.effects.forEach(eff => {
+                                const tObj = getTargetObject(eff.target, character, monster, teamMembers);
+                                if (tObj && tObj.currentStats && typeof tObj.currentStats.hp !== 'undefined' && typeof tObj.currentStats.maxHp !== 'undefined') {
+                                    targetHpStrings.add(`${tObj.name} 剩余HP: ${Math.floor(tObj.currentStats.hp)}/${Math.floor(tObj.currentStats.maxHp)}。`);
+                                }
+                            });
+                        }
+                    } else if (resEffects.type === 'dispel') {
+                        if (resEffects.effects && Array.isArray(resEffects.effects) && resEffects.effects.length > 0) {
+                            const dispelledDetail = resEffects.effects[0]; // { target: name, count: X, dispelPositive: bool }
+                            const dispelledTargetName = dispelledDetail.target || targetStringDisplay;
+                            const dispelType = dispelledDetail.dispelPositive ? "增益" : "负面";
+                            const count = dispelledDetail.count || resEffects.totalDispelCount;
+                            if (count > 0) {
+                                mainEffectDescription = `驱散了 ${dispelledTargetName} 的 ${count} 个[${dispelType}]效果。`; // Removed space before [
+                            } else {
+                                mainEffectDescription = `尝试驱散 ${dispelledTargetName} 的[${dispelType}]效果，但未成功。`;
+                            }
+                            const tObj = getTargetObject(dispelledTargetName, character, monster, teamMembers);
+                            if (tObj && tObj.currentStats && typeof tObj.currentStats.hp !== 'undefined' && typeof tObj.currentStats.maxHp !== 'undefined') {
+                                targetHpStrings.add(`${tObj.name} 剩余HP: ${Math.floor(tObj.currentStats.hp)}/${Math.floor(tObj.currentStats.maxHp)}。`);
+                            }
+                        } else {
+                             mainEffectDescription = `对 ${targetStringDisplay} 进行了驱散（无具体效果信息）。`;
+                        }
+                    } else if (result.message && !mainEffectDescription) {
+                        let simpleMsg = result.message.replace(`${character.name} 使用了【${skillDisplayName}】，`, '').trim(); // Use skillDisplayName
+                        simpleMsg = simpleMsg.replace(/^为 |^对 /, '').trim(); // Remove "为 " or "对 "
+                        if (simpleMsg.startsWith(targetStringDisplay)) {
+                             simpleMsg = simpleMsg.substring(targetStringDisplay.length).trim().replace(/^了 |^的 /, '').trim(); // Remove target name and "了 " or "的 "
+                        }
+                        mainEffectDescription = simpleMsg.charAt(0).toUpperCase() + simpleMsg.slice(1);
+                         if (!mainEffectDescription.endsWith('.') && !mainEffectDescription.endsWith('！')) mainEffectDescription += '。';
+                    }
+                }
+                
+                if (mainEffectDescription) {
+                    logParts.push(mainEffectDescription);
+                }
+
+                targetHpStrings.forEach(hpStr => logParts.push(hpStr));
+                
+                Battle.logBattle(logParts.join(' ').trim());
+
+            } catch (e) {
+                console.error("Error generating skill log:", e, "Result object:", JSON.stringify(result));
+                Battle.logBattle(`[技能][回合 ${Battle.currentTurn || 0}] ${character.name} 使用了 [${skillDisplayName}]。 (详细日志生成失败)`); // Use skillDisplayName
+            }
+        }
+        // --- End 详细技能使用日志 ---
+
+        const finalReturnObject = {
+            success: result && result.success !== undefined ? result.success : false, // Ensure success is explicitly from result or defaults to false
             message: result ? result.message : "技能执行失败或无返回信息。",
             effects: result ? result.effects : {}
         };
+        // console.log(`[DEBUG] JobSkills.useSkill: RETURNING - success: ${finalReturnObject.success}, message: ${finalReturnObject.message}, effects:`, JSON.parse(JSON.stringify(finalReturnObject.effects)));
+        return finalReturnObject;
     },
 
     /**
@@ -123,18 +274,12 @@ const JobSkills = {
             return { success: false, message: `技能 ${template.name} 配置错误：缺少 triggerSkillId` };
         }
 
-        const triggeredSkillTemplate = JobSkillsTemplate.getTemplate(triggeredSkillId);
+        // const triggeredSkillTemplate = JobSkillsTemplate.getTemplate(triggeredSkillId); // Replaced
+        const triggeredSkillTemplate = SkillLoader.getSkillInfo(triggeredSkillId); // Use SkillLoader
         if (!triggeredSkillTemplate) {
-            // 尝试从全局技能列表获取 (如SSR技能)
-            const globalSkill = SkillLoader.getSkillInfo(triggeredSkillId);
-            if (!globalSkill || !globalSkill.effects) { // 假设全局技能也有effects定义
-                 return { success: false, message: `要触发的技能 ${triggeredSkillId} 不存在或无效果定义` };
-            }
-            // 构造一个临时的template-like对象给applySkillEffects
-            const tempTemplate = { ...globalSkill, effectType: globalSkill.effects[0]?.type, effects: globalSkill.effects, isTriggeredSkill: true };
-             Battle.logBattle(`${character.name} 的技能 ${template.name} 触发了技能 ${globalSkill.name}!`);
-            // 直接应用效果，不走完整的useSkill流程（避免冷却等问题）
-            return this.applySkillEffects(character, tempTemplate, teamMembers, monster);
+            // 如果 SkillLoader.getSkillInfo 都找不到，则技能确实不存在
+             // console.log(`[DEBUG] applyTriggerSkillEffect: Triggered skill ${triggeredSkillId} not found by SkillLoader.`);
+             return { success: false, message: `要触发的技能 ${triggeredSkillId} 不存在或无效果定义` };
         } else {
              Battle.logBattle(`${character.name} 的技能 ${template.name} 触发了职业技能 ${triggeredSkillTemplate.name}!`);
             // 标记为被触发的技能，以避免重复冷却设置
@@ -157,6 +302,7 @@ const JobSkills = {
      * @returns {object} 技能效果结果
      */
     applySkillEffects(character, template, teamMembers, monster) {
+        // console.log(`[DEBUG] JobSkills.applySkillEffects: CALLED - character: ${character.id}(${character.name}), template: ${template.id}(${template.name}), targetType: ${template.targetType}, effects:`, JSON.parse(JSON.stringify(template.effects)));
         let message = "";
         let effectsOutput = {};
 
@@ -291,9 +437,12 @@ const JobSkills = {
                     break;
                 default:
                     currentEffectResult = {
-                        message: `${character.name} 使用了【${template.name}】中的未知效果类型: ${actualEffectType}。`,
+                        message: `${character.name} 使用了【${template.name}】中的未知效果类型: ${actualEffectType}。该效果被跳过。`,
                         effects: {},
-                        success: false
+                        // 设置为 true，使得此未知类型不会将整个 multi_effect 标记为失败，
+                        // 除非没有其他成功的已知效果。combinedResults.success 的最终状态
+                        // 将取决于是否有任何已知效果成功应用。
+                        success: true
                     };
             }
             if (currentEffectResult && currentEffectResult.message) combinedResults.messages.push(currentEffectResult.message);
@@ -301,11 +450,13 @@ const JobSkills = {
             if (currentEffectResult && currentEffectResult.success === false) combinedResults.success = false; // 标记整体结果为失败
         }
 
-        return {
+        const applyEffectsReturnObject = {
             message: combinedResults.messages.join(' \n') || `${character.name} 使用了【${template.name}】。`,
             effects: combinedResults.effectsApplied.length > 0 ? combinedResults.effectsApplied : {},
             success: combinedResults.success // 返回最终的成功状态
         };
+        // console.log(`[DEBUG] JobSkills.applySkillEffects: RETURNING - applyEffectsReturnObject:`, JSON.parse(JSON.stringify(applyEffectsReturnObject)));
+        return applyEffectsReturnObject;
     },
 
     /**
@@ -349,6 +500,7 @@ const JobSkills = {
                 effects.push({
                     target: target.name,
                     type: effect.type,
+                    name: buff.name, // Add buff name for logging
                     value: effect.value,
                     duration: effect.duration || template.duration
                 });
@@ -393,30 +545,37 @@ const JobSkills = {
                 case 'evade':
                     desc = `完全回避效果`;
                     break;
+                // Add other buff types as needed
                 default:
-                    desc = effect.name || effect.type;
+                    desc = `${effect.name || effect.type || '未知BUFF'}效果`; // Fallback description
             }
+            if (desc) {
+                const durationText = (effect.duration || template.duration) ? `(持续${effect.duration || template.duration}回合)` : '';
+                effectDescriptions.push(`${desc}${durationText}`);
+            }
+        } // End of for (const effect of template.effects)
 
-            effectDescriptions.push(desc);
-        }
-
-        message += effectDescriptions.join('，');
-
-        if (template.duration > 0) {
-            message += `，持续${template.duration}回合！`;
+        if (effectDescriptions.length > 0) {
+            message += effectDescriptions.join('，') + '！';
+        } else if (targets.length > 0 && template.effects && template.effects.length > 0) {
+            // If there were targets and effects defined, but no descriptions were generated (e.g. all unknown effect types)
+            message += `施加了 ${template.effects.length} 个效果。`;
+        } else if (targets.length > 0) {
+            message += '但未产生具体效果。';
         } else {
-            message += `！`;
+            message += '但没有有效目标。';
         }
 
         return {
-            message,
+            success: true,
+            message: message,
             effects: {
                 type: 'buff',
-                targets: template.targetType,
-                effects
+                targetType: template.targetType,
+                effects: effects
             }
         };
-    },
+    }, // This comma is for the JobSkills object, applyBuffEffects function definition ends with the brace above.
 
     /**
      * 应用DEBUFF效果
@@ -456,6 +615,7 @@ const JobSkills = {
                 effects.push({
                     target: target.name,
                     type: effect.type,
+                    name: debuff.name, // Add debuff name for logging
                     value: effect.value,
                     duration: effect.duration || template.duration
                 });

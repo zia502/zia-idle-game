@@ -932,58 +932,110 @@ this.resetProcCounts(); // 重置技能Proc触发计数
     processCharacterAction(character, monster, battleStats, currentTeamMembers) {
         if (character.currentStats.hp <= 0) return;
 
+        // // DEBUG LOG: 函数入口
+        // console.log(`[DEBUG] processCharacterAction: Character ID: ${character.id}, Name: ${character.name}`);
+
+        // // DEBUG LOG: 角色技能列表及冷却
+        // if (character.skills && character.skills.length > 0) {
+        //     const skillStates = character.skills.map(skillId => {
+        //         const sData = SkillLoader.getSkillInfo(skillId);
+        //         const cd = character.skillCooldowns && character.skillCooldowns[skillId] ? character.skillCooldowns[skillId] : 0;
+        //         return `${skillId} (Cooldown: ${cd}, Name: ${sData ? sData.name : 'N/A'})`;
+        //     });
+        //     console.log(`[DEBUG] Character ${character.id} skills: [${skillStates.join(', ')}]`);
+        // } else {
+        //     console.log(`[DEBUG] Character ${character.id} has no skills in character.skills array.`);
+        // }
+
+        let hasPerformedOffensiveActionThisTurn = false;
+        const offensiveSkillTypes = ['damage', 'debuff', 'multi_effect', 'trigger'];
+
         // --- 技能使用阶段 ---
         const availableSkills = this.getAvailableSkills(character);
-        let usedSkillThisTurn = false; // 标记本回合是否已使用技能（未来可用于限制每回合技能数）
+        // // DEBUG LOG: getAvailableSkills 结果
+        // console.log(`[DEBUG] Character ${character.id} getAvailableSkills result: [${availableSkills.join(', ')}]`);
 
         if (availableSkills.length > 0) {
-            // TODO: 实现更智能的技能选择逻辑 (e.g., 基于优先级, 目标状态等)
-            // 当前简化为：尝试使用第一个可用技能
-            const skillToUseId = availableSkills[0];
-            const skillData = SkillLoader.getSkillInfo(skillToUseId); // 需要SkillLoader来获取技能数据
+            for (const skillToUseId of availableSkills) {
+                if (hasPerformedOffensiveActionThisTurn) {
+                    this.logBattle(`${character.name} 已执行过攻击性动作，本回合不再使用其他技能。`);
+                    break;
+                }
 
-            if (skillData) {
-                 // 检查技能使用限制 (次数, 冷却等)
-                 if (this.canUseSkill(character, skillToUseId, skillData)) {
-                    // 使用技能
-                    if (typeof JobSkills !== 'undefined' && typeof JobSkills.useSkill === 'function') {
-                        try {
-                            // 确保角色和技能模板在需要的地方可用
-                            if (typeof Character !== 'undefined' && !Character.characters[character.id]) {
-                                Character.characters[character.id] = character;
+                // // DEBUG LOG: 尝试使用的技能
+                // console.log(`[DEBUG] Character ${character.id} attempting to use skill ID: ${skillToUseId}`);
+                const skillData = SkillLoader.getSkillInfo(skillToUseId);
+
+                if (skillData) {
+                    // // DEBUG LOG: 获取到的技能数据
+                    // console.log(`[DEBUG] Character ${character.id} skillData for ${skillToUseId}:`, JSON.parse(JSON.stringify(skillData)));
+                    if (this.canUseSkill(character, skillToUseId, skillData)) {
+                        // // DEBUG LOG: canUseSkill 返回 true
+                        // console.log(`[DEBUG] Character ${character.id} canUseSkill for ${skillToUseId} returned true.`);
+                        if (typeof JobSkills !== 'undefined' && typeof JobSkills.useSkill === 'function') {
+                            try {
+                                if (typeof Character !== 'undefined' && !Character.characters[character.id]) {
+                                    Character.characters[character.id] = character;
+                                }
+                                if (typeof JobSkillsTemplate !== 'undefined' && !JobSkillsTemplate.templates[skillToUseId]) {
+                                    JobSkillsTemplate.templates[skillToUseId] = skillData;
+                                }
+
+                                const targets = this.getEffectTargets(skillData.targetType, character, currentTeamMembers, monster);
+                                const result = JobSkills.useSkill(character.id, skillToUseId, targets, monster);
+
+                                if (result.success) {
+                                    // // DEBUG LOG: 技能使用成功
+                                    // console.log(`[DEBUG] Character ${character.id} successfully used skill ${skillToUseId}. Message: ${result.message}`);
+                                    this.logBattle(result.message || `${character.name} 使用了技能 ${skillData.name}。`);
+                                    this.setSkillCooldown(character, skillToUseId, skillData);
+                                    this.recordSkillUsage(character, skillToUseId);
+
+                                    if (offensiveSkillTypes.includes(skillData.effectType)) {
+                                        hasPerformedOffensiveActionThisTurn = true;
+                                        this.logBattle(`${character.name} 使用的技能 ${skillData.name} 是攻击性技能。`);
+                                    }
+                                    // 触发技能使用后的 Proc
+                                    this.handleProcTrigger(character, 'onSkillUse', { skillId: skillToUseId, skillData, targets, battleStats });
+                                } else {
+                                    // // DEBUG LOG: 技能使用失败 (JobSkills.useSkill 返回 false)
+                                    // console.log(`[DEBUG] Character ${character.id} failed to use skill ${skillToUseId} (JobSkills.useSkill returned false). Message: ${result.message}`);
+                                    this.logBattle(`${character.name} 尝试使用技能 ${skillData.name || skillToUseId} 失败。${result.message ? '原因: ' + result.message : ''}`);
+                                }
+                            } catch (error) {
+                                console.error(`技能 ${skillToUseId} 使用错误:`, error);
+                                // // DEBUG LOG: 技能使用时发生异常
+                                // console.log(`[DEBUG] Character ${character.id} error using skill ${skillToUseId}:`, error);
+                                this.logBattle(`${character.name} 尝试使用技能 ${skillData.name || skillToUseId} 时发生错误。`);
                             }
-                            if (typeof JobSkillsTemplate !== 'undefined' && !JobSkillsTemplate.templates[skillToUseId]) {
-                                JobSkillsTemplate.templates[skillToUseId] = skillData;
-                            }
-
-                            // 确定目标
-                            const targets = this.getEffectTargets(skillData.targetType, character, currentTeamMembers, monster); // 需要获取当前队伍成员
-
-                            // 调用技能效果应用逻辑 (假设 JobSkills.useSkill 处理目标和效果)
-                            // 注意：JobSkills.useSkill 可能需要重构以接受目标数组
-                            const result = JobSkills.useSkill(character.id, skillToUseId, targets, monster); // 传递目标
-
-                            if (result.success) {
-                                this.logBattle(result.message);
-                                this.setSkillCooldown(character, skillToUseId, skillData); // 设置冷却
-                                this.recordSkillUsage(character, skillToUseId); // 记录使用次数
-                                usedSkillThisTurn = true;
-
-                                // 触发技能使用后的 Proc
-                                this.handleProcTrigger(character, 'onSkillUse', { skillId: skillToUseId, skillData, targets, battleStats });
-                            }
-                        } catch (error) {
-                            console.error(`技能 ${skillToUseId} 使用错误:`, error);
+                        } else {
+                            // // DEBUG LOG: JobSkills 或 JobSkills.useSkill 未定义
+                            // console.log(`[DEBUG] Character ${character.id} cannot use skill ${skillToUseId}: JobSkills.useSkill is not defined.`);
                         }
+                    } else {
+                        // // DEBUG LOG: canUseSkill 返回 false
+                        // console.log(`[DEBUG] Character ${character.id} canUseSkill for ${skillToUseId} returned false. SkillData:`, JSON.parse(JSON.stringify(skillData)));
+                         // this.logBattle(`${character.name} 无法使用技能 ${skillData.name || skillToUseId} (不满足使用条件)。`); // 可选：过于详细的日志
                     }
-                 }
+                } else {
+                    // // DEBUG LOG: 未获取到技能数据
+                    // console.log(`[DEBUG] Character ${character.id} could not get skillData for skill ID: ${skillToUseId}.`);
+                }
             }
+        } else {
+            // // DEBUG LOG: 没有可用技能
+            // console.log(`[DEBUG] Character ${character.id} has no available skills this turn.`);
         }
 
         // --- 普通攻击阶段 ---
-        // TODO: 未来可以根据角色状态或AI决定是否跳过攻击 (e.g., 使用了非攻击技能后)
-        // if (!usedSkillThisTurn || character.canAttackAfterSkill) { ... }
-        if (true) { // 简化：总是进行普通攻击
+        if (!hasPerformedOffensiveActionThisTurn) {
+            this.logBattle(`${character.name} 本回合未使用攻击性技能，尝试进行普通攻击。`);
+            // // DEBUG LOG: 进入普通攻击阶段
+            // if (usedSkillThisTurn) { // This variable is no longer accurate for this specific check
+            //     console.log(`[DEBUG] Character ${character.id} proceeding to normal attack AFTER using a skill (non-offensive).`);
+            // } else {
+            //     console.log(`[DEBUG] Character ${character.id} proceeding to normal attack (NO skill used this turn). Reason for no skill: See previous logs.`);
+            // }
             let daRate = character.currentStats.daRate || 0.10;
             let taRate = character.currentStats.taRate || 0.05;
 
@@ -1090,6 +1142,8 @@ this.resetProcCounts(); // 重置技能Proc触发计数
             } else if (isDA) {
                  this.handleProcTrigger(character, 'onDoubleAttack', { target: monster, totalDamage: totalDamageDealt, battleStats });
             }
+        } else {
+            this.logBattle(`${character.name} 本回合已执行过攻击性技能，不再进行普通攻击。`);
         }
 // --- End of Turn Triggers for the current character ---
     if (character.currentStats.hp > 0) { // Only for living characters

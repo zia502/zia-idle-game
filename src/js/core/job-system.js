@@ -296,109 +296,16 @@ const JobSystem = {
      * @returns {object|null} 技能信息
      */
     getSkill(skillId) {
-        // 首先尝试从RSkillsTemplate获取
-        if (typeof RSkillsTemplate !== 'undefined' && RSkillsTemplate.templates && RSkillsTemplate.templates[skillId]) {
-            return RSkillsTemplate.templates[skillId];
-        }
-
-        // 然后尝试从SRSkillsTemplate获取
-        if (typeof SRSkillsTemplate !== 'undefined' && SRSkillsTemplate.templates && SRSkillsTemplate.templates[skillId]) {
-            return SRSkillsTemplate.templates[skillId];
-        }
-
-        // 然后尝试从JobSkillsTemplate获取
-        if (typeof JobSkillsTemplate !== 'undefined' && JobSkillsTemplate.templates && JobSkillsTemplate.templates[skillId]) {
-            return JobSkillsTemplate.templates[skillId];
-        }
-
-        // 如果模板系统未加载，尝试从window全局变量获取
-        // 首先尝试从R角色技能中获取
-        if (typeof window !== 'undefined' && window.r_skills && window.r_skills[skillId]) {
-            return window.r_skills[skillId];
-        }
-
-        // 然后尝试从SR角色技能中获取
-        if (typeof window !== 'undefined' && window.sr_skills && window.sr_skills[skillId]) {
-            return window.sr_skills[skillId];
-        }
-
-        // 检查技能模板是否已加载
-        if (typeof JobSkillsTemplate === 'undefined' && typeof RSkillsTemplate === 'undefined' && typeof SRSkillsTemplate === 'undefined') {
-            console.warn(`技能模板系统未定义，无法获取技能: ${skillId}`);
-            return this.getFallbackSkill(skillId);
-        }
-
-        // 如果找不到技能，返回备用技能
-        console.warn(`找不到技能: ${skillId}`);
-        return this.getFallbackSkill(skillId);
-    },
-
-    /**
-     * 获取备用技能信息
-     * 当技能模板未加载或找不到技能时使用
-     * @param {string} skillId - 技能ID
-     * @returns {object} 备用技能信息
-     */
-    getFallbackSkill(skillId) {
-        // 常见技能的备用信息
-        const commonSkills = {
-            'warriorSlash': {
-                name: '狂怒',
-                description: '所有参战者获得攻击力+20%,持续3回合。CD5回合',
-                type: 'buff',
-                power: 1.0,
-                effectType: 'buff',
-                targetType: 'all_allies',
-                effects: [{ type: 'attackUp', value: 0.2, duration: 3 }]
-            },
-            'armorBreak': {
-                name: '护甲破坏',
-                description: '对敌方单体造成100%攻击力的伤害，并对敌方单位施加防御力-20%DEBUFF，持续3回合，CD5回合。',
-                type: 'attack',
-                power: 1.0,
-                effectType: 'damage_and_debuff',
-                targetType: 'enemy',
-                effects: [{ type: 'damage', multiplier: 1.0 }]
-            },
-            'fiercePounce': {
-                name: '猛袭',
-                description: '被动:自身DA+15%',
-                type: 'buff',
-                power: 0.5,
-                effectType: 'buff',
-                targetType: 'self',
-                effects: [{ type: 'daBoost', value: 0.15, passive: true }]
-            },
-            'whirlwind': {
-                name: '旋风斩',
-                description: '对所有敌人造成伤害',
-                type: 'attack',
-                power: 1.2,
-                effectType: 'damage',
-                targetType: 'all_enemies',
-                effects: [{ type: 'damage', multiplier: 1.2 }]
+        // 统一调用 SkillLoader.getSkillInfo
+        if (typeof SkillLoader !== 'undefined' && typeof SkillLoader.getSkillInfo === 'function') {
+            const skillInfo = SkillLoader.getSkillInfo(skillId);
+            if (skillInfo) {
+                return skillInfo;
             }
-        };
-
-        // 如果是常见技能，返回预定义的备用信息
-        if (commonSkills[skillId]) {
-            return {
-                id: skillId,
-                ...commonSkills[skillId]
-            };
         }
-
-        // 否则创建一个基本的技能对象
-        return {
-            id: skillId,
-            name: skillId, // 使用ID作为名称
-            description: "技能信息尚未加载",
-            type: "unknown",
-            power: 1.0,
-            effectType: "unknown",
-            targetType: "unknown",
-            effects: []
-        };
+        // 如果 SkillLoader 未定义或未找到技能，也打印警告并返回 null
+        console.warn(`JobSystem.getSkill: 无法通过 SkillLoader 获取技能 ${skillId}，或 SkillLoader 未定义。`);
+        return null;
     },
 
     /**

@@ -1198,19 +1198,34 @@
 
                 // 创建 Character 实例
                 // MODIFIED: Use Character.createCharacter
+                // Determine type for Character.createCharacter
+                let charTypeForCreate = baseData.type;
+                if (!charTypeForCreate) { // If type is not defined in baseData
+                    if (isPlayer) {
+                        charTypeForCreate = 'player'; // Default player type if not specified
+                    } else {
+                        charTypeForCreate = 'attack'; // Default BOSS type to 'attack' or another valid type from Character.types
+                        logMessage(`警告: BOSS ${baseData.name} 未指定type, 默认为 '${charTypeForCreate}'。`, 'warning');
+                    }
+                }
+
                 const characterInstance = Character.createCharacter({
                     id: baseData.id,
                     name: baseData.name,
                     attribute: baseData.attribute || baseData.element,
-                    type: baseData.type || (isPlayer ? 'player' : 'boss'),
-                    baseStats: calculatedStats, // MODIFIED: Pass baseStats, createCharacter will handle currentStats
-                    skills: baseData.skills || [], // Pass skill IDs, createCharacter might process them or store as is
+                    type: charTypeForCreate, // Use determined type
+                    baseStats: calculatedStats,
+                    skills: baseData.skills || [],
                     isPlayer: isPlayer,
                     jobId: baseData.isJob ? baseData.id : undefined,
                     rarity: rarityVal,
                     level: targetLevel,
-                    // Ensure all necessary fields for Character.createCharacter are provided
                 });
+
+                if (!characterInstance) {
+                    logMessage(`错误: Character.createCharacter未能为 ${baseData.name} (ID: ${baseData.id}, Type: ${charTypeForCreate}) 创建实例。可能是类型或属性在Character.js中未定义或无效。`, 'error');
+                    return null; // Prevent further errors
+                }
                 
                 // If Character.createCharacter doesn't process skills from baseData.skills,
                 // and skills should be just IDs or templates on the instance.

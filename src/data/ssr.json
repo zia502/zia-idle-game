@@ -181,50 +181,50 @@
   },
   "ssr_31": {
     "id": "character_031",
-    "name": "风之游侠",
-    "attribute": "wind",
-    "type": "attack",
+    "name": "卡莉奥斯特萝",
+    "attribute": "earth",
+    "type": "healing",
     "baseStats": {
       "hp": 264,
-      "maxHp": 3520,
+      "maxHp": 3900,
       "attack": 1650,
-      "maxAttack": 9600,
+      "maxAttack": 8310,
       "defense": 10,
       "critRate": 0.05,
       "critDamage": 1.5,
-      "daRate": 0.1,
-      "taRate": 0.05
+      "daRate": 0.04,
+      "taRate": 0.01
     },
     "skills": ["windArrow", "stormShot", "hurricaneArrow"]
   },
   "ssr_32": {
     "id": "character_032",
-    "name": "大地法师",
+    "name": "阿露露梅娅",
     "attribute": "earth",
     "type": "special",
     "baseStats": {
       "hp": 264,
-      "maxHp": 3520,
+      "maxHp": 3380,
       "attack": 1650,
-      "maxAttack": 9600,
+      "maxAttack": 9980,
       "defense": 10,
       "critRate": 0.05,
       "critDamage": 1.5,
-      "daRate": 0.1,
-      "taRate": 0.05
+      "daRate": 0.07,
+      "taRate": 0.03
     },
     "skills": ["earthBolt", "stoneShield", "earthquake"]
   },
   "ssr_33": {
     "id": "character_033",
-    "name": "冰霜战士",
-    "attribute": "water",
+    "name": "哈蕾泽娜",
+    "attribute": "earth",
     "type": "attack",
     "baseStats": {
       "hp": 264,
-      "maxHp": 3520,
+      "maxHp": 3860,
       "attack": 1650,
-      "maxAttack": 9600,
+      "maxAttack": 11970,
       "defense": 10,
       "critRate": 0.05,
       "critDamage": 1.5,
@@ -235,32 +235,32 @@
   },
   "ssr_34": {
     "id": "character_034",
-    "name": "雷霆法师",
-    "attribute": "light",
-    "type": "special",
+    "name": "巴萨拉卡",
+    "attribute": "earth",
+    "type": "attack",
     "baseStats": {
       "hp": 264,
-      "maxHp": 3520,
+      "maxHp": 3340,
       "attack": 1650,
-      "maxAttack": 9600,
+      "maxAttack": 10130,
       "defense": 10,
       "critRate": 0.05,
       "critDamage": 1.5,
-      "daRate": 0.1,
-      "taRate": 0.05
+      "daRate": 0.07,
+      "taRate": 0.03
     },
     "skills": ["thunderBolt", "lightningShield", "thunderStorm"]
   },
   "ssr_35": {
     "id": "character_035",
-    "name": "暗影游侠",
-    "attribute": "dark",
-    "type": "attack",
+    "name": "[守护神域]布洛蒂亚·L",
+    "attribute": "earth",
+    "type": "defense",
     "baseStats": {
       "hp": 264,
-      "maxHp": 3520,
+      "maxHp": 4328,
       "attack": 1650,
-      "maxAttack": 9600,
+      "maxAttack": 8310,
       "defense": 10,
       "critRate": 0.05,
       "critDamage": 1.5,
@@ -271,14 +271,14 @@
   },
   "ssr_36": {
     "id": "character_036",
-    "name": "圣光法师",
-    "attribute": "light",
-    "type": "special",
+    "name": "聂查瓦尔皮利",
+    "attribute": "wind",
+    "type": "attack",
     "baseStats": {
       "hp": 264,
       "maxHp": 3520,
       "attack": 1650,
-      "maxAttack": 9600,
+      "maxAttack": 11400,
       "defense": 10,
       "critRate": 0.05,
       "critDamage": 1.5,
@@ -289,73 +289,73 @@
   },
   "ssr_37": {
     "id": "character_037",
-    "name": "火焰法师",
-    "attribute": "fire",
-    "type": "special",
+    "name": "高文",
+    "attribute": "wind",
+    "type": "defense",
     "baseStats": {
       "hp": 264,
-      "maxHp": 3520,
+      "maxHp": 4110,
       "attack": 1650,
-      "maxAttack": 9600,
+      "maxAttack": 8550,
       "defense": 10,
       "critRate": 0.05,
       "critDamage": 1.5,
-      "daRate": 0.1,
-      "taRate": 0.05
+      "daRate": 0.07,
+      "taRate": 0.03
     },
     "skills": ["fireBolt", "flameShield", "inferno"]
   },
   "ssr_38": {
     "id": "character_038",
-    "name": "风之战士",
+    "name": "蕾娜",
     "attribute": "wind",
-    "type": "attack",
+    "type": "healing",
     "baseStats": {
       "hp": 264,
-      "maxHp": 3520,
+      "maxHp": 4370,
       "attack": 1650,
-      "maxAttack": 9600,
+      "maxAttack": 7790,
       "defense": 10,
       "critRate": 0.05,
       "critDamage": 1.5,
-      "daRate": 0.1,
-      "taRate": 0.05
+      "daRate": 0.04,
+      "taRate": 0.01
     },
     "skills": ["windStrike", "stormGuard", "hurricane"]
   },
   "ssr_39": {
     "id": "character_039",
-    "name": "大地战士",
-    "attribute": "earth",
-    "type": "attack",
+    "name": "佩特拉",
+    "attribute": "wind",
+    "type": "special",
     "baseStats": {
       "hp": 264,
-      "maxHp": 3520,
+      "maxHp": 3920,
       "attack": 1650,
-      "maxAttack": 9600,
+      "maxAttack": 9120,
       "defense": 10,
       "critRate": 0.05,
       "critDamage": 1.5,
-      "daRate": 0.1,
-      "taRate": 0.05
+      "daRate": 0.07,
+      "taRate": 0.03
     },
     "skills": ["earthStrike", "stoneGuard", "earthquake"]
   },
   "ssr_40": {
     "id": "character_040",
-    "name": "冰霜游侠",
-    "attribute": "water",
-    "type": "attack",
+    "name": "[狂舞的暴风]格里姆尼尔·L",
+    "attribute": "wind",
+    "type": "special",
     "baseStats": {
       "hp": 264,
-      "maxHp": 3520,
+      "maxHp": 3980,
       "attack": 1650,
-      "maxAttack": 9600,
+      "maxAttack": 9100,
       "defense": 10,
       "critRate": 0.05,
       "critDamage": 1.5,
-      "daRate": 0.1,
-      "taRate": 0.05
+      "daRate": 0.07,
+      "taRate": 0.03
     },
     "skills": ["frostArrow", "iceVeil", "blizzard"]
   }

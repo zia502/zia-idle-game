@@ -24,3 +24,8 @@ This file tracks the project's progress using a task list format.
 * 创建 `memory-bank/systemPatterns.md`。 (此条目可能已过时，因为该文件已存在)
 * 根据 `activeContext.md` 中的 "Open Questions/Issues" 进一步完善主角和职业系统。
 * 如果当前问题解决，将继续处理武器盘相关功能的实现或修复。
+* [2025-05-08 16:53:42] - 完成 SSR 角色技能更新：根据 [`ssrskill.txt`](src/data/ssrskill.txt:1) 更新了 [`ssr.json`](src/data/ssr.json:1) 中的角色技能列表和 [`ssr_skill.json`](src/data/ssr_skill.json:1) 中的技能详情。部分技能因包含特殊机制或描述不明确，已整理完毕等待用户确认。
+* [2025-05-08 16:53:42] - 当前任务：等待用户确认特定 SSR 技能的处理方式。
+* [2025-05-08 16:59:25] - 根据用户确认，将所有先前待处理的 SSR 技能（包含特殊机制的技能）添加到了 [`ssr.json`](src/data/ssr.json:1) 和 [`ssr_skill.json`](src/data/ssr_skill.json:1) 中。技能ID使用建议的英文ID，描述按原样记录。
+* [2025-05-08 16:59:25] - SSR 技能更新流程已全部完成。
+* [2025-05-08 17:37:27] - 完成 [`src/data/ssr_skill.json`](src/data/ssr_skill.json:1) 文件中 SSR 角色技能效果的分析和补充：根据 [`src/data/ssrskill.txt`](src/data/ssrskill.txt:1) 的描述，全面更新了技能的 `type`, `cooldown`, `effectType`, `targetType` 和 `effects` 字段，确保了技能效果的清晰、具体和结构化。

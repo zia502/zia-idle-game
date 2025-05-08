@@ -23,7 +23,6 @@ const BuffSystem = {
             canDispel: true,
             stackable: true
         },
-
         // 防御相关
         defenseUp: {
             name: '防御力提升',
@@ -41,9 +40,8 @@ const BuffSystem = {
             canDispel: true,
             stackable: true
         },
-
         // 暴击相关
-        critRate: {
+        criticalRateUp: { // Renamed from critRate for consistency with ssr_skill.json
             name: '暴击率提升',
             description: '提高暴击率',
             icon: '🎯',
@@ -51,7 +49,7 @@ const BuffSystem = {
             canDispel: true,
             stackable: true
         },
-        critDamage: {
+        criticalDamageUp: { // Renamed from critDamage
             name: '暴击伤害提升',
             description: '提高暴击伤害',
             icon: '💥',
@@ -59,7 +57,6 @@ const BuffSystem = {
             canDispel: true,
             stackable: true
         },
-
         // 多重攻击相关
         daBoost: {
             name: 'DA提升',
@@ -93,9 +90,8 @@ const BuffSystem = {
             canDispel: true,
             stackable: true
         },
-
         // 命中相关
-        missRate: {
+        missRate: { // This is for target's miss rate on attacker
             name: '命中率降低',
             description: '降低攻击命中率',
             icon: '👁️❌',
@@ -103,9 +99,8 @@ const BuffSystem = {
             canDispel: true,
             stackable: true
         },
-
         // 伤害相关
-        damageIncrease: {
+        damageUp: { // Renamed from damageIncrease
             name: '伤害提升',
             description: '提高造成的伤害',
             icon: '🔥',
@@ -113,25 +108,40 @@ const BuffSystem = {
             canDispel: true,
             stackable: true
         },
-        damageReduction: {
-            name: '伤害减免',
-            description: '减少受到的伤害',
-            icon: '🛡️',
+        allDamageTakenReduction: { // Renamed from damageReduction for clarity
+            name: '全伤害减免',
+            description: '减少受到的所有类型伤害',
+            icon: '🛡️⬇️',
             isPositive: true,
             canDispel: true,
             stackable: true
         },
-        chase: {
+        echo: { // Added for追击, distinct from chase which might be specific
             name: '追击',
-            description: '普通攻击额外造成一定百分比的伤害',
-            icon: '⚔️↗️',
+            description: '攻击时追加额外伤害',
+            icon: '⚔️✨',
             isPositive: true,
             canDispel: true,
-            stackable: false
+            stackable: true // Echo effects can often stack from different sources
         },
-
+        damageCapUp: {
+            name: '伤害上限提升',
+            description: '提高造成的伤害上限',
+            icon: '⬆️💥',
+            isPositive: true,
+            canDispel: true,
+            stackable: true
+        },
+        skillDamageCapUp: {
+            name: '技能伤害上限提升',
+            description: '提高技能造成的伤害上限',
+            icon: '⬆️🔥',
+            isPositive: true,
+            canDispel: true,
+            stackable: true
+        },
         // 持续伤害/治疗
-        dot: {
+        dot: { // Damage Over Time
             name: '持续伤害',
             description: '每回合受到伤害',
             icon: '☠️',
@@ -139,17 +149,16 @@ const BuffSystem = {
             canDispel: true,
             stackable: true
         },
-        hot: {
-            name: '持续治疗',
+        regen: { // Renamed from hot (Heal Over Time) for consistency
+            name: '再生',
             description: '每回合恢复生命值',
             icon: '💚',
             isPositive: true,
             canDispel: true,
             stackable: true
         },
-
         // 状态效果
-        numbness: {
+        numbness: { // 麻痹
             name: '麻痹',
             description: '无法行动',
             icon: '💫',
@@ -157,15 +166,15 @@ const BuffSystem = {
             canDispel: true,
             stackable: false
         },
-        stun: {
+        stun: { // 眩晕
             name: '眩晕',
             description: '无法行动',
-            icon: '💫',
+            icon: '😵',
             isPositive: false,
             canDispel: true,
             stackable: false
         },
-        silence: {
+        silence: { // 沉默
             name: '沉默',
             description: '无法使用技能',
             icon: '🤐',
@@ -173,25 +182,40 @@ const BuffSystem = {
             canDispel: true,
             stackable: false
         },
-
+        statusImmunity: { // For specific immunities like "silence immunity"
+            name: '状态免疫',
+            description: '免疫特定的负面状态',
+            icon: '🚫✨',
+            isPositive: true,
+            canDispel: false, // Usually not dispellable
+            stackable: false
+        },
+        debuffImmunity: { // General debuff immunity
+            name: '弱体免疫',
+            description: '免疫所有弱体效果',
+            icon: '🛡️🚫',
+            isPositive: true,
+            canDispel: false,
+            stackable: false
+        },
         // 特殊效果
         shield: {
             name: '护盾',
             description: '抵挡一定量的伤害',
             icon: '🔰',
             isPositive: true,
-            canDispel: false,
-            stackable: true
+            canDispel: true, // Shields can sometimes be dispelled
+            stackable: true // Multiple shields can add up or take the highest
         },
         invincible: {
             name: '无敌',
-            description: '完全免疫伤害一次',
+            description: '完全免疫伤害', // Removed "once" as duration/hits will handle it
             icon: '🛡️✨',
             isPositive: true,
-            canDispel: false,
+            canDispel: false, // Usually not dispellable
             stackable: false
         },
-        evade: {
+        evasionAll: { // Renamed from evade for clarity
             name: '完全回避',
             description: '回避所有伤害',
             icon: '💨',
@@ -207,106 +231,106 @@ const BuffSystem = {
             canDispel: true,
             stackable: true
         },
-
-        // 元素增益
-        fireEnhance: {
-            name: '火属性增强',
-            description: '提高火属性伤害',
-            icon: '🔥',
+        cover: {
+            name: '援护',
+            description: '替代队友承受单体攻击',
+            icon: '🛡️🫂',
+            isPositive: true,
+            canDispel: true,
+            stackable: false
+        },
+        threatUp: {
+            name: '敌对心提升',
+            description: '更容易被敌人攻击',
+            icon: '🎯⬆️',
+            isPositive: true, // For tanks
+            canDispel: true,
+            stackable: true
+        },
+        threatDown: {
+            name: '敌对心降低',
+            description: '更不容易被敌人攻击',
+            icon: '🎯⬇️',
+            isPositive: true, // For dps/healers
+            canDispel: true,
+            stackable: true
+        },
+        extraAttackTurn: {
+            name: '再攻击',
+            description: '本回合可以再次行动',
+            icon: '⚔️🔄',
+            isPositive: true,
+            canDispel: true,
+            stackable: false
+        },
+        debuffResistOnce: {
+            name: '弱体无效(次)',
+            description: '抵抗下一次受到的弱体效果',
+            icon: '🛡️🔮',
+            isPositive: true,
+            canDispel: true, // Can be dispelled before it triggers
+            stackable: true // Can have multiple stacks of resist
+        },
+        // 元素增益/抗性
+        elementalResistance: { // Generic elemental resistance
+            name: '元素伤害减轻',
+            description: '减少受到的特定元素伤害',
+            icon: '🛡️🔥', // Icon can be generic or specific if needed
             isPositive: true,
             canDispel: true,
             stackable: true
         },
-        waterEnhance: {
-            name: '水属性增强',
-            description: '提高水属性伤害',
-            icon: '💧',
+        // elementalDamageCap is not a buff on character, but a check during damage calculation
+        // fireEnhance, waterEnhance etc. are specific applications of a general "elementalDamageUp" type
+        elementalDamageUp: {
+            name: '元素伤害提升',
+            description: '提高造成的特定元素伤害',
+            icon: '🔥⬆️', // Icon can be generic or specific
             isPositive: true,
             canDispel: true,
             stackable: true
         },
-        windEnhance: {
-            name: '风属性增强',
-            description: '提高风属性伤害',
-            icon: '🌪️',
-            isPositive: true,
-            canDispel: true,
-            stackable: true
-        },
-        earthEnhance: {
-            name: '土属性增强',
-            description: '提高土属性伤害',
-            icon: '🌍',
-            isPositive: true,
-            canDispel: true,
-            stackable: true
-        },
-        lightEnhance: {
-            name: '光属性增强',
-            description: '提高光属性伤害',
-            icon: '✨',
-            isPositive: true,
-            canDispel: true,
-            stackable: true
-        },
-        darkEnhance: {
-            name: '暗属性增强',
-            description: '提高暗属性伤害',
-            icon: '🌑',
-            isPositive: true,
-            canDispel: true,
-            stackable: true
-        },
-
         // 背水/浑身
-        staminaUp: {
-            name: '背水/浑身',
-            description: '根据HP百分比提升属性',
-            icon: '💪',
+        staminaUp: { // In GBF, "Stamina" usually means "浑身" (higher HP, more power)
+            name: '浑身',
+            description: 'HP越高，属性提升越大',
+            icon: '💪🟢',
             isPositive: true,
             canDispel: true,
-            stackable: true // 通常同名效果会覆盖或取最高，但具体实现看游戏逻辑
+            stackable: true
         },
-
+        enmityUp: { // In GBF, "Enmity" usually means "背水" (lower HP, more power)
+            name: '背水',
+            description: 'HP越低，属性提升越大',
+            icon: '💪🔴',
+            isPositive: true,
+            canDispel: true,
+            stackable: true
+        },
         // 元素伤害转换
-        elementConversion: {
-            name: '元素伤害转换',
+        damageElementConversion: { // Renamed from elementConversion
+            name: '伤害属性转换',
             description: '将受到的伤害转换为特定元素',
-            icon: '🔄',
-            isPositive: true, // 通常是增益，但也可能被视为特殊机制
-            canDispel: true, // 通常不可驱散，但根据游戏设定
-            stackable: false // 通常不叠加，新效果覆盖旧效果
-        },
-
-        // EX攻击提升
-        exAttackUp: {
-            name: 'EX攻击提升',
-            description: '独立乘区的攻击力提升',
-            icon: '⚔️⭐',
+            icon: '🔄🎨',
             isPositive: true,
             canDispel: true,
-            stackable: true
+            stackable: false
         },
+        // EX攻击提升 (already exists as exAttackUp, but ssr_skill.json might use a different term)
+        // dot_vulnerability (already exists)
 
-        // DoT易伤
-        dot_vulnerability: {
-            name: 'DoT易伤',
-            description: '增加受到的持续伤害',
-            icon: '☠️➕',
-            isPositive: false, // 对目标是负面效果
-            canDispel: true,
-            stackable: true
-        },
-
-        // 复合BUFF类型
-        compositeBuff: {
-            name: '复合BUFF',
-            description: '包含多个效果的BUFF',
-            icon: '✨',
-            isPositive: true,
-            canDispel: true,
-            stackable: true,
-            maxStacks: 3
+        // 复合BUFF类型 - This is a structural type, not an effect type itself.
+        // Individual effects within a composite buff will use the types above.
+        // The 'compositeBuff' type in buffTypes might be redundant if we handle buff packages structurally.
+        // For now, keeping it for potential direct use, but applyBuffPackage in skills.json is the main driver.
+        buffPackage: { // Used to represent a named collection of buffs from ssr_skill.json
+            name: '效果包',
+            description: '一个包含多种效果的特殊状态',
+            icon: '📦✨',
+            isPositive: true, // Depends on the content of the package
+            canDispel: true,  // Depends on the 'dispellable' property of the package itself
+            stackable: true, // Depends on the 'stackable' property of the package itself
+            maxStacks: 1      // Default, can be overridden by the package definition
         }
     },
 
@@ -323,227 +347,315 @@ const BuffSystem = {
      * @param {number} value - BUFF效果值
      * @param {number} duration - 持续回合数，-1表示永续
      * @param {object} source - BUFF来源
+     * @param {object} options - 额外选项，如 { कैनDispel, stackable, maxStacks, elementType, statusToImmune, etc. }
      * @returns {object} BUFF对象
      */
-    createBuff(type, value, duration, source = null) {
-        const buffType = this.buffTypes[type];
-        if (!buffType) {
+    createBuff(type, value, duration, source = null, options = {}) {
+        const buffTypeDefinition = this.buffTypes[type];
+        if (!buffTypeDefinition) {
             console.error(`未知的BUFF类型: ${type}`);
             return null;
         }
 
-        return {
-            id: `${type}_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
+        // 优先使用options中的定义，否则使用buffTypeDefinition的默认值
+        const canDispel = options.canDispel !== undefined ? options.canDispel : buffTypeDefinition.canDispel;
+        const stackable = options.stackable !== undefined ? options.stackable : buffTypeDefinition.stackable;
+        const maxStacks = options.maxStacks !== undefined ? options.maxStacks : (buffTypeDefinition.maxStacks || 1);
+        const isPositive = options.isPositive !== undefined ? options.isPositive : buffTypeDefinition.isPositive;
+        const name = options.name || buffTypeDefinition.name; // 允许技能定义覆盖默认名称，例如具名buff包
+        const description = options.description || buffTypeDefinition.description;
+        const icon = options.icon || buffTypeDefinition.icon;
+
+        const buff = {
+            id: `${type}_${name}_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
             type,
-            name: buffType.name,
-            description: buffType.description,
-            icon: buffType.icon,
-            value,
+            name,
+            description,
+            icon,
+            value, // For simple buffs, this is the direct value. For complex ones, it might be an object or not used.
             duration,
             initialDuration: duration,
-            isPositive: buffType.isPositive,
-            canDispel: buffType.canDispel,
-            stackable: buffType.stackable,
+            isPositive,
+            canDispel,
+            stackable,
+            maxStacks,
+            currentStacks: 1, // Initial stack count
             source: source ? { id: source.id, name: source.name } : null,
             createdAt: Date.now()
         };
+
+        // 添加特定于类型的属性
+        if (type === 'elementalResistance' || type === 'elementalDamageUp') {
+            buff.elementType = options.elementType; // e.g., 'fire', 'water'
+        }
+        if (type === 'statusImmunity') {
+            buff.statusToImmune = options.statusToImmune; // e.g., 'silence', 'stun'
+        }
+        if (type === 'damageElementConversion') {
+            buff.convertToElementType = options.convertToElementType;
+        }
+        if (options.buffsPerStack) { // For buff packages that scale with stacks
+            buff.buffsPerStack = options.buffsPerStack;
+        }
+        if (options.effects) { // For buff packages that contain multiple sub-effects
+             buff.effects = options.effects; // This will be an array of effect definitions
+        }
+
+
+        return buff;
     },
 
     /**
-     * 创建一个复合BUFF
-     * @param {string} name - BUFF名称
-     * @param {array} effects - 子效果数组
+     * 创建一个复合BUFF (Buff Package)
+     * @param {string} name - BUFF包的名称 (e.g., "晓之誇炎")
+     * @param {array} effects - 子效果定义数组 (来自ssr_skill.json的effects数组)
      * @param {number} duration - 持续回合数
      * @param {object} source - BUFF来源
-     * @param {number} maxStacks - 最大叠加层数
-     * @returns {object} 复合BUFF对象
+     * @param {object} packageOptions - 从ssr_skill.json读取的buff包的属性 { dispellable, stackable, maxStacks, icon, description }
+     * @returns {object} 复合BUFF对象 (实际上是一个标记了类型的普通buff，其effects将在applyBuffPackage时处理)
      */
-    createCompositeBuff(name, effects, duration, source = null, maxStacks = 3) {
-        return {
-            id: `composite_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
-            type: 'compositeBuff',
-            name,
-            description: '包含多个效果的BUFF',
-            icon: '✨',
-            effects,
+    createBuffPackage(name, effects, duration, source = null, packageOptions = {}) {
+        // 'buffPackage' 类型用于识别这是一个容器
+        // 其 'effects' 属性将包含真正的子buff定义
+        // 'canDispel', 'stackable', 'maxStacks' 直接来自 packageOptions
+        return this.createBuff(
+            'buffPackage', // 特定的类型来标识这是一个包
+            null, // value 对于包本身可能无直接意义，其效果来自内部effects
             duration,
-            initialDuration: duration,
-            isPositive: true,
-            canDispel: true,
-            stackable: true,
-            maxStacks,
-            currentStacks: 1,
-            source: source ? { id: source.id, name: source.name } : null,
-            createdAt: Date.now()
-        };
+            source,
+            {
+                name: name,
+                description: packageOptions.description || `效果包: ${name}`,
+                icon: packageOptions.icon || '📦✨',
+                canDispel: packageOptions.dispellable !== undefined ? packageOptions.dispellable : true,
+                stackable: packageOptions.stackable !== undefined ? packageOptions.stackable : true,
+                maxStacks: packageOptions.maxStacks || 1,
+                isPositive: packageOptions.isPositive !== undefined ? packageOptions.isPositive : true, // 包通常是增益，但可覆盖
+                effects: effects, // 存储子效果定义
+                isBuffPackage: true // 自定义标记
+            }
+        );
     },
 
     /**
-     * 应用BUFF到目标
+     * 应用BUFF到目标，处理叠加、刷新、层数和子效果计算
      * @param {object} target - 目标对象
-     * @param {object} buff - BUFF对象
-     * @returns {boolean} 是否成功应用
+     * @param {object} buff - 要应用的BUFF对象
+     * @param {boolean} isSubBuff - 标记此buff是否为buff包的子buff
+     * @returns {boolean} 是否成功应用或更新
      */
     applyBuff(target, buff, isSubBuff = false) {
         if (!target || !buff) return false;
+        if (!target.buffs) target.buffs = [];
 
-        // 初始化目标的BUFF数组
-        if (!target.buffs) {
-            target.buffs = [];
+        // 标记是否为子BUFF
+        buff.isSubBuff = isSubBuff;
+        // 如果是子buff，确保它有关联的parentBuffId (应由applyBuffPackage设置)
+        if (isSubBuff && !buff.parentBuffId) {
+            console.error("子BUFF缺少parentBuffId:", buff);
+            return false;
         }
 
-        // 如果是子BUFF，它总是可叠加的（因为它属于一个父BUFF）
-        // 并且它的持续时间等属性由父BUFF管理
-        if (isSubBuff) {
-            // 为了区分，给子BUFF一个标记
-            buff.isSubBuff = true;
-            // parentBuffId 应该在创建子buff时由 applyCompositeBuff 设置好
-            // buff.parentBuffId = buff.source?.id;
-        }
+        // 查找已存在的匹配BUFF
+        const existingBuff = target.buffs.find(b =>
+            b.type === buff.type &&
+            b.name === buff.name && // 名字也需匹配，区分同类型不同名buff包
+            b.isSubBuff === isSubBuff && // 区分主副BUFF
+            (isSubBuff ? b.parentBuffId === buff.parentBuffId : b.source?.id === buff.source?.id) // 子buff按父ID匹配，主buff按来源匹配
+        );
 
-        // 检查是否可以叠加
-        if (buff.stackable || isSubBuff) {
-            const existingBuffOfSameTypeAndSource = target.buffs.find(
-                b => b.type === buff.type &&
-                (b.source?.id === buff.source?.id || (isSubBuff && b.parentBuffId === buff.parentBuffId)) && // 子buff通过parentBuffId匹配
-                b.name === buff.name && // 确保是完全相同的BUFF
-                b.isSubBuff === isSubBuff // 区分主副BUFF
-            );
+        if (existingBuff) {
+            // --- 更新已存在的BUFF ---
+            const maxStacks = existingBuff.maxStacks || 1;
+            let needsRecalculate = false;
 
-            if (existingBuffOfSameTypeAndSource) {
-                const currentStacks = existingBuffOfSameTypeAndSource.currentStacks || 1;
-                const maxStacks = existingBuffOfSameTypeAndSource.maxStacks || buff.maxStacks || 1; // 优先用已存在BUFF的maxStacks
+            // 刷新持续时间 (取更长的)
+            if (buff.duration === -1 || existingBuff.duration === -1) { // 永续覆盖
+                 if (existingBuff.duration !== -1) needsRecalculate = true; // 之前不是永续
+                 existingBuff.duration = -1;
+            } else if (buff.duration > existingBuff.duration) {
+                 existingBuff.duration = buff.duration;
+                 needsRecalculate = true; // 持续时间变化可能影响计算
+            }
 
-                if (currentStacks < maxStacks) {
-                    existingBuffOfSameTypeAndSource.currentStacks = currentStacks + 1;
-                    existingBuffOfSameTypeAndSource.duration = Math.max(existingBuffOfSameTypeAndSource.duration, buff.duration);
-                    // 对于叠加层数的BUFF，效果值如何变化需要具体定义，这里假设简单相加或取最大
-                    if (buff.stackingValueBehavior === 'add') {
-                        existingBuffOfSameTypeAndSource.value += buff.value;
-                    } else if (buff.stackingValueBehavior === 'max') {
-                        existingBuffOfSameTypeAndSource.value = Math.max(existingBuffOfSameTypeAndSource.value, buff.value);
-                    } else { // 默认替换或根据类型特定逻辑
-                        existingBuffOfSameTypeAndSource.value = buff.value;
-                    }
-                } else {
-                    // 已达到最大层数，刷新持续时间，并可能更新效果值（如取最大）
-                    existingBuffOfSameTypeAndSource.duration = Math.max(existingBuffOfSameTypeAndSource.duration, buff.duration);
-                    if (buff.stackingValueBehavior === 'max') {
-                         existingBuffOfSameTypeAndSource.value = Math.max(existingBuffOfSameTypeAndSource.value, buff.value);
-                    } else {
-                        existingBuffOfSameTypeAndSource.value = buff.value; // 默认刷新为新值
-                    }
-                }
-                this.applyBuffEffect(target, existingBuffOfSameTypeAndSource);
+            // 处理叠加层数
+            if (existingBuff.stackable && (existingBuff.currentStacks || 1) < maxStacks) {
+                existingBuff.currentStacks = (existingBuff.currentStacks || 1) + 1;
+                needsRecalculate = true;
+            }
+
+            // 更新效果值 (根据叠加行为)
+            // 注意：对于子buff，其值可能依赖于父buff层数，在recalculateStats中处理
+            if (!isSubBuff) { // 主buff才直接更新value
+                 if (buff.stackingValueBehavior === 'add' && existingBuff.stackable && existingBuff.currentStacks > 1) {
+                     // 累加逻辑可能复杂，取决于具体效果，这里简化为替换或取最大
+                     existingBuff.value = buff.value; // 默认替换
+                 } else if (buff.stackingValueBehavior === 'max') {
+                     if (buff.value > existingBuff.value) {
+                         existingBuff.value = buff.value;
+                         needsRecalculate = true;
+                     }
+                 } else { // 默认替换
+                     if (existingBuff.value !== buff.value) {
+                         existingBuff.value = buff.value;
+                         needsRecalculate = true;
+                     }
+                 }
+            }
+
+            // 如果有任何变化，重新计算属性
+            if (needsRecalculate) {
+                this.applyBuffEffect(target, existingBuff); // 应用效果（如护盾）
                 this.recalculateStatsWithBuffs(target);
-                return true;
             }
-            // 如果没有找到完全匹配的，且是可叠加类型，则添加新的
-            target.buffs.push(buff);
+            return true;
+
         } else {
-            // 不可叠加的主BUFF (isSubBuff 为 false 且 buff.stackable 为 false)
-            const existingBuff = target.buffs.find(b => b.type === buff.type && !b.isSubBuff);
-            if (existingBuff) {
-                // 已存在同类型BUFF，更新持续时间和效果值
-                existingBuff.duration = Math.max(existingBuff.duration, buff.duration);
-                if (buff.type === 'chase') {
-                    existingBuff.value = Math.max(existingBuff.value, buff.value);
-                } else {
-                    existingBuff.value = buff.value;
+            // --- 添加新的BUFF ---
+            // 如果是不可叠加的主buff，先移除同类型的旧buff
+            if (!buff.stackable && !isSubBuff) {
+                const oldBuffIndex = target.buffs.findIndex(b => b.type === buff.type && !b.isSubBuff);
+                if (oldBuffIndex > -1) {
+                    this.removeBuff(target, target.buffs[oldBuffIndex].id);
                 }
-                this.applyBuffEffect(target, existingBuff); // 重新应用效果
-                return true; // 替换了旧BUFF，所以返回
-            } else {
-                // 不存在同类型BUFF，添加新BUFF
-                target.buffs.push(buff);
             }
+
+            // 添加新buff
+            target.buffs.push(buff);
+            this.applyBuffEffect(target, buff); // 应用初始效果
+            this.recalculateStatsWithBuffs(target); // 重新计算属性
+            return true;
         }
-
-        // 应用BUFF效果
-        this.applyBuffEffect(target, buff);
-
-        return true;
     },
 
     /**
-     * 应用复合BUFF到目标
+     * 应用一个BUFF包（来自技能定义）到目标
      * @param {object} target - 目标对象
-     * @param {object} compositeBuffData - 从技能JSON读取的复合BUFF定义
+     * @param {object} buffPackageData - 从技能JSON读取的buff包定义 (包含 name, effects, duration, dispellable, stackable, maxStacks 等)
      * @param {object} source - BUFF来源角色
-     * @returns {boolean} 是否成功应用
+     * @returns {boolean} 是否成功应用或更新
      */
-    applyCompositeBuff(target, compositeBuffData, source) {
-        if (!target || !compositeBuffData) return false;
+    applyBuffPackage(target, buffPackageData, source) {
+        if (!target || !buffPackageData || !buffPackageData.effects) return false;
 
-        if (!target.buffs) {
-            target.buffs = [];
-        }
+        if (!target.buffs) target.buffs = [];
 
-        let existingCompositeBuff = target.buffs.find(b => b.type === 'compositeBuff' && b.name === compositeBuffData.name && !b.isSubBuff);
+        // 查找已存在的同名BUFF包
+        let existingPackage = target.buffs.find(b =>
+            b.isBuffPackage && // 确保是包类型
+            b.name === buffPackageData.buffName &&
+            b.source?.id === source?.id // 同来源
+        );
 
-        if (existingCompositeBuff) {
-            // 复合BUFF已存在
-            const currentStacks = existingCompositeBuff.currentStacks || 1;
-            const maxStacks = existingCompositeBuff.maxStacks || compositeBuffData.maxStacks || 1;
+        if (existingPackage) {
+            // --- 更新已存在的BUFF包 ---
+            const maxStacks = existingPackage.maxStacks || 1;
+            let needsUpdate = false;
 
-            if (existingCompositeBuff.stackable && currentStacks < maxStacks) {
-                existingCompositeBuff.currentStacks = currentStacks + 1;
-                existingCompositeBuff.duration = Math.max(existingCompositeBuff.duration, compositeBuffData.duration);
-                // 叠加子效果
-                for (const effect of compositeBuffData.effects) {
-                    // 创建子BUFF时，其source应该是父BUFF (existingCompositeBuff)
-                    const subBuff = this.createBuff(effect.type, effect.value, existingCompositeBuff.duration, existingCompositeBuff);
-                    if (subBuff) {
-                        subBuff.parentBuffId = existingCompositeBuff.id;
-                        subBuff.maxStacks = effect.maxStacks; // 子效果也可能有自己的maxStacks
-                        this.applyBuff(target, subBuff, true); // true表示是子BUFF
-                    }
-                }
-            } else {
-                // 刷新持续时间，并重新应用子效果 (先移除旧的子效果)
-                this.removeSubBuffsOf(target, existingCompositeBuff.id); // 移除所有旧的子BUFF
-                existingCompositeBuff.duration = Math.max(existingCompositeBuff.duration, compositeBuffData.duration);
-                existingCompositeBuff.effects = compositeBuffData.effects; // 更新效果定义
-                // 重新应用所有子效果
-                for (const effect of compositeBuffData.effects) {
-                    const subBuff = this.createBuff(effect.type, effect.value, existingCompositeBuff.duration, existingCompositeBuff);
-                    if (subBuff) {
-                        subBuff.parentBuffId = existingCompositeBuff.id;
-                        subBuff.maxStacks = effect.maxStacks;
-                        this.applyBuff(target, subBuff, true);
-                    }
-                }
+            // 刷新持续时间
+            const newDuration = buffPackageData.duration === 99 ? -1 : buffPackageData.duration; // 处理永续
+            if (newDuration === -1 || existingPackage.duration === -1) {
+                 if (existingPackage.duration !== -1) needsUpdate = true;
+                 existingPackage.duration = -1;
+            } else if (newDuration > existingPackage.duration) {
+                 existingPackage.duration = newDuration;
+                 needsUpdate = true;
             }
+
+            // 叠加层数
+            if (existingPackage.stackable && (existingPackage.currentStacks || 1) < maxStacks) {
+                existingPackage.currentStacks = (existingPackage.currentStacks || 1) + 1;
+                needsUpdate = true;
+            }
+
+            // 如果层数或持续时间变化，需要重新计算和应用子效果
+            if (needsUpdate) {
+                // 1. 移除旧的子效果
+                this.removeSubBuffsOf(target, existingPackage.id);
+                // 2. 根据新的层数和持续时间，重新创建并应用子效果
+                this.applySubBuffsFromPackage(target, existingPackage, source);
+                this.recalculateStatsWithBuffs(target);
+            }
+            return true;
+
         } else {
-            // 新建复合BUFF
-            const newCompositeBuff = this.createCompositeBuff(
-                compositeBuffData.name,
-                compositeBuffData.effects, // 这是效果定义数组
-                compositeBuffData.duration,
-                source, // 技能施放者
-                compositeBuffData.maxStacks || 1,
-                compositeBuffData.icon, // 从数据中获取图标
-                compositeBuffData.description // 从数据中获取描述
+            // --- 创建新的BUFF包 ---
+            const newPackage = this.createBuffPackage(
+                buffPackageData.buffName,
+                buffPackageData.buffs || buffPackageData.effects, // JSON中可能是buffs或effects
+                buffPackageData.duration === 99 ? -1 : buffPackageData.duration,
+                source,
+                { // 传递包的属性
+                    dispellable: buffPackageData.dispellable,
+                    stackable: buffPackageData.stackable,
+                    maxStacks: buffPackageData.maxStacks,
+                    icon: buffPackageData.icon, // 可选
+                    description: buffPackageData.description, // 可选
+                    buffsPerStack: buffPackageData.buffsPerStack // 传递叠层效果定义
+                }
             );
-            if (!newCompositeBuff) return false;
+            if (!newPackage) return false;
 
-            target.buffs.push(newCompositeBuff);
-            // 应用子效果
-            for (const effect of newCompositeBuff.effects) { // newCompositeBuff.effects 是子效果的定义
-                const subBuff = this.createBuff(effect.type, effect.value, newCompositeBuff.duration, newCompositeBuff); // source 是父BUFF
-                if (subBuff) {
-                    subBuff.parentBuffId = newCompositeBuff.id;
-                    subBuff.maxStacks = effect.maxStacks; // 子效果也可能有自己的maxStacks
-                    this.applyBuff(target, subBuff, true);
+            target.buffs.push(newPackage);
+            // 应用初始的子效果
+            this.applySubBuffsFromPackage(target, newPackage, source);
+            this.recalculateStatsWithBuffs(target);
+            return true;
+        }
+    },
+
+    /**
+     * 根据BUFF包及其当前状态，应用其子效果
+     * @param {object} target - 目标对象
+     * @param {object} buffPackage - BUFF包对象 (已存在于target.buffs中)
+     * @param {object} source - 原始施法者 (用于子buff的source记录，可选)
+     */
+    applySubBuffsFromPackage(target, buffPackage, _source) {
+        if (!buffPackage || !buffPackage.effects || !Array.isArray(buffPackage.effects)) return;
+
+        const parentBuffId = buffPackage.id;
+        const parentDuration = buffPackage.duration;
+        const parentStacks = buffPackage.currentStacks || 1;
+        const buffsPerStackDef = buffPackage.buffsPerStack; // 获取叠层效果定义
+
+        for (const effectDef of buffPackage.effects) {
+            let effectValue = effectDef.value;
+            let effectType = effectDef.type;
+
+            // 检查是否是叠层效果
+            let perStackValue = null;
+            if (buffsPerStackDef && Array.isArray(buffsPerStackDef)) {
+                const stackEffectDef = buffsPerStackDef.find(ps => ps.type === effectType);
+                if (stackEffectDef) {
+                    perStackValue = stackEffectDef.value;
                 }
             }
-            existingCompositeBuff = newCompositeBuff; // 用于后续处理
-        }
-        
-        // 确保复合BUFF的子效果能正确更新角色属性
-        this.recalculateStatsWithBuffs(target);
 
-        return true;
+            // 如果是叠层效果，根据层数计算最终值
+            if (perStackValue !== null) {
+                // 假设叠层效果是线性叠加
+                effectValue = perStackValue * parentStacks;
+            }
+
+            // 创建子BUFF
+            const subBuff = this.createBuff(
+                effectType,
+                effectValue,
+                parentDuration, // 子buff持续时间跟随父buff
+                buffPackage, // 子buff的直接来源是父buff包
+                { // 传递从父级继承或自身的属性
+                    canDispel: buffPackage.canDispel, // 子buff的可驱散性通常跟随父buff
+                    stackable: false, // 子buff本身通常不独立叠加，其效果由父buff层数决定
+                    maxStacks: 1,
+                    name: effectDef.name || `${buffPackage.name}-${effectType}` // 可以给子buff一个更具体的名字
+                }
+            );
+
+            if (subBuff) {
+                subBuff.parentBuffId = parentBuffId; // 关联父buff
+                this.applyBuff(target, subBuff, true); // 应用子buff
+            }
+        }
     },
 
     /**

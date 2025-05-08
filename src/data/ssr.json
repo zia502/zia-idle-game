@@ -105,7 +105,7 @@
       "daRate": 0.04,
       "taRate": 0.01
     },
-    "skills": ["frostBolt", "iceShield", "blizzard"]
+    "skills": ["bingJingJieJie", "bingFengKuangFeng", "shanYaoShuiJing"]
   },
   "ssr_27": {
     "id": "character_027",
@@ -123,7 +123,7 @@
       "daRate": 0.07,
       "taRate": 0.03
     },
-    "skills": ["thunderStrike", "lightningSpeed", "thunderStorm"]
+    "skills": ["zhanShuCeFangYuan", "zhanShuCeHeYi", "bingHuoZhiShu"]
   },
   "ssr_28": {
     "id": "character_028",
@@ -141,7 +141,7 @@
       "daRate": 0.1,
       "taRate": 0.05
     },
-    "skills": ["shadowBolt", "darknessVeil", "shadowStorm"]
+    "skills": ["baiCheng", "qianZhuan", "shiQi"]
   },
   "ssr_29": {
     "id": "character_029",
@@ -159,7 +159,7 @@
       "daRate": 0.04,
       "taRate": 0.01
     },
-    "skills": ["holyLight", "divineHeal", "heavenlyBlessing"]
+    "skills": ["faLiChongJi", "tuiLuoChengBi", "shengQuanDeXingHua", "xuNuanZhiGuang"]
   },
   "ssr_30": {
     "id": "character_030",
@@ -177,7 +177,7 @@
       "daRate": 0.07,
       "taRate": 0.03
     },
-    "skills": ["fireStrike", "flameGuard", "inferno"]
+    "skills": ["zuAiShu", "gongZhuDeYinLing", "xueYuanZhiShouHuJi"]
   },
   "ssr_31": {
     "id": "character_031",
@@ -195,7 +195,7 @@
       "daRate": 0.04,
       "taRate": 0.01
     },
-    "skills": ["windArrow", "stormShot", "hurricaneArrow"]
+    "skills": ["tanSuo", "huanJueChengXiang", "buQiang"]
   },
   "ssr_32": {
     "id": "character_032",
@@ -213,7 +213,7 @@
       "daRate": 0.07,
       "taRate": 0.03
     },
-    "skills": ["earthBolt", "stoneShield", "earthquake"]
+    "skills": ["yueTian", "xinRuBaiZhi", "weiLaiHuanShi"]
   },
   "ssr_33": {
     "id": "character_033",
@@ -231,7 +231,7 @@
       "daRate": 0.1,
       "taRate": 0.05
     },
-    "skills": ["frostStrike", "iceGuard", "blizzard"]
+    "skills": ["daBuZhongWo", "baNiDuoSui", "jiuZheMeDingLe"]
   },
   "ssr_34": {
     "id": "character_034",
@@ -249,7 +249,7 @@
       "daRate": 0.07,
       "taRate": 0.03
     },
-    "skills": ["thunderBolt", "lightningShield", "thunderStorm"]
+    "skills": ["kongBuJunShi", "lingHunDuanZao", "meiYouTongJueDeRouTi"]
   },
   "ssr_35": {
     "id": "character_035",
@@ -267,7 +267,7 @@
       "daRate": 0.1,
       "taRate": 0.05
     },
-    "skills": ["shadowArrow", "darknessVeil", "shadowStorm"]
+    "skills": ["niBoLongGenZhiDun", "xiErDeBuLanTeZhiJian", "shenYuDeShouHuZhe", "buKeQinShenYu"]
   },
   "ssr_36": {
     "id": "character_036",
@@ -285,7 +285,7 @@
       "daRate": 0.1,
       "taRate": 0.05
     },
-    "skills": ["holyBolt", "divineShield", "heavenlyLight"]
+    "skills": ["baZhuangJiaShi", "yiFaJiaShi", "lieFeiJiaShi"]
   },
   "ssr_37": {
     "id": "character_037",
@@ -303,7 +303,7 @@
       "daRate": 0.07,
       "taRate": 0.03
     },
-    "skills": ["fireBolt", "flameShield", "inferno"]
+    "skills": ["duanGu", "mouPan", "guiZuYiWu"]
   },
   "ssr_38": {
     "id": "character_038",
@@ -321,7 +321,7 @@
       "daRate": 0.04,
       "taRate": 0.01
     },
-    "skills": ["windStrike", "stormGuard", "hurricane"]
+    "skills": ["hanFengHuaShuQuSan", "fuXing", "wuWangWo"]
   },
   "ssr_39": {
     "id": "character_039",
@@ -339,7 +339,7 @@
       "daRate": 0.07,
       "taRate": 0.03
     },
-    "skills": ["earthStrike", "stoneGuard", "earthquake"]
+    "skills": ["huanXiang", "yuanSuZhuFu", "qiangFengFuNeng"]
   },
   "ssr_40": {
     "id": "character_040",
@@ -357,6 +357,6 @@
       "daRate": 0.07,
       "taRate": 0.03
     },
-    "skills": ["frostArrow", "iceVeil", "blizzard"]
+    "skills": ["yongHengDeLiuFeng", "tianXiangShenShengDuanMiePo", "kuangWuDeBaoFeng", "tianKuJuFengLuoXuanJin"]
   }
 }

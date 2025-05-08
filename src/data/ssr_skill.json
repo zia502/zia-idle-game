@@ -7,12 +7,12 @@
     "cooldown": 5,
     "effectType": "damage_and_buff",
     "targetType": "enemy",
-    "duration": 1,
     "effects": [
       {
         "type": "damage",
         "minMultiplier": 3.0,
-        "maxMultiplier": 4.0
+        "maxMultiplier": 4.0,
+        "targetType": "enemy"
       },
       {
         "type": "taBoost",
@@ -32,39 +32,45 @@
     "cooldown": 6,
     "effectType": "buff",
     "targetType": "self",
-    "duration": 1,
     "effects": [
       {
         "type": "attackUp",
         "value": 2.5,
         "duration": 1,
         "stackable": true,
-        "dispellable": true
+        "dispellable": true,
+        "targetType": "self"
       }
     ]
   },
   "albesContractor": {
     "name": "阿尔贝斯的契约者",
     "description": "[被动]自身发动TA时，3次攻击均进行追击20%效果，并驱散敌方一个BUFF。",
-    "type": "attack",
+    "type": "passive",
     "fixed": false,
     "passive": true,
-    "effectType": "buff",
+    "cooldown": 0,
+    "effectType": "triggered_echo_and_dispel",
     "targetType": "self",
     "effects": [
       {
         "type": "proc",
-        "onTripleAttack": true,
-        "effect": {
-          "type": "echo",
-          "value": 0.2,
-          "followUp": {
+        "triggerCondition": "onTripleAttack",
+        "targetType": "self",
+        "triggeredEffects": [
+          {
+            "type": "echo",
+            "value": 0.2,
+            "count": 3,
+            "targetType": "self"
+          },
+          {
             "type": "dispel",
             "count": 1,
             "dispelPositive": true,
             "targetType": "enemy"
           }
-        }
+        ]
       }
     ]
   },
@@ -74,37 +80,32 @@
     "type": "defense",
     "fixed": false,
     "cooldown": 6,
-    "effectType": "buff",
+    "effectType": "buff_package",
     "targetType": "self",
-    "duration": 4,
     "effects": [
       {
-        "type": "cover",
-        "value": 1.0,
+        "type": "applyBuffPackage",
+        "buffName": "晓之誇炎",
         "duration": 4,
-        "stackable": false,
+        "targetType": "self",
         "dispellable": false,
-        "name": "晓之誇炎",
-        "description": "替代其他角色承担单体攻击"
-      },
-      {
-        "type": "defenseUp",
-        "value": 50,
-        "duration": 4,
-        "stackable": false,
-        "dispellable": false,
-        "name": "晓之誇炎",
-        "description": "增加防御力"
-      },
-      {
-        "type": "damageCap",
-        "value": 2000,
-        "elementType": "wind",
-        "duration": 4,
-        "stackable": false,
-        "dispellable": false,
-        "name": "晓之誇炎",
-        "description": "限制受到的风属性伤害"
+        "buffs": [
+          {
+            "type": "cover",
+            "value": 1.0,
+            "description": "替代其他角色承担单体攻击"
+          },
+          {
+            "type": "defenseUp",
+            "value": 50
+          },
+          {
+            "type": "elementalDamageCap",
+            "elementType": "wind",
+            "value": 2000,
+            "description": "限制受到的风属性伤害"
+          }
+        ]
       }
     ]
   },
@@ -120,7 +121,8 @@
       {
         "type": "damage",
         "minMultiplier": 3.0,
-        "maxMultiplier": 5.0
+        "maxMultiplier": 5.0,
+        "targetType": "enemy"
       },
       {
         "type": "taBoost",
@@ -131,8 +133,8 @@
         "targetType": "self"
       },
       {
-        "type": "staminaUp",
-        "value": 10,
+        "type": "staminaUp", 
+        "value": 0.1,
         "duration": 3,
         "stackable": true,
         "dispellable": true,
@@ -143,21 +145,24 @@
   "magnanimous": {
     "name": "豪放磊落",
     "description": "[被动] 自身受到敌对心+100%，防御力+30.",
-    "type": "defense",
+    "type": "passive",
     "fixed": false,
     "passive": true,
-    "effectType": "buff",
+    "cooldown": 0,
+    "effectType": "passive_buff",
     "targetType": "self",
     "effects": [
       {
         "type": "threatUp",
-        "value": 100,
-        "passive": true
+        "value": 1.0, 
+        "passive": true,
+        "targetType": "self"
       },
       {
         "type": "defenseUp",
         "value": 30,
-        "passive": true
+        "passive": true,
+        "targetType": "self"
       }
     ]
   },
@@ -167,7 +172,7 @@
     "type": "defense",
     "fixed": false,
     "cooldown": 7,
-    "effectType": "buff",
+    "effectType": "team_buff_package",
     "targetType": "all_allies",
     "effects": [
       {
@@ -176,21 +181,24 @@
         "value": 0.4,
         "duration": 1,
         "stackable": true,
-        "dispellable": true
+        "dispellable": true,
+        "targetType": "all_allies"
       },
       {
-        "type": "elementConversion",
-        "elementType": "wind",
+        "type": "damageElementConversion",
+        "convertToElementType": "wind",
         "duration": 3,
         "stackable": false,
-        "dispellable": true
+        "dispellable": true,
+        "targetType": "all_allies"
       },
       {
         "type": "regen",
         "value": 800,
         "duration": 3,
         "stackable": true,
-        "dispellable": true
+        "dispellable": true,
+        "targetType": "all_allies"
       }
     ]
   },
@@ -201,17 +209,17 @@
     "fixed": false,
     "cooldown": 5,
     "effectType": "damage_and_debuff",
-    "targetType": "random_enemy",
-    "duration": 3,
+    "targetType": "random_enemy", 
     "effects": [
       {
-        "type": "multi_attack",
+        "type": "multiHitDamage",
         "count": 5,
-        "multiplier": 1.0
+        "multiplierPerHit": 1.0,
+        "targetType": "random_enemy"
       },
       {
         "type": "defenseDown",
-        "value": 20,
+        "value": 20, 
         "duration": 3,
         "stackable": true,
         "dispellable": true,
@@ -222,20 +230,24 @@
   "protectingValkyrie": {
     "name": "守护的女武神",
     "description": "受到攻击后30%概率触发四德拉克马。",
-    "type": "defense",
+    "type": "passive",
     "fixed": false,
     "passive": true,
-    "effectType": "counter",
+    "cooldown": 0,
+    "effectType": "triggered_skill",
     "targetType": "self",
     "effects": [
       {
         "type": "proc",
         "chance": 0.3,
-        "onDamaged": true,
-        "effect": {
-          "type": "skill",
-          "skillId": "tetragrammaton"
-        }
+        "triggerCondition": "onDamagedByEnemy",
+        "targetType": "self",
+        "triggeredEffects": [
+          {
+            "type": "castSkill",
+            "skillId": "tetragrammaton"
+          }
+        ]
       }
     ]
   },
@@ -245,30 +257,31 @@
     "type": "attack",
     "fixed": false,
     "cooldown": 7,
-    "effectType": "damage_and_debuff",
+    "effectType": "damage_and_custom_debuff",
     "targetType": "enemy",
     "effects": [
       {
         "type": "damage",
-        "multiplier": 8.0
+        "multiplier": 8.0,
+        "targetType": "enemy"
       },
       {
-        "type": "attackDown",
-        "value": 0.1,
-        "permanent": true,
-        "stackable": false,
-        "dispellable": false,
-        "name": "恶灭之炎",
-        "description": "降低攻击力"
-      },
-      {
-        "type": "defenseDown",
-        "value": 10,
-        "permanent": true,
-        "stackable": false,
-        "dispellable": false,
-        "name": "恶灭之炎",
-        "description": "降低防御力"
+        "type": "applyBuffPackage", 
+        "buffName": "恶灭之炎",
+        "targetType": "enemy",
+        "duration": 99, 
+        "dispellable": false, 
+        "isDebuff": true,
+        "buffs": [
+           {
+            "type": "attackDown",
+            "value": 0.1 
+          },
+          {
+            "type": "defenseDown",
+            "value": 10 
+          }
+        ]
       }
     ]
   },
@@ -278,46 +291,33 @@
     "type": "buff",
     "fixed": false,
     "cooldown": 11,
-    "effectType": "buff",
+    "effectType": "team_buff_package",
     "targetType": "all_allies",
-    "duration": 5,
     "effects": [
-      {
-        "type": "attackUp",
-        "value": 0.15,
+       {
+        "type": "applyBuffPackage",
+        "buffName": "炎火之导",
         "duration": 5,
-        "stackable": false,
+        "targetType": "all_allies",
         "dispellable": false,
-        "name": "炎火之导",
-        "description": "提高攻击力"
-      },
-      {
-        "type": "regen",
-        "value": 1000,
-        "duration": 5,
-        "stackable": false,
-        "dispellable": false,
-        "name": "炎火之导",
-        "description": "持续回复HP"
-      },
-      {
-        "type": "damageReduction",
-        "value": 0.2,
-        "duration": 5,
-        "stackable": false,
-        "dispellable": false,
-        "name": "炎火之导",
-        "description": "减少受到的伤害"
-      },
-      {
-        "type": "damageCap",
-        "value": 0.1,
-        "isIncrease": true,
-        "duration": 5,
-        "stackable": false,
-        "dispellable": false,
-        "name": "炎火之导",
-        "description": "提高伤害上限"
+        "buffs": [
+          {
+            "type": "attackUp",
+            "value": 0.15
+          },
+          {
+            "type": "regen",
+            "value": 1000
+          },
+          {
+            "type": "allDamageTakenReduction", 
+            "value": 0.2
+          },
+          {
+            "type": "damageCapUp",
+            "value": 0.1
+          }
+        ]
       }
     ]
   },
@@ -326,78 +326,75 @@
     "description": "对敌方全体造成10次1倍攻击力伤害。初始CD10回合，后续99回合。我方全体HP回复100%。自身获得[冠月].",
     "type": "attack",
     "fixed": false,
-    "cooldown": 10,
+    "cooldown": 0, 
+    "initialCooldown": 10,
     "nextCooldown": 99,
-    "effectType": "damage_and_buff",
+    "effectType": "multi_effect_damage_heal_buff",
     "targetType": "all_enemies",
     "effects": [
       {
-        "type": "multi_attack",
+        "type": "multiHitDamage",
         "count": 10,
-        "multiplier": 1.0,
+        "multiplierPerHit": 1.0,
         "targetType": "all_enemies"
       },
       {
         "type": "heal",
-        "ratio": 1.0,
+        "healType": "percentageMaxHp",
+        "value": 1.0,
         "targetType": "all_allies"
       },
       {
-        "type": "echo",
-        "value": 0.5,
-        "permanent": true,
-        "stackable": false,
+        "type": "applyBuffPackage",
+        "buffName": "冠月",
+        "duration": 99, 
+        "targetType": "self",
         "dispellable": false,
-        "name": "冠月",
-        "description": "追击效果",
-        "targetType": "self"
+        "buffs": [
+            {
+                "type": "echo",
+                "value": 0.5
+            }
+        ]
       }
     ]
   },
   "worshippedDeity": {
     "name": "崇拜的尊神",
     "description": "[被动] 我方全体火属性角色获得 攻击力+30%，自身攻击时有10%概率同时获得TA+10%,攻击力+10%，防御力+10%的永续BUFF（最高10层）。",
-    "type": "buff",
+    "type": "passive",
     "fixed": false,
     "passive": true,
-    "effectType": "buff",
-    "targetType": "all_allies_fire",
+    "cooldown": 0,
+    "effectType": "passive_team_buff_and_self_stacking_buff",
+    "targetType": "all_allies_fire", 
     "effects": [
       {
         "type": "attackUp",
         "value": 0.3,
         "passive": true,
-        "elementType": "fire"
+        "filter": {"elementType": "fire"},
+        "targetType": "all_allies"
       },
       {
         "type": "proc",
         "chance": 0.1,
-        "onAttack": true,
-        "maxStacks": 10,
-        "effect": {
-          "type": "taBoost",
-          "value": 0.1,
-          "permanent": true,
-          "stackable": true,
-          "dispellable": false,
-          "targetType": "self"
-        },
-        "additionalEffects": [
+        "triggerCondition": "onAttack",
+        "targetType": "self",
+        "triggeredEffects": [
           {
-            "type": "attackUp",
-            "value": 0.1,
-            "permanent": true,
+            "type": "applyBuffPackage",
+            "buffName": "尊神崇拜层",
+            "duration": 99, 
             "stackable": true,
+            "maxStacks": 10,
             "dispellable": false,
-            "targetType": "self"
-          },
-          {
-            "type": "defenseUp",
-            "value": 10,
-            "permanent": true,
-            "stackable": true,
-            "dispellable": false,
-            "targetType": "self"
+            "targetType": "self",
+            "buffsPerStack": [ 
+              { "type": "taBoost", "value": 0.01 }, 
+              { "type": "attackUp", "value": 0.01 },
+              { "type": "defenseUp", "value": 0.01 } 
+            ]
           }
         ]
       }
@@ -415,12 +412,14 @@
       {
         "type": "damage",
         "minMultiplier": 4.0,
-        "maxMultiplier": 5.0
+        "maxMultiplier": 5.0,
+        "targetType": "enemy"
       },
       {
         "type": "dispel",
         "count": 1,
-        "dispelPositive": true
+        "dispelPositive": true,
+        "targetType": "enemy"
       }
     ]
   },
@@ -432,42 +431,1401 @@
     "cooldown": 6,
     "effectType": "buff",
     "targetType": "self",
-    "duration": 3,
     "effects": [
       {
         "type": "echo",
         "value": 0.3,
         "duration": 3,
         "stackable": true,
-        "dispellable": true
+        "dispellable": true,
+        "targetType": "self"
       },
       {
-        "type": "criticalRate",
+        "type": "criticalRateUp", 
         "value": 0.5,
         "duration": 3,
         "stackable": true,
-        "dispellable": true
+        "dispellable": true,
+        "targetType": "self"
       }
     ]
   },
   "fireMantra": {
     "name": "炎術式",
     "description": "[被动] 攻击力+50%， TA +100%",
-    "type": "buff",
+    "type": "passive",
     "fixed": false,
     "passive": true,
-    "effectType": "buff",
+    "cooldown": 0,
+    "effectType": "passive_buff",
     "targetType": "self",
     "effects": [
       {
         "type": "attackUp",
         "value": 0.5,
-        "passive": true
+        "passive": true,
+        "targetType": "self"
       },
       {
         "type": "taBoost",
         "value": 1.0,
-        "passive": true
+        "passive": true,
+        "targetType": "self"
+      }
+    ]
+  },
+  "bingJingJieJie": {
+    "name": "冰晶结界",
+    "description": "我方全体获得以下强化：火属性伤害70%减免，持续2回合。自身获得3层春风buff, 自己受到伤害时，治疗全队2000HP,并净化1个debuff ， CD 6",
+    "type": "buff",
+    "fixed": false,
+    "cooldown": 6,
+    "effectType": "team_buff_and_self_triggered_heal_dispel",
+    "targetType": "all_allies",
+    "effects": [
+      {
+        "type": "elementalResistance",
+        "elementType": "fire",
+        "value": 0.7,
+        "duration": 2,
+        "targetType": "all_allies",
+        "stackable": true,
+        "dispellable": true
+      },
+      {
+        "type": "proc",
+        "triggerCondition": "onDamagedByEnemy",
+        "targetType": "self",
+        "maxActivations": 3,
+        "name": "春风守护",
+        "descriptionForEffect": "受到伤害时，治疗全队2000HP,并净化1个debuff (消耗1层)",
+        "triggeredEffects": [
+          {
+            "type": "heal",
+            "value": 2000,
+            "targetType": "all_allies"
+          },
+          {
+            "type": "dispel",
+            "count": 1,
+            "dispelNegative": true,
+            "targetType": "all_allies"
+          }
+        ],
+        "dispellable": false 
+      }
+    ]
+  },
+  "bingFengKuangFeng": {
+    "name": "冰封狂风",
+    "description": "对敌方全体造成2.5~3倍伤害, 并施加 攻击力 -20% 防御力-20% DEBUFF 2回合 ， CD 5",
+    "type": "attack",
+    "fixed": false,
+    "cooldown": 5,
+    "effectType": "aoe_damage_and_debuff",
+    "targetType": "all_enemies",
+    "effects": [
+      {
+        "type": "damage",
+        "minMultiplier": 2.5,
+        "maxMultiplier": 3.0,
+        "targetType": "all_enemies"
+      },
+      {
+        "type": "attackDown",
+        "value": 0.2,
+        "duration": 2,
+        "targetType": "all_enemies",
+        "stackable": true,
+        "dispellable": true
+      },
+      {
+        "type": "defenseDown",
+        "value": 0.2,
+        "duration": 2,
+        "targetType": "all_enemies",
+        "stackable": true,
+        "dispellable": true
+      }
+    ]
+  },
+  "shanYaoShuiJing": {
+    "name": "闪耀水晶",
+    "description": "被动： 我方全体防御力加15， 火属性伤害减轻 15%",
+    "type": "passive",
+    "fixed": false,
+    "passive": true,
+    "cooldown": 0,
+    "effectType": "passive_team_buff",
+    "targetType": "all_allies",
+    "effects": [
+      {
+        "type": "defenseUp",
+        "value": 15,
+        "passive": true,
+        "targetType": "all_allies"
+      },
+      {
+        "type": "elementalResistance",
+        "elementType": "fire",
+        "value": 0.15,
+        "passive": true,
+        "targetType": "all_allies"
+      }
+    ]
+  },
+  "zhanShuCeFangYuan": {
+    "name": "戦術策：方円",
+    "description": "我方全体获得以下强化，持续5回合 攻击力 +80% 防御力 +50 CD 8",
+    "type": "buff",
+    "fixed": false,
+    "cooldown": 8,
+    "effectType": "team_buff",
+    "targetType": "all_allies",
+    "effects": [
+      {
+        "type": "attackUp",
+        "value": 0.8,
+        "duration": 5,
+        "targetType": "all_allies",
+        "stackable": true,
+        "dispellable": true
+      },
+      {
+        "type": "defenseUp",
+        "value": 50,
+        "duration": 5,
+        "targetType": "all_allies",
+        "stackable": true,
+        "dispellable": true
+      }
+    ]
+  },
+  "zhanShuCeHeYi": {
+    "name": "戦術策：鶴翼",
+    "description": "对敌方全体施加以下弱体，持续3回合 攻击力- 20% 防御力-30 CD 5",
+    "type": "debuff",
+    "fixed": false,
+    "cooldown": 5,
+    "effectType": "aoe_debuff",
+    "targetType": "all_enemies",
+    "effects": [
+      {
+        "type": "attackDown",
+        "value": 0.2,
+        "duration": 3,
+        "targetType": "all_enemies",
+        "stackable": true,
+        "dispellable": true
+      },
+      {
+        "type": "defenseDown",
+        "value": 0.3, 
+        "duration": 3,
+        "targetType": "all_enemies",
+        "stackable": true,
+        "dispellable": true
+      }
+    ]
+  },
+  "bingHuoZhiShu": {
+    "name": "兵活の书",
+    "description": "免疫沉默DEBUFF",
+    "type": "passive",
+    "fixed": false,
+    "passive": true,
+    "cooldown": 0,
+    "effectType": "passive_immunity",
+    "targetType": "self",
+    "effects": [
+      {
+        "type": "statusImmunity",
+        "status": "silence",
+        "passive": true,
+        "targetType": "self"
+      }
+    ]
+  },
+  "zuAiShu": {
+    "name": "阻碍术",
+    "description": "我方全体获得以下强化 防御力 +100，持续3回合 ， 火属性伤害40%减免，持续1回合，CD 8回合",
+    "type": "buff",
+    "fixed": false,
+    "cooldown": 8,
+    "effectType": "team_buff_defense_and_resistance",
+    "targetType": "all_allies",
+    "effects": [
+      {
+        "type": "defenseUp",
+        "value": 100,
+        "duration": 3,
+        "targetType": "all_allies",
+        "stackable": true,
+        "dispellable": true
+      },
+      {
+        "type": "elementalResistance",
+        "elementType": "fire",
+        "value": 0.4,
+        "duration": 1,
+        "targetType": "all_allies",
+        "stackable": true,
+        "dispellable": true
+      }
+    ]
+  },
+  "gongZhuDeYinLing": {
+    "name": "公主的引领",
+    "description": "自身获得以下状态，持续2回合，敌对心 +200%，HP回复HOT 1500， CD 5回合",
+    "type": "buff",
+    "fixed": false,
+    "cooldown": 5,
+    "effectType": "self_buff_threat_and_regen",
+    "targetType": "self",
+    "effects": [
+      {
+        "type": "threatUp",
+        "value": 2.0, 
+        "duration": 2,
+        "targetType": "self",
+        "stackable": true,
+        "dispellable": true
+      },
+      {
+        "type": "regen",
+        "value": 1500,
+        "duration": 2,
+        "targetType": "self",
+        "stackable": true,
+        "dispellable": true
+      }
+    ]
+  },
+  "xueYuanZhiShouHuJi": {
+    "name": "学院の守護姫",
+    "description": "被动: 被攻击时，获得1层英灵BUFF（最大5层/永续/消去不可） 英灵效果 攻击力UP （每层10%/最大50%） 防御力UP（每层20/最大100） DA UP（每层20%/最大100%） TA UP（每层5%/最大25%） 敌对心UP（每层40%/最大200%）",
+    "type": "passive",
+    "fixed": false,
+    "passive": true,
+    "cooldown": 0,
+    "effectType": "passive_stacking_buff_on_damaged",
+    "targetType": "self",
+    "effects": [
+      {
+        "type": "proc",
+        "triggerCondition": "onDamagedByEnemy",
+        "targetType": "self",
+        "triggeredEffects": [
+          {
+            "type": "applyBuffPackage",
+            "buffName": "英灵",
+            "duration": 99, 
+            "stackable": true,
+            "maxStacks": 5,
+            "dispellable": false,
+            "targetType": "self",
+            "buffsPerStack": [
+              { "type": "attackUp", "value": 0.1 },
+              { "type": "defenseUp", "value": 20 },
+              { "type": "daBoost", "value": 0.2 },
+              { "type": "taBoost", "value": 0.05 },
+              { "type": "threatUp", "value": 0.4 }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "shiQi": {
+    "name": "十起",
+    "description": "10回合后才可使用。 对敌方单体进行3次攻击，每次造成16倍伤害, 自身获得 TA+100% 5回合。 CD14回合",
+    "type": "attack",
+    "fixed": false,
+    "cooldown": 0, 
+    "initialCooldown": 10,
+    "nextCooldown": 14,
+    "effectType": "delayed_heavy_damage_and_self_buff",
+    "targetType": "enemy",
+    "effects": [
+      {
+        "type": "multiHitDamage",
+        "count": 3,
+        "multiplierPerHit": 16.0,
+        "targetType": "enemy"
+      },
+      {
+        "type": "taBoost",
+        "value": 1.0,
+        "duration": 5,
+        "targetType": "self",
+        "stackable": true,
+        "dispellable": true
+      }
+    ]
+  },
+  "baiCheng": {
+    "name": "百承",
+    "description": "自身获得以下效果，持续1回合，完全回避，援护. CD 7",
+    "type": "defense",
+    "fixed": false,
+    "cooldown": 7,
+    "effectType": "self_defensive_buffs",
+    "targetType": "self",
+    "effects": [
+      {
+        "type": "evasionAll", 
+        "duration": 1,
+        "targetType": "self",
+        "dispellable": true
+      },
+      {
+        "type": "cover", 
+        "value": 1.0, 
+        "duration": 1,
+        "targetType": "self",
+        "dispellable": true
+      }
+    ]
+  },
+  "qianZhuan": {
+    "name": "千転",
+    "description": "自身获得以下效果 浑身+10-30 ，TA +100% ，持续3回合。 HP 回复2000. CD 7",
+    "type": "buff",
+    "fixed": false,
+    "cooldown": 7,
+    "effectType": "self_buff_and_heal",
+    "targetType": "self",
+    "effects": [
+      {
+        "type": "enmityUp", 
+        "minRate": 0.1, 
+        "maxRate": 0.3,
+        "duration": 3,
+        "targetType": "self",
+        "stackable": true,
+        "dispellable": true
+      },
+      {
+        "type": "taBoost",
+        "value": 1.0,
+        "duration": 3,
+        "targetType": "self",
+        "stackable": true,
+        "dispellable": true
+      },
+      {
+        "type": "heal",
+        "value": 2000,
+        "targetType": "self"
+      }
+    ]
+  },
+  "faLiChongJi": {
+    "name": "法力冲击",
+    "description": "对敌方单体进行3次攻击，每次造成2倍伤害，我方全体获得以下效果 HP回复2000，净化一个DEBUFF CD 6回合",
+    "type": "attack",
+    "fixed": false,
+    "cooldown": 6,
+    "effectType": "damage_and_team_heal_dispel",
+    "targetType": "enemy",
+    "effects": [
+      {
+        "type": "multiHitDamage",
+        "count": 3,
+        "multiplierPerHit": 2.0,
+        "targetType": "enemy"
+      },
+      {
+        "type": "heal",
+        "value": 2000,
+        "targetType": "all_allies"
+      },
+      {
+        "type": "dispel",
+        "count": 1,
+        "dispelNegative": true,
+        "targetType": "all_allies"
+      }
+    ]
+  },
+  "tuiLuoChengBi": {
+    "name": "推罗城壁",
+    "description": "我方全体获得以下强化: 5000护盾，攻击力+45%， 受到伤害转为火属性，火属性伤害减轻50%， 持续5回合。CD12回合",
+    "type": "buff",
+    "fixed": false,
+    "cooldown": 12,
+    "effectType": "team_defensive_offensive_buff_package",
+    "targetType": "all_allies",
+    "effects": [
+      {
+        "type": "shield",
+        "value": 5000,
+        "duration": 5, 
+        "targetType": "all_allies",
+        "dispellable": true
+      },
+      {
+        "type": "attackUp",
+        "value": 0.45,
+        "duration": 5,
+        "targetType": "all_allies",
+        "stackable": true,
+        "dispellable": true
+      },
+      {
+        "type": "damageElementConversion",
+        "convertToElementType": "fire",
+        "duration": 5,
+        "targetType": "all_allies",
+        "stackable": false,
+        "dispellable": true
+      },
+      {
+        "type": "elementalResistance",
+        "elementType": "fire",
+        "value": 0.5,
+        "duration": 5,
+        "targetType": "all_allies",
+        "stackable": true,
+        "dispellable": true
+      }
+    ]
+  },
+  "xuNuanZhiGuang": {
+    "name": "煦暖之光",
+    "description": "10回合后才可使用，仅一次。 自身与主角获得 [慈爱的星芒] BUFF: TA+100% ,攻击上限+10%，技能上限+10%",
+    "type": "buff",
+    "fixed": false,
+    "cooldown": 0,
+    "initialCooldown": 10,
+    "once": true, 
+    "effectType": "delayed_powerful_buff_self_and_main",
+    "targetType": "self_and_main", 
+    "effects": [
+      {
+        "type": "applyBuffPackage",
+        "buffName": "慈爱的星芒",
+        "duration": 99, 
+        "targetType": "self_and_main", 
+        "dispellable": false, 
+        "buffs": [
+          { "type": "taBoost", "value": 1.0 },
+          { "type": "damageCapUp", "value": 0.1 },
+          { "type": "skillDamageCapUp", "value": 0.1 }
+        ]
+      }
+    ]
+  },
+  "shengQuanDeXingHua": {
+    "name": "圣泉的星华",
+    "description": "[被动] 我方全体水属性角色获得 攻击力+30%，自身攻击时获得 攻击力+10% 防御力+10， 追击+3%的永续BUFF，最高10层",
+    "type": "passive",
+    "fixed": false,
+    "passive": true,
+    "cooldown": 0,
+    "effectType": "passive_team_elemental_buff_and_self_stacking_buff",
+    "targetType": "all_allies_water", 
+    "effects": [
+      {
+        "type": "attackUp",
+        "value": 0.3,
+        "passive": true,
+        "filter": {"elementType": "water"},
+        "targetType": "all_allies"
+      },
+      {
+        "type": "proc",
+        "triggerCondition": "onAttack",
+        "targetType": "self",
+        "triggeredEffects": [
+          {
+            "type": "applyBuffPackage",
+            "buffName": "星华积层",
+            "duration": 99,
+            "stackable": true,
+            "maxStacks": 10,
+            "dispellable": false,
+            "targetType": "self",
+            "buffsPerStack": [
+              { "type": "attackUp", "value": 0.1 },
+              { "type": "defenseUp", "value": 10 },
+              { "type": "echo", "value": 0.03 }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "tanSuo": {
+    "name": "坍缩",
+    "description": "对敌方全体造成4-4.5 倍土属性伤害并施加以下弱体，持续3回合 防御力-40 CD6回合",
+    "type": "attack",
+    "fixed": false,
+    "cooldown": 6,
+    "effectType": "aoe_damage_and_debuff",
+    "targetType": "all_enemies",
+    "effects": [
+      {
+        "type": "damage",
+        "minMultiplier": 4.0,
+        "maxMultiplier": 4.5,
+        "elementType": "earth",
+        "targetType": "all_enemies"
+      },
+      {
+        "type": "defenseDown",
+        "value": 0.4, 
+        "duration": 3,
+        "targetType": "all_enemies",
+        "stackable": true,
+        "dispellable": true
+      }
+    ]
+  },
+  "huanJueChengXiang": {
+    "name": "幻觉成像",
+    "description": "我方全体获得以下强化： 暴击率+50%， 攻击力+30% 防御力 +30， DA+35%，TA+15% 持续3回合 。CD7回合",
+    "type": "buff",
+    "fixed": false,
+    "cooldown": 7,
+    "effectType": "team_offensive_buff_package",
+    "targetType": "all_allies",
+    "effects": [
+      {
+        "type": "criticalRateUp",
+        "value": 0.5,
+        "duration": 3,
+        "targetType": "all_allies",
+        "stackable": true,
+        "dispellable": true
+      },
+      {
+        "type": "attackUp",
+        "value": 0.3,
+        "duration": 3,
+        "targetType": "all_allies",
+        "stackable": true,
+        "dispellable": true
+      },
+      {
+        "type": "defenseUp",
+        "value": 30,
+        "duration": 3,
+        "targetType": "all_allies",
+        "stackable": true,
+        "dispellable": true
+      },
+      {
+        "type": "daBoost",
+        "value": 0.35,
+        "duration": 3,
+        "targetType": "all_allies",
+        "stackable": true,
+        "dispellable": true
+      },
+      {
+        "type": "taBoost",
+        "value": 0.15,
+        "duration": 3,
+        "targetType": "all_allies",
+        "stackable": true,
+        "dispellable": true
+      }
+    ]
+  },
+  "buQiang": {
+    "name": "补强",
+    "description": "我方全体获得以下效果： HP回复2000，净化一个debuff",
+    "type": "support",
+    "fixed": false,
+    "cooldown": 5, "descriptionForEffect": "CD assumed 5 if not specified, common for utility skills",
+    "effectType": "team_heal_and_dispel",
+    "targetType": "all_allies",
+    "effects": [
+      {
+        "type": "heal",
+        "value": 2000,
+        "targetType": "all_allies"
+      },
+      {
+        "type": "dispel",
+        "count": 1,
+        "dispelNegative": true,
+        "targetType": "all_allies"
+      }
+    ]
+  },
+  "yueTian": {
+    "name": "月天",
+    "description": "对敌方全体造成7倍伤害，并施加 以下弱体: 攻击力-40% 持续3回合， CD 6回合",
+    "type": "attack",
+    "fixed": false,
+    "cooldown": 6,
+    "effectType": "aoe_damage_and_debuff",
+    "targetType": "all_enemies",
+    "effects": [
+      {
+        "type": "damage",
+        "multiplier": 7.0,
+        "targetType": "all_enemies"
+      },
+      {
+        "type": "attackDown",
+        "value": 0.4,
+        "duration": 3,
+        "targetType": "all_enemies",
+        "stackable": true,
+        "dispellable": true
+      }
+    ]
+  },
+  "xinRuBaiZhi": {
+    "name": "心如白纸",
+    "description": "我方全体获得3000 护盾， CD 7回合",
+    "type": "defense",
+    "fixed": false,
+    "cooldown": 7,
+    "effectType": "team_shield",
+    "targetType": "all_allies",
+    "effects": [
+      {
+        "type": "shield",
+        "value": 3000,
+        "duration": 99, "descriptionForEffect": "Shields usually last until broken or turn limit, assume long if not specified",
+        "targetType": "all_allies",
+        "dispellable": true
+      }
+    ]
+  },
+  "weiLaiHuanShi": {
+    "name": "未来幻視",
+    "description": "被动：回合开始时 50% 概率 我方全体获得 水属性伤害减轻70% BUFF,持续1回合",
+    "type": "passive",
+    "fixed": false,
+    "passive": true,
+    "cooldown": 0,
+    "effectType": "passive_random_team_buff",
+    "targetType": "all_allies",
+    "effects": [
+      {
+        "type": "proc",
+        "chance": 0.5,
+        "triggerCondition": "onTurnStart",
+        "targetType": "self", "descriptionForEffect": "Proc is on self, effect targets team",
+        "triggeredEffects": [
+          {
+            "type": "elementalResistance",
+            "elementType": "water",
+            "value": 0.7,
+            "duration": 1,
+            "targetType": "all_allies",
+            "stackable": true,
+            "dispellable": true
+          }
+        ]
+      }
+    ]
+  },
+  "daBuZhongWo": {
+    "name": "打不中我",
+    "description": "自身获得 完全回避 2回合，CD 8回合",
+    "type": "defense",
+    "fixed": false,
+    "cooldown": 8,
+    "effectType": "self_evasion",
+    "targetType": "self",
+    "effects": [
+      {
+        "type": "evasionAll",
+        "duration": 2,
+        "targetType": "self",
+        "dispellable": true
+      }
+    ]
+  },
+  "baNiDuoSui": {
+    "name": "把你剁碎",
+    "description": "对敌方目标进行6次攻击，每次造成1倍伤害并对敌方全体施加以下弱体，持续2回合。 DA-100% TA-100% CD6回合",
+    "type": "attack",
+    "fixed": false,
+    "cooldown": 6,
+    "effectType": "multi_hit_damage_and_aoe_ma_debuff",
+    "targetType": "enemy", 
+    "effects": [
+      {
+        "type": "multiHitDamage",
+        "count": 6,
+        "multiplierPerHit": 1.0,
+        "targetType": "enemy" 
+      },
+      {
+        "type": "daDown",
+        "value": 1.0,
+        "duration": 2,
+        "targetType": "all_enemies",
+        "stackable": true,
+        "dispellable": true
+      },
+      {
+        "type": "taDown",
+        "value": 1.0,
+        "duration": 2,
+        "targetType": "all_enemies",
+        "stackable": true,
+        "dispellable": true
+      }
+    ]
+  },
+  "jiuZheMeDingLe": {
+    "name": "就这么定了",
+    "description": "自身获得以下强化，持续1回合：TA+100%, 攻击力+100% 追击+50% CD6回合",
+    "type": "buff",
+    "fixed": false,
+    "cooldown": 6,
+    "effectType": "self_burst_buff",
+    "targetType": "self",
+    "effects": [
+      {
+        "type": "taBoost",
+        "value": 1.0,
+        "duration": 1,
+        "targetType": "self",
+        "stackable": true,
+        "dispellable": true
+      },
+      {
+        "type": "attackUp",
+        "value": 1.0,
+        "duration": 1,
+        "targetType": "self",
+        "stackable": true,
+        "dispellable": true
+      },
+      {
+        "type": "echo",
+        "value": 0.5,
+        "duration": 1,
+        "targetType": "self",
+        "stackable": true,
+        "dispellable": true
+      }
+    ]
+  },
+  "lingHunDuanZao": {
+    "name": "灵魂锻造",
+    "description": "自身获得灵魂锻造（消去不可），持续8回合 ，CD 10回合 灵魂锻造效果： 攻击力 +30% 暴击率 + 100% DA +100% 弱体免疫 敌对心 +200%",
+    "type": "buff",
+    "fixed": false,
+    "cooldown": 10,
+    "effectType": "self_powerful_buff_package",
+    "targetType": "self",
+    "effects": [
+      {
+        "type": "applyBuffPackage",
+        "buffName": "灵魂锻造",
+        "duration": 8,
+        "targetType": "self",
+        "dispellable": false,
+        "buffs": [
+          { "type": "attackUp", "value": 0.3 },
+          { "type": "criticalRateUp", "value": 1.0 },
+          { "type": "daBoost", "value": 1.0 },
+          { "type": "debuffImmunity" },
+          { "type": "threatUp", "value": 2.0 }
+        ]
+      }
+    ]
+  },
+  "kongBuJunShi": {
+    "name": "恐怖军势",
+    "description": "对敌方单体造成2~9倍伤害，自身HP百分比越低，伤害倍率越高。CD5回合",
+    "type": "attack",
+    "fixed": false,
+    "cooldown": 5,
+    "effectType": "enmity_damage",
+    "targetType": "enemy",
+    "effects": [
+      {
+        "type": "damage",
+        "damageType": "enmity", 
+        "minMultiplier": 2.0,
+        "maxMultiplier": 9.0,
+        "targetType": "enemy"
+      }
+    ]
+  },
+  "meiYouTongJueDeRouTi": {
+    "name": "没有痛觉的肉体",
+    "description": "被动: 回合结束时，HP低于25% 触发HP回复100%效果，仅生效一次。",
+    "type": "passive",
+    "fixed": false,
+    "passive": true,
+    "cooldown": 0,
+    "effectType": "passive_emergency_heal",
+    "targetType": "self",
+    "effects": [
+      {
+        "type": "proc",
+        "triggerCondition": "onTurnEndHpBelow25Percent",
+        "targetType": "self",
+        "oncePerBattle": true,
+        "triggeredEffects": [
+          {
+            "type": "heal",
+            "healType": "percentageMaxHp",
+            "value": 1.0,
+            "targetType": "self"
+          }
+        ]
+      }
+    ]
+  },
+  "buKeQinShenYu": {
+    "name": "不可侵神域",
+    "description": "我方全体获得以下强化：不可侵神域BUFF，消去不可 持续3回合： 防御力+100，受到伤害转为水属性。 并获得 水属性伤害70%减免，持续1回合，CD 6回合",
+    "type": "defense",
+    "fixed": false,
+    "cooldown": 6,
+    "effectType": "team_defensive_buff_package",
+    "targetType": "all_allies",
+    "effects": [
+      {
+        "type": "applyBuffPackage",
+        "buffName": "不可侵神域",
+        "duration": 3,
+        "targetType": "all_allies",
+        "dispellable": false,
+        "buffs": [
+          { "type": "defenseUp", "value": 100 },
+          { "type": "damageElementConversion", "convertToElementType": "water" }
+        ]
+      },
+      {
+        "type": "elementalResistance",
+        "elementType": "water",
+        "value": 0.7,
+        "duration": 1,
+        "targetType": "all_allies",
+        "stackable": true,
+        "dispellable": true 
+      }
+    ]
+  },
+  "niBoLongGenZhiDun": {
+    "name": "尼伯龙根之盾",
+    "description": "对敌方全体造成6倍伤害，我方全体获得以下强化：无敌 1回合， CD12回合",
+    "type": "attack",
+    "fixed": false,
+    "cooldown": 12,
+    "effectType": "aoe_damage_and_team_invincibility",
+    "targetType": "all_enemies",
+    "effects": [
+      {
+        "type": "damage",
+        "multiplier": 6.0,
+        "targetType": "all_enemies"
+      },
+      {
+        "type": "invincible",
+        "duration": 1,
+        "targetType": "all_allies",
+        "dispellable": true 
+      }
+    ]
+  },
+  "xiErDeBuLanTeZhiJian": {
+    "name": "希尔德布兰特之剑",
+    "description": "对敌方目标进行6次攻击，每次造成1.5倍土属性伤害。并对敌方全体施加攻击力-30% 持续3回合DEBUFF，CD7回合",
+    "type": "attack",
+    "fixed": false,
+    "cooldown": 7,
+    "effectType": "multi_hit_damage_and_aoe_debuff",
+    "targetType": "enemy", 
+    "effects": [
+      {
+        "type": "multiHitDamage",
+        "count": 6,
+        "multiplierPerHit": 1.5,
+        "elementType": "earth",
+        "targetType": "enemy" 
+      },
+      {
+        "type": "attackDown",
+        "value": 0.3,
+        "duration": 3,
+        "targetType": "all_enemies",
+        "stackable": true,
+        "dispellable": true
+      }
+    ]
+  },
+  "shenYuDeShouHuZhe": {
+    "name": "神域的守护者",
+    "description": "[被动] 我方全体土属性角色获得 攻击力+30%，自身攻击时获得：攻击力+10%，防御力+10，技能伤害上限+3% 永续BUFF，最大10层。",
+    "type": "passive",
+    "fixed": false,
+    "passive": true,
+    "cooldown": 0,
+    "effectType": "passive_team_elemental_buff_and_self_stacking_buff",
+    "targetType": "all_allies_earth", 
+    "effects": [
+      {
+        "type": "attackUp",
+        "value": 0.3,
+        "passive": true,
+        "filter": {"elementType": "earth"},
+        "targetType": "all_allies"
+      },
+      {
+        "type": "proc",
+        "triggerCondition": "onAttack",
+        "targetType": "self",
+        "triggeredEffects": [
+          {
+            "type": "applyBuffPackage",
+            "buffName": "神域守护层",
+            "duration": 99,
+            "stackable": true,
+            "maxStacks": 10,
+            "dispellable": false,
+            "targetType": "self",
+            "buffsPerStack": [
+              { "type": "attackUp", "value": 0.1 },
+              { "type": "defenseUp", "value": 10 },
+              { "type": "skillDamageCapUp", "value": 0.03 }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "baZhuangJiaShi": {
+    "name": "霸装架式",
+    "description": "自身获得以下状态，持续5回合： 攻击力+45%， 防御力-20， CD6回合",
+    "type": "buff",
+    "fixed": false,
+    "cooldown": 6,
+    "effectType": "self_buff_tradeoff",
+    "targetType": "self",
+    "effects": [
+      {
+        "type": "attackUp",
+        "value": 0.45,
+        "duration": 5,
+        "targetType": "self",
+        "stackable": true,
+        "dispellable": true
+      },
+      {
+        "type": "defenseDown", 
+        "value": 20, 
+        "duration": 5,
+        "targetType": "self",
+        "stackable": true,
+        "dispellable": true
+      }
+    ]
+  },
+  "yiFaJiaShi": {
+    "name": "一伐架式",
+    "description": "自身获得以下强化，持续1回合：攻击力+300% ， CD6回合",
+    "type": "buff",
+    "fixed": false,
+    "cooldown": 6,
+    "effectType": "self_burst_attack_buff",
+    "targetType": "self",
+    "effects": [
+      {
+        "type": "attackUp",
+        "value": 3.0,
+        "duration": 1,
+        "targetType": "self",
+        "stackable": true,
+        "dispellable": true
+      }
+    ]
+  },
+  "lieFeiJiaShi": {
+    "name": "烈飞架式",
+    "description": "自身获得TA+100%，再攻击（攻击阶段进行2次攻击步骤），持续1回合，CD 6",
+    "type": "buff",
+    "fixed": false,
+    "cooldown": 6,
+    "effectType": "self_ta_and_extra_attack_buff",
+    "targetType": "self",
+    "effects": [
+      {
+        "type": "taBoost",
+        "value": 1.0,
+        "duration": 1,
+        "targetType": "self",
+        "stackable": true,
+        "dispellable": true
+      },
+      {
+        "type": "extraAttackTurn", 
+        "count": 1, 
+        "duration": 1,
+        "targetType": "self",
+        "dispellable": true
+      }
+    ]
+  },
+  "duanGu": {
+    "name": "断骨",
+    "description": "对敌方单体造成3.5~5倍伤害，并施加 攻击力-40% DEBUFF 持续3回合 ，CD 6回合",
+    "type": "attack",
+    "fixed": false,
+    "cooldown": 6,
+    "effectType": "damage_and_debuff",
+    "targetType": "enemy",
+    "effects": [
+      {
+        "type": "damage",
+        "minMultiplier": 3.5,
+        "maxMultiplier": 5.0,
+        "targetType": "enemy"
+      },
+      {
+        "type": "attackDown",
+        "value": 0.4,
+        "duration": 3,
+        "targetType": "enemy",
+        "stackable": true,
+        "dispellable": true
+      }
+    ]
+  },
+  "mouPan": {
+    "name": "谋叛",
+    "description": "对敌方全体造成10倍伤害, 自身获得背水+20 BUFF 持续8回合，当前HP -30%，CD 6",
+    "type": "attack",
+    "fixed": false,
+    "cooldown": 6,
+    "effectType": "aoe_damage_self_hp_cost_and_buff",
+    "targetType": "all_enemies",
+    "effects": [
+      {
+        "type": "damage",
+        "multiplier": 10.0,
+        "targetType": "all_enemies"
+      },
+      {
+        "type": "hpCostPercentageCurrent",
+        "value": 0.3,
+        "targetType": "self"
+      },
+      {
+        "type": "staminaUp", 
+        "value": 0.2, 
+        "duration": 8,
+        "targetType": "self",
+        "stackable": true,
+        "dispellable": true
+      }
+    ]
+  },
+  "guiZuYiWu": {
+    "name": "贵族义务",
+    "description": "我方全体获得以下强化，持续1回合: 伤害降低70%。 CD5回合",
+    "type": "defense",
+    "fixed": false,
+    "cooldown": 5,
+    "effectType": "team_damage_reduction",
+    "targetType": "all_allies",
+    "effects": [
+      {
+        "type": "allDamageTakenReduction",
+        "value": 0.7,
+        "duration": 1,
+        "targetType": "all_allies",
+        "stackable": true,
+        "dispellable": true
+      }
+    ]
+  },
+  "hanFengHuaShuQuSan": {
+    "name": "寒风花束",
+    "description": "驱散敌方全体1个强化状态，并施加剧毒DEBUFF（每回合损失1万HP） ，持续3回合。CD 4回合",
+    "type": "debuff",
+    "fixed": false,
+    "cooldown": 4,
+    "effectType": "aoe_dispel_and_dot",
+    "targetType": "all_enemies",
+    "effects": [
+      {
+        "type": "dispel",
+        "count": 1,
+        "dispelPositive": true,
+        "targetType": "all_enemies"
+      },
+      {
+        "type": "dot",
+        "damageType": "poison",
+        "value": 10000,
+        "duration": 3,
+        "targetType": "all_enemies",
+        "stackable": true, 
+        "dispellable": true
+      }
+    ]
+  },
+  "fuXing": {
+    "name": "复兴",
+    "description": "我方全体获得以下效果：HP回复2000，净化一个弱体， HP持续回复500（持续3回合），CD 6回合",
+    "type": "support",
+    "fixed": false,
+    "cooldown": 6,
+    "effectType": "team_heal_dispel_and_regen",
+    "targetType": "all_allies",
+    "effects": [
+      {
+        "type": "heal",
+        "value": 2000,
+        "targetType": "all_allies"
+      },
+      {
+        "type": "dispel",
+        "count": 1,
+        "dispelNegative": true,
+        "targetType": "all_allies"
+      },
+      {
+        "type": "regen",
+        "value": 500,
+        "duration": 3,
+        "targetType": "all_allies",
+        "stackable": true,
+        "dispellable": true
+      }
+    ]
+  },
+  "wuWangWo": {
+    "name": "勿忘我",
+    "description": "使我方一位角色复活（复活时拥有100%生命值）。◆被复活的队友排序会移动到最后一位 CD 16 回合",
+    "type": "support",
+    "fixed": false,
+    "cooldown": 16,
+    "effectType": "revive_ally",
+    "targetType": "ally_dead", 
+    "effects": [
+      {
+        "type": "revive",
+        "hpPercentage": 1.0,
+        "targetType": "ally_dead", 
+        "note": "被复活的队友排序会移动到最后一位 - game mechanic"
+      }
+    ]
+  },
+  "huanXiang": {
+    "name": "幻像",
+    "description": "我方全体获得 完全回避 持续1回合， CD 5回合",
+    "type": "defense",
+    "fixed": false,
+    "cooldown": 5,
+    "effectType": "team_evasion",
+    "targetType": "all_allies",
+    "effects": [
+      {
+        "type": "evasionAll",
+        "duration": 1,
+        "targetType": "all_allies",
+        "dispellable": true
+      }
+    ]
+  },
+  "yuanSuZhuFu": {
+    "name": "元素祝福",
+    "description": "对敌方全体进行4次攻击，每次造成2倍伤害， 并施加 防御力-25% 持续3回合。 CD 7回合",
+    "type": "attack",
+    "fixed": false,
+    "cooldown": 7,
+    "effectType": "aoe_multi_hit_damage_and_debuff",
+    "targetType": "all_enemies",
+    "effects": [
+      {
+        "type": "multiHitDamage",
+        "count": 4,
+        "multiplierPerHit": 2.0,
+        "targetType": "all_enemies"
+      },
+      {
+        "type": "defenseDown",
+        "value": 0.25,
+        "duration": 3,
+        "targetType": "all_enemies",
+        "stackable": true,
+        "dispellable": true
+      }
+    ]
+  },
+  "qiangFengFuNeng": {
+    "name": "强风赋能",
+    "description": "我方全体获得以下强化，持续3回合： 攻击力+50%，暴击率+50%, TA+50% . CD 8回合",
+    "type": "buff",
+    "fixed": false,
+    "cooldown": 8,
+    "effectType": "team_offensive_buff_package",
+    "targetType": "all_allies",
+    "effects": [
+      {
+        "type": "attackUp",
+        "value": 0.5,
+        "duration": 3,
+        "targetType": "all_allies",
+        "stackable": true,
+        "dispellable": true
+      },
+      {
+        "type": "criticalRateUp",
+        "value": 0.5,
+        "duration": 3,
+        "targetType": "all_allies",
+        "stackable": true,
+        "dispellable": true
+      },
+      {
+        "type": "taBoost",
+        "value": 0.5,
+        "duration": 3,
+        "targetType": "all_allies",
+        "stackable": true,
+        "dispellable": true
+      }
+    ]
+  },
+  "yongHengDeLiuFeng": {
+    "name": "永恒的流风",
+    "description": "我方全体角色获得以下强化：2000护盾，完全回避 1回合， 弱体无效1次。 CD8回合",
+    "type": "defense",
+    "fixed": false,
+    "cooldown": 8,
+    "effectType": "team_defensive_buff_package",
+    "targetType": "all_allies",
+    "effects": [
+      {
+        "type": "shield",
+        "value": 2000,
+        "duration": 99, 
+        "targetType": "all_allies",
+        "dispellable": true
+      },
+      {
+        "type": "evasionAll",
+        "duration": 1,
+        "targetType": "all_allies",
+        "dispellable": true
+      },
+      {
+        "type": "debuffResistOnce", 
+        "count": 1,
+        "targetType": "all_allies",
+        "dispellable": true 
+      }
+    ]
+  },
+  "tianXiangShenShengDuanMiePo": {
+    "name": "天翔·神圣断灭破",
+    "description": "对敌方单体进行6次攻击，每次造成1.5倍伤害，自身 获得 攻击力+30% 持续3回合",
+    "type": "attack",
+    "fixed": false,
+    "cooldown": 7, "descriptionForEffect": "CD assumed 7, common for such skills",
+    "effectType": "multi_hit_damage_and_self_buff",
+    "targetType": "enemy",
+    "effects": [
+      {
+        "type": "multiHitDamage",
+        "count": 6,
+        "multiplierPerHit": 1.5,
+        "targetType": "enemy"
+      },
+      {
+        "type": "attackUp",
+        "value": 0.3,
+        "duration": 3,
+        "targetType": "self",
+        "stackable": true,
+        "dispellable": true
+      }
+    ]
+  },
+  "tianKuJuFengLuoXuanJin": {
+    "name": "天哭·飓风螺旋尽",
+    "description": "初始CD10 ，再使用不可。 对敌方单体进行5次攻击，每次造成8倍伤害，并驱散其全部强化状态，并对敌方施加 攻击力-20% 防御力-20 持续3回合 。",
+    "type": "attack",
+    "fixed": false,
+    "cooldown": 0,
+    "initialCooldown": 10,
+    "once": true, 
+    "effectType": "powerful_single_use_damage_dispel_debuff",
+    "targetType": "enemy",
+    "effects": [
+      {
+        "type": "multiHitDamage",
+        "count": 5,
+        "multiplierPerHit": 8.0,
+        "targetType": "enemy"
+      },
+      {
+        "type": "dispelAll", 
+        "dispelPositive": true,
+        "targetType": "enemy"
+      },
+      {
+        "type": "attackDown",
+        "value": 0.2,
+        "duration": 3,
+        "targetType": "enemy",
+        "stackable": true,
+        "dispellable": true
+      },
+      {
+        "type": "defenseDown",
+        "value": 0.2, 
+        "duration": 3,
+        "targetType": "enemy",
+        "stackable": true,
+        "dispellable": true
+      }
+    ]
+  },
+  "kuangWuDeBaoFeng": {
+    "name": "狂舞的暴风",
+    "description": "[被动] 我方全体风属性角色获得 攻击力+30%，自身攻击时获得：攻击力+10%，防御力+10，TA+10% 永续BUFF，最大10层。",
+    "type": "passive",
+    "fixed": false,
+    "passive": true,
+    "cooldown": 0,
+    "effectType": "passive_team_elemental_buff_and_self_stacking_buff",
+    "targetType": "all_allies_wind", 
+    "effects": [
+      {
+        "type": "attackUp",
+        "value": 0.3,
+        "passive": true,
+        "filter": {"elementType": "wind"},
+        "targetType": "all_allies"
+      },
+      {
+        "type": "proc",
+        "triggerCondition": "onAttack",
+        "targetType": "self",
+        "triggeredEffects": [
+          {
+            "type": "applyBuffPackage",
+            "buffName": "暴风积层",
+            "duration": 99,
+            "stackable": true,
+            "maxStacks": 10,
+            "dispellable": false,
+            "targetType": "self",
+            "buffsPerStack": [
+              { "type": "attackUp", "value": 0.1 },
+              { "type": "defenseUp", "value": 10 },
+              { "type": "taBoost", "value": 0.1 }
+            ]
+          }
+        ]
       }
     ]
   }

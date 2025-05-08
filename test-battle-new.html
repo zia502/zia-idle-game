@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>职业战斗测试系统</title>
+    <title>队伍战斗测试系统</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -19,7 +19,7 @@
             border-radius: 8px;
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         }
-        h1, h2, h3 {
+        h1, h2, h3, h4 {
             color: #333;
         }
         .section {
@@ -63,50 +63,78 @@
             background-color: #cccccc;
             cursor: not-allowed;
         }
-        .job-selection, .boss-selection {
+        .character-selection-area, .boss-selection {
             display: flex;
             flex-wrap: wrap;
             gap: 15px;
             margin-bottom: 20px;
         }
-        .job-card, .boss-card {
+        .character-card, .boss-card {
             border: 1px solid #ddd;
             border-radius: 8px;
             padding: 15px;
-            width: 200px;
+            width: 200px; /* Adjust width as needed */
             cursor: pointer;
             transition: all 0.3s;
             background-color: #f9f9f9;
+            box-sizing: border-box; /* Include padding and border in the element's total width and height */
         }
-        .job-card:hover, .boss-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        .character-card:hover, .boss-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
         }
-        .job-card.selected, .boss-card.selected {
+        .character-card.selected, .boss-card.selected {
             border-color: #4CAF50;
             background-color: #e8f5e9;
+            box-shadow: 0 2px 5px rgba(76, 175, 80, 0.4);
         }
-        .job-card h3, .boss-card h3 {
+        .character-card h3, .boss-card h3 {
             margin-top: 0;
-            color: #333;
+            margin-bottom: 8px; /* Add some space below title */
+            font-size: 1.1em; /* Slightly larger title */
         }
-        .job-card p, .boss-card p {
+        .character-card p, .boss-card p {
             font-size: 14px;
             color: #666;
+            margin-bottom: 5px; /* Consistent spacing */
         }
         .skills-list {
             margin-top: 10px;
+            padding-left: 0; /* Remove default padding */
+            list-style-type: none; /* Remove bullets */
         }
         .skill-item {
             background-color: #eee;
-            padding: 5px 10px;
-            margin: 5px 0;
+            padding: 3px 8px; /* Adjust padding */
+            margin: 4px 0; /* Adjust margin */
             border-radius: 4px;
+            font-size: 13px; /* Slightly smaller skill font */
+            display: inline-block; /* Make skills appear inline */
+            margin-right: 5px; /* Space between inline skills */
+        }
+        .selected-team-area {
+            margin-bottom: 20px;
+            padding: 15px; /* Increased padding */
+            border: 1px solid #ccc;
+            border-radius: 8px; /* Match section radius */
+            background-color: #f9f9f9;
+            min-height: 50px; /* Ensure area is visible even when empty */
+        }
+        .selected-team-member {
+            display: inline-block;
+            padding: 6px 12px; /* Increased padding */
+            margin: 5px;
+            background-color: #4CAF50; /* Use theme color */
+            color: white; /* White text */
+            border-radius: 15px; /* Pill shape */
             font-size: 14px;
+            font-weight: bold;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         }
         .battle-status {
             display: flex;
             justify-content: space-between;
+            gap: 20px; /* Add gap between player and boss status */
             margin-bottom: 20px;
         }
         .character-status, .boss-status {
@@ -116,8 +144,16 @@
             border-radius: 8px;
             background-color: #f9f9f9;
         }
+        .team-member-status-item {
+            margin-bottom: 8px;
+            padding-bottom: 5px;
+            border-bottom: 1px solid #eee;
+        }
+        .team-member-status-item:last-child {
+            border-bottom: none;
+        }
         .hp-bar {
-            height: 20px;
+            height: 15px; /* Slightly thinner bar */
             background-color: #e0e0e0;
             border-radius: 10px;
             margin-top: 5px;
@@ -127,13 +163,16 @@
             height: 100%;
             background-color: #4CAF50;
             width: 100%;
-            transition: width 0.3s;
+            transition: width 0.3s ease-in-out; /* Smoother transition */
+            border-radius: 10px;
         }
         .boss-hp-fill {
             background-color: #f44336;
         }
         .instructions {
-            background-color: #e8f5e9;
+            background-color: #e3f2fd; /* Light blue background */
+            border: 1px solid #bbdefb; /* Blue border */
+            color: #1e88e5; /* Blue text */
             padding: 15px;
             border-radius: 8px;
             margin-bottom: 20px;
@@ -142,33 +181,63 @@
             display: none;
         }
         @media (max-width: 768px) {
-            .job-card, .boss-card {
-                width: 100%;
+            .character-card, .boss-card {
+                width: calc(50% - 10px); /* Two cards per row on smaller screens */
             }
             .battle-status {
                 flex-direction: column;
                 gap: 15px;
             }
         }
+         @media (max-width: 480px) {
+            .character-card, .boss-card {
+                width: 100%; /* One card per row on very small screens */
+            }
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>职业战斗测试系统</h1>
+        <h1>队伍战斗测试系统</h1>
 
         <div class="instructions">
             <h3>使用说明</h3>
-            <p>这个页面用于测试不同职业与BOSS的战斗过程。选择一个职业和一个BOSS，然后点击"开始战斗"按钮来模拟战斗过程。</p>
-            <p>每个职业都有自己独特的技能，战斗过程中会自动使用这些技能。战斗日志会显示详细的战斗过程。</p>
+            <p>选择 1 至 <span id="max-team-size-display-instr">4</span> 名角色组成你的队伍，然后选择一个 BOSS 进行战斗模拟。</p>
+            <p>点击角色卡片进行选择/取消选择，点击 BOSS 卡片进行选择。选好后点击“开始战斗”。</p>
         </div>
 
         <div class="section">
-            <h2>选择职业</h2>
-            <div class="job-selection" id="job-selection">
-                <!-- 职业卡片将通过JavaScript动态添加 -->
-                <div class="job-card">
-                    <h3>加载中...</h3>
+            <h2>选择角色 (最多 <span id="max-team-size-display">4</span> 名)</h2>
+            <div class="character-selection-area" id="character-selection">
+                <div>
+                    <label for="rarity-select">选择稀有度:</label>
+                    <select id="rarity-select">
+                        <option value="">--选择稀有度--</option>
+                        <option value="R">R</option>
+                        <option value="SR">SR</option>
+                        <option value="SSR">SSR</option>
+                    </select>
                 </div>
+                <div>
+                    <label for="character-select-dropdown">选择角色:</label>
+                    <select id="character-select-dropdown" disabled>
+                        <option value="">--先选择稀有度--</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="job-select-dropdown">选择职业:</label>
+                    <select id="job-select-dropdown" disabled>
+                        <option value="">--先选择角色--</option>
+                    </select>
+                </div>
+                <button id="add-character-btn" disabled style="margin-top: 10px;">添加到队伍</button>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>已选队伍</h2>
+            <div class="selected-team-area" id="selected-team-display">
+                <p>尚未选择任何角色。</p>
             </div>
         </div>
 
@@ -176,9 +245,46 @@
             <h2>选择BOSS</h2>
             <div class="boss-selection" id="boss-selection">
                 <!-- BOSS卡片将通过JavaScript动态添加 -->
-                <div class="boss-card">
-                    <h3>加载中...</h3>
-                </div>
+                 <div class="boss-card"><h3>加载中...</h3></div>
+            </div>
+        </div>
+
+        <div class="section" id="weapon-board-config-section">
+            <h2>配置武器盘</h2>
+            <div class="controls">
+                <button id="add-weapon-to-board-btn">添加武器到盘</button>
+                <button id="apply-weapon-board-btn" disabled>应用武器盘到队伍</button>
+                <button id="clear-weapon-board-btn">清空武器盘</button>
+            </div>
+            <div id="weapon-selection-modal" class="hidden" style="border:1px solid #ccc; padding:15px; margin-top:15px; background:#fff; position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); z-index:1000; width:80%; max-width:600px; max-height: 80vh; overflow-y:auto;">
+                <h3>选择武器并配置</h3>
+                <label for="weapon-select-dropdown">选择武器:</label>
+                <select id="weapon-select-dropdown" style="width:100%; margin-bottom:10px;"></select>
+                <br>
+                <label for="weapon-level-input">武器等级 (1-150):</label>
+                <input type="number" id="weapon-level-input" value="100" min="1" max="150" style="margin-bottom:10px;">
+                <br>
+                <label for="weapon-slot-select">选择槽位:</label>
+                <select id="weapon-slot-select" style="margin-bottom:10px;">
+                    <option value="mainHand">主手</option>
+                    <option value="subHand">副手</option>
+                    <option value="slot_0">槽位 1</option>
+                    <option value="slot_1">槽位 2</option>
+                    <option value="slot_2">槽位 3</option>
+                    <option value="slot_3">槽位 4</option>
+                    <option value="slot_4">槽位 5</option>
+                    <option value="slot_5">槽位 6</option>
+                    <option value="slot_6">槽位 7</option>
+                    <option value="slot_7">槽位 8</option>
+                    <option value="slot_8">槽位 9</option>
+                    <option value="slot_9">槽位 10</option>
+                </select>
+                <br>
+                <button id="confirm-add-weapon-btn">确认添加</button>
+                <button id="cancel-add-weapon-btn" style="margin-left:10px;">取消</button>
+            </div>
+            <div id="current-weapon-board-display" style="margin-top:15px; border:1px dashed #ddd; padding:10px; min-height:50px;">
+                <p>当前武器盘为空。</p>
             </div>
         </div>
 
@@ -186,15 +292,11 @@
             <h2>战斗状态</h2>
             <div class="battle-status">
                 <div class="character-status">
-                    <h3 id="character-name">角色</h3>
-                    <p>属性: <span id="character-attribute">-</span></p>
-                    <p>生命值: <span id="character-hp">0</span>/<span id="character-max-hp">0</span></p>
-                    <div class="hp-bar">
-                        <div class="hp-fill" id="character-hp-fill"></div>
+                    <h3 id="player-team-name">玩家队伍</h3>
+                    <p>状态: <span id="player-team-status">-</span></p>
+                    <div id="player-team-members-status">
+                        <!-- 队伍成员状态将动态填充 -->
                     </div>
-                    <p>攻击力: <span id="character-attack">0</span></p>
-                    <p>防御力: <span id="character-defense">0</span>%</p>
-                    <p>速度: <span id="character-speed">0</span></p>
                 </div>
                 <div class="boss-status">
                     <h3 id="boss-name">BOSS</h3>
@@ -222,48 +324,63 @@
     <script src="src/js/core/game.js"></script>
     <script src="src/js/core/character.js"></script>
     <script src="src/js/core/weapon.js"></script>
+    <script src="src/js/core/team.js"></script> <!-- 引入 team.js -->
     <script src="src/js/core/battle.js"></script>
     <script src="src/js/core/buff-system.js"></script>
     <script src="src/js/core/job-system.js"></script>
     <script src="src/js/core/job-skills.js"></script>
     <script src="src/js/core/job-skills-template.js"></script>
 
+
     <!-- 游戏组件 -->
     <script src="src/js/components/ui.js"></script>
     <script src="src/js/components/events.js"></script>
 
-    <!-- 战斗系统更新 -->
+    <!-- 战斗系统更新 (如果需要) -->
     <script src="src/js/core/battle-system-integration.js"></script>
 
-    <script>
-        // 战斗测试脚本
-        (function() {
-            // 全局变量
-            let selectedJob = null;
-            let selectedBoss = null;
-            let character = null;
-            let boss = null;
-            let battleInProgress = false;
-            let battleInterval = null;
-            let turnCount = 0;
+    <!-- 技能测试 (如果需要) -->
+    <!-- <div id="skill-test-container" style="border: 1px solid blue; padding: 10px; margin-top: 20px;"></div> -->
+    <!-- <script src="src/js/demo/skill-test.js"></script> -->
 
-            // DOM元素
+    <script>
+        // 战斗测试脚本 (IIFE)
+        (function() {
+            // --- 全局变量 ---
+            let selectedPlayerTeamData = []; // 存储选择的角色原始数据 {id, name, level, ...}
+            let playerTeamInstances = []; // 存储实例化的角色对象 [Character, ...]
+            let selectedBossData = null;    // 存储选择的BOSS原始数据 {id, name, ...}
+            let bossInstance = null;        // 存储实例化的BOSS对象 Character
+            let battleInProgress = false;
+            let turnCount = 0;
+            const MAX_TEAM_SIZE = 4;
+            const MAX_WEAPON_SLOTS = 10; // 假设武器盘最多10个普通槽位
+
+            let allCharactersData = {}; // 合并存储 R, SR, SSR 角色和职业数据
+            let allWeaponsData = {}; // 存储从 weapons.json 加载的武器数据
+            let currentWeaponBoardConfig = { // 存储当前配置的武器盘
+                mainHand: null, // { weaponId: 'id', weaponData:{...}, level: 100 }
+                subHand: null,
+                slots: new Array(MAX_WEAPON_SLOTS).fill(null)
+            };
+            let tempTeamForWeaponBoard = null; // 存储临时的Team实例用于武器盘
+
+            // --- DOM 元素缓存 ---
             const battleLog = document.getElementById('battle-log');
-            const jobSelection = document.getElementById('job-selection');
-            const bossSelection = document.getElementById('boss-selection');
+            const characterSelectionContainer = document.getElementById('character-selection'); // This div will now hold the dropdowns
+            const raritySelect = document.getElementById('rarity-select');
+            const characterSelectDropdown = document.getElementById('character-select-dropdown');
+            const jobSelectDropdown = document.getElementById('job-select-dropdown'); // 新增职业下拉框
+            const addCharacterBtn = document.getElementById('add-character-btn');
+            const selectedTeamDisplay = document.getElementById('selected-team-display');
+            const bossSelectionContainer = document.getElementById('boss-selection');
             const startBattleBtn = document.getElementById('start-battle');
             const resetBtn = document.getElementById('reset');
             const battleSection = document.getElementById('battle-section');
-
-            // 角色状态元素
-            const characterName = document.getElementById('character-name');
-            const characterHp = document.getElementById('character-hp');
-            const characterMaxHp = document.getElementById('character-max-hp');
-            const characterHpFill = document.getElementById('character-hp-fill');
-            const characterAttack = document.getElementById('character-attack');
-            const characterDefense = document.getElementById('character-defense');
-            const characterSpeed = document.getElementById('character-speed');
-
+            // 玩家队伍状态元素
+            const playerTeamName = document.getElementById('player-team-name');
+            const playerTeamStatus = document.getElementById('player-team-status');
+            const playerTeamMembersStatusContainer = document.getElementById('player-team-members-status');
             // BOSS状态元素
             const bossName = document.getElementById('boss-name');
             const bossHp = document.getElementById('boss-hp');
@@ -272,1167 +389,822 @@
             const bossAttack = document.getElementById('boss-attack');
             const bossDefense = document.getElementById('boss-defense');
             const bossSpeed = document.getElementById('boss-speed');
-
-            // BOSS数据
+            const bossAttribute = document.getElementById('boss-attribute');
+            // UI 显示最大队伍数量
+            if (document.getElementById('max-team-size-display')) {
+                document.getElementById('max-team-size-display').textContent = MAX_TEAM_SIZE;
+            }
+             if (document.getElementById('max-team-size-display-instr')) {
+                 document.getElementById('max-team-size-display-instr').textContent = MAX_TEAM_SIZE;
+             }
+             // 武器盘配置相关DOM
+             const addWeaponToBoardBtn = document.getElementById('add-weapon-to-board-btn');
+             const applyWeaponBoardBtn = document.getElementById('apply-weapon-board-btn');
+             const clearWeaponBoardBtn = document.getElementById('clear-weapon-board-btn');
+             const weaponSelectionModal = document.getElementById('weapon-selection-modal');
+             const weaponSelectDropdown = document.getElementById('weapon-select-dropdown');
+             const weaponLevelInput = document.getElementById('weapon-level-input');
+             const weaponSlotSelect = document.getElementById('weapon-slot-select');
+             const confirmAddWeaponBtn = document.getElementById('confirm-add-weapon-btn');
+             const cancelAddWeaponBtn = document.getElementById('cancel-add-weapon-btn');
+             const currentWeaponBoardDisplay = document.getElementById('current-weapon-board-display');
+ 
+             // --- 静态数据 ---
+            // BOSS 数据 (保持硬编码)
             const bosses = [
-                {
-                    id: 'dragon',
-                    name: '远古巨龙',
-                    description: '喷吐烈焰的远古巨龙，拥有强大的物理攻击和火焰魔法。',
-                    baseStats: { hp: 5000, attack: 150, defense: 50, speed: 30 },
-                    skills: ['dragonBreath', 'tailSwipe', 'fireStorm'],
-                    element: 'fire'
-                },
-                {
-                    id: 'lich',
-                    name: '巫妖王',
-                    description: '掌控死亡魔法的不死生物，能够召唤亡灵并施放强力诅咒。',
-                    baseStats: { hp: 4000, attack: 120, defense: 60, speed: 40 },
-                    skills: ['deathGrip', 'curseOfWeakness', 'soulDrain'],
-                    element: 'dark'
-                },
-                {
-                    id: 'golem',
-                    name: '远古石魔像',
-                    description: '由远古魔法创造的巨型石魔像，拥有极高的防御力和强力的物理攻击。',
-                    baseStats: { hp: 6000, attack: 100, defense: 120, speed: 20 },
-                    skills: ['rockSlide', 'earthShatter', 'stoneArmor'],
-                    element: 'earth'
-                },
-                {
-                    id: 'demonLord',
-                    name: '恶魔领主',
-                    description: '来自地狱的恶魔领主，擅长混乱魔法和精神控制。',
-                    baseStats: { hp: 4500, attack: 180, defense: 70, speed: 50 },
-                    skills: ['chaosBlast', 'mindControl', 'hellfire'],
-                    element: 'chaos'
-                }
+                { id: 'dragon', name: '远古巨龙', description: '喷吐烈焰的远古巨龙，拥有强大的物理攻击和火焰魔法。', baseStats: { hp: 5000, attack: 150, defense: 50, speed: 30 }, skills: ['dragonBreath', 'tailSwipe', 'fireStorm'], element: 'fire' },
+                { id: 'lich', name: '巫妖王', description: '掌控死亡魔法的不死生物，能够召唤亡灵并施放强力诅咒。', baseStats: { hp: 4000, attack: 120, defense: 60, speed: 40 }, skills: ['deathGrip', 'curseOfWeakness', 'soulDrain'], element: 'dark' },
+                { id: 'golem', name: '远古石魔像', description: '由远古魔法创造的巨型石魔像，拥有极高的防御力和强力的物理攻击。', baseStats: { hp: 6000, attack: 100, defense: 120, speed: 20 }, skills: ['rockSlide', 'earthShatter', 'stoneArmor'], element: 'earth' },
+                { id: 'demonLord', name: '恶魔领主', description: '来自地狱的恶魔领主，擅长混乱魔法和精神控制。', baseStats: { hp: 4500, attack: 180, defense: 70, speed: 50 }, skills: ['chaosBlast', 'mindControl', 'hellfire'], element: 'chaos' }
             ];
 
-            // BOSS技能数据
+            // BOSS 技能数据 (保持硬编码)
             const bossSkills = {
-                dragonBreath: {
-                    name: '龙息',
-                    description: '喷吐烈焰，对敌方全体造成大量火属性伤害。',
-                    type: 'magic',
-                    power: 2.0,
-                    cooldown: 3,
-                    effectType: 'damage',
-                    targetType: 'all_enemies',
-                    effects: [
-                        {
-                            type: 'damage',
-                            multiplier: 2.0,
-                            element: 'fire'
-                        }
-                    ]
-                },
-                tailSwipe: {
-                    name: '龙尾横扫',
-                    description: '用尾巴横扫，对敌方全体造成物理伤害并有几率击退。',
-                    type: 'attack',
-                    power: 1.5,
-                    cooldown: 2,
-                    effectType: 'damage_and_debuff',
-                    targetType: 'all_enemies',
-                    effects: [
-                        {
-                            type: 'damage',
-                            multiplier: 1.5
-                        },
-                        {
-                            type: 'speedDown',
-                            value: 0.2,
-                            duration: 2,
-                            chance: 0.5
-                        }
-                    ]
-                },
-                fireStorm: {
-                    name: '烈焰风暴',
-                    description: '召唤烈焰风暴，对敌方全体造成持续伤害。',
-                    type: 'magic',
-                    power: 1.0,
-                    cooldown: 4,
-                    effectType: 'damage_and_debuff',
-                    targetType: 'all_enemies',
-                    effects: [
-                        {
-                            type: 'damage',
-                            multiplier: 1.0
-                        },
-                        {
-                            type: 'dot',
-                            value: 200,
-                            duration: 3,
-                            name: '灼烧',
-                            description: '每回合受到火焰伤害'
-                        }
-                    ]
-                },
-                deathGrip: {
-                    name: '死亡之握',
-                    description: '用死亡能量抓住敌人，造成伤害并吸取生命。',
-                    type: 'magic',
-                    power: 1.8,
-                    cooldown: 3,
-                    effectType: 'damage',
-                    targetType: 'enemy',
-                    effects: [
-                        {
-                            type: 'damage',
-                            multiplier: 1.8,
-                            element: 'dark',
-                            lifeSteal: 0.3
-                        }
-                    ]
-                },
-                curseOfWeakness: {
-                    name: '衰弱诅咒',
-                    description: '诅咒敌人，降低其攻击力和防御力。',
-                    type: 'magic',
-                    power: 0.5,
-                    cooldown: 4,
-                    effectType: 'debuff',
-                    targetType: 'all_enemies',
-                    effects: [
-                        {
-                            type: 'attackDown',
-                            value: 0.3,
-                            duration: 3
-                        },
-                        {
-                            type: 'defenseDown',
-                            value: 0.3,
-                            duration: 3
-                        }
-                    ]
-                },
-                soulDrain: {
-                    name: '灵魂汲取',
-                    description: '汲取敌人的灵魂，造成伤害并恢复自身生命。',
-                    type: 'magic',
-                    power: 1.5,
-                    cooldown: 3,
-                    effectType: 'damage',
-                    targetType: 'enemy',
-                    effects: [
-                        {
-                            type: 'damage',
-                            multiplier: 1.5,
-                            element: 'dark',
-                            lifeSteal: 0.5
-                        }
-                    ]
-                },
-                rockSlide: {
-                    name: '岩崩',
-                    description: '引发岩崩，对敌方全体造成地属性伤害。',
-                    type: 'magic',
-                    power: 1.7,
-                    cooldown: 3,
-                    effectType: 'damage',
-                    targetType: 'all_enemies',
-                    effects: [
-                        {
-                            type: 'damage',
-                            multiplier: 1.7,
-                            element: 'earth'
-                        }
-                    ]
-                },
-                earthShatter: {
-                    name: '大地震颤',
-                    description: '震动大地，对敌方全体造成伤害并有几率眩晕。',
-                    type: 'magic',
-                    power: 1.3,
-                    cooldown: 4,
-                    effectType: 'damage_and_debuff',
-                    targetType: 'all_enemies',
-                    effects: [
-                        {
-                            type: 'damage',
-                            multiplier: 1.3,
-                            element: 'earth'
-                        },
-                        {
-                            type: 'stun',
-                            duration: 1,
-                            chance: 0.3
-                        }
-                    ]
-                },
-                stoneArmor: {
-                    name: '石化护甲',
-                    description: '增强自身防御力，并反弹部分伤害。',
-                    type: 'defense',
-                    power: 0.5,
-                    cooldown: 5,
-                    effectType: 'buff',
-                    targetType: 'self',
-                    effects: [
-                        {
-                            type: 'defenseUp',
-                            value: 0.5,
-                            duration: 3
-                        },
-                        {
-                            type: 'damageReflect',
-                            value: 0.3,
-                            duration: 3
-                        }
-                    ]
-                },
-                chaosBlast: {
-                    name: '混沌爆破',
-                    description: '释放混沌能量，对敌方全体造成大量伤害。',
-                    type: 'magic',
-                    power: 2.2,
-                    cooldown: 4,
-                    effectType: 'damage',
-                    targetType: 'all_enemies',
-                    effects: [
-                        {
-                            type: 'damage',
-                            multiplier: 2.2,
-                            element: 'chaos'
-                        }
-                    ]
-                },
-                mindControl: {
-                    name: '精神控制',
-                    description: '控制敌人的精神，使其无法行动。',
-                    type: 'magic',
-                    power: 0.5,
-                    cooldown: 5,
-                    effectType: 'debuff',
-                    targetType: 'enemy',
-                    effects: [
-                        {
-                            type: 'stun',
-                            duration: 2
-                        }
-                    ]
-                },
-                hellfire: {
-                    name: '地狱之火',
-                    description: '召唤地狱之火，对敌方全体造成持续伤害。',
-                    type: 'magic',
-                    power: 1.5,
-                    cooldown: 3,
-                    effectType: 'damage_and_debuff',
-                    targetType: 'all_enemies',
-                    effects: [
-                        {
-                            type: 'damage',
-                            multiplier: 1.5,
-                            element: 'fire'
-                        },
-                        {
-                            type: 'dot',
-                            value: 250,
-                            duration: 3,
-                            name: '地狱火',
-                            description: '每回合受到火焰伤害'
-                        }
-                    ]
-                }
+                dragonBreath: { name: '龙息', description: '喷吐烈焰...', type: 'magic', power: 2.0, cooldown: 3, effectType: 'damage', targetType: 'all_enemies', effects: [{ type: 'damage', multiplier: 2.0, element: 'fire' }] },
+                tailSwipe: { name: '龙尾横扫', description: '用尾巴横扫...', type: 'attack', power: 1.5, cooldown: 2, effectType: 'damage_and_debuff', targetType: 'all_enemies', effects: [{ type: 'damage', multiplier: 1.5 }, { type: 'speedDown', value: 0.2, duration: 2, chance: 0.5 }] },
+                fireStorm: { name: '烈焰风暴', description: '召唤烈焰风暴...', type: 'magic', power: 1.0, cooldown: 4, effectType: 'damage_and_debuff', targetType: 'all_enemies', effects: [{ type: 'damage', multiplier: 1.0 }, { type: 'dot', value: 200, duration: 3, name: '灼烧', description: '每回合受到火焰伤害' }] },
+                deathGrip: { name: '死亡之握', description: '用死亡能量抓住敌人...', type: 'magic', power: 1.8, cooldown: 3, effectType: 'damage', targetType: 'enemy', effects: [{ type: 'damage', multiplier: 1.8, element: 'dark', lifeSteal: 0.3 }] },
+                curseOfWeakness: { name: '衰弱诅咒', description: '诅咒敌人...', type: 'magic', power: 0.5, cooldown: 4, effectType: 'debuff', targetType: 'all_enemies', effects: [{ type: 'attackDown', value: 0.3, duration: 3 }, { type: 'defenseDown', value: 0.3, duration: 3 }] },
+                soulDrain: { name: '灵魂汲取', description: '汲取敌人的灵魂...', type: 'magic', power: 1.5, cooldown: 3, effectType: 'damage', targetType: 'enemy', effects: [{ type: 'damage', multiplier: 1.5, element: 'dark', lifeSteal: 0.5 }] },
+                rockSlide: { name: '岩崩', description: '引发岩崩...', type: 'magic', power: 1.7, cooldown: 3, effectType: 'damage', targetType: 'all_enemies', effects: [{ type: 'damage', multiplier: 1.7, element: 'earth' }] },
+                earthShatter: { name: '大地震颤', description: '震动大地...', type: 'magic', power: 1.3, cooldown: 4, effectType: 'damage_and_debuff', targetType: 'all_enemies', effects: [{ type: 'damage', multiplier: 1.3, element: 'earth' }, { type: 'stun', duration: 1, chance: 0.3 }] },
+                stoneArmor: { name: '石化护甲', description: '增强自身防御力...', type: 'defense', power: 0.5, cooldown: 5, effectType: 'buff', targetType: 'self', effects: [{ type: 'defenseUp', value: 0.5, duration: 3 }, { type: 'damageReflect', value: 0.3, duration: 3 }] },
+                chaosBlast: { name: '混沌爆破', description: '释放混沌能量...', type: 'magic', power: 2.2, cooldown: 4, effectType: 'damage', targetType: 'all_enemies', effects: [{ type: 'damage', multiplier: 2.2, element: 'chaos' }] },
+                mindControl: { name: '精神控制', description: '控制敌人的精神...', type: 'magic', power: 0.5, cooldown: 5, effectType: 'debuff', targetType: 'enemy', effects: [{ type: 'stun', duration: 2 }] },
+                hellfire: { name: '地狱之火', description: '召唤地狱之火...', type: 'magic', power: 1.5, cooldown: 3, effectType: 'damage_and_debuff', targetType: 'all_enemies', effects: [{ type: 'damage', multiplier: 1.5, element: 'fire' }, { type: 'dot', value: 250, duration: 3, name: '地狱火', description: '每回合受到火焰伤害' }] }
             };
 
-            // 初始化函数
-            function init() {
-                // 确保Character对象在页面加载时就初始化
-                if (typeof Character === 'undefined') {
-                    window.Character = {
-                        characters: {},
-                        getCharacter: function(id) {
-                            return this.characters[id];
-                        },
-                        traits: {}
-                    };
-                    log('Character对象已初始化');
-                } else if (typeof Character.getCharacter !== 'function') {
-                    Character.getCharacter = function(id) {
-                        return this.characters[id];
-                    };
-                    log('Character.getCharacter方法已添加');
+            // --- 初始化 ---
+            async function init() {
+                // 确保核心类已加载
+                if (typeof Character === 'undefined' || typeof Team === 'undefined' || typeof Battle === 'undefined' || typeof JobSkills === 'undefined' || typeof JobSystem === 'undefined') {
+                    logMessage("错误: 核心脚本 (Character, Team, Battle, JobSkills, JobSystem) 未能完全加载。", 'error');
+                    return; // 阻止进一步执行
                 }
-
-                // 初始化Events系统
-                if (typeof Events !== 'undefined' && typeof Events.init === 'function') {
-                    Events.init();
-                    log('Events系统已初始化');
-                } else {
-                    log('警告：Events系统未定义');
-                }
-
-                // 初始化JobSkillsTemplate系统
-                if (typeof JobSkillsTemplate !== 'undefined' && typeof JobSkillsTemplate.init === 'function') {
-                    JobSkillsTemplate.init();
-                    log('JobSkillsTemplate系统已初始化');
-                } else {
-                    log('错误：JobSkillsTemplate系统未定义');
-                }
-
-                // 确保JobSkillsTemplate.getTemplate方法存在
-                if (typeof JobSkillsTemplate !== 'undefined' && typeof JobSkillsTemplate.getTemplate !== 'function') {
-                    JobSkillsTemplate.getTemplate = function(templateId) {
-                        return this.templates[templateId] || null;
-                    };
-                    log('JobSkillsTemplate.getTemplate方法已添加');
-                }
-
-                // 初始化JobSystem系统
+                // 初始化 JobSystem
                 if (typeof JobSystem !== 'undefined' && typeof JobSystem.init === 'function') {
                     JobSystem.init();
-                    log('JobSystem系统已初始化');
-                } else {
-                    log('错误：JobSystem系统未定义');
-                }
-
-                // 初始化BuffSystem系统
-                if (typeof BuffSystem !== 'undefined' && typeof BuffSystem.init === 'function') {
-                    BuffSystem.init();
-                    log('BuffSystem系统已初始化');
-                } else {
-                    log('错误：BuffSystem系统未定义');
-                }
-
-                // 初始化JobSkills系统
-                if (typeof JobSkills !== 'undefined' && typeof JobSkills.init === 'function') {
-                    JobSkills.init();
-                    log('JobSkills系统已初始化');
-                } else {
-                    log('错误：JobSkills系统未定义');
-                }
-
-                // 初始化战斗系统更新
-                if (typeof initBattleSystemUpdates === 'function') {
-                    initBattleSystemUpdates();
-                    log('战斗系统更新已应用');
-                } else {
-                    log('警告：战斗系统更新未定义');
-                }
-
-                // 设置事件监听器，等待JobSkillsTemplate加载完成
-                if (typeof Events !== 'undefined' && typeof Events.on === 'function') {
-                    Events.on('jobSkillsTemplate:loaded', () => {
-                        log('JobSkillsTemplate数据加载完成');
-
-                        // 加载职业数据
-                        loadJobs();
-
-                        // 加载BOSS数据
-                        loadBosses();
-
-                        log('职业和BOSS数据加载完成');
-                    });
-                } else {
-                    // 如果Events模块不可用，直接加载数据
-                    log('警告：Events模块未定义，直接加载数据');
-
-                    // 加载职业数据
-                    loadJobs();
-
-                    // 加载BOSS数据
-                    loadBosses();
-                }
-
-                // 添加事件监听器
-                startBattleBtn.addEventListener('click', startBattle);
-                resetBtn.addEventListener('click', reset);
-
-                // 记录初始化完成
-                log('战斗测试系统初始化完成');
-            }
-
-            // 日志记录函数
-            function log(message) {
-                const logEntry = document.createElement('div');
-
-                // 处理特殊格式
-                if (message.startsWith('=====')) {
-                    // 标题
-                    logEntry.style.fontWeight = 'bold';
-                    logEntry.style.color = '#4CAF50';
-                    logEntry.style.borderBottom = '1px solid #4CAF50';
-                    logEntry.style.marginTop = '10px';
-                } else if (message.startsWith('-----')) {
-                    // 分隔线
-                    logEntry.style.borderBottom = '1px dashed #ccc';
-                    logEntry.style.margin = '5px 0';
-                    logEntry.innerHTML = '&nbsp;';
-                    battleLog.appendChild(logEntry);
-                    return;
-                } else if (message.includes('被击败了')) {
-                    // 击败消息
-                    logEntry.style.color = '#f44336';
-                    logEntry.style.fontWeight = 'bold';
-                } else if (message.includes('获胜')) {
-                    // 胜利消息
-                    logEntry.style.color = '#2196F3';
-                    logEntry.style.fontWeight = 'bold';
-                } else if (message.includes('造成')) {
-                    // 伤害消息
-                    logEntry.style.color = '#E91E63';
-                } else if (message.includes('恢复')) {
-                    // 治疗消息
-                    logEntry.style.color = '#4CAF50';
-                } else if (message.includes('使用了')) {
-                    // 技能使用消息
-                    logEntry.style.color = '#9C27B0';
-                }
-
-                logEntry.textContent = message;
-                battleLog.appendChild(logEntry);
-                battleLog.scrollTop = battleLog.scrollHeight;
-            }
-
-            // 错误处理函数
-            function handleError(error, context) {
-                console.error(`Error in ${context}:`, error);
-                log(`错误: ${context} - ${error.message}`);
-
-                // 在开发环境中显示更详细的错误信息
-                const errorDetails = document.createElement('div');
-                errorDetails.style.color = 'red';
-                errorDetails.style.fontFamily = 'monospace';
-                errorDetails.style.whiteSpace = 'pre-wrap';
-                errorDetails.textContent = `错误详情:\n${error.stack || error}`;
-                battleLog.appendChild(errorDetails);
-                battleLog.scrollTop = battleLog.scrollHeight;
-            }
-
-            // 获取属性名称
-            function getAttributeName(attribute) {
-                const attributeNames = {
-                    'fire': '火',
-                    'water': '水',
-                    'earth': '土',
-                    'wind': '风',
-                    'light': '光',
-                    'dark': '暗',
-                    'chaos': '混沌'
-                };
-                return attributeNames[attribute] || attribute;
-            }
-
-            // 加载职业数据
-            function loadJobs() {
-                if (typeof JobSystem === 'undefined' || !JobSystem.jobs) {
-                    log('错误：职业系统未加载');
-                    return;
-                }
-
-                // 检查JobSkillsTemplate是否已加载
-                if (typeof JobSkillsTemplate === 'undefined' || !JobSkillsTemplate.templates) {
-                    log('错误：技能模板系统未加载');
-                    return;
-                }
-
-                // 清空职业选择区域
-                jobSelection.innerHTML = '';
-
-                // 添加所有职业
-                for (const jobId in JobSystem.jobs) {
-                    const job = JobSystem.jobs[jobId];
-
-                    // 创建职业卡片
-                    const jobCard = document.createElement('div');
-                    jobCard.className = 'job-card';
-                    jobCard.dataset.jobId = jobId;
-
-                    // 添加职业信息
-                    const jobTitle = document.createElement('h3');
-                    jobTitle.textContent = job.name;
-
-                    const jobDesc = document.createElement('p');
-                    jobDesc.textContent = job.description;
-
-                    const jobStats = document.createElement('p');
-                    // 显示实际战斗中的生命值（乘以100）
-                    jobStats.textContent = `生命值: ${job.baseStats.hp * 100} | 攻击: ${job.baseStats.attack} | 防御: ${job.baseStats.defense} | 速度: ${job.baseStats.speed}`;
-
-                    // 添加技能列表
-                    const skillsList = document.createElement('div');
-                    skillsList.className = 'skills-list';
-
-                    // 获取职业技能
-                    const skills = job.skills || [];
-
-                    // 添加技能
-                    for (const skillId of skills) {
-                        // 首先尝试从JobSystem获取技能
-                        let skill = JobSystem.getSkill(skillId);
-
-                        // 如果JobSystem中没有找到，尝试从JobSkillsTemplate获取
-                        if (!skill && JobSkillsTemplate.templates[skillId]) {
-                            skill = JobSkillsTemplate.templates[skillId];
-                        }
-
-                        if (skill) {
-                            const skillItem = document.createElement('div');
-                            skillItem.className = 'skill-item';
-                            skillItem.textContent = `${skill.name}: ${skill.description}`;
-                            skillsList.appendChild(skillItem);
-                        } else {
-                            // 如果技能未找到，显示警告
-                            const skillItem = document.createElement('div');
-                            skillItem.className = 'skill-item error';
-                            skillItem.textContent = `未找到技能: ${skillId}`;
-                            skillItem.style.color = 'red';
-                            skillsList.appendChild(skillItem);
-
-                            console.warn(`未找到技能: ${skillId}`);
-                        }
-                    }
-
-                    // 组装职业卡片
-                    jobCard.appendChild(jobTitle);
-                    jobCard.appendChild(jobDesc);
-                    jobCard.appendChild(jobStats);
-                    jobCard.appendChild(skillsList);
-
-                    // 添加点击事件
-                    jobCard.addEventListener('click', () => {
-                        selectJob(jobId);
-                    });
-
-                    // 添加到职业选择区域
-                    jobSelection.appendChild(jobCard);
-                }
-            }
-
-            // 加载BOSS数据
-            function loadBosses() {
-                // 清空BOSS选择区域
-                bossSelection.innerHTML = '';
-
-                // 添加所有BOSS
-                for (const boss of bosses) {
-                    // 创建BOSS卡片
-                    const bossCard = document.createElement('div');
-                    bossCard.className = 'boss-card';
-                    bossCard.dataset.bossId = boss.id;
-
-                    // 添加BOSS信息
-                    const bossTitle = document.createElement('h3');
-                    bossTitle.textContent = boss.name;
-
-                    const bossDesc = document.createElement('p');
-                    bossDesc.textContent = boss.description;
-
-                    const bossStats = document.createElement('p');
-                    // 显示实际战斗中的生命值（乘以100）
-                    bossStats.textContent = `生命值: ${boss.baseStats.hp * 100} | 攻击: ${boss.baseStats.attack} | 防御: ${boss.baseStats.defense} | 速度: ${boss.baseStats.speed}`;
-
-                    // 添加技能列表
-                    const skillsList = document.createElement('div');
-                    skillsList.className = 'skills-list';
-
-                    // 获取BOSS技能
-                    const skills = boss.skills || [];
-
-                    // 添加技能
-                    for (const skillId of skills) {
-                        const skill = bossSkills[skillId];
-                        if (skill) {
-                            const skillItem = document.createElement('div');
-                            skillItem.className = 'skill-item';
-                            skillItem.textContent = `${skill.name}: ${skill.description}`;
-                            skillsList.appendChild(skillItem);
-                        }
-                    }
-
-                    // 组装BOSS卡片
-                    bossCard.appendChild(bossTitle);
-                    bossCard.appendChild(bossDesc);
-                    bossCard.appendChild(bossStats);
-                    bossCard.appendChild(skillsList);
-
-                    // 添加点击事件
-                    bossCard.addEventListener('click', () => {
-                        selectBoss(boss.id);
-                    });
-
-                    // 添加到BOSS选择区域
-                    bossSelection.appendChild(bossCard);
-                }
-            }
-
-            // 选择职业
-            function selectJob(jobId) {
-                // 移除之前的选择
-                const selectedCards = jobSelection.querySelectorAll('.job-card.selected');
-                selectedCards.forEach(card => card.classList.remove('selected'));
-
-                // 添加新的选择
-                const jobCard = jobSelection.querySelector(`.job-card[data-job-id="${jobId}"]`);
-                if (jobCard) {
-                    jobCard.classList.add('selected');
-                    selectedJob = jobId;
-
-                    // 检查是否可以开始战斗
-                    checkBattleReady();
-                }
-            }
-
-            // 选择BOSS
-            function selectBoss(bossId) {
-                // 移除之前的选择
-                const selectedCards = bossSelection.querySelectorAll('.boss-card.selected');
-                selectedCards.forEach(card => card.classList.remove('selected'));
-
-                // 添加新的选择
-                const bossCard = bossSelection.querySelector(`.boss-card[data-boss-id="${bossId}"]`);
-                if (bossCard) {
-                    bossCard.classList.add('selected');
-                    selectedBoss = bossId;
-
-                    // 检查是否可以开始战斗
-                    checkBattleReady();
-                }
-            }
-
-            // 检查是否可以开始战斗
-            function checkBattleReady() {
-                startBattleBtn.disabled = !(selectedJob && selectedBoss);
-            }
-
-            // 创建角色
-            function createCharacter() {
-                if (!selectedJob) return null;
-
-                const job = JobSystem.jobs[selectedJob];
-                if (!job) return null;
-
-                // 检查JobSkillsTemplate是否已加载
-                if (typeof JobSkillsTemplate === 'undefined' || !JobSkillsTemplate.templates) {
-                    log('错误：技能模板系统未加载，无法创建角色');
-                    return null;
-                }
-
-                // 随机选择一个属性
-                const attributes = ['fire', 'water', 'earth', 'wind', 'light', 'dark'];
-                const randomAttribute = attributes[Math.floor(Math.random() * attributes.length)];
-
-                // 创建角色对象
-                const char = {
-                    id: 'player_character',
-                    name: `${job.name}`,
-                    type: 'player',
-                    attribute: randomAttribute, // 随机属性
-                    baseStats: {
-                        ...job.baseStats,
-                        // 将血量乘以100倍，防止太快阵亡
-                        hp: job.baseStats.hp * 100,
-                        defense: job.baseStats.defense,
-                        // 设置攻击力为1000
-                        attack: 10000
-                    },
-                    currentStats: {
-                        ...job.baseStats,
-                        // 将血量乘以100倍，防止太快阵亡
-                        hp: job.baseStats.hp * 100,
-                        defense: job.baseStats.defense,
-                        // 设置攻击力为1000
-                        attack: 10000,
-                        // 添加DA和TA率
-                        daRate: 0.15, // 15%双重攻击率
-                        taRate: 0.05  // 5%三重攻击率
-                    },
-                    skills: job.skills || [],
-                    job: {
-                        current: selectedJob,
-                        level: 1
-                    },
-                    buffs: [],
-                    traits: [], // 添加空的traits数组，避免"not iterable"错误
-                    skillCooldowns: {},
-                    stats: {
-                        totalDamage: 0,
-                        totalHealing: 0,
-                        daCount: 0,
-                        taCount: 0,
-                        critCount: 0
-                    }
-                };
-
-                // 确保有最大生命值
-                char.currentStats.maxHp = char.baseStats.hp;
-                char.currentStats.hp = char.baseStats.hp;
-
-                // 记录角色属性
-                log(`角色 ${char.name} 的属性: ${getAttributeName(randomAttribute)}`);
-
-                // 记录防御力和攻击力
-                log(`角色 ${char.name} 的防御力: ${(char.currentStats.defense * 100).toFixed(1)}%`);
-                log(`角色 ${char.name} 的攻击力: ${char.currentStats.attack}`);
-
-                // 确保所有技能都可用
-                for (const skillId of char.skills) {
-                    // 检查技能是否存在于JobSkillsTemplate中
-                    if (!JobSkillsTemplate.templates[skillId]) {
-                        console.warn(`角色技能未找到: ${skillId}，尝试从JobSystem获取`);
-
-                        // 尝试从JobSystem获取技能
-                        const jobSkill = JobSystem.getSkill(skillId);
-                        if (jobSkill) {
-                            // 将技能添加到JobSkillsTemplate中
-                            JobSkillsTemplate.templates[skillId] = jobSkill;
-                            console.log(`已将技能 ${skillId} 添加到JobSkillsTemplate`);
-                        } else {
-                            console.error(`无法找到技能: ${skillId}`);
-                        }
+                    // 确保 window.JobSystem 指向正确的 JobSystem 对象
+                    if (typeof JobSystem !== 'undefined') {
+                        window.JobSystem = JobSystem;
                     }
                 }
-
-                return char;
+                await loadGameData();
+                populateCharacterSelection();
+                populateBossSelection();
+                addEventListeners();
+                updateSelectedTeamDisplay();
+                logMessage("系统初始化完成。请选择角色组成队伍和选择一个BOSS。");
             }
 
-            // 创建BOSS
-            function createBoss() {
-                if (!selectedBoss) return null;
+            // --- 数据加载 ---
+            async function loadGameData() {
+                logMessage("开始加载游戏数据...");
+                try {
+                    const [rData, srData, ssrData, jobSkillsTemplates, weaponsDataResponse] = await Promise.all([
+                        fetch('src/data/r.json').then(res => res.ok ? res.json() : {}).catch(e => { logMessage(`加载 r.json 失败: ${e}`, 'error'); return {}; }),
+                        fetch('src/data/sr.json').then(res => res.ok ? res.json() : {}).catch(e => { logMessage(`加载 sr.json 失败: ${e}`, 'error'); return {}; }),
+                        fetch('src/data/ssr.json').then(res => res.ok ? res.json() : {}).catch(e => { logMessage(`加载 ssr.json 失败: ${e}`, 'error'); return {}; }),
+                        fetch('src/data/job-skills-templates.json').then(res => res.ok ? res.json() : {}).catch(e => { logMessage(`加载 job-skills-templates.json 失败: ${e}`, 'error'); return {}; }),
+                        fetch('src/data/weapons.json').catch(e => { logMessage(`加载 weapons.json 失败: ${e}`, 'error'); return null; })
+                    ]);
 
-                const bossData = bosses.find(b => b.id === selectedBoss);
-                if (!bossData) return null;
-
-                // 检查JobSkillsTemplate是否已加载
-                if (typeof JobSkillsTemplate === 'undefined' || !JobSkillsTemplate.templates) {
-                    log('错误：技能模板系统未加载，无法创建BOSS');
-                    return null;
-                }
-
-                // 创建BOSS对象
-                const bossObj = {
-                    id: bossData.id,
-                    name: bossData.name,
-                    type: 'boss',
-                    attribute: bossData.element || 'fire', // 使用BOSS的元素属性
-                    baseStats: {
-                        ...bossData.baseStats,
-                        // 将BOSS血量也乘以100倍，保持战斗平衡
-                        hp: bossData.baseStats.hp * 100,
-                        defense: bossData.baseStats.defense,
-                        // 设置攻击力为1000
-                        attack: 2000
-                    },
-                    currentStats: {
-                        ...bossData.baseStats,
-                        // 将BOSS血量也乘以100倍，保持战斗平衡
-                        hp: bossData.baseStats.hp * 100,
-                        defense: bossData.baseStats.defense,
-                        // 设置攻击力为1000
-                        attack: 2000,
-                        // 添加DA和TA率
-                        daRate: 0.1, // 10%双重攻击率
-                        taRate: 0.03 // 3%三重攻击率
-                    },
-                    skills: bossData.skills || [],
-                    element: bossData.element,
-                    buffs: [],
-                    traits: [], // 添加空的traits数组，避免"not iterable"错误
-                    skillCooldowns: {},
-                    stats: {
-                        totalDamage: 0,
-                        totalHealing: 0
-                    }
-                };
-
-                // 确保有最大生命值
-                bossObj.currentStats.maxHp = bossObj.baseStats.hp;
-                bossObj.currentStats.hp = bossObj.baseStats.hp;
-
-                // 记录BOSS属性
-                log(`BOSS ${bossObj.name} 的属性: ${getAttributeName(bossObj.attribute)}`);
-
-                // 记录防御力和攻击力
-                log(`BOSS ${bossObj.name} 的防御力: ${(bossObj.currentStats.defense * 100).toFixed(1)}%`);
-                log(`BOSS ${bossObj.name} 的攻击力: ${bossObj.currentStats.attack}`);
-
-                // 添加BOSS技能
-                for (const skillId of bossObj.skills) {
-                    if (bossSkills[skillId]) {
-                        // 将BOSS技能添加到JobSkillsTemplate.templates中
-                        if (typeof JobSkillsTemplate !== 'undefined' && JobSkillsTemplate.templates) {
-                            // 添加必要的属性
-                            const bossSkill = bossSkills[skillId];
-                            if (!bossSkill.cooldown && bossSkill.effectType === 'damage') {
-                                bossSkill.cooldown = 2; // 默认冷却时间
-                            }
-
-                            // 将技能添加到模板中
-                            JobSkillsTemplate.templates[skillId] = bossSkill;
-                            console.log(`已将BOSS技能 ${skillId} 添加到JobSkillsTemplate`);
-                        }
+                    if (weaponsDataResponse && weaponsDataResponse.ok) {
+                        allWeaponsData = await weaponsDataResponse.json();
+                        logMessage(`已加载 ${Object.keys(allWeaponsData).length} 个武器数据。`);
+                        populateWeaponSelectionDropdown(); // 填充武器选择下拉框
                     } else {
-                        console.error(`未找到BOSS技能: ${skillId}`);
+                        logMessage('加载 src/data/weapons.json 失败或响应不正确。武器盘功能可能受限。', 'error');
+                        allWeaponsData = {}; // 确保是对象
                     }
-                }
 
-                return bossObj;
+                    // 合并 R, SR, SSR 角色
+                    allCharactersData = { ...rData, ...srData, ...ssrData };
+                    logMessage(`已加载 ${Object.keys(allCharactersData).length} 个 R/SR/SSR 角色数据。`);
+
+                    // 加载职业数据 (如果 JobSystem 可用)
+                    if (window.JobSystem && JobSystem.jobs) {
+                        // 职业数据将通过 JobSystem.jobs 访问，不再合并到 allCharactersData
+                        // 确保 JobSystem.jobs 中的每个职业都有必要的属性
+                        Object.values(JobSystem.jobs).forEach(job => {
+                            job.isJob = true; // 标记为职业，如果JobSystem内部没有这个标记的话
+                            job.description = job.description || `职业特性: ${job.features || '无'}`;
+                        });
+                        logMessage(`已加载 ${Object.keys(JobSystem.jobs).length} 个职业数据。职业数据可通过 JobSystem.jobs 访问。`);
+                    } else {
+                         logMessage("JobSystem 或 JobSystem.jobs 不可用，未加载职业数据。", "warning");
+                    }
+
+                    // 设置全局技能库 (合并模板技能和BOSS技能)
+                    if (!window.JobSystem) window.JobSystem = {};
+                    if (!window.JobSystem.SKILLS) window.JobSystem.SKILLS = {};
+                    Object.assign(window.JobSystem.SKILLS, jobSkillsTemplates, bossSkills);
+                    logMessage(`技能库已设置，包含 ${Object.keys(window.JobSystem.SKILLS).length} 个技能定义。`);
+
+                } catch (error) {
+                    logMessage(`错误: 加载游戏数据时发生严重错误: ${error}`, 'error');
+                    console.error("加载游戏数据失败:", error);
+                }
+                 logMessage("游戏数据加载完成。");
             }
 
-            // 专门更新BOSS血条
-            function updateBossHpBar() {
-                if (!boss || !bossHpFill) {
-                    console.log("updateBossHpBar: boss或bossHpFill不存在");
+            // --- 武器选择下拉框填充 ---
+            function populateWeaponSelectionDropdown() {
+                if (!weaponSelectDropdown) {
+                    logMessage("错误: 武器选择下拉框元素未找到。", "error");
+                    return;
+                }
+                weaponSelectDropdown.innerHTML = ''; // 清空现有选项
+
+                if (!allWeaponsData || Object.keys(allWeaponsData).length === 0) {
+                    logMessage("武器数据为空或未加载，无法填充武器选择下拉框。", "warning");
+                    const defaultOption = document.createElement('option');
+                    defaultOption.textContent = "无可用武器";
+                    defaultOption.disabled = true;
+                    weaponSelectDropdown.appendChild(defaultOption);
                     return;
                 }
 
-                try {
-                    console.log("updateBossHpBar: 开始更新BOSS血条");
-                    console.log(`BOSS当前HP: ${boss.currentStats.hp}/${boss.currentStats.maxHp}`);
-
-                    // 更新BOSS血量文本
-                    if (bossHp) {
-                        bossHp.textContent = Math.max(0, Math.floor(boss.currentStats.hp));
+                logMessage(`开始填充武器选择下拉框，共 ${Object.keys(allWeaponsData).length} 个武器。`);
+                for (const weaponId in allWeaponsData) {
+                    if (allWeaponsData.hasOwnProperty(weaponId)) {
+                        const weapon = allWeaponsData[weaponId];
+                        const option = document.createElement('option');
+                        option.value = weaponId;
+                        option.textContent = `${weapon.name} (${weapon.type || '未知类型'})`; // 显示武器名称和类型
+                        weaponSelectDropdown.appendChild(option);
                     }
-
-                    // 更新BOSS生命条
-                    const bossHpPercent = Math.max(0, Math.min(100, (boss.currentStats.hp / boss.currentStats.maxHp) * 100));
-                    bossHpFill.style.width = `${bossHpPercent}%`;
-                    console.log(`BOSS血条宽度更新为: ${bossHpPercent}%`);
-
-                    // 强制重绘
-                    void bossHpFill.offsetHeight;
-
-                    console.log("updateBossHpBar: BOSS血条更新完成");
-                } catch (error) {
-                    console.error("updateBossHpBar出错:", error);
                 }
+                logMessage("武器选择下拉框填充完成。");
             }
 
-            // 更新战斗状态显示
-            function updateBattleStatus() {
-                if (!character || !boss) {
-                    console.log("updateBattleStatus: character或boss不存在");
+            // --- 职业选择下拉框填充 ---
+            function populateJobDropdown() {
+                if (!jobSelectDropdown) {
+                    logMessage("错误: 职业选择下拉框元素未找到。", "error");
+                    return;
+                }
+                jobSelectDropdown.innerHTML = ''; // 清空现有选项
+
+                // 初始默认选项
+                const initialOption = document.createElement('option');
+                initialOption.value = "";
+                initialOption.textContent = "--先选择角色--";
+                jobSelectDropdown.appendChild(initialOption);
+
+                if (!window.JobSystem || !JobSystem.jobs || Object.keys(JobSystem.jobs).length === 0) {
+                    logMessage("职业数据为空或未加载，无法填充职业选择下拉框。", "warning");
+                    jobSelectDropdown.disabled = true;
                     return;
                 }
 
-                try {
-                    console.log("updateBattleStatus: 开始更新UI");
-                    console.log(`BOSS当前HP: ${boss.currentStats.hp}/${boss.currentStats.maxHp}`);
+                Object.values(JobSystem.jobs).forEach(job => {
+                    const option = document.createElement('option');
+                    option.value = job.id;
+                    option.textContent = job.name;
+                    jobSelectDropdown.appendChild(option);
+                });
 
-                    // 更新角色状态
-                    characterName.textContent = character.name;
-                    document.getElementById('character-attribute').textContent = getAttributeName(character.attribute);
-                    characterHp.textContent = Math.max(0, Math.floor(character.currentStats.hp));
-                    console.log('mc current hp');
-                    console.log(character.currentStats.hp);
-                    characterMaxHp.textContent = character.currentStats.maxHp;
-                    characterAttack.textContent = Math.floor(character.currentStats.attack);
-                    characterDefense.textContent = (character.currentStats.defense * 100).toFixed(1);
-                    characterSpeed.textContent = Math.floor(character.currentStats.speed);
-
-                    // 更新角色生命条
-                    const charHpPercent = Math.max(0, Math.min(100, (character.currentStats.hp / character.currentStats.maxHp) * 100));
-                    characterHpFill.style.width = `${charHpPercent}%`;
-                    console.log(`角色血条宽度更新为: ${charHpPercent}%`);
-
-                    // 更新BOSS状态
-                    bossName.textContent = boss.name;
-                    document.getElementById('boss-attribute').textContent = getAttributeName(boss.attribute);
-                    bossHp.textContent = Math.max(0, Math.floor(boss.currentStats.hp));
-                    console.log('boss current hp');
-                    console.log(boss.currentStats.hp);
-                    bossMaxHp.textContent = boss.currentStats.maxHp;
-                    bossAttack.textContent = Math.floor(boss.currentStats.attack);
-                    bossDefense.textContent = (boss.currentStats.defense * 100).toFixed(1);
-                    bossSpeed.textContent = Math.floor(boss.currentStats.speed);
-
-                    // 更新BOSS生命条
-                    const bossHpPercent = Math.max(0, Math.min(100, (boss.currentStats.hp / boss.currentStats.maxHp) * 100));
-                    bossHpFill.style.width = `${bossHpPercent}%`;
-                    console.log(`BOSS血条宽度更新为: ${bossHpPercent}%`);
-
-                    // 强制重绘
-                    void bossHpFill.offsetHeight;
-
-                    // 添加一个小延迟，确保UI更新
-                    setTimeout(() => {
-                        console.log("延迟后再次检查BOSS血条宽度");
-                        console.log(`BOSS血条当前宽度: ${bossHpFill.style.width}`);
-                    }, 100);
-
-                    console.log("updateBattleStatus: UI更新完成");
-                } catch (error) {
-                    console.error("updateBattleStatus出错:", error);
-                }
+                jobSelectDropdown.value = "";
+                jobSelectDropdown.disabled = true;
+                logMessage("职业选择下拉框填充完成。");
             }
 
-            // 开始战斗
-            function startBattle() {
-                try {
-                    if (battleInProgress) return;
-                    if (!selectedJob || !selectedBoss) {
-                        log('请先选择职业和BOSS');
-                        return;
-                    }
+            // --- UI 填充 (角色选择修改为下拉框) ---
+            function populateCharacterSelection() {
+                // 稀有度选择已在HTML中硬编码: R, SR, SSR
+                // 初始化时，角色下拉框是禁用的
 
-                    // 创建角色和BOSS
-                    character = createCharacter();
-                    boss = createBoss();
+                raritySelect.addEventListener('change', () => {
+                    const selectedRarity = raritySelect.value;
+                    populateCharacterDropdown(selectedRarity);
+                    // 当稀有度改变时，重置并禁用职业选择
+                    jobSelectDropdown.value = "";
+                    jobSelectDropdown.disabled = true;
+                    const firstOption = jobSelectDropdown.options[0];
+                    if (firstOption) firstOption.textContent = "--先选择角色--";
+                    addCharacterBtn.disabled = true;
+                });
+                
+                // characterSelectDropdown 的 change 事件监听器现在在这里
+                characterSelectDropdown.addEventListener('change', () => {
+                    const charSelected = !!characterSelectDropdown.value;
+                    addCharacterBtn.disabled = !charSelected;
+                    jobSelectDropdown.disabled = !charSelected;
 
-                    if (!character || !boss) {
-                        log('创建角色或BOSS失败');
-                        return;
+                    const firstJobOption = jobSelectDropdown.options[0];
+                    if (charSelected) {
+                        if (firstJobOption) firstJobOption.textContent = "--选择职业 (可选)--";
+                    } else {
+                        jobSelectDropdown.value = "";
+                        if (firstJobOption) firstJobOption.textContent = "--先选择角色--";
                     }
-                } catch (error) {
-                    handleError(error, '初始化战斗');
+                });
+
+                addCharacterBtn.addEventListener('click', handleAddCharacterToTeam);
+            }
+
+            function populateCharacterDropdown(rarity) {
+                characterSelectDropdown.innerHTML = '';
+                addCharacterBtn.disabled = true;
+                jobSelectDropdown.disabled = true;
+                jobSelectDropdown.value = "";
+                const firstJobOption = jobSelectDropdown.options[0];
+                if (firstJobOption) firstJobOption.textContent = "--先选择角色--";
+
+
+                const defaultCharOption = document.createElement('option');
+                defaultCharOption.value = "";
+                characterSelectDropdown.appendChild(defaultCharOption);
+
+                if (!rarity) {
+                    defaultCharOption.textContent = "--先选择稀有度--";
+                    characterSelectDropdown.disabled = true;
                     return;
                 }
 
-                // 将角色和BOSS添加到Character对象中，以便JobSkills.useSkill能够找到它们
-                if (typeof Character !== 'undefined') {
-                    Character.characters = Character.characters || {};
+                const charactersOfRarity = Object.values(allCharactersData).filter(charData => {
+                    if (!charData || !charData.id || charData.isJob) return false;
+                    const charRarity = charData.rarity || (charData.id.startsWith('ssr_') ? 'SSR' : charData.id.startsWith('sr_') ? 'SR' : charData.id.startsWith('r_') ? 'R' : null);
+                    return charRarity === rarity;
+                });
 
-                    // 确保角色ID正确
-                    if (!character.id) {
-                        character.id = 'player_character';
-                    }
+                if (charactersOfRarity.length === 0) {
+                    defaultCharOption.textContent = `--该稀有度下无角色--`;
+                    characterSelectDropdown.disabled = true;
+                } else {
+                    defaultCharOption.textContent = "--选择角色--";
+                    charactersOfRarity.forEach(charData => {
+                        const option = document.createElement('option');
+                        option.value = charData.id;
+                        option.textContent = `${charData.name} (ID: ${charData.id})`;
+                        characterSelectDropdown.appendChild(option);
+                    });
+                    characterSelectDropdown.disabled = false;
+                }
+            }
+            // characterSelectDropdown.addEventListener('change') 已移入 populateCharacterSelection
 
-                    // 确保BOSS ID正确
-                    if (!boss.id) {
-                        boss.id = 'dragon';
-                    }
+            function handleAddCharacterToTeam() {
+                const selectedCharId = characterSelectDropdown.value;
+                const selectedJobId = jobSelectDropdown.value;
 
-                    Character.characters[character.id] = character;
-                    Character.characters[boss.id] = boss; // 添加BOSS到Character.characters中
+                if (!selectedCharId) {
+                    logMessage("请先选择一个角色。", "warning");
+                    return;
+                }
+                
+                const charDataOriginal = allCharactersData[selectedCharId];
+                if (!charDataOriginal) {
+                    logMessage(`错误：找不到ID为 ${selectedCharId} 的角色数据。`, "error");
+                    return;
+                }
 
-                    log(`将角色 ${character.name} (ID: ${character.id}) 添加到Character.characters中`);
-                    log(`将BOSS ${boss.name} (ID: ${boss.id}) 添加到Character.characters中`);
+                if (selectedPlayerTeamData.length >= MAX_TEAM_SIZE) {
+                    logMessage(`队伍已满 (最多 ${MAX_TEAM_SIZE} 名)，无法添加 ${charDataOriginal.name}。`, 'warning');
+                    return;
+                }
+                
+                if (selectedPlayerTeamData.find(member => member.id === selectedCharId)) {
+                    logMessage(`角色 ${charDataOriginal.name} 已在队伍中 (如需更换职业请先移除)。`, "warning");
+                    return;
+                }
 
-                    // 打印Character.characters中的所有角色
-                    log(`Character.characters中的角色数量: ${Object.keys(Character.characters).length}`);
-                    for (const id in Character.characters) {
-                        log(`- ${id}: ${Character.characters[id].name}`);
-                    }
+                const characterData = JSON.parse(JSON.stringify(charDataOriginal));
+                
+                let jobNameForLog = "";
+                if (selectedJobId && JobSystem.jobs && JobSystem.jobs[selectedJobId]) {
+                    characterData.jobId = selectedJobId;
+                    characterData.job = JSON.parse(JSON.stringify(JobSystem.jobs[selectedJobId]));
+                    jobNameForLog = ` (${JobSystem.jobs[selectedJobId].name})`;
+                    logMessage(`角色 ${characterData.name} 已选择职业: ${JobSystem.jobs[selectedJobId].name}`, 'info');
+                } else {
+                    characterData.jobId = null;
+                    characterData.job = null;
+                }
+                
+                characterData.level = characterData.level || 1;
 
-                    // 添加getCharacter方法（如果不存在）
-                    if (typeof Character.getCharacter !== 'function') {
-                        Character.getCharacter = function(id) {
-                            return this.characters[id];
-                        };
-                    }
+                selectedPlayerTeamData.push(characterData);
 
-                    // 确保Character.traits对象存在
-                    Character.traits = Character.traits || {};
+                logMessage(`${characterData.name}${jobNameForLog} (等级: ${characterData.level}) 已添加到队伍。 (队伍: ${selectedPlayerTeamData.length}/${MAX_TEAM_SIZE})`, "success");
+                updateSelectedTeamDisplay();
+                checkSelections();
 
-                    // 添加processTraitTriggers方法（如果不存在或需要覆盖）
-                    Character.processTraitTriggers = function(characterId, eventType, eventData) {
-                        const character = this.getCharacter(characterId);
-                        if (!character) return [];
+                characterSelectDropdown.value = "";
+                jobSelectDropdown.value = "";
+                addCharacterBtn.disabled = true;
+                jobSelectDropdown.disabled = true;
+                const firstJobOption = jobSelectDropdown.options[0];
+                if (firstJobOption) firstJobOption.textContent = "--先选择角色--";
+            }
 
-                        // 确保traits是一个数组
-                        if (!Array.isArray(character.traits)) {
-                            character.traits = [];
+            // getRaritySortValue 不再直接用于 populateCharacterSelection，但可能在其他地方有用
+            function getRaritySortValue(charData) {
+                if (!charData) return 0;
+                // 优先使用显式稀有度属性
+                if (charData.rarity === 'SSR') return 4;
+                if (charData.rarity === 'SR') return 3;
+                if (charData.rarity === 'R') return 2;
+                // 然后尝试通过ID前缀推断
+                if (charData.id.startsWith('ssr_')) return 4;
+                if (charData.id.startsWith('sr_')) return 3;
+                if (charData.id.startsWith('r_')) return 2;
+                if (charData.isJob) return 1;
+                return 0;
+            }
+
+            function populateBossSelection() {
+                bossSelectionContainer.innerHTML = ''; // 清空
+                bosses.forEach(bossData => {
+                    const card = createSelectableCard(bossData, 'boss');
+                    bossSelectionContainer.appendChild(card);
+                });
+            }
+
+            // --- 卡片创建 ---
+            function createSelectableCard(data, type) {
+                const card = document.createElement('div');
+                card.classList.add(type === 'character' ? 'character-card' : 'boss-card');
+                card.dataset.id = data.id;
+
+                // 确定稀有度
+                let rarity = data.rarity;
+                if (!rarity) {
+                    if (data.id.startsWith('ssr_')) rarity = 'SSR';
+                    else if (data.id.startsWith('sr_')) rarity = 'SR';
+                    else if (data.id.startsWith('r_')) rarity = 'R';
+                    else if (data.isJob) rarity = '职业';
+                    else rarity = 'N/A'; // BOSS 或其他
+                }
+                card.dataset.rarity = rarity;
+
+                // 名称
+                const nameEl = document.createElement('h3');
+                nameEl.textContent = data.name;
+                card.appendChild(nameEl);
+
+                // 描述
+                const descText = data.description || `属性: ${data.attribute || data.element || 'N/A'}, 类型: ${data.type || 'N/A'}`;
+                const descEl = document.createElement('p');
+                descEl.textContent = descText.substring(0, 60) + (descText.length > 60 ? '...' : ''); // 增加描述长度
+                descEl.title = descText; // 完整描述悬浮显示
+                card.appendChild(descEl);
+
+                // 稀有度/类型 显示
+                const infoEl = document.createElement('p');
+                infoEl.textContent = `${rarity} / ${data.type || '未知类型'}`;
+                infoEl.style.fontSize = '13px';
+                infoEl.style.color = '#555';
+                card.appendChild(infoEl);
+
+                // 技能列表
+                if (data.skills && data.skills.length > 0) {
+                    const skillsTitle = document.createElement('h4');
+                    skillsTitle.textContent = '主要技能:';
+                    skillsTitle.style.cssText = 'font-size: 14px; margin-top: 8px; margin-bottom: 4px;';
+                    card.appendChild(skillsTitle);
+
+                    const skillsListEl = document.createElement('ul');
+                    skillsListEl.classList.add('skills-list'); // 使用 class
+                    data.skills.slice(0, 2).forEach(skillIdentifier => { // 显示前两个技能
+                        let skillName = '未知技能';
+                        let skillDesc = '无描述';
+                        // 优先从全局技能库查找
+                        const skillData = (window.JobSystem && JobSystem.SKILLS && JobSystem.SKILLS[skillIdentifier]) || bossSkills[skillIdentifier];
+
+                        if (skillData) {
+                            skillName = skillData.name;
+                            skillDesc = skillData.description;
+                        } else if (typeof skillIdentifier === 'string') {
+                            skillName = skillIdentifier; // Fallback to ID if not found
                         }
 
-                        // 这里简化处理，直接返回空数组
-                        return [];
-                    };
+                        const skillItem = document.createElement('li');
+                        skillItem.classList.add('skill-item'); // 使用 class
+                        skillItem.textContent = skillName;
+                        skillItem.title = skillDesc;
+                        skillsListEl.appendChild(skillItem);
+                    });
+                    card.appendChild(skillsListEl);
                 }
 
-                // 显示战斗状态区域
-                battleSection.classList.remove('hidden');
-
-                // 更新战斗状态
-                updateBattleStatus();
-
-                // 设置战斗状态
-                battleInProgress = true;
-                turnCount = 0;
-
-                // 清空战斗日志
-                battleLog.innerHTML = '';
-
-                // 记录战斗开始
-                log(`战斗开始：${character.name} vs ${boss.name}`);
-
-                // 开始战斗模拟
-                simulateBattle();
+                // 添加点击事件
+                card.addEventListener('click', () => handleSelection(card, data, type));
+                return card;
             }
 
-            // 模拟战斗
-            function simulateBattle() {
-                try {
-                    if (!character || !boss || !battleInProgress) return;
+            // --- 选择处理 (旧的 handleSelection 主要处理卡片点击，现在角色选择通过下拉框和按钮) ---
+            // handleSelection 函数现在主要用于处理 BOSS 的选择，角色选择已移至 handleAddCharacterToTeam
+            function handleSelection(card, data, type) {
+                if (battleInProgress) return;
+                const selectedClass = 'selected';
 
-                    // 创建队伍数组
-                    const team = [character];
-
-                // 确保Battle对象有必要的方法
-                if (typeof Battle !== 'undefined') {
-                    // 添加processBattleStartTraits方法（如果不存在）
-                    if (typeof Battle.processBattleStartTraits !== 'function') {
-                        Battle.processBattleStartTraits = function(character, teamMembers) {
-                            // 简化处理，不做任何操作
-                        };
+                if (type === 'boss') {
+                    // BOSS 单选逻辑
+                    const currentlySelected = bossSelectionContainer.querySelector('.boss-card.selected');
+                    if (currentlySelected === card) { // 点击已选中的BOSS -> 取消选择
+                         card.classList.remove(selectedClass);
+                         selectedBossData = null;
+                         logMessage(`取消选择BOSS: ${data.name}`);
+                    } else { // 选择新的BOSS
+                        if(currentlySelected) currentlySelected.classList.remove(selectedClass);
+                        card.classList.add(selectedClass);
+                        selectedBossData = data;
+                        logMessage(`选择BOSS: ${data.name}`);
                     }
-
-                    // 确保isStunned方法存在
-                    if (typeof Battle.isStunned !== 'function') {
-                        Battle.isStunned = function(entity) {
-                            if (!entity || !entity.buffs) return false;
-                            return entity.buffs.some(buff => buff.type === 'stun');
-                        };
-                    }
-
-                    // 重写logBattle方法，将战斗日志显示在界面上
-                    // 保存原始方法的引用
-                    const originalLogBattle = Battle.logBattle;
-
-                    // 完全替换logBattle方法，而不是在原方法基础上添加
-                    Battle.logBattle = function(message) {
-                        // 直接保存到battleLog数组，不调用原始方法
-                        this.battleLog = this.battleLog || [];
-                        this.battleLog.push(message);
-                        console.log(`[战斗] ${message}`);
-
-                        // 在界面上显示日志
-                        log(message);
-                    };
                 }
+                // 角色选择现在由 handleAddCharacterToTeam 处理
+                // updateSelectedTeamDisplay(); // 这个会在 handleAddCharacterToTeam 中调用
+                checkSelections(); // 检查是否可以开始战斗
+            }
 
-                // 使用Battle.startBattle进行战斗
-                if (typeof Battle !== 'undefined' && typeof Battle.startBattle === 'function') {
-                    try {
-                        const result = Battle.startBattle(
-                            { id: 'test_team', name: '测试队伍', members: [character.id] },
-                            boss
-                        );
+            // 更新已选队伍区域显示
+            function updateSelectedTeamDisplay() {
+                selectedTeamDisplay.innerHTML = ''; // 清空
+                if (selectedPlayerTeamData.length === 0) {
+                    selectedTeamDisplay.innerHTML = '<p>尚未选择任何角色。</p>';
+                } else {
+                    selectedPlayerTeamData.forEach((memberData, index) => {
+                        const memberContainer = document.createElement('div');
+                        memberContainer.style.display = 'flex';
+                        memberContainer.style.alignItems = 'center';
+                        memberContainer.style.marginBottom = '5px';
 
-                        // 处理战斗结果
-                        if (result.success) {
-                            // 由于我们已经重写了logBattle方法，战斗日志已经在战斗过程中显示
-                            // 所以这里不需要再次显示战斗日志
+                        const memberNameSpan = document.createElement('span');
+                        memberNameSpan.classList.add('selected-team-member');
+                        memberNameSpan.textContent = memberData.name;
+                        memberNameSpan.style.marginRight = '10px';
+                        memberContainer.appendChild(memberNameSpan);
 
-                            // 只显示战斗开始的标题（如果还没有显示）
-                            if (!result.battleLog || result.battleLog.length === 0) {
-                                log('===== 战斗开始 =====');
-                                log(`${character.name} VS ${boss.name}`);
-                                log('===================');
+                        const levelLabel = document.createElement('label');
+                        levelLabel.textContent = '等级: ';
+                        levelLabel.style.marginRight = '5px';
+                        memberContainer.appendChild(levelLabel);
+
+                        const levelInput = document.createElement('input');
+                        levelInput.type = 'number';
+                        levelInput.value = memberData.level || 1;
+                        levelInput.min = 1;
+                        // 尝试从角色数据中获取最大等级，如果 Character.rarities 可用
+                        let maxLevel = 100; // Default max level
+                        if (typeof Character !== 'undefined' && Character.rarities) {
+                            const rarityKey = memberData.rarity // e.g., "SSR", "SR", "R" or "职业"
+                                                ? (memberData.rarity.toLowerCase() === 'ssr' ? 'legendary' :
+                                                  memberData.rarity.toLowerCase() === 'sr' ? 'epic' :
+                                                  memberData.rarity.toLowerCase() === 'r' ? 'rare' :
+                                                  null)
+                                                : null;
+                            if (rarityKey && Character.rarities[rarityKey]) {
+                                maxLevel = Character.rarities[rarityKey].maxLevel || 100;
+                            } else if (memberData.isJob) { // Handle "职业" if not mapped above
+                                // Assuming jobs might have a default max level or it's defined elsewhere
+                                // For now, use a generic max if not specifically found
                             }
+                        }
+                        levelInput.max = maxLevel;
+                        levelInput.style.width = '60px';
+                        levelInput.dataset.charId = memberData.id;
 
-                            // 更新战斗状态
-                            updateBattleStatus();
-
-                            // 显示战斗结果
-                            if (character.currentStats.hp <= 0) {
-                                log(`战斗结束：${boss.name} 获胜！`);
-                            } else if (boss.currentStats.hp <= 0) {
-                                log(`战斗结束：${character.name} 获胜！`);
-                            } else {
-                                log('战斗结束：平局');
-                            }
-
-                            // 战斗总结
-                            log('\n===== 战斗总结 =====');
-                            log(`总回合数: ${result.turns || 0}`);
-                            log(`${character.name} 剩余生命: ${Math.max(0, Math.floor(character.currentStats.hp))}/${character.currentStats.maxHp} (${Math.floor(character.currentStats.hp / character.currentStats.maxHp * 100)}%)`);
-                            log(`${boss.name} 剩余生命: ${Math.max(0, Math.floor(boss.currentStats.hp))}/${boss.currentStats.maxHp} (${Math.floor(boss.currentStats.hp / boss.currentStats.maxHp * 100)}%)`);
-
-                            // 显示伤害统计
-                            if (character.stats && character.stats.totalDamage) {
-                                log(`${character.name} 总伤害: ${character.stats.totalDamage}`);
-                            }
-
-                            if (boss.stats && boss.stats.totalDamage) {
-                                log(`${boss.name} 总伤害: ${boss.stats.totalDamage}`);
-                            }
-
-                            // 显示技能使用统计
-                            if (result.battleStats && result.battleStats.skillsUsed) {
-                                log('\n技能使用统计:');
-                                for (const skillId in result.battleStats.skillsUsed) {
-                                    const count = result.battleStats.skillsUsed[skillId];
-
-                                    // 首先尝试从JobSystem获取技能
-                                    let skill = JobSystem.getSkill(skillId);
-
-                                    // 如果JobSystem中没有找到，尝试从JobSkillsTemplate获取
-                                    if (!skill && typeof JobSkillsTemplate !== 'undefined' && JobSkillsTemplate.templates && JobSkillsTemplate.templates[skillId]) {
-                                        skill = JobSkillsTemplate.templates[skillId];
-                                    }
-
-                                    // 如果bossSkills中有这个技能
-                                    if (!skill && bossSkills[skillId]) {
-                                        skill = bossSkills[skillId];
-                                    }
-
-                                    if (skill) {
-                                        log(`- ${skill.name}: 使用了 ${count} 次`);
-                                    } else {
-                                        log(`- ${skillId}: 使用了 ${count} 次`);
-                                    }
+                        levelInput.addEventListener('change', (event) => {
+                            const newLevel = parseInt(event.target.value, 10);
+                            const charId = event.target.dataset.charId;
+                            const memberIndex = selectedPlayerTeamData.findIndex(m => m.id === charId);
+                            if (memberIndex > -1) {
+                                if (newLevel >= parseInt(event.target.min) && newLevel <= parseInt(event.target.max)) {
+                                    selectedPlayerTeamData[memberIndex].level = newLevel;
+                                    logMessage(`角色 ${selectedPlayerTeamData[memberIndex].name} 等级更新为: ${newLevel}`);
+                                } else {
+                                    event.target.value = selectedPlayerTeamData[memberIndex].level; // Revert to old value
+                                    logMessage(`等级 ${newLevel} 无效 (应在 ${event.target.min}-${event.target.max} 之间).`, 'warning');
                                 }
                             }
-                            log('=====================');
-                        } else {
-                            log(`战斗失败：${result.message}`);
-                        }
-                    } catch (error) {
-                        handleError(error, '战斗系统');
-                        // 如果Battle系统出错，使用简单的回合制战斗
-                        //simulateSimpleBattle();
-                    }
-                } else {
-                    // 如果Battle系统不可用，使用简单的回合制战斗
-                    //simulateSimpleBattle();
-                }
-
-
-                // 战斗结束
-                battleInProgress = false;
-                } catch (error) {
-                    handleError(error, '模拟战斗');
-                    battleInProgress = false;
+                        });
+                        memberContainer.appendChild(levelInput);
+                        selectedTeamDisplay.appendChild(memberContainer);
+                    });
                 }
             }
 
-            // 重置
-            function reset() {
+            // 检查选择状态，启用/禁用开始按钮
+            function checkSelections() {
+                startBattleBtn.disabled = !(selectedPlayerTeamData.length > 0 && selectedBossData);
+            }
+
+            // --- 事件监听 ---
+            function addEventListeners() {
+                populateJobDropdown(); // 初始化时填充职业下拉框
+                startBattleBtn.addEventListener('click', handleStartBattle);
+                resetBtn.addEventListener('click', resetBattle);
+                // 监听战斗结束事件
+                window.addEventListener('battleEnd', handleBattleEnd);
+            }
+
+            // --- 战斗流程 ---
+            async function handleStartBattle() { // <-- Added async here
+                if (selectedPlayerTeamData.length === 0 || !selectedBossData || battleInProgress) {
+                    logMessage("请至少选择一名角色和一名BOSS。", "warning");
+                    return;
+                }
+                battleInProgress = true;
+                startBattleBtn.disabled = true;
+                resetBtn.disabled = true; // 禁用重置直到战斗结束
+                battleSection.classList.remove('hidden');
+                battleLog.innerHTML = ''; // 清空日志
+                turnCount = 0;
+
+                if (applyWeaponBoardBtn && !applyWeaponBoardBtn.disabled) {
+                    logMessage("武器盘有未应用的更改，将在战斗开始前自动应用。", "info");
+                    await handleApplyWeaponBoardToTeam();
+                }
+
+                const teamNames = selectedPlayerTeamData.map(m => m.name).join(', ');
+                logMessage(`战斗开始! 队伍 [${teamNames}] vs ${selectedBossData.name}`);
+
+                if (playerTeamInstances.length === 0 || playerTeamInstances.length !== selectedPlayerTeamData.length) {
+                     logMessage("重新创建战斗角色实例...", "info");
+                     playerTeamInstances = selectedPlayerTeamData.map(charDataWithUserLevel => createGameCharacter(charDataWithUserLevel, true)).filter(Boolean);
+                }
+                if (!bossInstance) {
+                    bossInstance = createGameCharacter(selectedBossData, false);
+                }
+
+                if (playerTeamInstances.length === 0 || !bossInstance) {
+                    logMessage("错误：未能成功创建所有战斗单位。", "error");
+                    resetBattle(); // 重置状态
+                    return;
+                }
+
+                // 更新初始UI状态
+                updatePlayerTeamStatusDisplay(playerTeamInstances);
+                updateBossStatus(bossInstance);
+
+                // 初始化并开始战斗
                 try {
-                    // 停止战斗
-                    battleInProgress = false;
-                    if (battleInterval) {
-                        clearInterval(battleInterval);
-                        battleInterval = null;
-                    }
+                    const battle = new Battle();
+                    const playerTeamForBattle = new Team(playerTeamInstances);
+                    const enemyTeamForBattle = new Team([bossInstance]);
 
-                    // 重置选择
-                    selectedJob = null;
-                    selectedBoss = null;
+                    // 设置战斗更新回调
+                    battle.initialize(playerTeamForBattle, enemyTeamForBattle, battleLog, (currentBattleState) => {
+                        // 这个回调会在战斗系统内部的某个点被调用，用来更新UI
+                        if (currentBattleState.playerTeam) updatePlayerTeamStatusDisplay(currentBattleState.playerTeam.members);
+                        if (currentBattleState.enemyTeam && currentBattleState.enemyTeam.members[0]) updateBossStatus(currentBattleState.enemyTeam.members[0]);
+                    });
 
-                    // 重置角色和BOSS
-                    character = null;
-                    boss = null;
-
-                    // 重置UI
-                    const selectedJobCards = jobSelection.querySelectorAll('.job-card.selected');
-                    selectedJobCards.forEach(card => card.classList.remove('selected'));
-
-                    const selectedBossCards = bossSelection.querySelectorAll('.boss-card.selected');
-                    selectedBossCards.forEach(card => card.classList.remove('selected'));
-
-                    // 隐藏战斗状态区域
-                    battleSection.classList.add('hidden');
-
-                    // 禁用开始战斗按钮
-                    startBattleBtn.disabled = true;
-
-                    // 清空战斗日志
-                    battleLog.innerHTML = '';
-                    log('系统已重置');
+                    battle.start(); // 启动战斗循环
                 } catch (error) {
-                    handleError(error, '重置系统');
+                     logMessage(`战斗初始化或启动时出错: ${error}`, 'error');
+                     console.error("Battle start error:", error);
+                     resetBattle(); // 出错时重置
                 }
             }
 
-            // 在页面加载完成后初始化
-            window.addEventListener('load', init);
+            function handleBattleEnd(event) {
+                 logMessage("接收到 battleEnd 事件");
+                 if (!event.detail || !event.detail.winnerTeam) {
+                     logMessage(`战斗结束! 结果未知。`, 'warning');
+                 } else {
+                     const winnerIsPlayer = event.detail.winnerTeam.isPlayerTeam;
+                     // 确保 playerTeamInstances 在这里仍然可用
+                     const winnerName = winnerIsPlayer
+                                      ? `队伍 [${playerTeamInstances.map(p=>p.name).join(', ')}]`
+                                      : (event.detail.winnerTeam.members[0]?.name || "BOSS队");
+                     logMessage(`战斗结束! ${winnerName} 胜利!`);
+                 }
+                 battleInProgress = false;
+                 resetBtn.disabled = false; // 战斗结束后启用重置按钮
+                 // startBattleBtn 保持禁用，直到用户重置并重新选择
+            }
+
+
+            // --- 实例创建 ---
+            function createGameCharacter(charData, isPlayer) {
+                if (!charData || !charData.id) {
+                    logMessage(`错误: 无效数据提供给 createGameCharacter: ${JSON.stringify(charData)}`, 'error');
+                    return null;
+                }
+                // 查找基础数据 (优先从 allCharactersData 获取，因为可能包含职业数据)
+                const baseData = allCharactersData[charData.id] || charData; // Fallback to provided data if not found
+                if (!baseData || !baseData.baseStats) {
+                     logMessage(`错误: 找不到ID为 '${charData.id}' 的有效基础数据或属性。`, 'error');
+                     return null;
+                }
+
+                // charData is from selectedPlayerTeamData and includes the user-set 'level'
+                // baseData is the original character template (e.g., from r.json, sr.json)
+
+                const targetLevel = charData.level || baseData.level || 1;
+                let calculatedStats = JSON.parse(JSON.stringify(baseData.baseStats)); // Start with 1st level stats
+
+                // Calculate stats for the targetLevel if Character class and its properties are available
+                if (typeof Character !== 'undefined' && Character.types && Character.rarities && baseData.type && baseData.rarity) {
+                    const typeData = Character.types[baseData.type.toLowerCase()]; // Ensure type is lowercase if keys are
+                    const rarityKey = baseData.rarity // e.g., "SSR", "SR", "R"
+                                        ? (baseData.rarity.toLowerCase() === 'ssr' ? 'legendary' :
+                                          baseData.rarity.toLowerCase() === 'sr' ? 'epic' :
+                                          baseData.rarity.toLowerCase() === 'r' ? 'rare' :
+                                          null)
+                                        : null;
+                    const rarityData = rarityKey ? Character.rarities[rarityKey] : Character.rarities.rare; // Default to rare if not found
+
+                    if (typeData && typeData.growthRates && rarityData && rarityData.statMultiplier) {
+                        const growthRates = typeData.growthRates;
+                        const statMultiplier = rarityData.statMultiplier;
+                        
+                        // Start from level 1 stats and apply growth for each level up to targetLevel
+                        for (let lvl = 1; lvl < targetLevel; lvl++) {
+                            calculatedStats.hp = Math.floor((calculatedStats.hp || 0) + (growthRates.hp || 0) * statMultiplier);
+                            calculatedStats.attack = Math.floor((calculatedStats.attack || 0) + (growthRates.attack || 0) * statMultiplier);
+                            calculatedStats.defense = Math.floor((calculatedStats.defense || 0) + (growthRates.defense || 0) * statMultiplier);
+                            calculatedStats.speed = Math.floor((calculatedStats.speed || 0) + (growthRates.speed || 0) * statMultiplier);
+                            // Add other stats if they grow with level
+                        }
+                        calculatedStats.maxHp = calculatedStats.hp; // Ensure maxHp is also updated
+                    } else {
+                        logMessage(`警告: 角色 ${baseData.name} 的类型 (${baseData.type}) 或稀有度 (${baseData.rarity}) 的成长数据未找到，使用基础属性。`, 'warning');
+                    }
+                } else if (targetLevel > 1) {
+                     logMessage(`警告: Character核心数据未完全加载，无法为 ${baseData.name} 计算 ${targetLevel} 级属性，将使用1级属性。`, 'warning');
+                }
+                
+                // 确保 hp 和 maxHp 存在且有效 after calculation
+                calculatedStats.hp = Number(calculatedStats.hp) || 100;
+                calculatedStats.maxHp = Number(calculatedStats.maxHp) || calculatedStats.hp;
+
+                // 确定稀有度
+                let rarityVal = baseData.rarity || charData.rarity;
+                if (!rarityVal) {
+                    if (baseData.id.startsWith('ssr_')) rarityVal = 'SSR';
+                    else if (baseData.id.startsWith('sr_')) rarityVal = 'SR';
+                    else if (baseData.id.startsWith('r_')) rarityVal = 'R';
+                    else if (baseData.isJob) rarityVal = '职业';
+                    else rarityVal = 'N/A';
+                }
+
+                // 创建 Character 实例
+                const characterInstance = new Character({
+                    id: baseData.id,
+                    name: baseData.name,
+                    attribute: baseData.attribute || baseData.element,
+                    type: baseData.type || (isPlayer ? 'player' : 'boss'),
+                    stats: calculatedStats, // 使用为目标等级计算的属性
+                    skills: [],
+                    isPlayer: isPlayer,
+                    jobId: baseData.isJob ? baseData.id : undefined,
+                    rarity: rarityVal,
+                    level: targetLevel // 传递目标等级
+                });
+
+                // 加载并实例化技能
+                const skillSource = (window.JobSystem && JobSystem.SKILLS) || {}; // 全局技能库
+                if (baseData.skills && Array.isArray(baseData.skills)) {
+                    baseData.skills.forEach(skillIdentifier => {
+                        // 查找技能模板
+                        const skillTemplate = skillSource[skillIdentifier] || bossSkills[skillIdentifier]; // 也检查 bossSkills
+                        if (skillTemplate) {
+                            try {
+                                // 创建 Skill 实例
+                                const skillInstance = new Skill(skillTemplate, characterInstance, 1); // 默认等级1
+                                characterInstance.skills.push(skillInstance);
+                            } catch (skillError) {
+                                logMessage(`警告: 为 ${baseData.name} 创建技能 '${skillIdentifier}' 时出错: ${skillError}`, 'warning');
+                                console.error(`Skill creation error for ${skillIdentifier}:`, skillError);
+                            }
+                        } else {
+                            logMessage(`警告: ${baseData.name} 的技能ID '${skillIdentifier}' 在技能库中未找到。`, 'warning');
+                        }
+                    });
+                }
+                // 初始化 buffs 和 debuffs 数组
+                characterInstance.buffs = [];
+                characterInstance.debuffs = [];
+
+                logMessage(`${isPlayer ? '角色' : 'BOSS'} ${characterInstance.name} (稀有度: ${rarityVal}) 创建成功。`);
+                return characterInstance;
+            }
+
+            // --- UI 更新 ---
+            function updatePlayerTeamStatusDisplay(teamMembers) {
+                playerTeamName.textContent = "玩家队伍";
+                playerTeamMembersStatusContainer.innerHTML = ''; // 清空旧状态
+                if (!teamMembers || teamMembers.length === 0) {
+                    playerTeamStatus.textContent = "队伍为空或状态未知。"; return;
+                }
+                let totalHp = 0, totalMaxHp = 0, aliveMembers = 0;
+                teamMembers.forEach(member => {
+                    if (member && member.stats) { // 确保成员和属性存在
+                        const memberHp = Math.max(0, Math.round(member.stats.hp));
+                        const memberMaxHp = Math.round(member.stats.maxHp);
+                        totalHp += memberHp; totalMaxHp += memberMaxHp;
+                        if (memberHp > 0) aliveMembers++;
+
+                        // 创建每个成员的状态显示
+                        const memberStatusDiv = document.createElement('div');
+                        memberStatusDiv.classList.add('team-member-status-item');
+                        memberStatusDiv.innerHTML = `
+                            <strong>${member.name}</strong> (${member.rarity || 'N/A'}) - HP: ${memberHp}/${memberMaxHp}
+                            <div class="hp-bar" title="HP: ${memberHp}/${memberMaxHp}">
+                                <div class="hp-fill" style="width: ${memberMaxHp > 0 ? (memberHp / memberMaxHp) * 100 : 0}%;"></div>
+                            </div>`;
+                        playerTeamMembersStatusContainer.appendChild(memberStatusDiv);
+                    }
+                });
+                // 更新队伍整体状态文本
+                playerTeamStatus.textContent = totalMaxHp > 0 ? `存活: ${aliveMembers}/${teamMembers.length} | 总HP: ${totalHp}/${totalMaxHp}` : (teamMembers.length > 0 ? "队伍全灭。" : "队伍为空。");
+            }
+
+            function updateBossStatus(bossToUpdate) {
+                if (!bossToUpdate || !bossToUpdate.stats) {
+                    // 设置默认或错误状态
+                    bossName.textContent = 'BOSS (状态未知)'; bossHp.textContent = '0'; bossMaxHp.textContent = '0';
+                    bossHpFill.style.width = '0%'; bossAttack.textContent = '0'; bossDefense.textContent = '0%'; bossSpeed.textContent = '0';
+                    if (bossAttribute) bossAttribute.textContent = '-';
+                    return;
+                }
+                // 更新BOSS信息
+                bossName.textContent = bossToUpdate.name;
+                const currentBossHp = Math.max(0, Math.round(bossToUpdate.stats.hp));
+                const currentBossMaxHp = Math.round(bossToUpdate.stats.maxHp);
+                bossHp.textContent = currentBossHp; bossMaxHp.textContent = currentBossMaxHp;
+                bossHpFill.style.width = currentBossMaxHp > 0 ? `${(currentBossHp / currentBossMaxHp) * 100}%` : '0%';
+                // 获取有效属性，如果方法存在的话
+                const effectiveStats = typeof bossToUpdate.getEffectiveStats === 'function' ? bossToUpdate.getEffectiveStats() : bossToUpdate.stats;
+                bossAttack.textContent = Math.round(effectiveStats.attack);
+                bossDefense.textContent = `${Math.round((effectiveStats.defense || 0) * 100)}%`; // 处理可能的 undefined
+                bossSpeed.textContent = Math.round(effectiveStats.speed);
+                if (bossAttribute) bossAttribute.textContent = bossToUpdate.attribute || '-';
+            }
+
+            // --- 重置 ---
+            function resetBattle() {
+                logMessage("开始重置战斗...");
+                // 停止任何可能的战斗循环 (如果 Battle 类没有完全处理)
+                // clearInterval(battleInterval); battleInterval = null;
+
+                battleInProgress = false;
+                // 清空选择和实例
+                selectedPlayerTeamData = [];
+                playerTeamInstances = [];
+                selectedBossData = null;
+                bossInstance = null;
+                turnCount = 0;
+
+                // 清除UI选择状态
+                characterSelectionContainer.querySelectorAll('.character-card.selected').forEach(c => c.classList.remove('selected'));
+                bossSelectionContainer.querySelectorAll('.boss-card.selected').forEach(c => c.classList.remove('selected'));
+
+                updateSelectedTeamDisplay(); // 更新队伍显示（应为空）
+
+                // 重置按钮状态
+                startBattleBtn.disabled = true; // 开始按钮禁用
+                resetBtn.disabled = false; // 重置按钮启用
+
+                // 隐藏战斗区域
+                battleSection.classList.add('hidden');
+
+                // 清空战斗日志（或保留并添加分隔符）
+                // battleLog.innerHTML = ''; // 完全清空
+                 battleLog.innerHTML += '<p style="border-top: 1px dashed #ccc; margin-top: 10px; padding-top: 10px;">===== 战斗已重置 =====</p>';
+
+
+                // 重置状态显示
+                playerTeamName.textContent = '玩家队伍';
+                playerTeamStatus.textContent = '-';
+                playerTeamMembersStatusContainer.innerHTML = '';
+                updateBossStatus(null); // 使用 null 重置 BOSS 显示
+
+                logMessage("战斗已重置。请重新选择。");
+            }
+
+            // --- 工具函数 ---
+            // 日志记录
+            function logMessage(message, type = 'info') {
+                const logEntry = document.createElement('p');
+                const timestamp = new Date().toLocaleTimeString();
+                logEntry.innerHTML = `<span style="color: #999;">[${timestamp}]</span> ${message}`; // 时间戳颜色区分
+                if (type === 'error') {
+                    logEntry.style.color = 'red';
+                    logEntry.style.fontWeight = 'bold';
+                    console.error(timestamp, message);
+                } else if (type === 'warning') {
+                    logEntry.style.color = 'orange';
+                    console.warn(timestamp, message);
+                } else if (type === 'success') {
+                     logEntry.style.color = 'green';
+                     logEntry.style.fontWeight = 'bold';
+                }
+                // 插入到日志顶部而不是底部，最新的在上面
+                // battleLog.appendChild(logEntry);
+                battleLog.insertBefore(logEntry, battleLog.firstChild);
+                // battleLog.scrollTop = battleLog.scrollHeight; // 滚动到底部 (如果插入顶部则不需要)
+            }
+
+            // --- 启动应用 ---
+            document.addEventListener('DOMContentLoaded', init);
+
         })();
     </script>
+
 </body>
 </html>

@@ -210,25 +210,23 @@
             <h2>选择角色 (最多 <span id="max-team-size-display">4</span> 名)</h2>
             <div class="character-selection-area" id="character-selection">
                 <div>
-                    <label for="rarity-select">选择稀有度:</label>
-                    <select id="rarity-select">
-                        <option value="">--选择稀有度--</option>
+                    <label for="category-select">选择类型/稀有度:</label>
+                    <select id="category-select">
+                        <option value="">--选择类型/稀有度--</option>
                         <option value="R">R</option>
                         <option value="SR">SR</option>
                         <option value="SSR">SSR</option>
+                        <option value="JOB">职业 (主角专属)</option>
                     </select>
                 </div>
                 <div>
-                    <label for="character-select-dropdown">选择角色:</label>
-                    <select id="character-select-dropdown" disabled>
-                        <option value="">--先选择稀有度--</option>
+                    <label for="character-job-select">选择角色/职业:</label>
+                    <select id="character-job-select" disabled>
+                        <option value="">--先选择类型/稀有度--</option>
                     </select>
                 </div>
-                <div>
-                    <label for="job-select-dropdown">选择职业:</label>
-                    <select id="job-select-dropdown" disabled>
-                        <option value="">--先选择角色--</option>
-                    </select>
+                <div id="no-character-prompt" style="color: red; display: none; margin-top: 5px;">
+                    该条件下没有可用角色/职业。
                 </div>
                 <button id="add-character-btn" disabled style="margin-top: 10px;">添加到队伍</button>
             </div>
@@ -368,9 +366,9 @@
             // --- DOM 元素缓存 ---
             const battleLog = document.getElementById('battle-log');
             const characterSelectionContainer = document.getElementById('character-selection'); // This div will now hold the dropdowns
-            const raritySelect = document.getElementById('rarity-select');
-            const characterSelectDropdown = document.getElementById('character-select-dropdown');
-            const jobSelectDropdown = document.getElementById('job-select-dropdown'); // 新增职业下拉框
+            const categorySelect = document.getElementById('category-select'); // Updated ID
+            const characterJobSelect = document.getElementById('character-job-select'); // Updated ID
+            const noCharacterPrompt = document.getElementById('no-character-prompt'); // New prompt element
             const addCharacterBtn = document.getElementById('add-character-btn');
             const selectedTeamDisplay = document.getElementById('selected-team-display');
             const bossSelectionContainer = document.getElementById('boss-selection');
@@ -452,7 +450,9 @@
                 await loadGameData();
                 populateCharacterSelection();
                 populateBossSelection();
+                logMessage("调用 addEventListeners 之前", "debug");
                 addEventListeners();
+                logMessage("调用 addEventListeners 之后", "debug");
                 updateSelectedTeamDisplay();
                 logMessage("系统初始化完成。请选择角色组成队伍和选择一个BOSS。");
             }
@@ -478,9 +478,27 @@
                         allWeaponsData = {}; // 确保是对象
                     }
 
-                    // 合并 R, SR, SSR 角色
-                    allCharactersData = { ...rData, ...srData, ...ssrData };
-                    logMessage(`已加载 ${Object.keys(allCharactersData).length} 个 R/SR/SSR 角色数据。`);
+                    // 为 R, SR, SSR 角色添加 rarity 属性，然后合并
+                    const processCharacterData = (data, rarity) => {
+                        if (data && typeof data === 'object') {
+                            return Object.fromEntries(
+                                Object.entries(data).map(([key, char]) => {
+                                    if (char && typeof char === 'object' && !char.rarity) { // 确保 char 是对象且没有 rarity
+                                        return [key, { ...char, rarity: rarity, isJob: char.isJob || false }]; // 保留 isJob 或设为 false
+                                    }
+                                    return [key, char]; // 如果 char 不是对象或已有 rarity，则原样返回
+                                })
+                            );
+                        }
+                        return {}; // 如果 data 不是有效对象，返回空对象
+                    };
+
+                    const processedRData = processCharacterData(rData, "R");
+                    const processedSRData = processCharacterData(srData, "SR");
+                    const processedSSRData = processCharacterData(ssrData, "SSR");
+
+                    allCharactersData = { ...processedRData, ...processedSRData, ...processedSSRData };
+                    logMessage(`已加载和处理 ${Object.keys(allCharactersData).length} 个 R/SR/SSR 角色数据，并添加了 rarity 属性。`);
 
                     // 加载职业数据 (如果 JobSystem 可用)
                     if (window.JobSystem && JobSystem.jobs) {
@@ -538,165 +556,209 @@
                 logMessage("武器选择下拉框填充完成。");
             }
 
-            // --- 职业选择下拉框填充 ---
-            function populateJobDropdown() {
-                if (!jobSelectDropdown) {
-                    logMessage("错误: 职业选择下拉框元素未找到。", "error");
-                    return;
-                }
-                jobSelectDropdown.innerHTML = ''; // 清空现有选项
-
-                // 初始默认选项
-                const initialOption = document.createElement('option');
-                initialOption.value = "";
-                initialOption.textContent = "--先选择角色--";
-                jobSelectDropdown.appendChild(initialOption);
-
-                if (!window.JobSystem || !JobSystem.jobs || Object.keys(JobSystem.jobs).length === 0) {
-                    logMessage("职业数据为空或未加载，无法填充职业选择下拉框。", "warning");
-                    jobSelectDropdown.disabled = true;
-                    return;
-                }
-
-                Object.values(JobSystem.jobs).forEach(job => {
-                    const option = document.createElement('option');
-                    option.value = job.id;
-                    option.textContent = job.name;
-                    jobSelectDropdown.appendChild(option);
-                });
-
-                jobSelectDropdown.value = "";
-                jobSelectDropdown.disabled = true;
-                logMessage("职业选择下拉框填充完成。");
-            }
-
-            // --- UI 填充 (角色选择修改为下拉框) ---
+            // --- UI 填充 (角色/职业选择修改为新的下拉列表逻辑) ---
             function populateCharacterSelection() {
-                // 稀有度选择已在HTML中硬编码: R, SR, SSR
-                // 初始化时，角色下拉框是禁用的
-
-                raritySelect.addEventListener('change', () => {
-                    const selectedRarity = raritySelect.value;
-                    populateCharacterDropdown(selectedRarity);
-                    // 当稀有度改变时，重置并禁用职业选择
-                    jobSelectDropdown.value = "";
-                    jobSelectDropdown.disabled = true;
-                    const firstOption = jobSelectDropdown.options[0];
-                    if (firstOption) firstOption.textContent = "--先选择角色--";
-                    addCharacterBtn.disabled = true;
-                });
-                
-                // characterSelectDropdown 的 change 事件监听器现在在这里
-                characterSelectDropdown.addEventListener('change', () => {
-                    const charSelected = !!characterSelectDropdown.value;
-                    addCharacterBtn.disabled = !charSelected;
-                    jobSelectDropdown.disabled = !charSelected;
-
-                    const firstJobOption = jobSelectDropdown.options[0];
-                    if (charSelected) {
-                        if (firstJobOption) firstJobOption.textContent = "--选择职业 (可选)--";
-                    } else {
-                        jobSelectDropdown.value = "";
-                        if (firstJobOption) firstJobOption.textContent = "--先选择角色--";
-                    }
-                });
-
-                addCharacterBtn.addEventListener('click', handleAddCharacterToTeam);
-            }
-
-            function populateCharacterDropdown(rarity) {
-                characterSelectDropdown.innerHTML = '';
+                // categorySelect 选项已在HTML中定义 (R, SR, SSR, JOB)
+                // 初始化时，characterJobSelect 和 addCharacterBtn 是禁用的
+                characterJobSelect.innerHTML = '<option value="">--先选择类型/稀有度--</option>';
+                characterJobSelect.disabled = true;
                 addCharacterBtn.disabled = true;
-                jobSelectDropdown.disabled = true;
-                jobSelectDropdown.value = "";
-                const firstJobOption = jobSelectDropdown.options[0];
-                if (firstJobOption) firstJobOption.textContent = "--先选择角色--";
+                noCharacterPrompt.style.display = 'none';
 
-
-                const defaultCharOption = document.createElement('option');
-                defaultCharOption.value = "";
-                characterSelectDropdown.appendChild(defaultCharOption);
-
-                if (!rarity) {
-                    defaultCharOption.textContent = "--先选择稀有度--";
-                    characterSelectDropdown.disabled = true;
-                    return;
-                }
-
-                const charactersOfRarity = Object.values(allCharactersData).filter(charData => {
-                    if (!charData || !charData.id || charData.isJob) return false;
-                    const charRarity = charData.rarity || (charData.id.startsWith('ssr_') ? 'SSR' : charData.id.startsWith('sr_') ? 'SR' : charData.id.startsWith('r_') ? 'R' : null);
-                    return charRarity === rarity;
-                });
-
-                if (charactersOfRarity.length === 0) {
-                    defaultCharOption.textContent = `--该稀有度下无角色--`;
-                    characterSelectDropdown.disabled = true;
-                } else {
-                    defaultCharOption.textContent = "--选择角色--";
-                    charactersOfRarity.forEach(charData => {
-                        const option = document.createElement('option');
-                        option.value = charData.id;
-                        option.textContent = `${charData.name} (ID: ${charData.id})`;
-                        characterSelectDropdown.appendChild(option);
-                    });
-                    characterSelectDropdown.disabled = false;
-                }
+                // Event listeners will be in addEventListeners function
             }
-            // characterSelectDropdown.addEventListener('change') 已移入 populateCharacterSelection
+
+            function updateCharacterJobSelect() {
+                const selectedCategory = categorySelect.value;
+                characterJobSelect.innerHTML = ''; // 清空选项
+                characterJobSelect.disabled = true;
+                addCharacterBtn.disabled = true;
+                noCharacterPrompt.style.display = 'none'; // 先隐藏提示
+
+                let optionsAvailable = false;
+                let promptMessage = '--该条件下无可用选项--'; // 默认提示
+
+                if (selectedCategory === "R" || selectedCategory === "SR" || selectedCategory === "SSR") {
+                    logMessage(`Filtering characters for rarity: ${selectedCategory}. Total characters in allCharactersData: ${Object.keys(allCharactersData).length}`);
+                    const charactersOfRarity = Object.values(allCharactersData).filter(c => c.rarity === selectedCategory && !c.isJob);
+                    logMessage(`Found ${charactersOfRarity.length} characters for rarity ${selectedCategory}.`);
+
+                    if (charactersOfRarity.length > 0) {
+                        characterJobSelect.appendChild(new Option(`--选择 ${selectedCategory} 角色--`, ""));
+                        charactersOfRarity.forEach(char => {
+                            const option = new Option(`${char.name} (${char.type || '未知类型'})`, char.id);
+                            characterJobSelect.appendChild(option);
+                        });
+                        characterJobSelect.disabled = false;
+                        optionsAvailable = true;
+                    } else {
+                        promptMessage = `--该稀有度 (${selectedCategory}) 下无角色--`;
+                    }
+                } else if (selectedCategory === "JOB") {
+                    logMessage("Populating jobs. Checking JobSystem.jobs...");
+                    if (window.JobSystem && JobSystem.jobs && Object.keys(JobSystem.jobs).length > 0) {
+                        characterJobSelect.appendChild(new Option('--选择职业--', ""));
+                        Object.values(JobSystem.jobs).forEach(job => {
+                            logMessage(`Adding job option: Name='${job.name}', ID='${job.id}' (type: ${typeof job.id})`);
+                            const option = new Option(job.name, String(job.id)); // 确保 option.value 是字符串
+                            characterJobSelect.appendChild(option);
+                        });
+                        characterJobSelect.disabled = false;
+                        optionsAvailable = true;
+                    } else {
+                        logMessage("No job data found in JobSystem.jobs.");
+                        promptMessage = '--无可用职业数据--';
+                    }
+                }
+
+                if (!optionsAvailable && selectedCategory) {
+                    const option = document.createElement('option');
+                    option.value = "";
+                    option.textContent = promptMessage;
+                    characterJobSelect.appendChild(option);
+                    noCharacterPrompt.textContent = promptMessage;
+                    noCharacterPrompt.style.display = 'block'; // 显示自定义提示
+                } else if (!selectedCategory) {
+                    const option = document.createElement('option');
+                    option.value = "";
+                    option.textContent = '--先选择类型/稀有度--';
+                    characterJobSelect.appendChild(option);
+                }
+
+                // 如果有选项（非提示信息），则第一个空值选项不应被选中
+                if (optionsAvailable && characterJobSelect.options.length > 1 && characterJobSelect.options[0].value === "") {
+                   characterJobSelect.selectedIndex = 0; // 保持默认 "--选择..."
+                } else if (!optionsAvailable && selectedCategory) {
+                    characterJobSelect.selectedIndex = 0; // 选中提示信息
+                } else if (!selectedCategory) {
+                    characterJobSelect.selectedIndex = 0; // 选中 "--先选择类型/稀有度--"
+                }
+                // characterJobSelect.value = ""; // 确保此行已注释或移除
+
+                // 手动触发change事件以更新按钮状态
+                const event = new Event('change');
+                characterJobSelect.dispatchEvent(event);
+            }
 
             function handleAddCharacterToTeam() {
-                const selectedCharId = characterSelectDropdown.value;
-                const selectedJobId = jobSelectDropdown.value;
+                const selectedCategoryValue = categorySelect.value;
+                const selectedItemValue = characterJobSelect.value;
 
-                if (!selectedCharId) {
-                    logMessage("请先选择一个角色。", "warning");
-                    return;
-                }
-                
-                const charDataOriginal = allCharactersData[selectedCharId];
-                if (!charDataOriginal) {
-                    logMessage(`错误：找不到ID为 ${selectedCharId} 的角色数据。`, "error");
+                if (!selectedItemValue) {
+                    logMessage("请先选择一个角色或职业。", "warning");
                     return;
                 }
 
-                if (selectedPlayerTeamData.length >= MAX_TEAM_SIZE) {
-                    logMessage(`队伍已满 (最多 ${MAX_TEAM_SIZE} 名)，无法添加 ${charDataOriginal.name}。`, 'warning');
-                    return;
-                }
-                
-                if (selectedPlayerTeamData.find(member => member.id === selectedCharId)) {
-                    logMessage(`角色 ${charDataOriginal.name} 已在队伍中 (如需更换职业请先移除)。`, "warning");
-                    return;
-                }
+                if (selectedCategoryValue === "JOB") {
+                    // 处理添加职业的逻辑
+                    const selectedJobId = selectedItemValue; // This will be a string from select.value
+                    logMessage(`Attempting to add job. Selected category: JOB, selectedJobId from dropdown: '${selectedJobId}' (type: ${typeof selectedJobId})`);
+                    
+                    let jobData = null;
+                    if (JobSystem && JobSystem.jobs) {
+                        logMessage(`handleAddCharacterToTeam: Available job IDs in JobSystem.jobs: ${Object.keys(JobSystem.jobs).map(id => `'${id}' (type: ${typeof JobSystem.jobs[id].id})`).join(', ')}`);
+                        // selectedJobId is already a string. JobSystem.jobs keys should ideally be strings or handled consistently.
+                        // If JobSystem.jobs keys are numbers, this direct access might fail if selectedJobId is "1" and key is 1.
+                        // The change in updateCharacterJobSelect to use String(job.id) for option value should make selectedJobId always a string.
+                        jobData = JobSystem.jobs[selectedJobId];
+                        logMessage(`handleAddCharacterToTeam: Looked up jobData for ID '${selectedJobId}'. Found: ${JSON.stringify(jobData ? {name: jobData.name, id: jobData.id} : null)}`);
 
-                const characterData = JSON.parse(JSON.stringify(charDataOriginal));
-                
-                let jobNameForLog = "";
-                if (selectedJobId && JobSystem.jobs && JobSystem.jobs[selectedJobId]) {
-                    characterData.jobId = selectedJobId;
-                    characterData.job = JSON.parse(JSON.stringify(JobSystem.jobs[selectedJobId]));
-                    jobNameForLog = ` (${JobSystem.jobs[selectedJobId].name})`;
-                    logMessage(`角色 ${characterData.name} 已选择职业: ${JobSystem.jobs[selectedJobId].name}`, 'info');
+                        // Fallback check if job IDs in JobSystem.jobs might be numbers or if keys are not direct IDs
+                        if (!jobData) {
+                            logMessage(`handleAddCharacterToTeam: jobData not found with string key '${selectedJobId}'. Trying to find by matching String(job.id).`);
+                            for (const jobIdKey in JobSystem.jobs) {
+                                if (JobSystem.jobs.hasOwnProperty(jobIdKey) && String(JobSystem.jobs[jobIdKey].id) === selectedJobId) {
+                                    jobData = JobSystem.jobs[jobIdKey];
+                                    logMessage(`handleAddCharacterToTeam: Found jobData by comparing String(job.id) with '${selectedJobId}'. Job: ${jobData.name}`);
+                                    break;
+                                }
+                            }
+                        }
+
+                    } else {
+                        logMessage(`handleAddCharacterToTeam: JobSystem.jobs is not available.`, 'error');
+                    }
+                    // const jobData = JobSystem.jobs[selectedJobId]; // Moved lookup up
+
+                    if (!jobData) {
+                        logMessage(`错误：找不到职业数据 ID: '${selectedJobId}'. jobData is ${jobData}. Available job IDs in JobSystem.jobs: ${JobSystem && JobSystem.jobs ? Object.values(JobSystem.jobs).map(j => j.id).join(', ') : 'JobSystem.jobs not available'}`, "error");
+                        return;
+                    }
+
+                    if (selectedPlayerTeamData.length === 0) {
+                        logMessage("请先添加一个角色作为主角，然后才能为其分配职业。", "warn");
+                        return;
+                    }
+
+                    const mainCharacterData = selectedPlayerTeamData[0]; // 假定第一个角色是主角
+                    if (mainCharacterData.jobId) {
+                        logMessage(`主角 ${mainCharacterData.name} 已有职业 (${mainCharacterData.jobName || '未知职业'})。如需更换，请先移除角色或等待后续实现职业更换功能。`, "warn");
+                        return;
+                    }
+
+                    // 为主角应用职业
+                    mainCharacterData.jobId = selectedJobId;
+                    mainCharacterData.jobName = jobData.name;
+                    // 合并技能 (确保不重复)
+                    mainCharacterData.skills = [...new Set([...(mainCharacterData.skills || []), ...(jobData.skills || [])])];
+                    // 合并或覆盖属性 (根据JobSystem设计)
+                    // 假设 jobData.statModifiers 是一个对象，如 { attack: 10, defense: 5 }
+                    if (jobData.statModifiers) {
+                        for (const stat in jobData.statModifiers) {
+                            mainCharacterData.baseStats[stat] = (mainCharacterData.baseStats[stat] || 0) + jobData.statModifiers[stat];
+                        }
+                    }
+                    // 如果职业有特定元素或类型，也可以在这里更新
+                    // mainCharacterData.element = jobData.element || mainCharacterData.element;
+                    // mainCharacterData.type = jobData.jobType || mainCharacterData.type;
+
+
+                    logMessage(`已为主角 ${mainCharacterData.name} 设置职业: ${jobData.name}。`, "success");
+                    updateSelectedTeamDisplay(); // 更新队伍显示以反映职业变化
+
                 } else {
-                    characterData.jobId = null;
-                    characterData.job = null;
+                    // 处理添加角色的逻辑 (R, SR, SSR)
+                    const selectedCharId = selectedItemValue;
+                    const charDataOriginal = allCharactersData[selectedCharId];
+
+                    if (!charDataOriginal) {
+                        logMessage(`错误：找不到ID为 ${selectedCharId} 的角色数据。`, "error");
+                        return;
+                    }
+
+                    if (selectedPlayerTeamData.length >= MAX_TEAM_SIZE) {
+                        logMessage(`队伍已满 (最多 ${MAX_TEAM_SIZE} 名)，无法添加 ${charDataOriginal.name}。`, 'warning');
+                        return;
+                    }
+
+                    // 检查角色是否已在队伍中 (基于原始ID)
+                    if (selectedPlayerTeamData.some(member => member.originalId === charDataOriginal.id || member.id === charDataOriginal.id)) {
+                        logMessage(`角色 ${charDataOriginal.name} 已在队伍中。`, "warning");
+                        return;
+                    }
+
+                    const characterData = JSON.parse(JSON.stringify(charDataOriginal));
+                    characterData.originalId = charDataOriginal.id; // 保存原始ID，用于去重等
+                    // 为队伍中的角色生成唯一ID，以允许添加多个同名但不同实例的角色（如果需要）
+                    // 但当前逻辑是基于原始ID去重，所以暂时不需要队伍内唯一ID不同于原始ID
+                    // characterData.id = `${charDataOriginal.id}_${Date.now()}`;
+                    characterData.level = characterData.level || 1;
+                    characterData.jobId = null; // 新添加的角色默认无职业
+                    characterData.jobName = null;
+
+                    selectedPlayerTeamData.push(characterData);
+                    logMessage(`${characterData.name} (等级: ${characterData.level}) 已添加到队伍。 (队伍: ${selectedPlayerTeamData.length}/${MAX_TEAM_SIZE})`, "success");
+                    updateSelectedTeamDisplay();
                 }
-                
-                characterData.level = characterData.level || 1;
 
-                selectedPlayerTeamData.push(characterData);
-
-                logMessage(`${characterData.name}${jobNameForLog} (等级: ${characterData.level}) 已添加到队伍。 (队伍: ${selectedPlayerTeamData.length}/${MAX_TEAM_SIZE})`, "success");
-                updateSelectedTeamDisplay();
-                checkSelections();
-
-                characterSelectDropdown.value = "";
-                jobSelectDropdown.value = "";
+                // 重置选择并禁用按钮
+                categorySelect.value = "";
+                characterJobSelect.innerHTML = '<option value="">--先选择类型/稀有度--</option>';
+                characterJobSelect.disabled = true;
+                characterJobSelect.value = "";
                 addCharacterBtn.disabled = true;
-                jobSelectDropdown.disabled = true;
-                const firstJobOption = jobSelectDropdown.options[0];
-                if (firstJobOption) firstJobOption.textContent = "--先选择角色--";
+                noCharacterPrompt.style.display = 'none';
+                checkSelections(); // 更新开始战斗按钮的状态
             }
 
             // getRaritySortValue 不再直接用于 populateCharacterSelection，但可能在其他地方有用
@@ -893,11 +955,63 @@
 
             // --- 事件监听 ---
             function addEventListeners() {
-                populateJobDropdown(); // 初始化时填充职业下拉框
+                logMessage("进入 addEventListeners 函数", "debug");
+                // startBattleBtn, resetBtn, window battleEnd listeners remain
                 startBattleBtn.addEventListener('click', handleStartBattle);
                 resetBtn.addEventListener('click', resetBattle);
-                // 监听战斗结束事件
                 window.addEventListener('battleEnd', handleBattleEnd);
+
+                // New listeners for character/job selection
+                if (categorySelect) {
+                    logMessage("尝试为 categorySelect 添加事件监听器", "debug");
+                    categorySelect.addEventListener('change', () => {
+                        logMessage("categorySelect change 事件触发", "event");
+                        updateCharacterJobSelect();
+                        // Manually trigger change on characterJobSelect to update button state
+                        const event = new Event('change');
+                        characterJobSelect.dispatchEvent(event);
+                    });
+                } else {
+                    logMessage("categorySelect 元素未找到，无法添加监听器", "error");
+                }
+
+                if (characterJobSelect) {
+                    logMessage("尝试为 characterJobSelect 添加事件监听器", "debug");
+                    characterJobSelect.addEventListener('change', () => {
+                        logMessage("characterJobSelect change 事件触发", "event");
+                        const selectedValue = characterJobSelect.value;
+                        if (selectedValue) {
+                            addCharacterBtn.disabled = false;
+                            logMessage("addCharacterBtn 已启用", "debug");
+                        } else {
+                            addCharacterBtn.disabled = true;
+                            logMessage("addCharacterBtn 已禁用", "debug");
+                        }
+                    });
+                } else {
+                    logMessage("characterJobSelect 元素未找到，无法添加监听器", "error");
+                }
+
+                if (addCharacterBtn) {
+                    logMessage("尝试为 addCharacterBtn 添加事件监听器", "debug");
+                    addCharacterBtn.addEventListener('click', () => {
+                        logMessage("addCharacterBtn click 事件触发", "event");
+                        handleAddCharacterToTeam();
+                    });
+                } else {
+                    logMessage("addCharacterBtn 元素未找到，无法添加监听器", "error");
+                }
+                
+                // Weapon board listeners (ensure they are still relevant and correctly placed)
+                // Temporarily commented out to fix ReferenceError if functions are not defined in this scope
+                /*
+                if (addWeaponToBoardBtn) addWeaponToBoardBtn.addEventListener('click', handleOpenWeaponSelectionModal);
+                if (confirmAddWeaponBtn) confirmAddWeaponBtn.addEventListener('click', handleConfirmAddWeapon);
+                if (cancelAddWeaponBtn) cancelAddWeaponBtn.addEventListener('click', handleCloseWeaponSelectionModal);
+                if (applyWeaponBoardBtn) applyWeaponBoardBtn.addEventListener('click', handleApplyWeaponBoardToTeam);
+                if (clearWeaponBoardBtn) clearWeaponBoardBtn.addEventListener('click', handleClearWeaponBoard);
+                */
+
             }
 
             // --- 战斗流程 ---
@@ -1193,6 +1307,12 @@
                 } else if (type === 'success') {
                      logEntry.style.color = 'green';
                      logEntry.style.fontWeight = 'bold';
+                } else if (type === 'debug') {
+                    logEntry.style.color = 'blue'; //  Debug messages in blue
+                    console.debug(timestamp, message);
+                } else if (type === 'event') {
+                    logEntry.style.color = 'purple'; // Event messages in purple
+                    console.info(timestamp, `EVENT: ${message}`);
                 }
                 // 插入到日志顶部而不是底部，最新的在上面
                 // battleLog.appendChild(logEntry);

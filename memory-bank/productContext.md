@@ -19,8 +19,11 @@ This file provides a high-level overview of the project and the expected product
 * 商店交易系统
 * 装备突破与技能升级
 * 数据持久化保存
+* 主角专属的职业系统
 
 ## Overall Architecture
 
 * HTML5/CSS3 - 基础页面结构和样式
 * JavaScript (ES6+) - 游戏核心逻辑
+
+[2025-05-08 11:44:40] - 更新关键特性，明确职业系统为主角专属。

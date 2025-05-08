@@ -15,7 +15,9 @@ This file tracks the project's progress using a task list format.
 * [2025-05-08 14:49:00] - 分析了 [`test-battle-new.html`](test-battle-new.html) 中角色数据加载、存储和访问架构，识别了 "ID 未找到" 错误的潜在原因，并提出了架构改进建议。更新了记忆银行的相关文件 ([`activeContext.md`](memory-bank/activeContext.md), [`decisionLog.md`](memory-bank/decisionLog.md))。
 * [2025-05-08 20:20:00] - 完成SSR技能效果实现：在 [`src/js/core/job-skills.js`](src/js/core/job-skills.js) 中成功添加了 `enmity` (背水伤害) 和 `hpCostPercentageCurrent` (当前HP百分比消耗) 两种技能效果的逻辑。
 
+* [2025-05-08 21:07:00] - **Completed Task:** Fixed `ReferenceError: damageResult is not defined` in [`src/js/core/battle.js`](src/js/core/battle.js). The issue was caused by attempting to access `damageResult` outside its scope if the attack loop didn't run. Corrected logic to use a `criticalHits` counter, which also fixes critical hit counting for multi-attacks. Updated [`memory-bank/activeContext.md`](memory-bank/activeContext.md).
 ## Current Tasks
+* [2025-05-08 21:03:00] - 调试战斗中 TypeError (技能 warriorSlash 使用错误: TypeError: Cannot read properties of null (reading 'teamMembers') at battle.js:960).
 
 * [2025-05-08 14:49:00] - 准备向用户呈现关于 [`test-battle-new.html`](test-battle-new.html) "ID 未找到" 错误的分析、架构建议以及记忆银行更新的总结。
 

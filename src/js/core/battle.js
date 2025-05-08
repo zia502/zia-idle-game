@@ -441,7 +441,7 @@ this.resetProcCounts(); // 重置技能Proc触发计数
                 if (entity === monster) {
                     this.processMonsterAction(monster, teamMembers, battleStats);
                 } else { // Player Character
-                    this.processCharacterAction(entity, monster, battleStats);
+                    this.processCharacterAction(entity, monster, battleStats, teamMembers);
 
                     // 检查再攻击 BUFF
                     if (entity.currentStats.hp > 0 && !this.isStunned(entity) && typeof BuffSystem !== 'undefined') {
@@ -474,7 +474,7 @@ this.resetProcCounts(); // 重置技能Proc触发计数
                 }
 
                 this.logBattle(`--- ${entityForExtraTurn.name} 开始额外行动 (第 ${safetyExtraTurnCounter} 次额外行动) ---`);
-                this.processCharacterAction(entityForExtraTurn, monster, battleStats); // 执行额外行动
+                this.processCharacterAction(entityForExtraTurn, monster, battleStats, teamMembers); // 执行额外行动
 
                 // 重要：通常额外行动不应再触发“再攻击”从而无限循环。
                 // 由于我们消耗了原BUFF，此处的额外行动不会因同一个BUFF再次触发。
@@ -929,7 +929,7 @@ this.resetProcCounts(); // 重置技能Proc触发计数
      * @param {object} monster - 怪物对象
      * @param {object} battleStats - 战斗统计
      */
-    processCharacterAction(character, monster, battleStats) {
+    processCharacterAction(character, monster, battleStats, currentTeamMembers) {
         if (character.currentStats.hp <= 0) return;
 
         // --- 技能使用阶段 ---
@@ -957,7 +957,7 @@ this.resetProcCounts(); // 重置技能Proc触发计数
                             }
 
                             // 确定目标
-                            const targets = this.getEffectTargets(skillData.targetType, character, this.currentBattle.teamMembers, monster); // 需要获取当前队伍成员
+                            const targets = this.getEffectTargets(skillData.targetType, character, currentTeamMembers, monster); // 需要获取当前队伍成员
 
                             // 调用技能效果应用逻辑 (假设 JobSkills.useSkill 处理目标和效果)
                             // 注意：JobSkills.useSkill 可能需要重构以接受目标数组
@@ -1034,7 +1034,7 @@ this.resetProcCounts(); // 重置技能Proc触发计数
                     totalAttacks: attackCount,
                     attackType: 'single', // Normal attacks are single target
                     isSkillDamage: false,
-                    playerTeam: this.currentBattle && this.currentBattle.teamMembers ? this.currentBattle.teamMembers : [character], // Provide team context
+                    playerTeam: currentTeamMembers ? currentTeamMembers : [character], // Provide team context
                     enemyTeam: [monster], // Provide enemy context
                     battleStats: battleStats,
                     // damageElementType: character.currentStats.attackElement || null // If normal attacks can have elements
@@ -1073,14 +1073,14 @@ this.resetProcCounts(); // 重置技能Proc触发计数
             // 更新统计
             if (character.stats) {
                 character.stats.totalDamage = (character.stats.totalDamage || 0) + totalDamageDealt;
-                if (damageResult.isCritical) character.stats.critCount = (character.stats.critCount || 0) + 1; // 统计暴击次数
+                character.stats.critCount = (character.stats.critCount || 0) + criticalHits; // 使用累加的 criticalHits
             }
             if (battleStats && battleStats.characterStats && battleStats.characterStats[character.id]) {
                 battleStats.characterStats[character.id].totalDamage += totalDamageDealt;
                 battleStats.totalDamage += totalDamageDealt;
                 if (isDA) battleStats.characterStats[character.id].daCount++;
                 if (isTA) battleStats.characterStats[character.id].taCount++;
-                if (damageResult.isCritical) battleStats.characterStats[character.id].critCount++;
+                battleStats.characterStats[character.id].critCount += criticalHits; // 使用累加的 criticalHits
             }
 
             // 触发整个攻击动作完成后的 Proc (包括DA/TA)

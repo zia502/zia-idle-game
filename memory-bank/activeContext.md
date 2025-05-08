@@ -24,6 +24,12 @@ This file tracks the project's current status, including recent changes, current
 * [2025-05-08 12:37:35] - 修改 `test-battle-new.html`：在 `loadGameData` 中为从JSON加载的角色数据动态添加 `rarity` 属性。在 `init` 和 `addEventListeners` 函数中添加了诊断日志。
 
 ## Open Questions/Issues
+* [2025-05-08 21:07:00] - **New Issue:** `ReferenceError: damageResult is not defined` at [`src/js/core/battle.js:1076`](src/js/core/battle.js:1076) in `processCharacterAction`.
+    *   **Analysis:** The error occurs when attempting to access `damageResult.isCritical` after the attack loop. If the loop for normal attacks doesn't execute (e.g., if the monster is already defeated by a skill used earlier in the turn), `damageResult` remains undefined, leading to the ReferenceError. Additionally, the original logic for `critCount` only considered the last hit of a multi-attack.
+    *   **Fix Applied:** Modified [`src/js/core/battle.js`](src/js/core/battle.js) to use a `criticalHits` counter that is correctly incremented within the attack loop for each critical hit. This `criticalHits` counter is then used to update `character.stats.critCount` and `battleStats.characterStats[character.id].critCount` after the loop. This resolves the ReferenceError and correctly counts all critical hits in a multi-attack.
+* [2025-05-08 21:03:00] - **New Issue:** `TypeError: Cannot read properties of null (reading 'teamMembers')` at [`src/js/core/battle.js:960`](src/js/core/battle.js:960) in `processCharacterAction`.
+    *   **Analysis:** The error occurs because `this.currentBattle` is `null` when `processCharacterAction` attempts to access `this.currentBattle.teamMembers`. `this.currentBattle` is fully populated at the end of the `startBattle` function, after `processBattle` (which calls `processCharacterAction`) has completed.
+    *   **Proposed Fix:** Pass `teamMembers` obstáculos as an argument from `processBattle` to `processCharacterAction` and use this argument instead of `this.currentBattle.teamMembers` within `processCharacterAction`.
 
 * 需要更明确的主角指定机制，而不是简单地假定队伍中的第一个角色。
 * 职业赋予主角后，如果主角被从队伍中移除，职业状态如何处理。

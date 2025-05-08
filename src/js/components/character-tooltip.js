@@ -353,7 +353,6 @@ const CharacterTooltip = {
                 } else if (actualMultiMaxHp < 0) {
                     maxHpMultiDisplayStr = ` <span class="stat-multibonus-negative">${formatDisplayValue(actualMultiMaxHp, false)}</span>`;
                 }
-                statLine += ` / ${maxHpBaseDisplayStr}${maxHpMultiDisplayStr}`;
             }
             statLine += `</div>`;
             statsHtml += statLine;

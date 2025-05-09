@@ -161,3 +161,22 @@ To introduce more dynamic and challenging Boss encounters, a new skill selection
 *   [`src/js/core/battle.js`](src/js/core/battle.js:0) (or Boss AI module): To implement the new two-phase decision logic and integrate dynamic CD management for Bosses.
 *   Boss character representation in battle: Needs to store `skillCooldowns`.
 *   **System Patterns:** A new "Boss AI Skill Selection Pattern" has been added to [`memory-bank/systemPatterns.md`](memory-bank/systemPatterns.md:1).
+
+---
+### Decision (Debug)
+[2025-05-09 17:50:00] - Resolve "Boss不使用技能" bug by correcting skill data loading and access.
+
+**Rationale:**
+The root cause of the Boss not using any skills was twofold:
+1.  Boss skill data from [`src/data/boss-skills.json`](src/data/boss-skills.json:0) was not being loaded into the `window.bossSkills` object.
+2.  The `SkillLoader.getSkillInfo` method in [`src/js/core/skill-loader.js`](src/js/core/skill-loader.js:0) did not include `window.bossSkills` in its lookup paths.
+This meant that for HP-triggered skills (Phase 1 of Boss AI), `window.bossSkills` was likely undefined, preventing skill data retrieval. For regular skills (Phase 2), `SkillLoader.getSkillInfo` would return null for Boss-specific skills, leading to them being filtered out as unusable.
+
+**Details:**
+The fix involved modifying [`src/js/core/skill-loader.js`](src/js/core/skill-loader.js:0):
+1.  **Added `loadBossSkills()` method:** This new method fetches data from [`src/data/boss-skills.json`](src/data/boss-skills.json:0) and stores the `bossSkills` object into `window.bossSkills`. Error handling was included to initialize `window.bossSkills` as an empty object if loading fails or the JSON structure is incorrect.
+2.  **Called `loadBossSkills()` in `SkillLoader.init()`:** Ensured that Boss skills are loaded during the skill system initialization.
+3.  **Updated `SkillLoader.getSkillInfo()`:** Added a check for `window.bossSkills[skillId]` in the skill lookup sequence. This allows `getAvailableSkills` (used in Phase 2 of Boss AI) to correctly retrieve Boss skill data.
+
+**Affected Files:**
+*   [`src/js/core/skill-loader.js`](src/js/core/skill-loader.js:0)

@@ -41,6 +41,9 @@ This file tracks the project's current status, including recent changes, current
     *   确认突破加成 (`multiBonusStats`) 维持基于角色当前最新 `baseStats` 的计算方式。
     *   最终地下城内属性计算流程为：`currentStats = (dungeonOriginalStats + 基于 dungeonOriginalStats 的武器盘加成) + 基于当前 baseStats 的突破加成`。
 ## Recent Changes
+*   [2025-05-09 17:50:00] - **Boss AI 技能 Bug 修复：**
+    *   修改了 [`src/js/core/skill-loader.js`](src/js/core/skill-loader.js:0) 以正确加载 [`src/data/boss-skills.json`](src/data/boss-skills.json:0) 到 `window.bossSkills`。
+    *   更新了 [`src/js/core/skill-loader.js`](src/js/core/skill-loader.js:0) 中的 `getSkillInfo` 函数，使其能够从 `window.bossSkills` 查找技能数据。
 *   [2025-05-09 17:07:00] - **Boss AI 技能选择逻辑实现：**
     *   修改了 [`src/data/boss-skills.json`](src/data/boss-skills.json:0)，为示例技能添加了 `triggerCondition`。
     *   修改了 [`src/js/core/battle.js`](src/js/core/battle.js:0) 中的 `processMonsterAction` 函数，实现了三阶段决策逻辑（血量触发、常规CD、普通攻击）。
@@ -58,6 +61,14 @@ This file tracks the project's current status, including recent changes, current
 *   [2025-05-09 14:37:00] - 修改了 [`src/data/ssr_skill.json`](src/data/ssr_skill.json:1) 文件，统一了所有技能 `description` 字段的格式，并移除了临时的 `descriptionForEffect` 字段。
 
 ## Open Questions/Issues
+*   [2025-05-09 17:50:00] - **Issue Resolved:** Boss 在战斗中完全不使用任何技能。
+    *   **Root Cause:** Boss 技能数据 ([`src/data/boss-skills.json`](src/data/boss-skills.json:0)) 未被加载到 `window.bossSkills`，且 `SkillLoader.getSkillInfo` ([`src/js/core/skill-loader.js:80`](src/js/core/skill-loader.js:80)) 未配置从 `window.bossSkills` 查找。这导致在血量触发和常规技能选择阶段均无法获取到有效的 Boss 技能数据。
+    *   **Fix Applied:**
+        1.  修改了 [`src/js/core/skill-loader.js`](src/js/core/skill-loader.js:0)：
+            *   添加了 `loadBossSkills()` 方法以加载 [`src/data/boss-skills.json`](src/data/boss-skills.json:0) 到 `window.bossSkills`。
+            *   在 `SkillLoader.init()` ([`src/js/core/skill-loader.js:8`](src/js/core/skill-loader.js:8)) 中调用了 `loadBossSkills()`。
+            *   在 `SkillLoader.getSkillInfo()` ([`src/js/core/skill-loader.js:80`](src/js/core/skill-loader.js:80)) 的查找逻辑中加入了对 `window.bossSkills` 的支持。
+    *   **Status:** Fix implemented. Boss应该能够正确使用技能了。
 *   [2025-05-08 21:25:00] - **New Issue:** 角色在战斗中不再使用技能。
     *   **Analysis:**
         *   对 [`src/js/core/battle.js`](src/js/core/battle.js), [`src/js/core/skill-loader.js`](src/js/core/skill-loader.js), [`src/js/core/job-skills.js`](src/js/core/job-skills.js), [`src/js/core/job-system.js`](src/js/core/job-system.js), 和 [`src/js/core/job-skills-template.js`](src/js/core/job-skills-template.js) 的分析表明，根本原因在于 SSR 技能数据 ([`src/data/ssr_skill.json`](src/data/ssr_skill.json:1)) 没有被整合到核心的技能信息获取路径中。

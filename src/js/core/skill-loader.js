@@ -10,6 +10,7 @@ const SkillLoader = {
         this.loadRSkills();
         this.loadSRSkills();
         this.loadSSRSkills(); // 添加 SSR 技能加载
+        this.loadBossSkills(); // 添加 Boss 技能加载
     },
 
     /**
@@ -73,6 +74,32 @@ const SkillLoader = {
     },
 
     /**
+     * 加载Boss技能
+     */
+    loadBossSkills() {
+        fetch('src/data/boss-skills.json')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status} for boss-skills.json`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data && data.bossSkills) {
+                    console.log('Boss技能加载成功:', Object.keys(data.bossSkills).length);
+                    window.bossSkills = data.bossSkills; // 存储到 window.bossSkills
+                } else {
+                    console.error('加载Boss技能失败: boss-skills.json 格式不正确，缺少 bossSkills 顶层对象。');
+                    window.bossSkills = {}; // 初始化为空对象以避免后续错误
+                }
+            })
+            .catch(error => {
+                console.error('加载Boss技能失败:', error);
+                window.bossSkills = {}; // 初始化为空对象以避免后续错误
+            });
+    },
+
+    /**
      * 获取技能信息
      * @param {string} skillId - 技能ID
      * @returns {object|null} 技能信息
@@ -93,17 +120,22 @@ const SkillLoader = {
             return SRSkillsTemplate.templates[skillId];
         }
 
-        // 4. 尝试从 window.ssr_skills (SSR技能数据)
+        // 4. 尝试从 window.bossSkills (Boss技能数据) - 调整优先级，Boss技能可能更特定
+        if (window.bossSkills && window.bossSkills[skillId]) {
+            return window.bossSkills[skillId];
+        }
+
+        // 5. 尝试从 window.ssr_skills (SSR技能数据)
         if (window.ssr_skills && window.ssr_skills[skillId]) {
             return window.ssr_skills[skillId];
         }
 
-        // 5. 尝试从 window.sr_skills (SR技能数据)
+        // 6. 尝试从 window.sr_skills (SR技能数据)
         if (window.sr_skills && window.sr_skills[skillId]) {
             return window.sr_skills[skillId];
         }
 
-        // 6. 尝试从 window.r_skills (R技能数据)
+        // 7. 尝试从 window.r_skills (R技能数据)
         if (window.r_skills && window.r_skills[skillId]) {
             return window.r_skills[skillId];
         }

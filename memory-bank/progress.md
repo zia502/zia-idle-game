@@ -7,6 +7,9 @@ This file tracks the project's progress using a task list format.
 
 ## Completed Tasks
 
+*   [2025-05-09 17:50:00] - **Completed Task:** 修复 Boss 在战斗中不使用技能的 Bug。
+    *   **Cause:** Boss 技能数据未正确加载到 `window.bossSkills`，且 `SkillLoader.getSkillInfo` 未从 `window.bossSkills` 查找。
+    *   **Fix:** 修改了 [`src/js/core/skill-loader.js`](src/js/core/skill-loader.js:0) 以加载 Boss 技能数据并更新 `getSkillInfo` 的查找逻辑。
 *   [2025-05-09 17:07:00] - Boss AI 技能新机制实现：完成 Boss 血量触发技能和常规技能选择逻辑的编码。
 *   [2025-05-09 16:37:53] - Boss 技能更新：完成对 src/data/boss-skills.json 的修改，包括 effectType 统一、技能描述调整和防御数值明确化。
 *   初始化 Memory Bank。

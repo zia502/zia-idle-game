@@ -522,7 +522,7 @@
     "type": "attack",
     "fixed": false,
     "cooldown": 5,
-    "effectType": "aoe_damage_and_debuff",
+    "effectType": "multi_effect",
     "targetType": "all_enemies",
     "effects": [
       {
@@ -556,7 +556,7 @@
     "fixed": false,
     "passive": true,
     "cooldown": 0,
-    "effectType": "passive_team_buff",
+    "effectType": "passive",
     "targetType": "all_allies",
     "effects": [
       {
@@ -580,7 +580,7 @@
     "type": "buff",
     "fixed": false,
     "cooldown": 8,
-    "effectType": "team_buff",
+    "effectType": "buff",
     "targetType": "all_allies",
     "effects": [
       {
@@ -607,7 +607,7 @@
     "type": "debuff",
     "fixed": false,
     "cooldown": 5,
-    "effectType": "aoe_debuff",
+    "effectType": "debuff",
     "targetType": "all_enemies",
     "effects": [
       {
@@ -635,7 +635,7 @@
     "fixed": false,
     "passive": true,
     "cooldown": 0,
-    "effectType": "passive_immunity",
+    "effectType": "passive",
     "targetType": "self",
     "effects": [
       {
@@ -652,7 +652,7 @@
     "type": "buff",
     "fixed": false,
     "cooldown": 8,
-    "effectType": "team_buff_defense_and_resistance",
+    "effectType": "buff",
     "targetType": "all_allies",
     "effects": [
       {
@@ -680,7 +680,7 @@
     "type": "buff",
     "fixed": false,
     "cooldown": 5,
-    "effectType": "self_buff_threat_and_regen",
+    "effectType": "buff",
     "targetType": "self",
     "effects": [
       {
@@ -708,7 +708,7 @@
     "fixed": false,
     "passive": true,
     "cooldown": 0,
-    "effectType": "passive_stacking_buff_on_damaged",
+    "effectType": "trigger",
     "targetType": "self",
     "effects": [
       {
@@ -744,7 +744,7 @@
     "cooldown": 0, 
     "initialCooldown": 10,
     "nextCooldown": 14,
-    "effectType": "delayed_heavy_damage_and_self_buff",
+    "effectType": "multi_effect",
     "targetType": "enemy",
     "effects": [
       {
@@ -769,7 +769,7 @@
     "type": "defense",
     "fixed": false,
     "cooldown": 7,
-    "effectType": "self_defensive_buffs",
+    "effectType": "buff",
     "targetType": "self",
     "effects": [
       {
@@ -793,7 +793,7 @@
     "type": "buff",
     "fixed": false,
     "cooldown": 7,
-    "effectType": "self_buff_and_heal",
+    "effectType": "multi_effect",
     "targetType": "self",
     "effects": [
       {
@@ -826,7 +826,7 @@
     "type": "attack",
     "fixed": false,
     "cooldown": 6,
-    "effectType": "damage_and_team_heal_dispel",
+    "effectType": "multi_effect",
     "targetType": "enemy",
     "effects": [
       {
@@ -854,7 +854,7 @@
     "type": "buff",
     "fixed": false,
     "cooldown": 12,
-    "effectType": "team_defensive_offensive_buff_package",
+    "effectType": "buff",
     "targetType": "all_allies",
     "effects": [
       {
@@ -899,7 +899,7 @@
     "cooldown": 0,
     "initialCooldown": 10,
     "once": true, 
-    "effectType": "delayed_powerful_buff_self_and_main",
+    "effectType": "buff",
     "targetType": "self_and_main", 
     "effects": [
       {
@@ -923,7 +923,7 @@
     "fixed": false,
     "passive": true,
     "cooldown": 0,
-    "effectType": "passive_team_elemental_buff_and_self_stacking_buff",
+    "effectType": "passive",
     "targetType": "all_allies_water", 
     "effects": [
       {
@@ -962,7 +962,7 @@
     "type": "attack",
     "fixed": false,
     "cooldown": 6,
-    "effectType": "aoe_damage_and_debuff",
+    "effectType": "multi_effect",
     "targetType": "all_enemies",
     "effects": [
       {
@@ -988,7 +988,7 @@
     "type": "buff",
     "fixed": false,
     "cooldown": 7,
-    "effectType": "team_offensive_buff_package",
+    "effectType": "buff",
     "targetType": "all_allies",
     "effects": [
       {
@@ -1039,7 +1039,7 @@
     "type": "support",
     "fixed": false,
     "cooldown": 5, "descriptionForEffect": "CD assumed 5 if not specified, common for utility skills",
-    "effectType": "team_heal_and_dispel",
+    "effectType": "multi_effect",
     "targetType": "all_allies",
     "effects": [
       {
@@ -1061,7 +1061,7 @@
     "type": "attack",
     "fixed": false,
     "cooldown": 6,
-    "effectType": "aoe_damage_and_debuff",
+    "effectType": "multi_effect",
     "targetType": "all_enemies",
     "effects": [
       {
@@ -1085,7 +1085,7 @@
     "type": "defense",
     "fixed": false,
     "cooldown": 7,
-    "effectType": "team_shield",
+    "effectType": "buff",
     "targetType": "all_allies",
     "effects": [
       {
@@ -1104,7 +1104,7 @@
     "fixed": false,
     "passive": true,
     "cooldown": 0,
-    "effectType": "passive_random_team_buff",
+    "effectType": "passive",
     "targetType": "all_allies",
     "effects": [
       {
@@ -1132,7 +1132,7 @@
     "type": "defense",
     "fixed": false,
     "cooldown": 8,
-    "effectType": "self_evasion",
+    "effectType": "buff",
     "targetType": "self",
     "effects": [
       {
@@ -1149,7 +1149,7 @@
     "type": "attack",
     "fixed": false,
     "cooldown": 6,
-    "effectType": "multi_hit_damage_and_aoe_ma_debuff",
+    "effectType": "multi_effect",
     "targetType": "enemy", 
     "effects": [
       {
@@ -1182,7 +1182,7 @@
     "type": "buff",
     "fixed": false,
     "cooldown": 6,
-    "effectType": "self_burst_buff",
+    "effectType": "buff",
     "targetType": "self",
     "effects": [
       {
@@ -1217,7 +1217,7 @@
     "type": "buff",
     "fixed": false,
     "cooldown": 10,
-    "effectType": "self_powerful_buff_package",
+    "effectType": "buff",
     "targetType": "self",
     "effects": [
       {
@@ -1242,7 +1242,7 @@
     "type": "attack",
     "fixed": false,
     "cooldown": 5,
-    "effectType": "enmity_damage",
+    "effectType": "damage",
     "targetType": "enemy",
     "effects": [
       {
@@ -1261,7 +1261,7 @@
     "fixed": false,
     "passive": true,
     "cooldown": 0,
-    "effectType": "passive_emergency_heal",
+    "effectType": "trigger",
     "targetType": "self",
     "effects": [
       {
@@ -1286,7 +1286,7 @@
     "type": "defense",
     "fixed": false,
     "cooldown": 6,
-    "effectType": "team_defensive_buff_package",
+    "effectType": "buff",
     "targetType": "all_allies",
     "effects": [
       {
@@ -1317,7 +1317,7 @@
     "type": "attack",
     "fixed": false,
     "cooldown": 12,
-    "effectType": "aoe_damage_and_team_invincibility",
+    "effectType": "multi_effect",
     "targetType": "all_enemies",
     "effects": [
       {
@@ -1339,7 +1339,7 @@
     "type": "attack",
     "fixed": false,
     "cooldown": 7,
-    "effectType": "multi_hit_damage_and_aoe_debuff",
+    "effectType": "multi_effect",
     "targetType": "enemy", 
     "effects": [
       {
@@ -1366,7 +1366,7 @@
     "fixed": false,
     "passive": true,
     "cooldown": 0,
-    "effectType": "passive_team_elemental_buff_and_self_stacking_buff",
+    "effectType": "passive",
     "targetType": "all_allies_earth", 
     "effects": [
       {
@@ -1405,7 +1405,7 @@
     "type": "buff",
     "fixed": false,
     "cooldown": 6,
-    "effectType": "self_buff_tradeoff",
+    "effectType": "multi_effect",
     "targetType": "self",
     "effects": [
       {
@@ -1432,7 +1432,7 @@
     "type": "buff",
     "fixed": false,
     "cooldown": 6,
-    "effectType": "self_burst_attack_buff",
+    "effectType": "buff",
     "targetType": "self",
     "effects": [
       {
@@ -1451,7 +1451,7 @@
     "type": "buff",
     "fixed": false,
     "cooldown": 6,
-    "effectType": "self_ta_and_extra_attack_buff",
+    "effectType": "buff",
     "targetType": "self",
     "effects": [
       {
@@ -1502,7 +1502,7 @@
     "type": "attack",
     "fixed": false,
     "cooldown": 6,
-    "effectType": "aoe_damage_self_hp_cost_and_buff",
+    "effectType": "multi_effect",
     "targetType": "all_enemies",
     "effects": [
       {
@@ -1531,7 +1531,7 @@
     "type": "defense",
     "fixed": false,
     "cooldown": 5,
-    "effectType": "team_damage_reduction",
+    "effectType": "buff",
     "targetType": "all_allies",
     "effects": [
       {
@@ -1550,7 +1550,7 @@
     "type": "debuff",
     "fixed": false,
     "cooldown": 4,
-    "effectType": "aoe_dispel_and_dot",
+    "effectType": "multi_effect",
     "targetType": "all_enemies",
     "effects": [
       {
@@ -1576,7 +1576,7 @@
     "type": "support",
     "fixed": false,
     "cooldown": 6,
-    "effectType": "team_heal_dispel_and_regen",
+    "effectType": "multi_effect",
     "targetType": "all_allies",
     "effects": [
       {
@@ -1606,7 +1606,7 @@
     "type": "support",
     "fixed": false,
     "cooldown": 16,
-    "effectType": "revive_ally",
+    "effectType": "multi_effect",
     "targetType": "ally_dead", 
     "effects": [
       {
@@ -1623,7 +1623,7 @@
     "type": "defense",
     "fixed": false,
     "cooldown": 5,
-    "effectType": "team_evasion",
+    "effectType": "buff",
     "targetType": "all_allies",
     "effects": [
       {
@@ -1640,7 +1640,7 @@
     "type": "attack",
     "fixed": false,
     "cooldown": 7,
-    "effectType": "aoe_multi_hit_damage_and_debuff",
+    "effectType": "multi_effect",
     "targetType": "all_enemies",
     "effects": [
       {
@@ -1665,7 +1665,7 @@
     "type": "buff",
     "fixed": false,
     "cooldown": 8,
-    "effectType": "team_offensive_buff_package",
+    "effectType": "buff",
     "targetType": "all_allies",
     "effects": [
       {
@@ -1700,7 +1700,7 @@
     "type": "defense",
     "fixed": false,
     "cooldown": 8,
-    "effectType": "team_defensive_buff_package",
+    "effectType": "buff",
     "targetType": "all_allies",
     "effects": [
       {
@@ -1730,7 +1730,7 @@
     "type": "attack",
     "fixed": false,
     "cooldown": 7, "descriptionForEffect": "CD assumed 7, common for such skills",
-    "effectType": "multi_hit_damage_and_self_buff",
+    "effectType": "multi_effect",
     "targetType": "enemy",
     "effects": [
       {
@@ -1757,7 +1757,7 @@
     "cooldown": 0,
     "initialCooldown": 10,
     "once": true, 
-    "effectType": "powerful_single_use_damage_dispel_debuff",
+    "effectType": "multi_effect",
     "targetType": "enemy",
     "effects": [
       {

@@ -144,3 +144,12 @@ This file tracks the project's current status, including recent changes, current
         *   **Issue 2:** Skill "护甲破坏" had a top-level `effectType` of `"damage_and_debuff"` ([`src/data/job-skills-templates.json:598`](src/data/job-skills-templates.json:598)), which is not one of the 8 standard types.
             *   **Analysis:** Located "护甲破坏" (ID: `armorBreak`) in [`src/data/job-skills-templates.json`](src/data/job-skills-templates.json:590).
             *   **Resolution:** Changed `effectType` for `armorBreak` from `"damage_and_debuff"` to `"multi_effect"` in [`src/data/job-skills-templates.json`](src/data/job-skills-templates.json:598). The `effects` array already correctly defined the damage and `defenseDown` atomic effects.
+* [2025-05-09 09:26:00] - 澄清了包含多个buff效果的技能的处理流程：
+    *   如果顶层 `effectType` 是 `'buff'`，则 `JobSkills.applyBuffEffects` 会遍历技能的 `effects` 数组并应用所有buff。
+    *   如果顶层 `effectType` 是 `'multi_effect'`，则 `JobSkills.applySkillEffects` 会遍历技能的 `effects` 数组。对于其中 `type: "buff"` 的每个子效果，它会单独调用 `JobSkills.applyBuffEffects` 来处理该buff。
+    *   两种情况下，多个buff都会被正确处理。参考 [`src/js/core/job-skills.js`](src/js/core/job-skills.js)。
+* [2025-05-09 09:53:00] - 更新了 [`src/data/ssr_skill.json`](src/data/ssr_skill.json:1) 中部分技能的顶层 `effectType` 以符合8种标准类型。具体修改：
+    *   `zhanShuCeFangYuan` 的 `effectType`: `"team_buff"` -> `"buff"`
+    *   `zhanShuCeHeYi` 的 `effectType`: `"aoe_debuff"` -> `"debuff"`
+    *   文件 [`src/data/r_skills.json`](src/data/r_skills.json:1) 和 [`src/data/sr_skills.json`](src/data/sr_skills.json:1) 经检查已符合标准，未作修改。
+* [2025-05-09 10:02:00] - 对 [`src/data/ssr_skill.json`](src/data/ssr_skill.json:1) 进行了全面检查和更新，确保所有技能的顶层 `effectType` 符合8种标准类型。多个非标准 `effectType` (如 `"aoe_damage_and_debuff"`, `"passive_team_buff"`, `"self_evasion"`, `"enmity_damage"`, `"revive_ally"` 等) 已根据其效果内容和 [`memory-bank/systemPatterns.md`](memory-bank/systemPatterns.md:1) 的指导原则，被修正为 `"multi_effect"`, `"passive"`, `"buff"`, `"damage"`, 或 `"trigger"` 等标准类型。

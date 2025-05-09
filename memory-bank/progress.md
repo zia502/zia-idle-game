@@ -72,3 +72,13 @@ This file tracks the project's progress using a task list format.
         *   Confirmed `defenseDown` is handled by existing `debuff` logic in `JobSkills.applySkillEffects` ([`src/js/core/job-skills.js:394`](src/js/core/job-skills.js:394)) and `BuffSystem` ([`src/js/core/buff-system.js:35`](src/js/core/buff-system.js:35)). No code changes required for these files.
         *   Modified `effectType` of "护甲破坏" (ID: `armorBreak`) in [`src/data/job-skills-templates.json`](src/data/job-skills-templates.json:598) from `"damage_and_debuff"` to `"multi_effect"`.
         *   Updated [`memory-bank/activeContext.md`](memory-bank/activeContext.md).
+* [2025-05-09 09:53:00] - **Completed Task:** 更新技能数据文件以符合标准的8种 `effectType`。
+    *   分析了 [`src/data/r_skills.json`](src/data/r_skills.json:1), [`src/data/sr_skills.json`](src/data/sr_skills.json:1), 和 [`src/data/ssr_skill.json`](src/data/ssr_skill.json:1)。
+    *   修改了 [`src/data/ssr_skill.json`](src/data/ssr_skill.json:1) 中 `zhanShuCeFangYuan` 的 `effectType` 从 `"team_buff"` 为 `"buff"`。
+    *   修改了 [`src/data/ssr_skill.json`](src/data/ssr_skill.json:1) 中 `zhanShuCeHeYi` 的 `effectType` 从 `"aoe_debuff"` 为 `"debuff"`。
+    *   [`r_skills.json`](src/data/r_skills.json:1) 和 [`sr_skills.json`](src/data/sr_skills.json:1) 已符合标准，未作修改。
+    *   更新了 [`memory-bank/activeContext.md`](memory-bank/activeContext.md:1)。
+* [2025-05-09 10:02:00] - **Completed Task:** 全面更新 [`src/data/ssr_skill.json`](src/data/ssr_skill.json:1) 以符合标准的8种 `effectType`。
+    *   对 [`src/data/ssr_skill.json`](src/data/ssr_skill.json:1) 进行了彻底检查。
+    *   修正了多个技能的顶层 `effectType`，使其符合 `damage`, `buff`, `debuff`, `heal`, `dispel`, `multi_effect`, `passive`, `trigger` 之一。
+    *   更新了 [`memory-bank/activeContext.md`](memory-bank/activeContext.md:1)。

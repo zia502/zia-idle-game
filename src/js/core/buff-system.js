@@ -448,6 +448,36 @@ const BuffSystem = {
         if (!target || !buff) return false;
         if (!target.buffs) target.buffs = [];
 
+        // 检查弱体抵抗和免疫 (仅对负面BUFF生效)
+        if (buff.isPositive === false) {
+            // 检查完全弱体免疫
+            const immunityBuff = target.buffs.find(b => b.type === 'debuffImmunity' && b.duration > 0);
+            if (immunityBuff) {
+                Battle.logBattle(`${target.name} 因 [${immunityBuff.name}] 效果免疫了 [${buff.name}]。`);
+                return false; // 阻止应用此debuff
+            }
+
+            // 检查特定状态免疫 (如果buff.type是可被免疫的状态之一)
+            // 例如: if (buff.type === 'silence' || buff.type === 'stun' || ...)
+            const specificImmunity = target.buffs.find(b => b.type === 'statusImmunity' && b.statusToImmune === buff.type && b.duration > 0);
+            if (specificImmunity) {
+                 Battle.logBattle(`${target.name} 因 [${specificImmunity.name}] 效果免疫了 [${buff.name}]。`);
+                return false; // 阻止应用此debuff
+            }
+
+            // 检查 debuffResistOnce
+            const resistOnceBuff = target.buffs.find(b => b.type === 'debuffResistOnce' && (b.currentStacks || 0) > 0 && b.duration > 0);
+            if (resistOnceBuff) {
+                Battle.logBattle(`${target.name} 因 [${resistOnceBuff.name}] 效果抵抗了 [${buff.name}]。`);
+                resistOnceBuff.currentStacks = (resistOnceBuff.currentStacks || 1) - 1;
+                if (resistOnceBuff.currentStacks <= 0) {
+                    this.removeBuff(target, resistOnceBuff.id); // 移除消耗完的抵抗buff
+                    Battle.logBattle(`[${resistOnceBuff.name}] 效果已消耗完毕。`);
+                }
+                return false; // 阻止应用此debuff
+            }
+        }
+
         // 标记是否为子BUFF
         buff.isSubBuff = isSubBuff;
         // 如果是子buff，确保它有关联的parentBuffId (应由applyBuffPackage设置)

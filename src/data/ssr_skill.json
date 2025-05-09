@@ -212,7 +212,7 @@
     "targetType": "random_enemy", 
     "effects": [
       {
-        "type": "multiHitDamage",
+        "type": "damage",
         "count": 5,
         "multiplierPerHit": 1.0,
         "targetType": "random_enemy"
@@ -333,7 +333,7 @@
     "targetType": "all_enemies",
     "effects": [
       {
-        "type": "multiHitDamage",
+        "type": "damage",
         "count": 10,
         "multiplierPerHit": 1.0,
         "targetType": "all_enemies"
@@ -441,7 +441,7 @@
         "targetType": "self"
       },
       {
-        "type": "criticalRateUp", 
+        "type": "critRateUp",
         "value": 0.5,
         "duration": 3,
         "stackable": true,
@@ -1153,7 +1153,7 @@
     "targetType": "enemy", 
     "effects": [
       {
-        "type": "multiHitDamage",
+        "type": "damage",
         "count": 6,
         "multiplierPerHit": 1.0,
         "targetType": "enemy" 
@@ -1343,7 +1343,7 @@
     "targetType": "enemy", 
     "effects": [
       {
-        "type": "multiHitDamage",
+        "type": "damage",
         "count": 6,
         "multiplierPerHit": 1.5,
         "elementType": "earth",
@@ -1644,7 +1644,7 @@
     "targetType": "all_enemies",
     "effects": [
       {
-        "type": "multiHitDamage",
+        "type": "damage",
         "count": 4,
         "multiplierPerHit": 2.0,
         "targetType": "all_enemies"
@@ -1734,7 +1734,7 @@
     "targetType": "enemy",
     "effects": [
       {
-        "type": "multiHitDamage",
+        "type": "damage",
         "count": 6,
         "multiplierPerHit": 1.5,
         "targetType": "enemy"
@@ -1761,7 +1761,7 @@
     "targetType": "enemy",
     "effects": [
       {
-        "type": "multiHitDamage",
+        "type": "damage",
         "count": 5,
         "multiplierPerHit": 8.0,
         "targetType": "enemy"

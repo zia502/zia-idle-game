@@ -82,3 +82,18 @@ This file tracks the project's progress using a task list format.
     *   对 [`src/data/ssr_skill.json`](src/data/ssr_skill.json:1) 进行了彻底检查。
     *   修正了多个技能的顶层 `effectType`，使其符合 `damage`, `buff`, `debuff`, `heal`, `dispel`, `multi_effect`, `passive`, `trigger` 之一。
     *   更新了 [`memory-bank/activeContext.md`](memory-bank/activeContext.md:1)。
+* [2025-05-09 10:20:00] - **Completed Task:** 统一并扩展了原子技能效果类型的处理。
+    *   **数据文件** ([`r_skills.json`](src/data/r_skills.json:1), [`sr_skills.json`](src/data/sr_skills.json:1), [`ssr_skill.json`](src/data/ssr_skill.json:1)):
+        *   `multi_attack` 和 `multiHitDamage` 原子类型已统一为 `damage`，并使用 `count` 属性。
+        *   `criticalRateUp` 原子类型已统一为 `critRateUp`。
+    *   **逻辑文件** ([`src/js/core/job-skills.js`](src/js/core/job-skills.js:1)):
+        *   [`applyDamageEffects()`](src/js/core/job-skills.js:1093) 已更新，以正确处理带有 `count` 属性的 `damage` 原子效果。
+        *   [`applySkillEffects()`](src/js/core/job-skills.js:304) 的 `switch` 语句 ([`src/js/core/job-skills.js:390`]) 已扩展，为 `castSkill`, `applyBuffPackage`, `applyDebuff`, `customBuff`, `echo`, `fieldEffect`, `additionalDamage` 等原子类型添加了处理逻辑或占位符。
+    *   更新了 [`memory-bank/activeContext.md`](memory-bank/activeContext.md:1)。
+* [2025-05-09 10:29:00] - **Completed Task:** 优化了 `job-skills.js` 中对buff包原子效果的处理。
+    *   修改了 [`src/js/core/job-skills.js`](src/js/core/job-skills.js:1) 的 `applySkillEffects()` 函数，使其在处理 `applyBuffPackage` 和包含子效果数组的 `applyDebuff` 原子类型时，能够正确调用 `BuffSystem.applyBuffPackage()`。
+    *   更新了 [`memory-bank/activeContext.md`](memory-bank/activeContext.md:1)。
+* [2025-05-09 10:33:00] - **Completed Task:** 实现了 `debuffResistOnce` 及相关弱体免疫效果的核心判断逻辑。
+    *   修改了 [`src/js/core/buff-system.js`](src/js/core/buff-system.js:1) 中的 `applyBuff()` 函数，在施加负面buff前检查目标是否拥有 `debuffImmunity`、`statusImmunity` 或 `debuffResistOnce`。
+    *   如果存在抵抗/免疫，则阻止debuff施加，并正确处理 `debuffResistOnce` 的层数消耗和移除。
+    *   更新了 [`memory-bank/activeContext.md`](memory-bank/activeContext.md:1)。

@@ -29,7 +29,7 @@
     "targetType": "enemy",
     "effects": [
       {
-        "type": "multi_attack",
+        "type": "damage",
         "count": 3,
         "multiplier": 0.8,
         "element": "water"
@@ -48,7 +48,7 @@
     "targetType": "enemy",
     "effects": [
       {
-        "type": "multi_attack",
+        "type": "damage",
         "count": 6,
         "multiplier": 0.5,
         "element": "wind"
@@ -103,7 +103,7 @@
     "targetType": "enemy",
     "effects": [
       {
-        "type": "multi_attack",
+        "type": "damage",
         "count": 8,
         "multiplier": 0.35,
         "element": "dark"
@@ -289,7 +289,7 @@
     "duration": 2,
     "effects": [
       {
-        "type": "multi_attack",
+        "type": "damage",
         "count": 3,
         "multiplier": 0.7,
         "element": "water"
@@ -318,7 +318,7 @@
     "targetType": "enemy",
     "effects": [
       {
-        "type": "multi_attack",
+        "type": "damage",
         "count": 6,
         "multiplier": 0.45,
         "element": "wind"
@@ -384,7 +384,7 @@
     "targetType": "enemy",
     "effects": [
       {
-        "type": "multi_attack",
+        "type": "damage",
         "count": 8,
         "multiplier": 0.33,
         "element": "dark"

@@ -332,16 +332,16 @@ const JobSkills = {
                 if (isNaN(costValue) || costValue <= 0) {
                     Battle.logBattle(`技能 ${template.name} 的 hpCostPercentageCurrent 值无效: ${effectDetail.value}`);
                     combinedResults.messages.push(`技能 ${template.name} 的HP消耗配置错误。`);
-                    combinedResults.success = false; // 标记为失败
-                    // return { // 如果配置错误，可以提前返回
-                    //     message: combinedResults.messages.join(' \n'),
-                    //     effects: combinedResults.effectsApplied.length > 0 ? combinedResults.effectsApplied : {},
-                    //     success: false
-                    // };
-                    continue; // 跳过此错误效果
+                    combinedResults.success = false;
+                    continue;
                 }
 
-                const hpToCost = Math.floor(character.currentStats.hp * (costValue / 100));
+                let baseHpForCost = character.currentStats.hp; // 默认基于当前HP
+                if (effectDetail.basedOn === 'maxHp') {
+                    baseHpForCost = character.currentStats.maxHp;
+                }
+
+                const hpToCost = Math.floor(baseHpForCost * (costValue / 100));
                 
                 if (character.currentStats.hp - hpToCost < 1) {
                     if (character.currentStats.hp > 1) { // 如果当前HP大于1，则至少保留1点HP
@@ -396,17 +396,21 @@ const JobSkills = {
                     break;
                 case 'damage':
                 case 'enmity': // 将 enmity 视为一种特殊的 damage 类型进行处理
-                    // 查找此技能模板中是否定义了 additionalDamage
+                    // 查找此技能模板中是否定义了 additionalDamage 和 directDamageBonus
                     let totalAdditionalFixedDamage = 0;
+                    let totalDirectDamageBonus = 0;
                     if (Array.isArray(template.effects)) { // template.effects 是原始技能的完整效果列表
                         template.effects.forEach(siblingEffect => {
                             if (siblingEffect.type === 'additionalDamage' && typeof siblingEffect.value === 'number') {
                                 totalAdditionalFixedDamage += siblingEffect.value;
                             }
+                            if (siblingEffect.type === 'directDamageBonus' && typeof siblingEffect.value === 'number') {
+                                totalDirectDamageBonus += siblingEffect.value;
+                            }
                         });
                     }
-                    // 将追加伤害值传递给 applyDamageEffects
-                    currentEffectResult = this.applyDamageEffects(character, { ...template, ...effectDetail, effects: [effectDetail], type: actualEffectType }, teamMembers, monster, totalAdditionalFixedDamage);
+                    // 将追加伤害值和直接伤害奖励传递给 applyDamageEffects
+                    currentEffectResult = this.applyDamageEffects(character, { ...template, ...effectDetail, effects: [effectDetail], type: actualEffectType }, teamMembers, monster, totalAdditionalFixedDamage, totalDirectDamageBonus);
                     break;
                 case 'heal':
                     currentEffectResult = this.applyHealEffects(character, { ...template, ...effectDetail, effects: [effectDetail] }, teamMembers, monster);
@@ -488,11 +492,13 @@ const JobSkills = {
                     Battle.logBattle(`技能 ${template.name} 尝试应用未实现的场地效果。`);
                     currentEffectResult = { success: true, message: `应用了场地效果（待实现）`, effects: {} }; // 暂时标记为成功
                     break;
-                case 'additionalDamage':
-                    // 此处不需要做特别处理，因为它的值会在 'damage'/'enmity' case 中被收集并传递
-                    // 仅记录日志以表示它被识别了
-                    console.log(`Atomic effect 'additionalDamage' for skill ${template.name} will be handled by its corresponding damage effect.`);
-                    currentEffectResult = { success: true, message: `追加伤害效果已记录，将随主伤害一同处理。`, effects: {} };
+                case 'additionalDamage': // Handled by 'damage'/'enmity' case
+                    console.log(`Atomic effect 'additionalDamage' for skill ${template.name} will be handled by its corresponding damage/enmity effect.`);
+                    currentEffectResult = { success: true, message: `追加伤害效果已记录。`, effects: {} };
+                    break;
+                case 'directDamageBonus': // Handled by 'damage'/'enmity' case
+                    console.log(`Atomic effect 'directDamageBonus' for skill ${template.name} will be handled by its corresponding damage/enmity effect.`);
+                    currentEffectResult = { success: true, message: `直接伤害奖励已记录。`, effects: {} };
                     break;
                 case 'hpCostPercentageCurrent': // 此效果已在循环前处理，这里跳过
                     continue; // 使用 continue 跳过当前循环迭代
@@ -1229,6 +1235,22 @@ const JobSkills = {
 
                         // 实际应用伤害到目标HP
                         target.currentStats.hp = Math.max(0, target.currentStats.hp - damageToApply);
+
+                        // 检查 Guts (不死身) 效果
+                        if (target.currentStats.hp <= 0) {
+                            const gutsBuff = BuffSystem.getBuffsByType(target, 'guts').find(b => b.duration > 0 && (b.currentStacks || 0) > 0);
+                            if (gutsBuff) {
+                                target.currentStats.hp = 1; // 以1HP存活
+                                Battle.logBattle(`${target.name} 因 [${gutsBuff.name}] 效果以1HP存活！`);
+                                // 消耗 Guts buff
+                                gutsBuff.currentStacks = (gutsBuff.currentStacks || 1) - 1;
+                                if (gutsBuff.currentStacks <= 0) {
+                                    BuffSystem.removeBuff(target, gutsBuff.id);
+                                    Battle.logBattle(`[${gutsBuff.name}] 效果已消耗完毕。`);
+                                }
+                                // 可能需要阻止后续的“死亡”逻辑，如果伤害计算后立即有死亡判定的话
+                            }
+                        }
 
                         // 记录HP变化
                         console.log(`${target.name} HP: ${Math.floor(oldHp)} -> ${Math.floor(target.currentStats.hp)} (-${damageToApply})`);

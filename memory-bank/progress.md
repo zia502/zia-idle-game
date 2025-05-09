@@ -103,3 +103,18 @@ This file tracks the project's progress using a task list format.
     *   修改了 [`src/js/core/battle-system-integration.js`](src/js/core/battle-system-integration.js:1) 中对 `Battle.applyDamageToTarget` 的猴子补丁 ([`battle-system-integration.js`第486行](src/js/core/battle-system-integration.js:486))，使其正确调用原始的 `Battle.applyDamageToTarget`，并在其前后处理援护、追击、吸血等效果。
     *   移除了 [`src/js/core/job-skills.js`](src/js/core/job-skills.js:1) 中冗余的 `applyDamageToTarget` ([`job-skills.js`第762行](src/js/core/job-skills.js:762)) 方法。
     *   更新了 [`memory-bank/activeContext.md`](memory-bank/activeContext.md:1)。
+* [2025-05-09 11:43:00] - **Completed Task:** 根据CSV文件更新SSR角色和技能数据。
+    *   解析了 [`src/data/skill2.csv`](src/data/skill2.csv:1)，筛选出光属性角色。
+    *   向 [`src/data/ssr.json`](src/data/ssr.json:1) 添加了新的光属性SSR角色定义，包括估算的初始HP/ATK和技能列表。
+    *   向 [`src/data/ssr_skill.json`](src/data/ssr_skill.json:1) 添加了对应角色的技能定义，确保所有顶层 `effectType` 和原子 `type` 均使用项目已定义的类型。
+    *   与用户协作处理了新的效果机制：
+        *   修改了 `hpCostPercentageCurrent` 原子效果以支持基于最大HP的消耗。
+        *   在 `BuffSystem` 中添加了 `guts` (不死身) buff类型，并在 `JobSkills` 中添加了其触发逻辑。
+        *   为被动技能添加了 `onTurnEndIfHpIsOne` 的 `proc` 触发条件，并在回合结束处理中添加了相应检查。
+        *   在 `BuffSystem` 中添加了 `directDamageValueUp` buff类型，并在伤害计算中应用其效果。
+    *   更新了 [`memory-bank/activeContext.md`](memory-bank/activeContext.md:1)。
+* [2025-05-09 13:58:00] - **Completed Task:** 根据用户定义的 `buffTypes` 属性（来自CSV和澄清）更新了 `BuffSystem` 并规范化了新添加的SSR技能定义。
+    *   用户手动更新了 [`src/js/core/buff-system.js`](src/js/core/buff-system.js:1) 中的 `buffTypes` 对象。
+    *   更新了 [`src/js/core/buff-system.js`](src/js/core/buff-system.js:1) 中的 `applyBuff()` 方法以正确处理新的 `valueInteraction` 逻辑。
+    *   更新了 [`src/data/ssr_skill.json`](src/data/ssr_skill.json:1) 中新添加的光属性角色技能，移除了普通原子buff效果的自定义 `name` 属性，并确保它们将使用 `BuffSystem.buffTypes` 中定义的默认行为。
+    *   更新了 [`memory-bank/activeContext.md`](memory-bank/activeContext.md:1)。

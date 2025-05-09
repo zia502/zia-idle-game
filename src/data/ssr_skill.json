@@ -1829,4 +1829,228 @@
       }
     ]
   }
+
+,
+  "lefenye_s1_rainIris": {
+    "name": "雨虹",
+    "description": "自身获得以下效果 屏障（4000）， 追击（30%）3回合，CD6",
+    "cooldown": 6,
+    "effectType": "buff",
+    "targetType": "self",
+    "effects": [
+      { "type": "shield", "value": 4000, "duration": 3 },
+      { "type": "echo", "value": 0.3, "duration": 3 }
+    ]
+  },
+  "lefenye_s2_radiantFlame": {
+    "name": "光辉烈焰",
+    "description": "对敌方全体造成4~5倍伤害 并施加以下弱体，持续3回合，CD 6 防御力 -15% 攻击力 -10%",
+    "cooldown": 6,
+    "effectType": "multi_effect",
+    "targetType": "all_enemies",
+    "effects": [
+      { "type": "damage", "minMultiplier": 4.0, "maxMultiplier": 5.0, "element": "light" },
+      { "type": "defenseDown", "value": 0.15, "duration": 3 },
+      { "type": "attackDown", "value": 0.10, "duration": 3 }
+    ]
+  },
+  "lefenye_p1_blessingOfLight": {
+    "name": "祈福之光",
+    "description": "被动：每回合结束时 回复全体1500",
+    "passive": true,
+    "cooldown": 0,
+    "effectType": "passive",
+    "targetType": "all_allies",
+    "effects": [
+      {
+        "type": "proc",
+        "triggerCondition": "onTurnEnd",
+        "name": "祈福之光触发",
+        "targetType": "all_allies",
+        "triggeredEffects": [
+          { "type": "heal", "value": 1500, "targetType": "all_allies" }
+        ]
+      }
+    ]
+  },
+  "jeanne_s1_reversal": {
+    "name": "逆转",
+    "description": "对敌方单体施加以下弱体，持续3回合CD5回合 防御力 -25% 攻击力 -25%",
+    "cooldown": 5,
+    "effectType": "debuff",
+    "targetType": "enemy",
+    "effects": [
+      { "type": "defenseDown", "value": 0.25, "duration": 3, "name": "防御力下降" },
+      { "type": "attackDown", "value": 0.25, "duration": 3, "name": "攻击力下降" }
+    ]
+  },
+  "jeanne_s2_eternalAdvent": {
+    "name": "永恒降临",
+    "description": "自身获得以下强化，持续2回合，CD6 TA+100% 浑身+10",
+    "cooldown": 6,
+    "effectType": "buff",
+    "targetType": "self",
+    "effects": [
+      { "type": "taBoost", "value": 1.0, "duration": 2 },
+      { "type": "staminaUp", "value": 10, "duration": 2 }
+    ]
+  },
+  "jeanne_p1_saint": {
+    "name": "圣女",
+    "description": "被动：暴击率+50%",
+    "passive": true,
+    "cooldown": 0,
+    "effectType": "passive",
+    "targetType": "self",
+    "effects": [
+      { "type": "critRateUp", "value": 0.5, "passive": true, "duration": -1 }
+    ]
+  },
+  "albert_s1_impulseEdge": {
+    "name": "脉冲斩",
+    "description": "对敌方单体进行2次攻击，分别造成2.5倍伤害 并施加以下弱体，持续3回合，CD4回合，防御力-15%",
+    "cooldown": 4,
+    "effectType": "multi_effect",
+    "targetType": "enemy",
+    "effects": [
+      { "type": "damage", "count": 2, "multiplier": 2.5, "element": "light" },
+      { "type": "defenseDown", "value": 0.15, "duration": 3 }
+    ]
+  },
+  "albert_s2_electrifiedBlade": {
+    "name": "电化之刃",
+    "description": "对敌方全体造成1.5~2倍伤害.自身获得1TA+100% 持续1回合",
+    "cooldown": 5,
+    "effectType": "multi_effect",
+    "targetType": "all_enemies",
+    "effects": [
+      { "type": "damage", "minMultiplier": 1.5, "maxMultiplier": 2.0, "element": "light", "targetType": "all_enemies" },
+      { "type": "taBoost", "value": 1.0, "duration": 1, "targetType": "self" }
+    ]
+  },
+  "albert_p1_levinSword": {
+    "name": "雷维翁之剑",
+    "description": "被动：DA+100%",
+    "passive": true,
+    "cooldown": 0,
+    "effectType": "passive",
+    "targetType": "self",
+    "effects": [
+      { "type": "daBoost", "value": 1.0, "passive": true, "duration": -1 }
+    ]
+  },
+  "rosamia_s1_resonanceSigil": {
+    "name": "共鸣符",
+    "description": "自身获得以下强化 无敌，持续2回合 背水+20，持续4回合， 并减少自身15%最大HP",
+    "cooldown": 6, 
+    "effectType": "multi_effect", 
+    "targetType": "self",
+    "effects": [
+      { "type": "invincible", "duration": 2 },
+      { "type": "enmityUp", "value": 20, "duration": 4 },
+      { "type": "hpCostPercentageCurrent", "value": 15, "basedOn": "maxHp" }
+    ]
+  },
+  "rosamia_s2_armorBreakSigil": {
+    "name": "碎铠符·肆重",
+    "description": "对敌方单体造成2.5倍伤害 并施加以下弱体，持续3回合CD4回合， 攻击力-20% 防御力-20%",
+    "cooldown": 4,
+    "effectType": "multi_effect",
+    "targetType": "enemy",
+    "effects": [
+      { "type": "damage", "multiplier": 2.5, "element": "light" },
+      { "type": "attackDown", "value": 0.20, "duration": 3 },
+      { "type": "defenseDown", "value": 0.20, "duration": 3 }
+    ]
+  },
+  "rosamia_s3_earthStompSigil": {
+    "name": "陆踏符",
+    "description": "自身获得以下强化，持续5回合,CD10回合 TA+100% 伤害上升+30000 敌对心+1000%",
+    "cooldown": 10,
+    "effectType": "buff",
+    "targetType": "self",
+    "effects": [
+      { "type": "taBoost", "value": 1.0, "duration": 5 },
+      { "type": "directDamageValueUp", "value": 30000, "duration": 5 },
+      { "type": "threatUp", "value": 1000, "duration": 5 }
+    ]
+  },
+  "rosamia_p1_unwaveringSelf": {
+    "name": "確固たる自我",
+    "description": "被动：战斗开始时 自身拥有 【不死身】1次（驱散不可）：处于该效果的角色，可以在受到致死攻击时，以1HP状态存活下来 在回合结束时，若自身HP为1， 则回复最大HP的50%（优先级最高）",
+    "passive": true,
+    "cooldown": 0,
+    "effectType": "passive",
+    "targetType": "self",
+    "effects": [
+      { 
+        "type": "applyBuffPackage", 
+        "buffName": "不死身效果", 
+        "triggerCondition": "onBattleStart", 
+        "targetType":"self",
+        "buffs": [
+             { "type": "guts", "value": 1, "duration": -1, "canDispel": false, "name": "不死身", "maxStacks": 1 }
+        ]
+      },
+      { 
+        "type": "proc", 
+        "name": "HP1时回复",
+        "triggerCondition": "onTurnEndIfHpIsOne", 
+        "targetType":"self",
+        "triggeredEffects": [
+          { "type": "heal", "healType": "percentageMaxHp", "value": 0.5, "targetType": "self" }
+        ]
+      }
+    ]
+  },
+  "luciol_s1_evesTemptation": {
+    "name": "夏娃的诱惑",
+    "description": "我方全体获得以下强化，持续3回合,CD6回合 护盾（2000） 回复HOT（每回合500） 浑身 +10",
+    "cooldown": 6,
+    "effectType": "buff",
+    "targetType": "all_allies",
+    "effects": [
+      { "type": "shield", "value": 2000, "duration": 3 },
+      { "type": "regen", "value": 500, "duration": 3 },
+      { "type": "staminaUp", "value": 10, "duration": 3 }
+    ]
+  },
+  "luciol_s2_fromTheAshes": {
+    "name": "自灰烬中",
+    "description": "对敌方单体造成16倍伤害,CD5回合",
+    "cooldown": 5,
+    "effectType": "damage",
+    "targetType": "enemy",
+    "effects": [
+      { "type": "damage", "multiplier": 16.0, "element": "light" }
+    ]
+  },
+  "luciol_s3_awakening": {
+    "name": "觉醒",
+    "description": "自身获得以下强化，持续2回合，CD7回合 追击 （90%） TA +100% 暗属性伤害100%减免",
+    "cooldown": 7,
+    "effectType": "buff",
+    "targetType": "self",
+    "effects": [
+      { "type": "echo", "value": 0.9, "duration": 2 },
+      { "type": "taBoost", "value": 1.0, "duration": 2 },
+      { "type": "elementalResistance", "elementType": "dark", "value": 1.0, "duration": 2 }
+    ]
+  },
+  "luciol_p1_sacredWings": {
+    "name": "圣义之翼",
+    "description": "被动（永续/驱散不可）： DA+100% TA+50% 攻击力 + 30% 攻击伤害上限+20% 技能伤害上限+20% 回复HOT 1000每回合",
+    "passive": true,
+    "cooldown": 0,
+    "effectType": "passive",
+    "targetType": "self",
+    "effects": [
+      { "type": "daBoost", "value": 1.0, "passive": true, "canDispel": false, "duration": -1, "name": "DA永久提升" },
+      { "type": "taBoost", "value": 0.5, "passive": true, "canDispel": false, "duration": -1, "name": "TA永久提升" },
+      { "type": "attackUp", "value": 0.3, "passive": true, "canDispel": false, "duration": -1, "name": "攻击力永久提升" },
+      { "type": "damageCapUp", "value": 0.2, "passive": true, "canDispel": false, "duration": -1, "name": "攻击上限永久提升" },
+      { "type": "skillDamageCapUp", "value": 0.2, "passive": true, "canDispel": false, "duration": -1, "name": "技能上限永久提升" },
+      { "type": "regen", "value": 1000, "passive": true, "canDispel": false, "duration": -1, "name": "HOT永久" }
+    ]
+  }
 }

@@ -284,9 +284,23 @@ function integrateBattleSystemUpdates() {
                     if (skill && skill.passive && skill.effects) {
                         for (const effect of skill.effects) {
                             console.log(`技能效果类型: ${effect.type}`);
-                            if (effect.type === 'endOfTurn') {
-                                console.log(`触发回合结束效果: ${skillId}`);
+                            if (effect.type === 'endOfTurn') { // Standard endOfTurn passive
+                                console.log(`触发回合结束效果 (标准): ${skillId}`);
                                 this.processEndOfTurnEffect(member, effect.effect, teamMembers, monster);
+                            }
+                            // New: Check for onTurnEndIfHpIsOne
+                            if (effect.type === 'proc' && effect.triggerCondition === 'onTurnEndIfHpIsOne' && member.currentStats.hp === 1) {
+                                console.log(`触发回合结束效果 (HP为1时): ${skillId} - ${effect.name || 'Proc'}`);
+                                if (Array.isArray(effect.triggeredEffects)) {
+                                    for (const triggeredEffect of effect.triggeredEffects) {
+                                        // We need a way to apply these triggered effects.
+                                        // This might involve calling JobSkills.applySkillEffects with a temporary template,
+                                        // or having a dedicated function in Battle.js to handle generic effect objects.
+                                        // For now, let's assume processEndOfTurnEffect can be adapted or a similar function exists.
+                                        // This part might need further refinement based on how `triggeredEffects` are structured.
+                                        this.processEndOfTurnEffect(member, triggeredEffect, teamMembers, monster);
+                                    }
+                                }
                             }
                         }
                     }

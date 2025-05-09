@@ -358,5 +358,70 @@
       "taRate": 0.03
     },
     "skills": ["yongHengDeLiuFeng", "tianXiangShenShengDuanMiePo", "kuangWuDeBaoFeng", "tianKuJuFengLuoXuanJin"]
+  },
+  "leFenye": {
+    "id": "character_ssr_lefenye",
+    "name": "蕾芬耶",
+    "attribute": "light",
+    "type": "healing",
+    "baseStats": {
+      "hp": 275, "maxHp": 3900,
+      "attack": 1900, "maxAttack": 7600,
+      "defense": 10, "critRate": 0.05, "critDamage": 1.5,
+      "daRate": 0.07, "taRate": 0.03
+    },
+    "skills": ["lefenye_s1_rainIris", "lefenye_s2_radiantFlame", "lefenye_p1_blessingOfLight"]
+  },
+  "jeanne": {
+    "id": "character_ssr_jeanne",
+    "name": "贞德",
+    "attribute": "light",
+    "type": "special",
+    "baseStats": {
+      "hp": 260, "maxHp": 3840,
+      "attack": 2462, "maxAttack": 9850,
+      "defense": 10, "critRate": 0.05, "critDamage": 1.5,
+      "daRate": 0.10, "taRate": 0.05
+    },
+    "skills": ["jeanne_s1_reversal", "jeanne_s2_eternalAdvent", "jeanne_p1_saint"]
+  },
+  "albert": {
+    "id": "character_ssr_albert",
+    "name": "阿尔贝尔",
+    "attribute": "light",
+    "type": "attack",
+    "baseStats": {
+      "hp": 280, "maxHp": 3520,
+      "attack": 2270, "maxAttack": 9080,
+      "defense": 10, "critRate": 0.05, "critDamage": 1.5,
+      "daRate": 0.05, "taRate": 0.03
+    },
+    "skills": ["albert_s1_impulseEdge", "albert_s2_electrifiedBlade", "albert_p1_levinSword"]
+  },
+  "rosamia": {
+    "id": "character_ssr_rosamia",
+    "name": "萝莎米娅",
+    "attribute": "light",
+    "type": "special",
+    "baseStats": {
+      "hp": 275, "maxHp": 3900,
+      "attack": 2375, "maxAttack": 9500,
+      "defense": 10, "critRate": 0.05, "critDamage": 1.5,
+      "daRate": 0.10, "taRate": 0.05
+    },
+    "skills": ["rosamia_s1_resonanceSigil", "rosamia_s2_armorBreakSigil", "rosamia_s3_earthStompSigil", "rosamia_p1_unwaveringSelf"]
+  },
+  "lucioL": {
+    "id": "character_ssr_luciol",
+    "name": "[晓之裁定者]路西欧·L",
+    "attribute": "light",
+    "type": "special",
+    "baseStats": {
+      "hp": 292, "maxHp": 3970,
+      "attack": 2287, "maxAttack": 9150,
+      "defense": 10, "critRate": 0.05, "critDamage": 1.5,
+      "daRate": 0.10, "taRate": 0.05
+    },
+    "skills": ["luciol_s1_evesTemptation", "luciol_s2_fromTheAshes", "luciol_s3_awakening", "luciol_p1_sacredWings"]
   }
 }

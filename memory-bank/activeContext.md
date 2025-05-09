@@ -162,3 +162,12 @@ This file tracks the project's current status, including recent changes, current
     *   [`JobSkills.applyDamageEffects()`](src/js/core/job-skills.js:1161) 现在负责计算技能的原始伤害（包括`skillDamageUp`和`additionalDamage`效果），然后调用 `Battle.applyDamageToTarget()` ([`battle.js`第1797行](src/js/core/battle.js:1797)) 进行核心伤害计算（暴击、防御、减伤等），并最终负责扣减目标HP。
     *   [`src/js/core/battle-system-integration.js`](src/js/core/battle-system-integration.js:1) 中对 `Battle.applyDamageToTarget` 的猴子补丁 ([`battle-system-integration.js`第486行](src/js/core/battle-system-integration.js:486)) 已更新，现在它正确调用 `Battle.js` 中的原始 `applyDamageToTarget`。援护逻辑在原始计算前执行，追击和吸血逻辑在原始计算后执行。
     *   移除了 [`src/js/core/job-skills.js`](src/js/core/job-skills.js:1) 中多余的 `applyDamageToTarget` ([`job-skills.js`第762行](src/js/core/job-skills.js:762)) 方法。
+* [2025-05-09 11:43:00] - 根据 [`src/data/skill2.csv`](src/data/skill2.csv:1) 的内容，更新了 [`src/data/ssr.json`](src/data/ssr.json:1) 和 [`src/data/ssr_skill.json`](src/data/ssr_skill.json:1) 文件，添加了新的光属性SSR角色及其技能。
+    *   角色初始HP/ATK已根据最大值按比例估算。
+    *   技能的顶层 `effectType` 和原子 `type` 均使用了项目中已定义的类型。
+    *   与用户确认并处理了新的效果机制，如基于最大HP的百分比HP消耗（通过修改 `hpCostPercentageCurrent` 实现）和“不死身”效果（添加了 `guts` buff类型及相应处理逻辑）。
+    *   为萝莎米娅的被动技能添加了 `onTurnEndIfHpIsOne` 的 `proc` 触发条件，并在回合结束逻辑中添加了检查。
+    *   为萝莎米娅的“陆踏符”技能引入了 `directDamageValueUp` buff类型，并在伤害计算中应用。
+* [2025-05-09 13:58:00] - 完成了对新SSR技能JSON定义中原子buff效果的规范化。
+    *   移除了新添加技能中普通原子buff效果的自定义 `name` 属性，使其默认使用 `BuffSystem.buffTypes` 中定义的名称。
+    *   确认了这些原子buff效果将使用 `BuffSystem.buffTypes` 中更新后的 `canDispel`, `stackable`, `maxStacks`, 和 `valueInteraction` 默认行为。

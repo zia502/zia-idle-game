@@ -118,7 +118,7 @@ The fix involves two main parts:
 *   **代码影响:** [`src/js/core/job-skills.js`](src/js/core/job-skills.js:1) 中的 `useSkill` ([`src/js/core/job-skills.js:20`](src/js/core/job-skills.js:20)) 和 `applySkillEffects` ([`src/js/core/job-skills.js:281`](src/js/core/job-skills.js:281)) 函数的现有逻辑与此方案兼容，主要依赖 `effects` 数组中的原子 `type` 进行分发。
 ---
 ### Decision (Debug)
-[2025-05-08 22:36:00] - Refactor Skill Loading &amp; Remove Fallbacks/Hardcoding
+[2025-05-08 22:36:00] - Refactor Skill Loading & Remove Fallbacks/Hardcoding
 
 **Rationale:**
 Identified root cause of skill usage failure (`warriorSlash` executing as 【狂怒】) as incorrect skill data being returned. This stemmed from multiple issues: incorrect fallback logic in `JobSystem.getFallbackSkill`, incorrect hardcoded definitions in `JobSkillsTemplate.loadBasicTemplates`, and an incorrect definition in `job-skills-templates.json` itself (which user instructed to keep as is, implying `warriorSlash` ID *should* map to 【狂怒】 based on the authoritative JSON). User explicitly requested removal of all fallback mechanisms and hardcoded basic templates, enforcing strict loading solely from JSON data files. Refactored skill acquisition to use a single unified function (`SkillLoader.getSkillInfo`) and removed redundant/fallback functions/logic (`JobSystem.getFallbackSkill`, `JobSkillsTemplate.getTemplate`, `JobSkillsTemplate.loadBasicTemplates`). Corrected `applyBuffEffects` return logic.
@@ -180,3 +180,110 @@ The fix involved modifying [`src/js/core/skill-loader.js`](src/js/core/skill-loa
 
 **Affected Files:**
 *   [`src/js/core/skill-loader.js`](src/js/core/skill-loader.js:0)
+---
+### Decision (Debug)
+[2025-05-09 20:21:00] - Fix `ReferenceError` for `totalDamageAppliedToAllTargets` in `job-skills.js`.
+
+**Rationale:**
+The variable `totalDamageAppliedToAllTargets` was used in [`src/js/core/job-skills.js`](src/js/core/job-skills.js:1268) within the `applyDamageEffects` function without prior declaration, leading to a `ReferenceError`. The fix involves declaring and initializing this variable at the beginning of the function.
+
+**Details:**
+*   Added `let totalDamageAppliedToAllTargets = 0;` at the beginning of the `applyDamageEffects` function in [`src/js/core/job-skills.js`](src/js/core/job-skills.js:1180).
+
+---
+### Decision (Debug)
+[2025-05-09 20:21:00] - Fix `TypeError` for `expiredBuffs` not iterable in `battle.js`.
+
+**Rationale:**
+The variable `expiredBuffs` in [`src/js/core/battle.js`](src/js/core/battle.js:859) within the `updateBuffDurations` function was not guaranteed to be an iterable object (it could be `null` or `undefined` if `BuffSystem.updateBuffDurations` returned such). This caused a `TypeError` when attempting to iterate over it. The fix ensures that the variable is an array before iteration.
+
+**Details:**
+*   In [`src/js/core/battle.js`](src/js/core/battle.js:857), after `const expiredBuffs = BuffSystem.updateBuffDurations(member);`, added `const actualExpiredBuffs = Array.isArray(expiredBuffs) ? expiredBuffs : [];`.
+*   Changed the loop at line 859 from `for (const buff of expiredBuffs)` to `for (const buff of actualExpiredBuffs)`.
+---
+### Decision (Debug)
+[2025-05-09 20:52:00] - 修复战斗日志相关的多个问题 (问题1-5)
+
+**Rationale & Details:**
+
+*   **问题1: 怪物 `maxHp` 初始化问题**
+    *   **根本原因:** 怪物数据源中 `hp` 属性缺失或无效。
+    *   **修复策略:** 代码中已有备用逻辑。增强了 [`src/js/core/battle.js`](src/js/core/battle.js:184) 的错误日志，以更明确地指向数据源问题。
+
+*   **问题2: 角色攻击力未算入武器盘**
+    *   **根本原因:** [`src/js/core/weapon.js`](src/js/core/weapon.js:861) 的 `calculateCurrentStats` 函数在处理武器等级属性时，若缺少150级属性数据 (`150Attack`, `150Hp`) 可能导致计算错误 (NaN)，影响武器盘整体攻击力加成。
+    *   **修复策略:** 修改了 `calculateCurrentStats` ([`src/js/core/weapon.js:867-875`](src/js/core/weapon.js:867))，增加了对150级属性数据缺失或无效情况的处理，确保即使数据不完整也能返回有效的1级属性值。
+
+*   **问题3: 直接造成393伤害的来源不明确**
+    *   **根本原因:** [`src/js/core/battle.js`](src/js/core/battle.js:1848) 的 `applyDamageToTarget` 函数缺乏统一的、包含伤害来源信息的日志。
+    *   **修复策略:** 修改了 `applyDamageToTarget` ([`src/js/core/battle.js:2045`](src/js/core/battle.js:2045) 附近)，在扣减HP后添加了详细的战斗日志，记录攻击者、伤害来源（通过`options`参数传递，如技能名、普攻、buff名）、实际伤害及HP变化。相应地，在普通攻击调用点 ([`src/js/core/battle.js:1100`](src/js/core/battle.js:1100) 和 [`src/js/core/battle.js:1326`](src/js/core/battle.js:1326)) 添加了 `isNormalAttack: true` 标志。
+
+*   **问题4: “护甲破坏”技能0伤害问题**
+    *   **根本原因:** 技能伤害计算过程不透明，难以判断0伤害的具体原因。
+    *   **修复策略:** 在 [`src/js/core/job-skills.js`](src/js/core/job-skills.js:1177) 的 `applyDamageEffects` 函数中，为 `type: "damage"` 的效果添加了调试日志 ([`src/js/core/job-skills.js:1211`](src/js/core/job-skills.js:1211) 之后)，记录攻击者有效攻击力、技能伤害倍率和计算出的原始伤害值，以便追踪。
+
+*   **问题5: “护甲破坏”中使用未知效果类型 `defenseDown` 问题**
+    *   **根本原因:** 在 [`src/data/job-skills-templates.json`](src/data/job-skills-templates.json:607) 中，`armorBreak` 技能的降防效果错误地使用了 `type: "defenseDown"`。原子效果的 `type` 应为通用类型（如 "debuff"），具体的debuff种类应由 `buffType` 指定。
+    *   **修复策略:** 修改了 [`src/data/job-skills-templates.json`](src/data/job-skills-templates.json:607) 中 `armorBreak` 的效果定义，将 `type: "defenseDown"` 改为 `type: "debuff"`，并添加 `buffType: "defenseDown"`。
+
+*   **问题6: 已执行攻击性技能后不再进行普通攻击问题**
+    *   **确认:** 此行为是预期的，由 `processCharacterAction` 中的 `hasPerformedOffensiveActionThisTurn` 标志控制，符合系统设计。无需代码修改。
+---
+### Decision (Debug)
+[2025-05-09 21:03:48] - 修改 `processCharacterAction` 以允许技能后普攻
+
+**Rationale:**
+根据用户澄清的战斗逻辑和 `spec-pseudocode` 模式提供的伪代码，玩家应该能够在使用完所有当前回合可用的技能之后，再执行一次普通攻击。当前的实现是使用一个 `hasPerformedOffensiveActionThisTurn` 标志来阻止在攻击性技能后使用其他技能或普攻，这不符合新需求。
+
+**Details:**
+*   **修改 [`src/js/core/battle.js`](src/js/core/battle.js:1) 中的 `processCharacterAction` 函数:**
+    *   移除了 `hasPerformedOffensiveActionThisTurn` 变量及其相关的所有逻辑。
+    *   技能使用循环 (`for (const skillToUseId of availableSkills)`) 现在会尝试使用所有可用的技能，不再因为某个技能是“攻击性”的而提前中断。
+    *   引入了新的布尔标志 `performedNormalAttack`，初始化为 `false`。
+    *   在技能使用循环之后，添加了一个新的条件块来执行普通攻击：
+        *   条件：角色HP > 0，怪物HP > 0，且 `!performedNormalAttack`。
+        *   如果满足条件且战斗未结束 (`!this.isBattleOver(...)`)，则记录日志并调用一个新的辅助函数 `this.executeNormalAttack(character, monster, battleStats, currentTeamMembers)`。
+        *   调用后设置 `performedNormalAttack = true`。
+        *   添加了相应的日志来处理角色或目标死亡导致无法普攻的情况。
+*   **创建新的辅助函数 `executeNormalAttack`:**
+    *   将 `processCharacterAction` 中原有的普通攻击逻辑（包括DA/TA判断、伤害计算、Proc触发、统计更新等）完整迁移到这个新的私有方法中。
+    *   `executeNormalAttack` 接收 `character`, `monster`, `battleStats`, `currentTeamMembers` 作为参数。
+*   **Memory Bank 更新:**
+    *   [`memory-bank/activeContext.md`](memory-bank/activeContext.md:1) 已更新，记录了此项修改。
+    *   [`memory-bank/progress.md`](memory-bank/progress.md:1) 已更新，将此任务标记为完成。
+    *   [`memory-bank/decisionLog.md`](memory-bank/decisionLog.md:1) (此文件) 已更新此决策。
+
+---
+### Decision (Debug)
+[2025-05-09 21:18:00] - 修复战斗日志中的4个新问题
+
+**Rationale:**
+根据用户提供的战斗日志分析和代码审查，对指出的4个问题进行了修复。
+
+**Details:**
+1.  **怪物 `maxHp` 初始化问题依然存在：**
+    *   **Fix Strategy:** 修改 [`src/js/core/battle.js`](src/js/core/battle.js:1) 中的怪物HP初始化逻辑。
+    *   **Implementation:** 在 `startBattle` 函数中，当从 `monster.hp` 获取 `initialMaxHpFromJson` 无效时，在尝试 `monsterCharacter.currentStats.maxHp` 之前，增加了对 `monster.baseStats.maxHp` 和 `monster.baseStats.hp` 的检查和使用。
+    *   **Affected file:** [`src/js/core/battle.js`](src/js/core/battle.js:1)
+
+2.  **技能“护甲破坏”造成两次伤害 及 问题3 “护甲破坏”技能伤害日志仍然矛盾 (0伤害 vs 实际伤害)：**
+    *   **Fix Strategy:** 统一伤害应用和日志记录，移除冗余的伤害处理点。
+    *   **Implementation:**
+        *   在 [`src/js/core/job-skills.js`](src/js/core/job-skills.js:1)，注释掉了约 1042-1043 行附近一个旧的、多余的HP扣减 (`target.currentStats.hp = ...`) 和相关的 `Battle.logBattle` 最终伤害日志。
+        *   修改了 `JobSkills.applyDamageEffects` 函数 ([`src/js/core/job-skills.js:1177`](src/js/core/job-skills.js:1177)) 内部的日志记录逻辑 (约 [`src/js/core/job-skills.js:1262`](src/js/core/job-skills.js:1262) 附近)，将原来的 `console.log` 替换为 `Battle.logBattle`，以确保最终生效的伤害和HP变化通过标准战斗日志输出。
+    *   **Rationale for Combined Fix:** 这两个问题被认为是相关的，因为冗余的伤害处理点可能导致0伤害日志（如果其计算结果为0）和另一次实际伤害及日志。通过统一处理，旨在确保伤害只被计算和应用一次，并且日志准确反映该单次事件。
+    *   **Affected file:** [`src/js/core/job-skills.js`](src/js/core/job-skills.js:1)
+
+3.  **`TypeError: expiredBuffs is not iterable` 错误复现 ([`src/js/core/battle.js:901`](src/js/core/battle.js:901))：**
+    *   **Fix Strategy:** 加强数组类型检查。
+    *   **Implementation:** 在 [`src/js/core/battle.js`](src/js/core/battle.js:1) 的 `updateBuffDurations` 函数中，为处理怪物（`monster`）的 `expiredBuffs` 时（约 [`src/js/core/battle.js:913`](src/js/core/battle.js:913) 之后），添加了与处理队伍成员时相同的 `Array.isArray()` 检查，确保从 `BuffSystem.updateBuffDurations(monster)` 返回的值在迭代前被确认为数组。
+    *   **Affected file:** [`src/js/core/battle.js`](src/js/core/battle.js:1)
+---
+### Decision (Debug)
+[2025-05-09 21:38:00] - 修复玩家回合普通攻击执行两次的问题
+
+**Rationale:**
+根据 `spec-pseudocode` 的分析，在 [`src/js/core/battle.js`](src/js/core/battle.js:1) 的 `processCharacterAction` 函数中，调用新的 `this.executeNormalAttack(...)` 方法后，仍有残留的旧普通攻击逻辑，导致普通攻击流程被执行了两次。移除这部分残留逻辑以解决此问题。
+
+**Details:**
+*   在 [`src/js/core/battle.js`](src/js/core/battle.js:1) 的 `processCharacterAction` 函数中，移除了 `this.executeNormalAttack(...)` 调用（约第1068行）之后的残留普通攻击逻辑代码块（原第1083行至第1200行）。

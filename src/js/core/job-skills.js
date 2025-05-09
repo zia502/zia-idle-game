@@ -1039,8 +1039,8 @@ const JobSkills = {
         finalDamage = Math.max(1, Math.floor(finalDamage));
 
         // 更新目标HP
-        target.currentStats.hp = Math.max(0, target.currentStats.hp - finalDamage);
-        Battle.logBattle(`${source.name} 对 ${target.name} 造成 ${finalDamage} 点 ${finalDamageDisplayElement} 伤害。 ${target.name} 剩余HP: ${target.currentStats.hp}/${target.currentStats.maxHp}`);
+        // target.currentStats.hp = Math.max(0, target.currentStats.hp - finalDamage); // HP扣减移至 applyDamageEffects
+        // Battle.logBattle(`${source.name} 对 ${target.name} 造成 ${finalDamage} 点 ${finalDamageDisplayElement} 伤害。 ${target.name} 剩余HP: ${target.currentStats.hp}/${target.currentStats.maxHp}`); // 日志移至 applyDamageEffects
 
         // 更新伤害统计
         if (source.stats) {
@@ -1178,6 +1178,7 @@ const JobSkills = {
         const targets = this.getTargets(character, template.targetType, teamMembers, monster);
         const effects = [];
         let totalDamage = 0;
+        let totalDamageAppliedToAllTargets = 0; // 声明变量以跟踪对所有目标造成的总伤害
 
         // 应用每个伤害效果
         for (const target of targets) {
@@ -1207,7 +1208,12 @@ const JobSkills = {
                         if (target.currentStats.hp <= 0) break;
 
                         // 计算原始伤害 (使用调整后的倍率)
-                        const rawDamage = Math.floor(Character.calculateAttackPower(character) * damageMultiplier);
+                        const attackerEffectiveAttack = Character.calculateAttackPower(character);
+                        const rawDamage = Math.floor(attackerEffectiveAttack * damageMultiplier);
+                        // 新增日志: 记录技能伤害计算的中间值
+                        if (typeof Battle !== 'undefined' && Battle.logBattle) {
+                            Battle.logBattle(`[调试] 技能 [${template.name}] 对 ${target.name}: ${character.name} 攻击力 ${attackerEffectiveAttack}, 伤害倍率 ${damageMultiplier.toFixed(2)}, 计算原始伤害 ${rawDamage}`);
+                        }
 
                         // 应用伤害到目标，考虑BUFF和DEBUFF
                         const damageOptions = {
@@ -1252,10 +1258,14 @@ const JobSkills = {
                             }
                         }
 
-                        // 记录HP变化
-                        console.log(`${target.name} HP: ${Math.floor(oldHp)} -> ${Math.floor(target.currentStats.hp)} (-${damageToApply})`);
-                        if (typeof window !== 'undefined' && window.log) {
-                            window.log(`${target.name} HP: ${Math.floor(oldHp)} -> ${Math.floor(target.currentStats.hp)} (-${damageToApply})`);
+                        // 记录HP变化及最终伤害日志
+                        if (typeof Battle !== 'undefined' && Battle.logBattle) {
+                            Battle.logBattle(`${character.name} 对 ${target.name} 造成 ${damageToApply} 点伤害。 ${target.name} 剩余HP: ${target.currentStats.hp}/${target.currentStats.maxHp}`);
+                        } else { // Fallback to console if Battle.logBattle is not available
+                            console.log(`${character.name} 对 ${target.name} 造成 ${damageToApply} 点伤害。 ${target.name} HP: ${Math.floor(oldHp)} -> ${Math.floor(target.currentStats.hp)} (-${damageToApply})`);
+                            if (typeof window !== 'undefined' && window.log) {
+                                window.log(`${character.name} 对 ${target.name} 造成 ${damageToApply} 点伤害。 ${target.name} HP: ${Math.floor(oldHp)} -> ${Math.floor(target.currentStats.hp)} (-${damageToApply})`);
+                            }
                         }
 
                         // 更新伤害统计

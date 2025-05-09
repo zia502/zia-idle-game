@@ -41,6 +41,10 @@ This file tracks the project's current status, including recent changes, current
     *   确认突破加成 (`multiBonusStats`) 维持基于角色当前最新 `baseStats` 的计算方式。
     *   最终地下城内属性计算流程为：`currentStats = (dungeonOriginalStats + 基于 dungeonOriginalStats 的武器盘加成) + 基于当前 baseStats 的突破加成`。
 ## Recent Changes
+*   [2025-05-09 21:18:00] - **Debug Fixes Applied:** 针对战斗日志分析出的4个新问题进行了修复。
+    *   问题1 (怪物HP初始化): 修改了 [`src/js/core/battle.js`](src/js/core/battle.js:1) 的HP初始化逻辑，增加从 `monster.baseStats` 获取 `maxHp` 的途径。
+    *   问题2 (“护甲破坏”两次伤害) & 问题3 (“护甲破坏”0伤害日志矛盾): 修改了 [`src/js/core/job-skills.js`](src/js/core/job-skills.js:1)，移除了冗余的HP扣减和伤害日志，统一了伤害日志到 `applyDamageEffects` 并使用 `Battle.logBattle`。
+    *   问题4 (`TypeError: expiredBuffs is not iterable`): 修改了 [`src/js/core/battle.js`](src/js/core/battle.js:1) 的 `updateBuffDurations`，为怪物 `expiredBuffs` 添加了数组检查。
 *   [2025-05-09 17:50:00] - **Boss AI 技能 Bug 修复：**
     *   修改了 [`src/js/core/skill-loader.js`](src/js/core/skill-loader.js:0) 以正确加载 [`src/data/boss-skills.json`](src/data/boss-skills.json:0) 到 `window.bossSkills`。
     *   更新了 [`src/js/core/skill-loader.js`](src/js/core/skill-loader.js:0) 中的 `getSkillInfo` 函数，使其能够从 `window.bossSkills` 查找技能数据。
@@ -61,6 +65,11 @@ This file tracks the project's current status, including recent changes, current
 *   [2025-05-09 14:37:00] - 修改了 [`src/data/ssr_skill.json`](src/data/ssr_skill.json:1) 文件，统一了所有技能 `description` 字段的格式，并移除了临时的 `descriptionForEffect` 字段。
 
 ## Open Questions/Issues
+*   [2025-05-09 21:18:00] - **Issue Status Update:** 针对战斗日志分析出的4个新问题已应用修复：
+    *   怪物 `maxHp` 初始化问题 ([`src/js/core/battle.js`](src/js/core/battle.js:1))。
+    *   技能“护甲破坏”造成两次伤害及日志矛盾问题 ([`src/js/core/job-skills.js`](src/js/core/job-skills.js:1))。
+    *   `TypeError: expiredBuffs is not iterable` ([`src/js/core/battle.js`](src/js/core/battle.js:1))。
+    *   等待测试验证修复效果。
 *   [2025-05-09 17:50:00] - **Issue Resolved:** Boss 在战斗中完全不使用任何技能。
     *   **Root Cause:** Boss 技能数据 ([`src/data/boss-skills.json`](src/data/boss-skills.json:0)) 未被加载到 `window.bossSkills`，且 `SkillLoader.getSkillInfo` ([`src/js/core/skill-loader.js:80`](src/js/core/skill-loader.js:80)) 未配置从 `window.bossSkills` 查找。这导致在血量触发和常规技能选择阶段均无法获取到有效的 Boss 技能数据。
     *   **Fix Applied:**
@@ -203,3 +212,17 @@ This file tracks the project's current status, including recent changes, current
     *   移除了新添加技能中普通原子buff效果的自定义 `name` 属性，使其默认使用 `BuffSystem.buffTypes` 中定义的名称。
     *   确认了这些原子buff效果将使用 `BuffSystem.buffTypes` 中更新后的 `canDispel`, `stackable`, `maxStacks`, 和 `valueInteraction` 默认行为。
 *   [2025-05-09 14:06:00] - Finalized updates to [`src/data/ssr_skill.json`](src/data/ssr_skill.json:1) for newly added光属性角色技能. Ensured common atomic buff/debuff effects do not carry unnecessary `name` overrides and rely on `BuffSystem.buffTypes` defaults. Verified that `canDispel` and `stackable` properties are also implicitly handled by `BuffSystem.buffTypes` unless an explicit override is needed (which was not the case for these common buffs after `buffTypes` update).
+* [2025-05-09 20:21:00] - **Debug Fix Applied:** Resolved `ReferenceError: totalDamageAppliedToAllTargets is not defined` in [`src/js/core/job-skills.js`](src/js/core/job-skills.js:1268) by declaring the variable.
+* [2025-05-09 20:21:00] - **Debug Fix Applied:** Resolved `TypeError: expiredBuffs is not iterable` in [`src/js/core/battle.js`](src/js/core/battle.js:859) by ensuring the variable is an array before iteration.
+*   [2025-05-09 20:52:00] - **Debug Fixes Applied:** 针对战斗日志分析出的6个问题进行了修复和日志增强。
+    *   问题1 (怪物HP初始化): 增强了 [`src/js/core/battle.js`](src/js/core/battle.js:184) 的错误日志。
+    *   问题2 (角色攻击力未算武器盘): 修改了 [`src/js/core/weapon.js`](src/js/core/weapon.js:861) 的 `calculateCurrentStats`，增强了150级属性缺失的处理。
+    *   问题3 (伤害来源不明确): 修改了 [`src/js/core/battle.js`](src/js/core/battle.js:1848) 的 `applyDamageToTarget`，添加了统一的来源和伤害日志；更新了普通攻击调用点以传递来源信息。
+    *   问题4 (“护甲破坏”0伤害): 在 [`src/js/core/job-skills.js`](src/js/core/job-skills.js:1177) 的 `applyDamageEffects` 中添加了伤害计算的中间值日志。
+    *   问题5 (“护甲破坏”未知效果类型): 修改了 [`src/data/job-skills-templates.json`](src/data/job-skills-templates.json:607) 中 `armorBreak` 的效果定义，将 `type: "defenseDown"` 修正为 `type: "debuff"` 并添加 `buffType: "defenseDown"`。
+    *   问题6 (攻击后不普攻):确认为预期行为，无需修改。
+* [2025-05-09 21:03:48] - 修改了 [`src/js/core/battle.js`](src/js/core/battle.js:1) 中的 `processCharacterAction` 函数，以实现新的玩家战斗逻辑：玩家现在可以在用完所有可用技能后执行一次普通攻击。
+    *   移除了 `hasPerformedOffensiveActionThisTurn` 逻辑。
+    *   技能循环现在会尝试所有可用技能。
+    *   在技能循环后添加了普通攻击逻辑（如果角色和怪物存活且未执行过普攻）。
+    *   将原有的普通攻击逻辑封装到了新的 `executeNormalAttack` 方法中。

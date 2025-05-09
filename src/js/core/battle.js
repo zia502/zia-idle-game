@@ -181,9 +181,24 @@ this.resetProcCounts(); // 重置技能Proc触发计数
         if (typeof initialMaxHpFromJson === 'number' && !isNaN(initialMaxHpFromJson) && initialMaxHpFromJson > 0) {
             monsterCharacter.currentStats.maxHp = initialMaxHpFromJson;
         } else {
-            console.error(`怪物 ${monsterCharacter.name} (ID: ${monsterCharacter.id}) 的原始 maxHp (${initialMaxHpFromJson}) 无效，将尝试使用 currentStats.maxHp (${monsterCharacter.currentStats.maxHp}) 或默认值 10000。`);
-            if (!(typeof monsterCharacter.currentStats.maxHp === 'number' && !isNaN(monsterCharacter.currentStats.maxHp) && monsterCharacter.currentStats.maxHp > 0)) {
-                monsterCharacter.currentStats.maxHp = 10000; // 最后的默认值
+            let foundHpInBaseStats = false;
+            if (monster.baseStats) {
+                if (typeof monster.baseStats.maxHp === 'number' && !isNaN(monster.baseStats.maxHp) && monster.baseStats.maxHp > 0) {
+                    monsterCharacter.currentStats.maxHp = monster.baseStats.maxHp;
+                    foundHpInBaseStats = true;
+                    console.log(`怪物 ${monsterCharacter.name} (ID: ${monsterCharacter.id}) 使用 monster.baseStats.maxHp: ${monster.baseStats.maxHp} 作为 maxHp。`);
+                } else if (typeof monster.baseStats.hp === 'number' && !isNaN(monster.baseStats.hp) && monster.baseStats.hp > 0) {
+                    monsterCharacter.currentStats.maxHp = monster.baseStats.hp;
+                    foundHpInBaseStats = true;
+                    console.log(`怪物 ${monsterCharacter.name} (ID: ${monsterCharacter.id}) 使用 monster.baseStats.hp: ${monster.baseStats.hp} 作为 maxHp。`);
+                }
+            }
+
+            if (!foundHpInBaseStats) {
+                console.error(`怪物 ${monsterCharacter.name} (ID: ${monsterCharacter.id}) 的原始 maxHp (来自 monster.hp: ${initialMaxHpFromJson}) 和 baseStats 无效。将尝试使用 currentStats.maxHp (${monsterCharacter.currentStats.maxHp}) 或默认值 10000。`);
+                if (!(typeof monsterCharacter.currentStats.maxHp === 'number' && !isNaN(monsterCharacter.currentStats.maxHp) && monsterCharacter.currentStats.maxHp > 0)) {
+                    monsterCharacter.currentStats.maxHp = 10000; // 最后的默认值
+                }
             }
         }
 
@@ -854,9 +869,10 @@ this.resetProcCounts(); // 重置技能Proc触发计数
         for (const member of teamMembers) {
             if (typeof BuffSystem !== 'undefined') {
                 const expiredBuffs = BuffSystem.updateBuffDurations(member);
+                const actualExpiredBuffs = Array.isArray(expiredBuffs) ? expiredBuffs : []; // 确保是可迭代的
 
                 let buffNames = "";
-                for (const buff of expiredBuffs) {
+                for (const buff of actualExpiredBuffs) {
                     buffNames += buff.name + ", ";
                 }
                 if (buffNames !== "") {
@@ -894,10 +910,12 @@ this.resetProcCounts(); // 重置技能Proc触发计数
 
         // 更新怪物的BUFF
         if (typeof BuffSystem !== 'undefined') {
-            const expiredBuffs = BuffSystem.updateBuffDurations(monster);
+            const expiredBuffsFromSystem = BuffSystem.updateBuffDurations(monster);
+            // 确保 expiredBuffs 是可迭代的，以防 BuffSystem.updateBuffDurations 返回 null 或 undefined
+            const expiredBuffs = Array.isArray(expiredBuffsFromSystem) ? expiredBuffsFromSystem : [];
 
             let buffNames = "";
-            for (const buff of expiredBuffs) {
+            for (const buff of expiredBuffs) { // 现在迭代的是确保为数组的 expiredBuffs
                 buffNames += buff.name + ", ";
             }
             if (buffNames !== "") {
@@ -958,18 +976,19 @@ this.resetProcCounts(); // 重置技能Proc触发计数
         //     console.log(`[DEBUG] Character ${character.id} has no skills in character.skills array.`);
         // }
 
-        let hasPerformedOffensiveActionThisTurn = false;
-        const offensiveSkillTypes = ['damage', 'debuff', 'multi_effect', 'trigger'];
+        let usedAnySkillThisTurn = false;
+        let performedNormalAttack = false; // 新增：标记是否已执行普攻
+        // const offensiveSkillTypes = ['damage', 'debuff', 'multi_effect', 'trigger']; // 不再需要此变量
 
         // --- 技能使用阶段 ---
         const availableSkills = this.getAvailableSkills(character);
         // // DEBUG LOG: getAvailableSkills 结果
         // console.log(`[DEBUG] Character ${character.id} getAvailableSkills result: [${availableSkills.join(', ')}]`);
 
-        if (availableSkills.length > 0) {
+        if (availableSkills && availableSkills.length > 0) {
             for (const skillToUseId of availableSkills) {
-                if (hasPerformedOffensiveActionThisTurn) {
-                    this.logBattle(`${character.name} 已执行过攻击性动作，本回合不再使用其他技能。`);
+                // 检查战斗结束条件
+                if (this.isBattleOver(currentTeamMembers, monster) || character.currentStats.hp <= 0 || monster.currentStats.hp <= 0) {
                     break;
                 }
 
@@ -996,16 +1015,18 @@ this.resetProcCounts(); // 重置技能Proc触发计数
                                 const result = JobSkills.useSkill(character.id, skillToUseId, targets, monster);
 
                                 if (result.success) {
+                                    usedAnySkillThisTurn = true;
                                     // // DEBUG LOG: 技能使用成功
                                     // console.log(`[DEBUG] Character ${character.id} successfully used skill ${skillToUseId}. Message: ${result.message}`);
                                     this.logBattle(result.message || `${character.name} 使用了技能 ${skillData.name}。`);
                                     this.setSkillCooldown(character, skillToUseId, skillData);
                                     this.recordSkillUsage(character, skillToUseId);
 
-                                    if (offensiveSkillTypes.includes(skillData.effectType)) {
-                                        hasPerformedOffensiveActionThisTurn = true;
-                                        this.logBattle(`${character.name} 使用的技能 ${skillData.name} 是攻击性技能。`);
-                                    }
+                                    // 不再因为技能是“攻击性”而打断循环
+                                    // if (offensiveSkillTypes.includes(skillData.effectType)) {
+                                    //     hasPerformedOffensiveActionThisTurn = true; // This variable is removed
+                                    //     this.logBattle(`${character.name} 使用的技能 ${skillData.name} 是攻击性技能。`);
+                                    // }
                                     // 触发技能使用后的 Proc
                                     this.handleProcTrigger(character, 'onSkillUse', { skillId: skillToUseId, skillData, targets, battleStats });
                                 } else {
@@ -1036,126 +1057,29 @@ this.resetProcCounts(); // 重置技能Proc触发计数
         } else {
             // // DEBUG LOG: 没有可用技能
             // console.log(`[DEBUG] Character ${character.id} has no available skills this turn.`);
+            this.logBattle(`${character.name} 没有可用的技能。`);
         }
 
         // --- 普通攻击阶段 ---
-        if (!hasPerformedOffensiveActionThisTurn) {
-            this.logBattle(`${character.name} 本回合未使用攻击性技能，尝试进行普通攻击。`);
-            // // DEBUG LOG: 进入普通攻击阶段
-            // if (usedSkillThisTurn) { // This variable is no longer accurate for this specific check
-            //     console.log(`[DEBUG] Character ${character.id} proceeding to normal attack AFTER using a skill (non-offensive).`);
-            // } else {
-            //     console.log(`[DEBUG] Character ${character.id} proceeding to normal attack (NO skill used this turn). Reason for no skill: See previous logs.`);
-            // }
-            let daRate = character.currentStats.daRate || 0.10;
-            let taRate = character.currentStats.taRate || 0.05;
-
-            // 应用BUFF效果调整DA/TA率
-            if (character.buffs) {
-                for (const buff of character.buffs) {
-                    if (buff.type === 'daBoost') daRate += buff.value;
-                    if (buff.type === 'taBoost') taRate += buff.value;
-                    // TODO: 处理 daDown, taDown
-                }
+        // 在所有技能尝试完毕后，如果角色和目标存活，且本回合未执行过普攻，则执行一次普通攻击
+        if (character.currentStats.hp > 0 && monster.currentStats.hp > 0 && !performedNormalAttack) {
+            if (!this.isBattleOver(currentTeamMembers, monster)) {
+                this.logBattle(`${character.name} 在技能使用后，执行普通攻击。`);
+                this.executeNormalAttack(character, monster, battleStats, currentTeamMembers); // 调用封装的普攻逻辑
+                performedNormalAttack = true;
+            } else {
+                 this.logBattle(`${character.name} 或 ${monster.name} 已被击败，无法执行普通攻击。`);
             }
-            daRate = Math.max(0, daRate); // 确保不为负
-            taRate = Math.max(0, taRate);
-
-            const roll = Math.random();
-            let attackCount = 1;
-            let attackType = "普通攻击";
-            let isDA = false;
-            let isTA = false;
-
-            if (roll < taRate) {
-                attackCount = 3;
-                attackType = "三重攻击";
-                isTA = true;
-                if (character.stats) character.stats.taCount = (character.stats.taCount || 0) + 1;
-            } else if (roll < taRate + daRate) {
-                attackCount = 2;
-                attackType = "双重攻击";
-                isDA = true;
-                if (character.stats) character.stats.daCount = (character.stats.daCount || 0) + 1;
-            }
-
-            let totalDamageDealt = 0;
-            let totalHits = 0;
-            let criticalHits = 0;
-
-            for (let i = 0; i < attackCount; i++) {
-                if (monster.currentStats.hp <= 0) break;
-
-                // 触发攻击前的 Proc (e.g., 攻击前加buff)
-                this.handleProcTrigger(character, 'beforeAttack', { target: monster, attackIndex: i, battleStats });
-
-                const rawDamage = Character.calculateAttackPower(character); // 假设这个函数存在且正确
-                const damageResult = this.applyDamageToTarget(character, monster, rawDamage, {
-                    skipCritical: false,
-                    isMultiAttack: attackCount > 1,
-                    attackIndex: i + 1,
-                    totalAttacks: attackCount,
-                    attackType: 'single', // Normal attacks are single target
-                    isSkillDamage: false,
-                    playerTeam: currentTeamMembers ? currentTeamMembers : [character], // Provide team context
-                    enemyTeam: [monster], // Provide enemy context
-                    battleStats: battleStats,
-                    // damageElementType: character.currentStats.attackElement || null // If normal attacks can have elements
-                });
-
-                totalDamageDealt += damageResult.damage;
-                totalHits++;
-                if (damageResult.isCritical) criticalHits++;
-
-                // 触发单次攻击命中后的 Proc (e.g., 追击)
-                this.handleProcTrigger(character, 'onAttackHit', { target: monster, damageDealt: damageResult.damage, isCritical: damageResult.isCritical, attackIndex: i, battleStats });
-
-                // 只在第一次攻击时记录攻击类型日志
-                if (i === 0) {
-                    let damageMessage = `${character.name} ${attackType}，`;
-                    if (damageResult.missed) {
-                        damageMessage += `对 ${monster.name} 的攻击未命中！`;
-                    } else {
-                        damageMessage += `对 ${monster.name} 造成 ${damageResult.damage} 点伤害`;
-                        if (damageResult.isCritical) damageMessage += '（暴击！）';
-                    }
-                    // 暂时不打印单次伤害日志，在后面打印总伤害
-                    // this.logBattle(damageMessage);
-                }
-            }
-
-            // 记录总伤害日志
-            if (totalHits > 0) {
-                 let summaryMessage = `${character.name} ${attackType} (${totalHits}次攻击)`;
-                 if (criticalHits > 0) summaryMessage += ` (${criticalHits}次暴击)`;
-                 summaryMessage += `，总共对 ${monster.name} 造成 ${totalDamageDealt} 点伤害！`;
-                 this.logBattle(summaryMessage);
-            }
-
-
-            // 更新统计
-            if (character.stats) {
-                character.stats.totalDamage = (character.stats.totalDamage || 0) + totalDamageDealt;
-                character.stats.critCount = (character.stats.critCount || 0) + criticalHits; // 使用累加的 criticalHits
-            }
-            if (battleStats && battleStats.characterStats && battleStats.characterStats[character.id]) {
-                battleStats.characterStats[character.id].totalDamage += totalDamageDealt;
-                battleStats.totalDamage += totalDamageDealt;
-                if (isDA) battleStats.characterStats[character.id].daCount++;
-                if (isTA) battleStats.characterStats[character.id].taCount++;
-                battleStats.characterStats[character.id].critCount += criticalHits; // 使用累加的 criticalHits
-            }
-
-            // 触发整个攻击动作完成后的 Proc (包括DA/TA)
-            this.handleProcTrigger(character, 'onAttackFinish', { target: monster, totalDamage: totalDamageDealt, isDA, isTA, battleStats });
-            if (isTA) {
-                 this.handleProcTrigger(character, 'onTripleAttack', { target: monster, totalDamage: totalDamageDealt, battleStats });
-            } else if (isDA) {
-                 this.handleProcTrigger(character, 'onDoubleAttack', { target: monster, totalDamage: totalDamageDealt, battleStats });
-            }
-        } else {
-            this.logBattle(`${character.name} 本回合已执行过攻击性技能，不再进行普通攻击。`);
+        } else if (performedNormalAttack) {
+            this.logBattle(`${character.name} 本回合已执行过普通攻击。`);
+        } else if (character.currentStats.hp <= 0) {
+            this.logBattle(`${character.name} 已被击败，无法执行普通攻击。`);
+        } else if (monster.currentStats.hp <= 0) {
+            this.logBattle(`${monster.name} 已被击败，${character.name} 无需执行普通攻击。`);
         }
+
+
+        // 原普通攻击逻辑已移至 executeNormalAttack 函数，此处不再需要重复代码。
 // --- End of Turn Triggers for the current character ---
     if (character.currentStats.hp > 0) { // Only for living characters
         // Standard onTurnEnd proc
@@ -1168,6 +1092,118 @@ this.resetProcCounts(); // 重置技能Proc触发计数
             this.handleProcTrigger(character, 'onTurnEndHpBelow25Percent', { battleStats });
         }
     }
+    },
+executeNormalAttack(character, monster, battleStats, currentTeamMembers) {
+        // // DEBUG LOG: 进入普通攻击阶段
+        // console.log(`[DEBUG] Character ${character.id} executing normal attack.`);
+
+        let daRate = character.currentStats.daRate || 0.10;
+        let taRate = character.currentStats.taRate || 0.05;
+
+        // 应用BUFF效果调整DA/TA率
+        if (character.buffs) {
+            for (const buff of character.buffs) {
+                if (buff.type === 'daBoost') daRate += buff.value;
+                if (buff.type === 'taBoost') taRate += buff.value;
+                // TODO: 处理 daDown, taDown
+            }
+        }
+        daRate = Math.max(0, daRate); // 确保不为负
+        taRate = Math.max(0, taRate);
+
+        const roll = Math.random();
+        let attackCount = 1;
+        let attackType = "普通攻击";
+        let isDA = false;
+        let isTA = false;
+
+        if (roll < taRate) {
+            attackCount = 3;
+            attackType = "三重攻击";
+            isTA = true;
+            if (character.stats) character.stats.taCount = (character.stats.taCount || 0) + 1;
+        } else if (roll < taRate + daRate) {
+            attackCount = 2;
+            attackType = "双重攻击";
+            isDA = true;
+            if (character.stats) character.stats.daCount = (character.stats.daCount || 0) + 1;
+        }
+
+        let totalDamageDealt = 0;
+        let totalHits = 0;
+        let criticalHits = 0;
+
+        for (let i = 0; i < attackCount; i++) {
+            if (monster.currentStats.hp <= 0) break;
+
+            // 触发攻击前的 Proc (e.g., 攻击前加buff)
+            this.handleProcTrigger(character, 'beforeAttack', { target: monster, attackIndex: i, battleStats });
+
+            const rawDamage = Character.calculateAttackPower(character); // 假设这个函数存在且正确
+            const damageResult = this.applyDamageToTarget(character, monster, rawDamage, {
+                skipCritical: false,
+                isMultiAttack: attackCount > 1,
+                attackIndex: i + 1,
+                totalAttacks: attackCount,
+                attackType: 'single', // Normal attacks are single target
+                isSkillDamage: false, // 明确这不是技能伤害
+                isNormalAttack: true, // 添加此行以指明是普通攻击
+                playerTeam: currentTeamMembers ? currentTeamMembers : [character], // Provide team context
+                enemyTeam: [monster], // Provide enemy context
+                battleStats: battleStats,
+                // damageElementType: character.currentStats.attackElement || null // If normal attacks can have elements
+            });
+
+            totalDamageDealt += damageResult.damage;
+            totalHits++;
+            if (damageResult.isCritical) criticalHits++;
+
+            // 触发单次攻击命中后的 Proc (e.g., 追击)
+            this.handleProcTrigger(character, 'onAttackHit', { target: monster, damageDealt: damageResult.damage, isCritical: damageResult.isCritical, attackIndex: i, battleStats });
+
+            // 只在第一次攻击时记录攻击类型日志
+            if (i === 0) {
+                let damageMessage = `${character.name} ${attackType}，`;
+                if (damageResult.missed) {
+                    damageMessage += `对 ${monster.name} 的攻击未命中！`;
+                } else {
+                    damageMessage += `对 ${monster.name} 造成 ${damageResult.damage} 点伤害`;
+                    if (damageResult.isCritical) damageMessage += '（暴击！）';
+                }
+                // 暂时不打印单次伤害日志，在后面打印总伤害
+                // this.logBattle(damageMessage);
+            }
+        }
+
+        // 记录总伤害日志
+        if (totalHits > 0) {
+             let summaryMessage = `${character.name} ${attackType} (${totalHits}次攻击)`;
+             if (criticalHits > 0) summaryMessage += ` (${criticalHits}次暴击)`;
+             summaryMessage += `，总共对 ${monster.name} 造成 ${totalDamageDealt} 点伤害！`;
+             this.logBattle(summaryMessage);
+        }
+
+
+        // 更新统计
+        if (character.stats) {
+            character.stats.totalDamage = (character.stats.totalDamage || 0) + totalDamageDealt;
+            character.stats.critCount = (character.stats.critCount || 0) + criticalHits; // 使用累加的 criticalHits
+        }
+        if (battleStats && battleStats.characterStats && battleStats.characterStats[character.id]) {
+            battleStats.characterStats[character.id].totalDamage += totalDamageDealt;
+            battleStats.totalDamage += totalDamageDealt;
+            if (isDA) battleStats.characterStats[character.id].daCount++;
+            if (isTA) battleStats.characterStats[character.id].taCount++;
+            battleStats.characterStats[character.id].critCount += criticalHits; // 使用累加的 criticalHits
+        }
+
+        // 触发整个攻击动作完成后的 Proc (包括DA/TA)
+        this.handleProcTrigger(character, 'onAttackFinish', { target: monster, totalDamage: totalDamageDealt, isDA, isTA, battleStats });
+        if (isTA) {
+             this.handleProcTrigger(character, 'onTripleAttack', { target: monster, totalDamage: totalDamageDealt, battleStats });
+        } else if (isDA) {
+             this.handleProcTrigger(character, 'onDoubleAttack', { target: monster, totalDamage: totalDamageDealt, battleStats });
+        }
     },
 
     /**
@@ -1321,7 +1357,9 @@ this.resetProcCounts(); // 重置技能Proc触发计数
                 const damageResult = this.applyDamageToTarget(monster, target, rawDamage, {
                     isMultiAttack: attackCount > 1,
                     attackIndex: i + 1,
-                    totalAttacks: attackCount
+                    totalAttacks: attackCount,
+                    isNormalAttack: true, // 添加此行以指明是普通攻击
+                    isSkillDamage: false  // 明确这不是技能伤害
                 });
 
                 totalDamageDealt += damageResult.damage;
@@ -2041,27 +2079,62 @@ reviveCharacter(character, hpPercentToRestore, teamData) { // teamData is e.g. G
          } // End if (!missed)
 
          // Apply final damage to actualTarget
-         actualTarget.currentStats.hp = Math.max(0, actualTarget.currentStats.hp - finalDamage);
-         if (attacker && attacker.stats && finalDamage > 0) { // Record attacker's damage dealt
-             attacker.stats.totalDamage = (attacker.stats.totalDamage || 0) + finalDamage;
+         const previousHp = actualTarget.currentStats.hp; // Store HP before damage
+         const actualDamageDealt = finalDamage; // finalDamage is the conclusive damage to be applied
+ 
+         actualTarget.currentStats.hp = Math.max(0, previousHp - actualDamageDealt);
+ 
+         // Enhanced Logging for Damage Dealt
+         let damageSourceInfo = "";
+         if (options && options.skillName) {
+             damageSourceInfo = `通过 [${options.skillName}]`;
+         } else if (options && options.isNormalAttack) {
+             damageSourceInfo = `通过 普通攻击`;
+         } else if (options && options.buffName) { // For DOTs or other buff-induced damage
+             damageSourceInfo = `通过 [${options.buffName}] 效果`;
+         } else if (options && options.isProc) {
+             damageSourceInfo = `通过 触发效果`;
+         }
+         
+         const attackerName = attacker ? attacker.name : '未知攻击者';
+ 
+         if (actualDamageDealt > 0) {
+             this.logBattle(
+                 `${attackerName} ${damageSourceInfo} 对 ${actualTarget.name} 造成了 ${actualDamageDealt} 点伤害！` +
+                 ` HP: ${previousHp} -> ${actualTarget.currentStats.hp}` +
+                 `${isCritical ? ' (暴击!)' : ''}` // Missed is handled earlier or results in 0 damage
+             );
+         } else if (missed) { // 'missed' flag should be set if an attack misses entirely
+             this.logBattle(
+                 `${attackerName} ${damageSourceInfo} 对 ${actualTarget.name} 的攻击未命中！`
+             );
+         } else if (rawDamage > 0 && actualDamageDealt === 0) { // Damage was dealt but fully mitigated (e.g. invincible, shield)
+              this.logBattle(
+                 `${attackerName} ${damageSourceInfo} 对 ${actualTarget.name} 的攻击被完全吸收/免疫。 HP: ${actualTarget.currentStats.hp}`
+             );
+         }
+         // End Enhanced Logging
+ 
+         if (attacker && attacker.stats && actualDamageDealt > 0) { // Record attacker's damage dealt
+             attacker.stats.totalDamage = (attacker.stats.totalDamage || 0) + actualDamageDealt;
              if (battleStats.characterStats && battleStats.characterStats[attacker.id]) {
-                 battleStats.characterStats[attacker.id].totalDamage += finalDamage;
+                 battleStats.characterStats[attacker.id].totalDamage += actualDamageDealt;
              } else if (battleStats.monsterStats && attacker.id === options.enemyTeam?.[0]?.id) { // Basic monster damage tracking
-                 battleStats.monsterStats.totalDamage += finalDamage;
+                 battleStats.monsterStats.totalDamage += actualDamageDealt;
              }
          }
-
-
+ 
+ 
          // Trigger onDamaged proc for the actualTarget that took damage
-         if (finalDamage > 0) {
-             this.handleProcTrigger(actualTarget, 'onDamaged', { attacker, damageTaken: finalDamage, isCritical, isProc: options.isProc, battleStats, originalTarget: originalTarget });
+         if (actualDamageDealt > 0) {
+             this.handleProcTrigger(actualTarget, 'onDamaged', { attacker, damageTaken: actualDamageDealt, isCritical, isProc: options.isProc, battleStats, originalTarget: originalTarget });
              if (attacker) {
-                 this.handleProcTrigger(actualTarget, 'onDamagedByEnemy', { attacker, damageTaken: finalDamage, isCritical, isProc: options.isProc, battleStats, originalTarget: originalTarget });
+                 this.handleProcTrigger(actualTarget, 'onDamagedByEnemy', { attacker, damageTaken: actualDamageDealt, isCritical, isProc: options.isProc, battleStats, originalTarget: originalTarget });
              }
          }
          // If original target was different and didn't take damage due to cover, maybe trigger 'onTargetedButCovered' proc? (Future enhancement)
-
-         return { damage: finalDamage, isCritical, missed, isProc: options.isProc, actualTarget: actualTarget, originalTarget: originalTarget };
+ 
+         return { damage: actualDamageDealt, isCritical, missed, isProc: options.isProc, actualTarget: actualTarget, originalTarget: originalTarget };
      },
 
      // --- Helper Method for Character Defeat ---

@@ -604,7 +604,8 @@
         "multiplier": 1.0
       },
       {
-        "type": "defenseDown",
+        "type": "debuff",
+        "buffType": "defenseDown",
         "value": 20,
         "duration": 3,
         "stackable": true,

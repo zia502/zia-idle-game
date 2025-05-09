@@ -864,8 +864,21 @@ const Weapon = {
         const maxLevel = this.breakthroughLevels[weapon.breakthrough || 0];
 
         // 计算当前等级对应的基础属性值（线性增长）
-        const attack = Math.floor(baseStats.attack + Math.floor((baseStats["150Attack"] - baseStats.attack) * (currentLevel - 1) / (maxLevel - 1)));
-        const hp = Math.floor(baseStats.hp + Math.floor((baseStats["150Hp"] - baseStats.hp) * (currentLevel - 1) / (maxLevel - 1)));
+        let attack = baseStats.attack;
+        if (currentLevel > 1 && maxLevel > 1 && typeof baseStats["150Attack"] === 'number' && baseStats["150Attack"] >= baseStats.attack && maxLevel -1 !== 0) {
+            attack = Math.floor(baseStats.attack + Math.floor((baseStats["150Attack"] - baseStats.attack) * (currentLevel - 1) / (maxLevel - 1)));
+        } else if (currentLevel > 1 && (typeof baseStats["150Attack"] !== 'number' || maxLevel <= 1 || baseStats["150Attack"] < baseStats.attack)) {
+            // console.warn(`武器 ${weapon.name} (ID: ${weapon.id}) 缺少150级攻击力数据、150级攻击低于1级、或等级设置不当 (${currentLevel}/${maxLevel})，攻击力将等同于1级。`);
+        }
+        attack = Math.max(0, attack || 0); // 确保非负且有默认值
+
+        let hp = baseStats.hp;
+        if (currentLevel > 1 && maxLevel > 1 && typeof baseStats["150Hp"] === 'number' && baseStats["150Hp"] >= baseStats.hp && maxLevel -1 !== 0) {
+            hp = Math.floor(baseStats.hp + Math.floor((baseStats["150Hp"] - baseStats.hp) * (currentLevel - 1) / (maxLevel - 1)));
+        } else if (currentLevel > 1 && (typeof baseStats["150Hp"] !== 'number' || maxLevel <= 1 || baseStats["150Hp"] < baseStats.hp)) {
+            // console.warn(`武器 ${weapon.name} (ID: ${weapon.id}) 缺少150级HP数据、150级HP低于1级、或等级设置不当 (${currentLevel}/${maxLevel})，HP将等同于1级。`);
+        }
+        hp = Math.max(0, hp || 0); // 确保非负且有默认值
 
         // 创建基础属性对象
         let stats = { attack, hp };

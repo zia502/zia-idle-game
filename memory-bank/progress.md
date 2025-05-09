@@ -7,6 +7,10 @@ This file tracks the project's progress using a task list format.
 
 ## Completed Tasks
 
+*   [2025-05-09 21:18:00] - **Completed Debugging Task:** 调查并修复了战斗日志中指出的4个新问题。
+    *   问题1 (怪物 `maxHp` 初始化): 修改了 [`src/js/core/battle.js`](src/js/core/battle.js:1) 的HP初始化逻辑。
+    *   问题2 (“护甲破坏”两次伤害) & 问题3 (“护甲破坏”0伤害日志矛盾): 修改了 [`src/js/core/job-skills.js`](src/js/core/job-skills.js:1) 以统一伤害应用和日志。
+    *   问题4 (`TypeError: expiredBuffs is not iterable`): 修改了 [`src/js/core/battle.js`](src/js/core/battle.js:1) 的 `updateBuffDurations`，为怪物 `expiredBuffs` 添加了数组检查。
 *   [2025-05-09 17:50:00] - **Completed Task:** 修复 Boss 在战斗中不使用技能的 Bug。
     *   **Cause:** Boss 技能数据未正确加载到 `window.bossSkills`，且 `SkillLoader.getSkillInfo` 未从 `window.bossSkills` 查找。
     *   **Fix:** 修改了 [`src/js/core/skill-loader.js`](src/js/core/skill-loader.js:0) 以加载 Boss 技能数据并更新 `getSkillInfo` 的查找逻辑。
@@ -135,3 +139,20 @@ This file tracks the project's progress using a task list format.
     *   Modified [`src/js/core/job-skills.js`](src/js/core/job-skills.js) to add logging logic in `useSkill` and enhance returned data from `applyBuffEffects` and `applyDebuffEffects`.
     *   Ensured logs capture turn, caster, skill, target, primary effect (damage, heal, buff/debuff application, dispel), and target HP status, following provided specifications.
     *   No changes were needed in [`src/js/core/battle.js`](src/js/core/battle.js) regarding `applyDamageToTarget`'s internal logging, as its existing logs for special events (cover, shield, etc.) do not conflict with the new higher-level skill logs.
+* [2025-05-09 20:21:00] - **Completed Debugging Task:** Fixed JavaScript errors: `ReferenceError` in `job-skills.js` and `TypeError` in `battle.js`.
+*   [2025-05-09 20:52:00] - **Completed Debugging Task:** 调查并修复了战斗日志中指出的6个问题。
+    *   问题1 (怪物HP初始化): 增强日志。
+    *   问题2 (角色攻击力未算武器盘): 修复 `calculateCurrentStats`。
+    *   问题3 (伤害来源不明确): 增强 `applyDamageToTarget` 日志。
+    *   问题4 (“护甲破坏”0伤害): 添加 `applyDamageEffects` 日志。
+    *   问题5 (“护甲破坏”未知效果类型): 修正 `job-skills-templates.json` 中的技能定义。
+    *   问题6 (攻击后不普攻): 确认为预期行为。
+*   [2025-05-09 21:03:48] - **Completed Task:** 根据 `spec-pseudocode` 的输出和用户澄清，修改了 [`src/js/core/battle.js`](src/js/core/battle.js:1) 中的 `processCharacterAction` 函数。
+    *   **Change:** 玩家现在可以在使用完所有当前回合可用的技能之后，再执行一次普通攻击。
+    *   **Details:**
+        *   移除了原有的 `hasPerformedOffensiveActionThisTurn` 标志和相关逻辑。
+        *   技能使用循环现在会遍历所有可用技能，不再因“攻击性”技能而提前中止。
+        *   在技能循环之后，添加了新的逻辑来执行一次普通攻击（前提是角色和目标仍然存活，且本回合未执行过普攻）。
+        *   原有的普通攻击详细逻辑被封装到一个新的辅助函数 `executeNormalAttack` 中，并在适当的时候调用。
+    *   Memory Bank (`activeContext.md`, `progress.md`, `decisionLog.md`) 已更新。
+*   [2025-05-09 21:38:00] - **Completed Debugging Task:** 修复了 [`src/js/core/battle.js`](src/js/core/battle.js:1) 中 `processCharacterAction` 函数内普通攻击执行两次的bug。移除了在调用 `this.executeNormalAttack()` 之后残留的旧攻击逻辑。

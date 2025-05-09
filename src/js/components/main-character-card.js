@@ -117,11 +117,11 @@ class MainCharacterCard {
                     </div>
                     <div class="stat-row">
                         <span class="stat-label">攻击力</span>
-                        <span class="stat-value">${character.attack || character.baseStats?.attack || 0}</span>
+                        <span class="stat-value">${character.currentStats?.attack || character.baseStats?.attack || 0}</span>
                     </div>
                     <div class="stat-row">
                         <span class="stat-label">生命值</span>
-                        <span class="stat-value">${character.hp || character.baseStats?.hp || 0}</span>
+                        <span class="stat-value">${character.currentStats?.hp || character.baseStats?.hp || 0} / ${character.currentStats?.maxHp || character.baseStats?.maxHp || 0}</span>
                     </div>
                 </div>
 

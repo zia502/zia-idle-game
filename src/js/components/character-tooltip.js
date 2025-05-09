@@ -302,56 +302,57 @@ const CharacterTooltip = {
         
         statDisplayConfig.forEach(config => {
             const statKey = config.key;
-            const baseValue = parseFloat(weaponStats[statKey]); // 可能为 NaN
-            const multiValue = parseFloat(multiStats[statKey]); // 可能为 NaN
-            
-            let shouldShow = weaponStats.hasOwnProperty(statKey) ||
-                             (multiStats.hasOwnProperty(statKey) && !isNaN(multiValue) && multiValue !== 0) ||
-                             config.alwaysShow;
+            let displayValue;
+            let displayMaxHpValue; // 用于HP的最大值
 
-            if (!shouldShow && currentStats.hasOwnProperty(statKey) && !multiStats.hasOwnProperty(statKey)) {
-                // 特殊情况：属性在 currentStats 中，但不在 multiStats 中（意味着不受 multiBonus 影响）
-                const currentValue = parseFloat(currentStats[statKey]);
-                let statLine = `<div><span class="skill-tooltip-stat-icon">${config.icon}</span> ${config.name}: ${formatDisplayValue(currentValue, config.isPercent)}`;
-                if (statKey === 'hp') {
-                    const currentMaxHp = parseFloat(currentStats.maxHp) || currentValue;
-                    statLine += ` / ${formatDisplayValue(currentMaxHp, false)}`;
+            // 优先从 currentStats 获取最终值
+            if (currentStats && currentStats.hasOwnProperty(statKey)) {
+                displayValue = parseFloat(currentStats[statKey]);
+                if (statKey === 'hp' && currentStats.hasOwnProperty('maxHp')) {
+                    displayMaxHpValue = parseFloat(currentStats.maxHp);
+                } else if (statKey === 'hp') { // 如果没有maxHp，则当前hp就是最大hp
+                    displayMaxHpValue = displayValue;
                 }
-                statLine += `</div>`;
-                statsHtml += statLine;
-                return;
+            } else if (weaponStats && weaponStats.hasOwnProperty(statKey)) { // 回退到 weaponBonusStats
+                displayValue = parseFloat(weaponStats[statKey]);
+                 if (statKey === 'hp' && weaponStats.hasOwnProperty('maxHp')) {
+                    displayMaxHpValue = parseFloat(weaponStats.maxHp);
+                } else if (statKey === 'hp') {
+                    displayMaxHpValue = displayValue;
+                }
+            } else if (character.baseStats && character.baseStats.hasOwnProperty(statKey)) { // 再回退到 baseStats
+                displayValue = parseFloat(character.baseStats[statKey]);
+                if (statKey === 'hp' && character.baseStats.hasOwnProperty('maxHp')) {
+                    displayMaxHpValue = parseFloat(character.baseStats.maxHp);
+                } else if (statKey === 'hp') {
+                    displayMaxHpValue = displayValue;
+                }
+            } else if (!config.alwaysShow) {
+                return; // 如果不是必须显示的属性且无值，则跳过
             }
+
+            // 如果值无效且不是必须显示的，则跳过
+            if ((displayValue === undefined || isNaN(displayValue)) && !config.alwaysShow) return;
             
-            if (!shouldShow) return;
-
-            const actualBaseValue = isNaN(baseValue) ? 0 : baseValue;
-            const actualMultiValue = isNaN(multiValue) ? 0 : multiValue;
-
-            let baseValueDisplayStr = formatDisplayValue(actualBaseValue, config.isPercent);
-            let multiValueDisplayStr = "";
-
-            if (actualMultiValue > 0) {
-                multiValueDisplayStr = ` <span class="stat-multibonus-positive">+${formatDisplayValue(actualMultiValue, config.isPercent)}</span>`;
-            } else if (actualMultiValue < 0) {
-                multiValueDisplayStr = ` <span class="stat-multibonus-negative">${formatDisplayValue(actualMultiValue, config.isPercent)}</span>`;
-            }
-
-            let statLine = `<div><span class="skill-tooltip-stat-icon">${config.icon}</span> ${config.name}: ${baseValueDisplayStr}${multiValueDisplayStr}`;
+            // 格式化显示值
+            const formattedValue = formatDisplayValue(displayValue, config.isPercent);
+            let statLine = `<div><span class="skill-tooltip-stat-icon">${config.icon}</span> ${config.name}: ${formattedValue}`;
 
             if (statKey === 'hp') {
-                const weaponMaxHp = parseFloat(weaponStats.maxHp);
-                const multiMaxHpVal = parseFloat(multiStats.maxHp);
-
-                const actualBaseMaxHp = isNaN(weaponMaxHp) ? actualBaseValue : weaponMaxHp;
-                const actualMultiMaxHp = isNaN(multiMaxHpVal) ? 0 : multiMaxHpVal;
-                
-                let maxHpBaseDisplayStr = formatDisplayValue(actualBaseMaxHp, false);
-                let maxHpMultiDisplayStr = "";
-
-                if (actualMultiMaxHp > 0) {
-                    maxHpMultiDisplayStr = ` <span class="stat-multibonus-positive">+${formatDisplayValue(actualMultiMaxHp, false)}</span>`;
-                } else if (actualMultiMaxHp < 0) {
-                    maxHpMultiDisplayStr = ` <span class="stat-multibonus-negative">${formatDisplayValue(actualMultiMaxHp, false)}</span>`;
+                const formattedMaxHp = formatDisplayValue(displayMaxHpValue, false);
+                statLine += ` / ${formattedMaxHp}`;
+            }
+            
+            // (可选) 如果仍想显示突破带来的增量，可以从 multiStats 中获取并附加
+            if (multiStats && multiStats.hasOwnProperty(statKey)) {
+                const multiValue = parseFloat(multiStats[statKey]);
+                if (!isNaN(multiValue) && multiValue !== 0) {
+                    const formattedMultiValue = formatDisplayValue(multiValue, config.isPercent);
+                    if (multiValue > 0) {
+                        statLine += ` <span class="stat-multibonus-positive">(+${formattedMultiValue})</span>`;
+                    } else {
+                        statLine += ` <span class="stat-multibonus-negative">(${formattedMultiValue})</span>`;
+                    }
                 }
             }
             statLine += `</div>`;

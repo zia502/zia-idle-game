@@ -235,6 +235,34 @@ const DungeonRunner = {
         // 设置运行状态
         this.isRunning = true;
 
+        // 为队伍成员设置进入地下城时的属性快照
+        if (typeof Game !== 'undefined' && typeof Game.getActiveTeam === 'function' &&
+            typeof Character !== 'undefined' && typeof Character.getCharacter === 'function') {
+            const team = Game.getActiveTeam();
+            if (team && team.members) {
+                for (const memberId of team.members) {
+                    const member = Character.getCharacter(memberId);
+                    if (member) {
+                        // 确保清除旧的快照（如果存在），然后设置新的
+                        if (member.dungeonOriginalStats) {
+                            delete member.dungeonOriginalStats;
+                        }
+                        member.dungeonOriginalStats = JSON.parse(JSON.stringify(member.baseStats));
+                        // console.log(`为 ${member.name} 设置进入地下城时的属性快照:`, member.dungeonOriginalStats);
+                        
+                        // 初始化或重置地下城相关的其他状态
+                        member.dungeonAppliedPassives = {};
+                        member.skillCooldowns = {};
+                        if (typeof BuffSystem !== 'undefined') {
+                            BuffSystem.clearAllBuffs(member); // 清除进入地下城前的buff
+                        } else if (member.buffs) {
+                            member.buffs = [];
+                        }
+                    }
+                }
+            }
+        }
+
         // 清空战斗日志和重置地下城状态
         if (typeof Battle !== 'undefined') {
             Battle.battleLog = [];

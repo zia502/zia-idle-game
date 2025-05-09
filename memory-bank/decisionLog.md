@@ -17,6 +17,20 @@ This file records architectural and implementation decisions using a list format
 
 *
 ---
+### Decision (Code)
+[2025-05-09 14:51:00] - 调整角色进入地下城时属性快照的设置时机，并确认突破加成的计算基准。
+
+**Rationale:**
+为了更准确地反映角色“进入地下城时”的属性状态，`dungeonOriginalStats`（属性快照）的设置时机从之前的加载流程中移至 `DungeonRunner.startDungeonRun()` 函数中，在队伍确认进入地下城后立即为每个队员设置。这确保了武器盘加成基于进入时的准确属性。
+用户确认突破加成 (`multiBonusStats`) 的计算基准维持现状，即基于角色当前的、最新的 `baseStats` 计算，这允许突破效果反映角色在地下城外的持续成长。
+
+**Details:**
+*   修改了 [`src/js/core/dungeon-runner.js`](src/js/core/dungeon-runner.js) 的 `startDungeonRun` 函数：
+    *   在 `this.isRunning = true;` 之后添加了逻辑，为队伍中每个成员创建 `dungeonOriginalStats`，其值为当时的 `member.baseStats`。
+    *   同时，清除了角色进入地下城前的buff，并重置了技能冷却 (`skillCooldowns`) 和地下城已应用的被动技能记录 (`dungeonAppliedPassives`)。
+*   突破加成 (`multiBonusStats`) 的计算逻辑 (在 [`src/js/core/character.js`](src/js/core/character.js:687) 的 `updateMultiBonusStats` 函数中) 保持不变，继续使用角色当前的 `baseStats`。
+*   因此，在地下城中，角色的最终属性 (`currentStats`) 计算公式为：`(dungeonOriginalStats + 基于 dungeonOriginalStats 的武器盘加成) + 基于当前 baseStats 的突破加成`。
+---
 ### Decision
 [2025-05-08 11:44:27] - 将 `test-battle-new.html` 中的职业选择与稀有度选择合并到同一个下拉列表。
 

@@ -90,6 +90,15 @@ This file tracks the project's progress using a task list format.
     *   所有技能描述已更新，以包含标准的被动标记和CD信息。
     *   更新了 [`memory-bank/activeContext.md`](memory-bank/activeContext.md:1)。
 
+*   [2025-05-09 15:01:00] - **Completed Sub-Task:** 检查并调整了UI组件（主角色卡片、角色提示框）中的角色属性显示逻辑，确保其优先使用 `currentStats` 来展示武器盘和突破加成后的数据。
+    *   修改了 [`src/js/components/main-character-card.js`](src/js/components/main-character-card.js:1)。
+    *   修改了 [`src/js/components/character-tooltip.js`](src/js/components/character-tooltip.js:1)。
+    *   更新了 [`memory-bank/activeContext.md`](memory-bank/activeContext.md:1)。
+*   [2025-05-09 14:51:00] - **Completed Task:** 检查并调整了角色属性计算流程，特别是进入地下城时的属性快照机制。
+    *   分析了 [`src/js/core/character.js`](src/js/core/character.js:1), [`src/js/core/dungeon.js`](src/js/core/dungeon.js:1), 和 [`src/js/core/dungeon-runner.js`](src/js/core/dungeon-runner.js:1) 中的相关逻辑。
+    *   修改了 [`src/js/core/dungeon-runner.js`](src/js/core/dungeon-runner.js:1) 的 `startDungeonRun` 函数，以在进入地下城时立即为队伍成员设置准确的 `dungeonOriginalStats`，并重置相关状态。
+    *   确认了突破加成 (`multiBonusStats`) 仍基于角色当前的 `baseStats` 计算。
+    *   更新了 [`memory-bank/decisionLog.md`](memory-bank/decisionLog.md:1) 和 [`memory-bank/activeContext.md`](memory-bank/activeContext.md:1)。
 ## Current Tasks
 *   [2025-05-08 21:03:00] - 调试战斗中 TypeError (技能 warriorSlash 使用错误: TypeError: Cannot read properties of null (reading 'teamMembers') at battle.js:960).
 

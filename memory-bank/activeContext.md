@@ -28,6 +28,18 @@ This file tracks the project's current status, including recent changes, current
 *   [2025-05-09 00:00:00] - 在 [`src/js/core/battle.js`](src/js/core/battle.js) 的 `processCharacterAction` 函数中实现了新的多技能使用循环逻辑。角色现在每回合可以尝试使用所有冷却完毕的技能，直到没有可用技能或已执行过攻击性动作。
 *   [2025-05-09 14:37:00] - 完成了对 [`src/data/ssr_skill.json`](src/data/ssr_skill.json:1) 文件中技能 `description` 字段的统一格式化。所有描述现在都包含标准的被动标记和CD信息。
 
+*   [2025-05-09 15:01:00] - **UI属性显示检查与调整：**
+    *   确认了角色 `baseStats` 主要受等级和职业影响。
+    *   检查了主角色卡片 ([`src/js/components/main-character-card.js`](src/js/components/main-character-card.js:1)) 和角色提示框 ([`src/js/components/character-tooltip.js`](src/js/components/character-tooltip.js:1)) 的属性显示逻辑。
+    *   修改了 `MainCharacterCard` 的渲染逻辑，使其显示 `character.currentStats.attack` 和 `character.currentStats.hp` / `maxHp`。
+    *   修改了 `CharacterTooltip` 的 `generateTooltipContent` 方法，使其优先从 `character.currentStats` 获取并显示属性值。
+    *   组队界面 ([`src/js/components/team-management.js`](src/js/components/team-management.js:1)) 未直接显示详细攻防数值，故未修改。
+    *   强调了在UI渲染前确保角色对象的 `currentStats` 已通过 `Character._updateCharacterEffectiveStats` 更新的重要性。
+*   [2025-05-09 14:51:00] - **角色属性计算流程检查与调整：**
+    *   分析了角色在地下城内外属性（`baseStats`, `weaponBonusStats`, `multiBonusStats`, `currentStats`, `dungeonOriginalStats`）的计算和应用逻辑，涉及文件 [`src/js/core/character.js`](src/js/core/character.js:1), [`src/js/core/dungeon.js`](src/js/core/dungeon.js:1), 和 [`src/js/core/dungeon-runner.js`](src/js/core/dungeon-runner.js:1)。
+    *   根据用户决策，修改了 [`src/js/core/dungeon-runner.js`](src/js/core/dungeon-runner.js:1) 的 `startDungeonRun` 函数，确保在队伍进入地下城时立即为每个成员设置 `dungeonOriginalStats` 属性快照，并清除进入前的buff、重置技能冷却和地下城被动。
+    *   确认突破加成 (`multiBonusStats`) 维持基于角色当前最新 `baseStats` 的计算方式。
+    *   最终地下城内属性计算流程为：`currentStats = (dungeonOriginalStats + 基于 dungeonOriginalStats 的武器盘加成) + 基于当前 baseStats 的突破加成`。
 ## Recent Changes
 
 *   创建了 `memory-bank/productContext.md`。

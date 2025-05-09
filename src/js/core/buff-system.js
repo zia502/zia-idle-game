@@ -140,6 +140,14 @@ const BuffSystem = {
             canDispel: true,
             stackable: true
         },
+        skillDamageUp: {
+            name: '技能伤害提升',
+            description: '提高技能造成的伤害倍率',
+            icon: '📜🔥',
+            isPositive: true,
+            canDispel: true,
+            stackable: true
+        },
         // 持续伤害/治疗
         dot: { // Damage Over Time
             name: '持续伤害',
@@ -316,6 +324,14 @@ const BuffSystem = {
             canDispel: true,
             stackable: false
         },
+        elementalDamageCap: {
+            name: '元素伤害上限',
+            description: '限制受到的特定元素伤害的上限',
+            icon: '🛡️🚫🔥',
+            isPositive: true,
+            canDispel: true,
+            stackable: false
+        },
         // EX攻击提升 (already exists as exAttackUp, but ssr_skill.json might use a different term)
         // dot_vulnerability (already exists)
 
@@ -393,6 +409,10 @@ const BuffSystem = {
         }
         if (type === 'damageElementConversion') {
             buff.convertToElementType = options.convertToElementType;
+        }
+        if (type === 'elementalDamageCap') {
+            buff.elementType = options.elementType; // Store the specific element for the cap
+            // value (the cap amount) is already handled by the generic value assignment
         }
         if (options.buffsPerStack) { // For buff packages that scale with stacks
             buff.buffsPerStack = options.buffsPerStack;

@@ -97,3 +97,9 @@ This file tracks the project's progress using a task list format.
     *   修改了 [`src/js/core/buff-system.js`](src/js/core/buff-system.js:1) 中的 `applyBuff()` 函数，在施加负面buff前检查目标是否拥有 `debuffImmunity`、`statusImmunity` 或 `debuffResistOnce`。
     *   如果存在抵抗/免疫，则阻止debuff施加，并正确处理 `debuffResistOnce` 的层数消耗和移除。
     *   更新了 [`memory-bank/activeContext.md`](memory-bank/activeContext.md:1)。
+* [2025-05-09 11:11:00] - **Completed Task:** 重构并统一了游戏中的伤害处理核心逻辑。
+    *   明确 `Battle.applyDamageToTarget()` ([`battle.js`第1797行](src/js/core/battle.js:1797)) 作为核心伤害数值计算（暴击、防御、减伤、上限等）的唯一入口。
+    *   更新了 [`JobSkills.applyDamageEffects()`](src/js/core/job-skills.js:1161) 以计算技能原始伤害（包含`skillDamageUp`, `additionalDamage`）并调用 `Battle.applyDamageToTarget()`，然后负责实际HP扣减。
+    *   修改了 [`src/js/core/battle-system-integration.js`](src/js/core/battle-system-integration.js:1) 中对 `Battle.applyDamageToTarget` 的猴子补丁 ([`battle-system-integration.js`第486行](src/js/core/battle-system-integration.js:486))，使其正确调用原始的 `Battle.applyDamageToTarget`，并在其前后处理援护、追击、吸血等效果。
+    *   移除了 [`src/js/core/job-skills.js`](src/js/core/job-skills.js:1) 中冗余的 `applyDamageToTarget` ([`job-skills.js`第762行](src/js/core/job-skills.js:762)) 方法。
+    *   更新了 [`memory-bank/activeContext.md`](memory-bank/activeContext.md:1)。

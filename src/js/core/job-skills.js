@@ -396,13 +396,26 @@ const JobSkills = {
                     break;
                 case 'damage':
                 case 'enmity': // 将 enmity 视为一种特殊的 damage 类型进行处理
-                    currentEffectResult = this.applyDamageEffects(character, { ...template, ...effectDetail, effects: [effectDetail], type: actualEffectType }, teamMembers, monster);
+                    // 查找此技能模板中是否定义了 additionalDamage
+                    let totalAdditionalFixedDamage = 0;
+                    if (Array.isArray(template.effects)) { // template.effects 是原始技能的完整效果列表
+                        template.effects.forEach(siblingEffect => {
+                            if (siblingEffect.type === 'additionalDamage' && typeof siblingEffect.value === 'number') {
+                                totalAdditionalFixedDamage += siblingEffect.value;
+                            }
+                        });
+                    }
+                    // 将追加伤害值传递给 applyDamageEffects
+                    currentEffectResult = this.applyDamageEffects(character, { ...template, ...effectDetail, effects: [effectDetail], type: actualEffectType }, teamMembers, monster, totalAdditionalFixedDamage);
                     break;
                 case 'heal':
                     currentEffectResult = this.applyHealEffects(character, { ...template, ...effectDetail, effects: [effectDetail] }, teamMembers, monster);
                     break;
-                case 'dispel':
+                case 'dispel': // Standard dispel
                     currentEffectResult = this.applyDispelEffects(character, { ...template, ...effectDetail, effects: [effectDetail] }, teamMembers, monster);
+                    break;
+                case 'clearDebuff': // Specific action to clear debuffs
+                    currentEffectResult = this.applyDispelEffects(character, { ...template, ...effectDetail, dispelPositive: false, effects: [effectDetail] }, teamMembers, monster);
                     break;
                 case 'revive':
                     currentEffectResult = this.applyReviveEffects(character, { ...template, ...effectDetail, effects: [effectDetail] }, teamMembers, monster);
@@ -476,10 +489,10 @@ const JobSkills = {
                     currentEffectResult = { success: true, message: `应用了场地效果（待实现）`, effects: {} }; // 暂时标记为成功
                     break;
                 case 'additionalDamage':
-                     // TODO: Implement additional damage logic (how is it different from damage/echo?)
-                    console.warn(`Unhandled atomic effect type: additionalDamage in skill ${template.name}`);
-                    Battle.logBattle(`技能 ${template.name} 尝试应用未实现的追加伤害效果。`);
-                    currentEffectResult = { success: true, message: `应用了追加伤害（待实现）`, effects: {} }; // 暂时标记为成功
+                    // 此处不需要做特别处理，因为它的值会在 'damage'/'enmity' case 中被收集并传递
+                    // 仅记录日志以表示它被识别了
+                    console.log(`Atomic effect 'additionalDamage' for skill ${template.name} will be handled by its corresponding damage effect.`);
+                    currentEffectResult = { success: true, message: `追加伤害效果已记录，将随主伤害一同处理。`, effects: {} };
                     break;
                 case 'hpCostPercentageCurrent': // 此效果已在循环前处理，这里跳过
                     continue; // 使用 continue 跳过当前循环迭代
@@ -1163,7 +1176,7 @@ const JobSkills = {
         // 应用每个伤害效果
         for (const target of targets) {
             for (const effect of template.effects) {
-                if (effect.type === 'damage' || effect.type === 'multi_attack') {
+                if (effect.type === 'damage') { // multi_attack has been consolidated into damage with a count property
                     // 计算伤害
                     let damageMultiplier = effect.multiplier || 1.0;
                     let attackCount = effect.count || 1;
@@ -1173,55 +1186,72 @@ const JobSkills = {
                         damageMultiplier = effect.minMultiplier + Math.random() * (effect.maxMultiplier - effect.minMultiplier);
                     }
 
+                    // 应用 character 身上的 skillDamageUp buff 来调整当前 effect 的伤害倍率
+                    if (character.buffs) {
+                        character.buffs.forEach(buff => {
+                            if (buff.type === 'skillDamageUp' && buff.duration > 0 && typeof buff.value === 'number') {
+                                damageMultiplier += buff.value; // 直接加到倍率上
+                            }
+                        });
+                    }
+
                     // 计算每次攻击的伤害
                     for (let i = 0; i < attackCount; i++) {
                         // 检查目标是否已被击败
                         if (target.currentStats.hp <= 0) break;
 
-                        // 计算原始伤害
+                        // 计算原始伤害 (使用调整后的倍率)
                         const rawDamage = Math.floor(Character.calculateAttackPower(character) * damageMultiplier);
 
                         // 应用伤害到目标，考虑BUFF和DEBUFF
-                        const options = {
+                        const damageOptions = {
                             element: effect.element || template.attribute,
                             isFixedDamage: effect.fixedDamageValue !== undefined,
                             fixedDamageValue: effect.fixedDamageValue,
                             skillName: template.name,
                             ignoreDefense: effect.ignoreDefense || false,
-                            hits: 1 // applyDamageToTarget is called per hit in the loop
-                            // randomApplied, skipStats, skipCritical can be added if needed by applyDamageToTarget's design
+                            hits: 1, // applyDamageToTarget is called per hit in the loop, so this is 1 for this call
+                            skipCritical: template.skipCritical !== undefined ? template.skipCritical : (effect.skipCritical !== undefined ? effect.skipCritical : true)
                         };
-                        const actualDamage = this.applyDamageToTarget(character, target, rawDamage, options);
+                        // 直接调用 Battle.applyDamageToTarget (原始版本，假设 battle-system-integration.js 的修改后续处理)
+                        // 注意：Battle.applyDamageToTarget 只计算伤害，不直接扣血。扣血仍在此处处理。
+                        const actualDamageResult = Battle.applyDamageToTarget(character, target, rawDamage, damageOptions);
+                        
+                        let damageToApply = 0;
+                        if (actualDamageResult && typeof actualDamageResult.damage === 'number') {
+                            damageToApply = actualDamageResult.damage;
+                        } else {
+                            console.error("Battle.applyDamageToTarget did not return a valid damage result:", actualDamageResult);
+                        }
 
                         // 记录旧HP值
                         const oldHp = target.currentStats.hp;
 
-                        // 确保伤害是有效数字
-                        let damage = actualDamage.damage;
-                        if (isNaN(damage) || damage === undefined) {
-                            console.error("伤害值为NaN或undefined，设置为0");
-                            damage = 0;
-                        }
-
                         // 实际应用伤害到目标HP
-                        target.currentStats.hp = Math.max(0, target.currentStats.hp - damage);
+                        target.currentStats.hp = Math.max(0, target.currentStats.hp - damageToApply);
 
                         // 记录HP变化
-                        console.log(`${target.name} HP: ${Math.floor(oldHp)} -> ${Math.floor(target.currentStats.hp)} (-${damage})`);
+                        console.log(`${target.name} HP: ${Math.floor(oldHp)} -> ${Math.floor(target.currentStats.hp)} (-${damageToApply})`);
                         if (typeof window !== 'undefined' && window.log) {
-                            window.log(`${target.name} HP: ${Math.floor(oldHp)} -> ${Math.floor(target.currentStats.hp)} (-${damage})`);
+                            window.log(`${target.name} HP: ${Math.floor(oldHp)} -> ${Math.floor(target.currentStats.hp)} (-${damageToApply})`);
                         }
 
                         // 更新伤害统计
-                        character.stats.totalDamage += actualDamage.damage;
-                        totalDamage += actualDamage.damage;
+                        if (character.stats) { // 确保 character.stats 存在
+                           character.stats.totalDamage = (character.stats.totalDamage || 0) + damageToApply;
+                           if(actualDamageResult && actualDamageResult.isCritical) {
+                               character.stats.critCount = (character.stats.critCount || 0) + 1;
+                           }
+                        }
+                        totalDamageAppliedToAllTargets += damageToApply; // 使用正确的累加变量
 
                         effects.push({
                             target: target.name,
-                            type: effect.type,
-                            rawDamage,
-                            actualDamage: actualDamage.damage,
-                            multiplier: damageMultiplier.toFixed(2)
+                            type: effect.type, // Should be 'damage' or 'enmity'
+                            rawDamage, // Raw damage for this hit
+                            actualDamage: damageToApply, // Actual damage for this hit
+                            isCritical: actualDamageResult ? actualDamageResult.isCritical : false,
+                            multiplier: damageMultiplier.toFixed(2) // Multiplier used for this hit (after skillDamageUp)
                         });
                     }
                 }
@@ -1241,11 +1271,10 @@ const JobSkills = {
 
         return {
             message,
-            effects: {
-                type: 'damage',
-                targets: template.targetType,
-                totalDamage,
-                effects
+            effects: { // This should be the top-level effect type from the skill template
+                type: template.type, // e.g., 'damage', 'enmity' from the effectDetail passed in
+                totalDamage: Math.floor(totalDamageAppliedToAllTargets),
+                details: effects // Array of individual damage applications
             }
         };
     },

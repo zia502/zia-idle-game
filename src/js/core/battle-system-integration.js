@@ -493,96 +493,74 @@ function integrateBattleSystemUpdates() {
             target = cover;
         }
 
-        // 使用 JobSkills.applyDamageToTarget 计算基础伤害
-        let damageResult = JobSkills.applyDamageToTarget(attacker, target, rawDamage, options);
+        // 调用 Battle.js 中的原始 applyDamageToTarget 进行核心伤害计算
+        // 'this' 在这里应该指向 Battle 对象，originalApplyDamageToTarget 是 Battle.js 中的版本
+        // 'target' 变量在这里是经过援护效果判断后的实际受击目标。
+        let mainDamageCalculationResult = originalApplyDamageToTarget.call(this, attacker, target, rawDamage, options);
 
-        // 确保damageResult是一个对象
-        if (typeof damageResult !== 'object' || damageResult === null) {
-            console.error("JobSkills.applyDamageToTarget返回值不是对象:", damageResult);
-            damageResult = { damage: damageResult, isCritical: false, attributeBonus: 0 };
+        // 确保mainDamageCalculationResult是一个对象并有 damage 属性
+        if (typeof mainDamageCalculationResult !== 'object' || mainDamageCalculationResult === null || typeof mainDamageCalculationResult.damage !== 'number') {
+            console.error('originalApplyDamageToTarget (Battle.js) 返回的结果无效:', mainDamageCalculationResult);
+            mainDamageCalculationResult = { damage: 0, isCritical: false, attributeBonus: 0 };
         }
+        
+        let actualDamageDealtByMainHit = mainDamageCalculationResult.damage;
 
-        // 提取伤害值
-        let finalDamage = damageResult.damage;
-
-        // 确保finalDamage是一个数字
-        if (isNaN(finalDamage) || finalDamage === undefined) {
-            console.error("伤害值为NaN或undefined，设置为0");
-            finalDamage = 0;
-            damageResult.damage = 0;
-        }
-
-        // 考虑伤害上限
-        if (target.buffs) {
-            const damageCap = target.buffs.find(buff => buff.type === 'damageCap');
-            if (damageCap && damageCap.value) {
-                finalDamage = Math.min(finalDamage, damageCap.value);
-                damageResult.damage = finalDamage;
-            }
-        }
-
-        // 考虑目标的无敌状态
-        if (target.buffs && target.buffs.some(buff => buff.type === 'invincible')) {
-            const invincibleBuff = target.buffs.find(buff => buff.type === 'invincible');
-            if (invincibleBuff) {
-                // 消耗一次无敌次数
-                if (invincibleBuff.maxHits) {
-                    invincibleBuff.maxHits--;
-                    if (invincibleBuff.maxHits <= 0) {
-                        BuffSystem.removeBuff(target, invincibleBuff.id);
+        // 处理追击效果 (echo) - based on actualDamageDealtByMainHit
+        // 追击伤害的HP扣减不在此函数中处理，仅计算并记录
+        if (attacker.buffs && attacker.buffs.some(buff => buff.type === 'echo' && buff.duration > 0)) {
+            const echoBuff = attacker.buffs.find(buff => buff.type === 'echo' && buff.duration > 0);
+            if (echoBuff && echoBuff.value > 0 && actualDamageDealtByMainHit > 0 && target.currentStats.hp > 0) {
+                const echoRawDamage = Math.floor(actualDamageDealtByMainHit * echoBuff.value);
+                if (echoRawDamage > 0) {
+                    this.logBattle(`${attacker.name} 的追击效果对 ${target.name} 准备造成额外的 ${echoRawDamage} 点原始伤害！`);
+                    const echoOptions = {
+                        ...options,
+                        isEcho: true,
+                        skillName: (options.skillName || "") + " (追击)",
+                        skipCritical: echoBuff.skipCritical !== undefined ? echoBuff.skipCritical : true
+                    };
+                    const echoDamageResult = originalApplyDamageToTarget.call(this, attacker, target, echoRawDamage, echoOptions);
+                    
+                    if (echoDamageResult && echoDamageResult.damage > 0) {
+                         this.logBattle(`${attacker.name} 的追击实际对 ${target.name} 造成了 ${echoDamageResult.damage} 点伤害！`);
+                        if (!mainDamageCalculationResult.additionalDamages) {
+                            mainDamageCalculationResult.additionalDamages = [];
+                        }
+                        mainDamageCalculationResult.additionalDamages.push({
+                            type: 'echo',
+                            damage: echoDamageResult.damage,
+                            isCritical: echoDamageResult.isCritical,
+                            targetId: target.id,
+                            sourceBuff: echoBuff.name
+                        });
+                         if (attacker.stats) {
+                             attacker.stats.totalDamage = (attacker.stats.totalDamage || 0) + echoDamageResult.damage;
+                         }
                     }
                 }
-                finalDamage = 0;
-                damageResult.damage = 0;
             }
         }
-
-        // 考虑目标的完全回避状态
-        if (target.buffs && target.buffs.some(buff => buff.type === 'evade')) {
-            finalDamage = 0;
-            damageResult.damage = 0;
-            // 可以选择是否消耗回避BUFF
-            const evadeBuff = target.buffs.find(buff => buff.type === 'evade');
-            if (evadeBuff && options.consumeEvade) {
-                BuffSystem.removeBuff(target, evadeBuff.id);
-            }
-        }
-
-        // 考虑护盾效果
-        if (target.shield && target.shield > 0) {
-            if (target.shield >= finalDamage) {
-                target.shield -= finalDamage;
-                finalDamage = 0;
-                damageResult.damage = 0;
-            } else {
-                finalDamage -= target.shield;
-                damageResult.damage = finalDamage;
-                target.shield = 0;
-            }
-        }
-
-        // 考虑元素转换
-        if (target.buffs) {
-            const elementConversion = target.buffs.find(buff => buff.type === 'elementConversion');
-            if (elementConversion && elementConversion.maxHits) {
-                // 这里可以添加元素转换的逻辑
-                // 例如，将伤害转换为目标有利的属性
-
-                // 消耗一次元素转换次数
-                elementConversion.maxHits--;
-                if (elementConversion.maxHits <= 0) {
-                    BuffSystem.removeBuff(target, elementConversion.id);
+        
+        // 处理吸血效果 (lifeSteal) - based on actualDamageDealtByMainHit
+        // 吸血效果直接修改攻击者HP
+        if (attacker.buffs && attacker.buffs.some(buff => buff.type === 'lifeSteal' && buff.duration > 0)) {
+            const lifeStealBuff = attacker.buffs.find(buff => buff.type === 'lifeSteal' && buff.duration > 0);
+            if (lifeStealBuff && lifeStealBuff.value > 0 && actualDamageDealtByMainHit > 0) {
+                const healedAmount = Math.floor(actualDamageDealtByMainHit * lifeStealBuff.value);
+                if (healedAmount > 0 && attacker.currentStats.hp > 0 && attacker.currentStats.hp < attacker.currentStats.maxHp) {
+                    const oldHpAttacker = attacker.currentStats.hp;
+                    attacker.currentStats.hp = Math.min(attacker.currentStats.maxHp, attacker.currentStats.hp + healedAmount);
+                    this.logBattle(`${attacker.name} 通过吸血恢复了 ${healedAmount} 点生命！ (${oldHpAttacker} -> ${attacker.currentStats.hp})`);
+                    if (attacker.stats) {
+                        attacker.stats.totalHealing = (attacker.stats.totalHealing || 0) + (attacker.currentStats.hp - oldHpAttacker);
+                    }
                 }
             }
         }
 
-        // 应用伤害
-        target.currentStats.hp = Math.max(0, target.currentStats.hp - finalDamage);
-
-        // 更新damageResult中的damage值
-        damageResult.damage = finalDamage;
-
-        return damageResult;
+        // 返回原始伤害计算函数的结果。调用者负责应用主伤害的HP扣减。
+        return mainDamageCalculationResult;
     };
 
     // 12. 添加Battle.processReviveEffect方法

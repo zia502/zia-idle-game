@@ -133,3 +133,31 @@ Identified root cause of skill usage failure (`warriorSlash` executing as 【狂
 *   Corrected return value of `JobSkills.applyBuffEffects` to include `success: true`.
 *   Reverted `warriorSlash` definition in `job-skills-templates.json` back to "狂怒" as per user instruction.
 *   Affected files: [`src/js/core/job-system.js`](src/js/core/job-system.js), [`src/js/core/skill-loader.js`](src/js/core/skill-loader.js), [`src/js/core/job-skills-template.js`](src/js/core/job-skills-template.js), [`src/js/core/job-skills.js`](src/js/core/job-skills.js), [`src/data/job-skills-templates.json`](src/data/job-skills-templates.json).
+
+---
+### Decision (Architecture)
+[2025-05-09 17:03:00] - Adopt new Boss skill selection mechanism with HP threshold triggers.
+
+**Rationale:**
+To introduce more dynamic and challenging Boss encounters, a new skill selection logic is required. This logic prioritizes skills triggered by the Boss's HP percentage, allowing for strategic phase-based abilities. These HP-triggered skills operate without cooldown constraints. If no HP-triggered skills are applicable, the Boss falls back to a standard cooldown-based skill selection, and finally to a basic attack if no skills are available. This aligns with the user's confirmed detailed logic.
+
+**Implications/Details:**
+*   **Skill Data Structure (`boss-skills.json`):**
+*   Skills can now include a `triggerCondition` object: `{ type: "hp_threshold", value: 0.xx, priority: N }`.
+*   `value` represents the HP percentage (e.g., 0.50 for 50%).
+*   `priority` is an integer (lower value means higher priority) for resolving conflicts if multiple HP threshold skills are met.
+*   **Boss AI Logic (e.g., in `src/js/core/battle.js` or a dedicated Boss AI module):**
+1.  **HP Threshold Check:** At the start of the Boss's turn, evaluate all skills with `hp_threshold` conditions.
+    *   If conditions met, select based on `priority` (then original skill order for ties).
+    *   Selected skill is used *without* CD check and *does not* enter CD. Turn ends.
+2.  **Regular Skill Check:** If no HP skill used, iterate through skills, select the first one not on cooldown.
+    *   Use skill, set its CD. Turn ends.
+3.  **Default Action:** If no skills used, perform a normal attack.
+*   **Cooldown Management:**
+*   Skill cooldowns for Bosses will be managed dynamically on the Boss's instance during battle (e.g., `boss.skillCooldowns = {"skill_id": current_cd_value}`).
+*   HP-triggered skills, when activated via HP threshold, bypass this CD mechanism entirely. If these skills also have a regular `cooldown` property (for potential use as a regular skill if not HP-triggered), that CD applies only when used as a regular skill.
+*   **Affected Files:**
+*   [`src/data/boss-skills.json`](src/data/boss-skills.json:0) (or equivalent): To add `triggerCondition` to relevant skills.
+*   [`src/js/core/battle.js`](src/js/core/battle.js:0) (or Boss AI module): To implement the new two-phase decision logic and integrate dynamic CD management for Bosses.
+*   Boss character representation in battle: Needs to store `skillCooldowns`.
+*   **System Patterns:** A new "Boss AI Skill Selection Pattern" has been added to [`memory-bank/systemPatterns.md`](memory-bank/systemPatterns.md:1).

@@ -7,6 +7,8 @@ This file tracks the project's progress using a task list format.
 
 ## Completed Tasks
 
+*   [2025-05-09 17:07:00] - Boss AI 技能新机制实现：完成 Boss 血量触发技能和常规技能选择逻辑的编码。
+*   [2025-05-09 16:37:53] - Boss 技能更新：完成对 src/data/boss-skills.json 的修改，包括 effectType 统一、技能描述调整和防御数值明确化。
 *   初始化 Memory Bank。
 *   [2025-05-08 11:48:58] - 修改 `test-battle-new.html`：合并职业与稀有度选择，实现主角专属职业逻辑，添加无角色提示。
 *   [2025-05-08 12:18:42] - 调试 `test-battle-new.html`：改进了角色/职业下拉列表的显示逻辑和按钮状态管理，并为职业数据获取添加了增强日志，以解决用户反馈的问题。

@@ -111,6 +111,48 @@ A skill is considered "offensive" if its `effectType` is one of:
 
 Skills with `effectType` like `buff`, `heal`, `dispel` are generally not considered "offensive" for the purpose of ending the skill usage phase immediately, allowing characters to potentially use a buff and then an attack skill. The exact definition of "offensive" might need refinement based on game balance.
 
+---
+### [2025-05-09 17:03:00] - Boss AI Skill Selection Pattern
+
+**Context:** Bosses require a new skill selection logic that prioritizes HP threshold-triggered skills, then considers regular cooldown-based skills, and finally resorts to a basic attack.
+
+**Pattern:**
+
+**Phase 1: HP Threshold Skill Check (Highest Priority)**
+1.  **Trigger Identification:** At the start of the Boss's turn, identify all skills with a `triggerCondition: { type: "hp_threshold", value: Number, priority: Number }`.
+2.  **Condition Check:** For each identified skill, check if `Boss.currentHP / Boss.maxHP <= triggerCondition.value`.
+3.  **Selection:**
+    *   If multiple skills meet the HP threshold:
+        *   Sort them by `triggerCondition.priority` (ascending, lower value is higher priority).
+        *   If priorities are equal, sort by their original order in the Boss's skill list.
+    *   Select the highest priority skill.
+4.  **Action & CD:**
+    *   If a skill is selected, the Boss uses this skill.
+    *   **Crucially, this type of skill usage IGNORES its own cooldown and DOES NOT trigger a cooldown after use.**
+    *   The Boss's turn ends (no normal attack).
+
+**Phase 2: Regular Skill Check (If No HP Threshold Skill Used)**
+1.  **Condition:** This phase executes only if no skill was chosen in Phase 1.
+2.  **Skill Iteration:** Iterate through the Boss's skill list in their defined order.
+3.  **CD Check:** For each skill, check its current cooldown status (managed dynamically on the Boss instance in battle, e.g., `bossInstance.skillCooldowns[skillId] === 0`).
+4.  **Selection:** Select the first skill that is not on cooldown.
+5.  **Action & CD:**
+    *   If a skill is selected, the Boss uses this skill.
+    *   The skill's cooldown is then set according to its definition (e.g., `bossInstance.skillCooldowns[skillId] = skill.cooldown`).
+    *   The Boss's turn ends (no normal attack).
+
+**Phase 3: No Skill Available**
+1.  **Condition:** This phase executes if no skill was chosen in Phase 1 or Phase 2.
+2.  **Action:** The Boss performs a normal attack or takes no action (based on game design).
+
+**Skill Cooldown Management (for Regular Skills):**
+*   Skill cooldowns are dynamic and managed on the Boss's battle instance (e.g., an object like `skillCooldowns: { skill_A: 0, skill_B: 2 }`).
+*   When a regular skill is used, its entry in `skillCooldowns` is updated to its defined `cooldown` value.
+*   At the end/start of each Boss turn, all active cooldowns in `skillCooldowns` are decremented by 1 (until they reach 0).
+*   HP threshold-triggered skills do not interact with this `skillCooldowns` mechanism when triggered by HP.
+
+---
+
 ## Testing Patterns
 
 *

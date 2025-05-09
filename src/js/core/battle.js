@@ -8,6 +8,7 @@ const Battle = {
     battleLog: [],
     currentBattle: null, // 保存当前战斗信息
     dungeonTurn: 0, // 地下城回合数
+    bossSkillCooldowns: {}, // 存储Boss技能的当前冷却时间
 
     // 战斗常量
     BASE_DAMAGE_CAP: 199999,
@@ -160,6 +161,8 @@ this.resetProcCounts(); // 重置技能Proc触发计数
             currentStats: {...monster.currentStats},
             isBoss: monster.isBoss || false,
             isMiniBoss: monster.isMiniBoss || false,
+            skills: monster.skills || [], // 添加 skills 属性
+            skillCooldowns: {}, // 初始化技能冷却时间
             isFinalBoss: monster.isFinalBoss || false,
             stats: { totalDamage: 0, totalHealing: 0 },
             xpReward: monster.xpReward || 100
@@ -902,35 +905,18 @@ this.resetProcCounts(); // 重置技能Proc触发计数
             };
         }
 
-        // 更新怪物技能冷却
+        // 更新怪物技能冷却 (常规技能)
         if (monster.skillCooldowns) {
             for (const skillId in monster.skillCooldowns) {
                 if (monster.skillCooldowns[skillId] > 0) {
                     monster.skillCooldowns[skillId]--;
                     if (monster.skillCooldowns[skillId] === 0) {
-                        // 首先尝试从bossSkills获取技能
-                        let skill = null;
-
-                        // 如果有全局的bossSkills对象
-                        if (typeof window !== 'undefined' && window.bossSkills && window.bossSkills[skillId]) {
-                            skill = window.bossSkills[skillId];
+                        const skillData = SkillLoader.getSkillInfo(skillId) || (window.bossSkills && window.bossSkills[skillId]);
+                        if (skillData) {
+                            // this.logBattle(`${monster.name} 的技能 ${skillData.name} 冷却结束，可以再次使用！`);
+                        } else {
+                            // this.logBattle(`${monster.name} 的技能 ${skillId} 冷却结束，可以再次使用！`);
                         }
-
-                        // 如果JobSystem中有这个技能
-                        if (!skill && typeof JobSystem !== 'undefined' && typeof JobSystem.getSkill === 'function') {
-                            skill = JobSystem.getSkill(skillId);
-                        }
-
-                        // 如果JobSkillsTemplate中有这个技能
-                        if (!skill && typeof JobSkillsTemplate !== 'undefined' && JobSkillsTemplate.templates && JobSkillsTemplate.templates[skillId]) {
-                            skill = JobSkillsTemplate.templates[skillId];
-                        }
-
-                        // if (skill) {
-                        //     this.logBattle(`${monster.name} 的技能 ${skill.name} 冷却结束，可以再次使用！`);
-                        // } else {
-                        //     this.logBattle(`${monster.name} 的技能 ${skillId} 冷却结束，可以再次使用！`);
-                        // }
                     }
                 }
             }
@@ -1193,45 +1179,115 @@ this.resetProcCounts(); // 重置技能Proc触发计数
     processMonsterAction(monster, teamMembers, battleStats) {
         if (monster.currentStats.hp <= 0) return;
 
-        // --- 选择目标 ---
-        const target = this.selectMonsterTarget(monster, teamMembers);
-        if (!target) return; // 没有有效目标
+        let usedActionThisTurn = false;
 
-        // --- 技能使用阶段 ---
-        const availableSkills = this.getAvailableSkills(monster);
-        let usedSkillThisTurn = false;
-
-        if (availableSkills.length > 0) {
-            // TODO: 实现怪物 AI 决定使用哪个技能
-            const skillToUseId = availableSkills[Math.floor(Math.random() * availableSkills.length)]; // 随机选择
-            const skillData = SkillLoader.getSkillInfo(skillToUseId);
-
-            if (skillData && this.canUseSkill(monster, skillToUseId, skillData)) {
-                 if (typeof JobSkills !== 'undefined' && typeof JobSkills.useSkill === 'function') {
-                     try {
-                         // 确保怪物和技能模板可用
-                         if (typeof Character !== 'undefined') { Character.characters = Character.characters || {}; Character.characters[monster.id] = monster; }
-                         if (typeof JobSkillsTemplate !== 'undefined' && !JobSkillsTemplate.templates[skillToUseId]) { JobSkillsTemplate.templates[skillToUseId] = skillData; }
-
-                         const targets = this.getEffectTargets(skillData.targetType, monster, teamMembers, monster);
-                         const result = JobSkills.useSkill(monster.id, skillToUseId, targets, target); // 传递目标
-
-                         if (result.success) {
-                             this.logBattle(result.message);
-                             this.setSkillCooldown(monster, skillToUseId, skillData);
-                             this.recordSkillUsage(monster, skillToUseId);
-                             usedSkillThisTurn = true;
-                             this.handleProcTrigger(monster, 'onSkillUse', { skillId: skillToUseId, skillData, targets, battleStats });
-                         }
-                     } catch (error) {
-                         console.error(`怪物技能 ${skillToUseId} 使用错误:`, error);
-                     }
-                 }
+        // --- 阶段一：血量触发技能 ---
+        const hpPercent = monster.currentStats.hp / monster.currentStats.maxHp;
+        const triggeredSkills = [];
+        if (monster.skills && window.bossSkills) { // 确保 monster.skills 和 window.bossSkills 存在
+            for (const skillId of monster.skills) {
+                const skillData = window.bossSkills[skillId]; // 从全局 bossSkills 获取技能数据
+                if (skillData && skillData.triggerCondition && skillData.triggerCondition.type === "hp_threshold") {
+                    if (hpPercent <= skillData.triggerCondition.value) {
+                        triggeredSkills.push({ ...skillData, id: skillId }); // 添加id到技能数据中
+                    }
+                }
             }
         }
 
-        // --- 普通攻击阶段 ---
-        if (!usedSkillThisTurn) {
+
+        if (triggeredSkills.length > 0) {
+            triggeredSkills.sort((a, b) => {
+                const priorityA = a.triggerCondition.priority !== undefined ? a.triggerCondition.priority : Infinity;
+                const priorityB = b.triggerCondition.priority !== undefined ? b.triggerCondition.priority : Infinity;
+                if (priorityA !== priorityB) {
+                    return priorityA - priorityB;
+                }
+                // 如果优先级相同，则按原始顺序（此处简化为ID顺序，实际应为boss.skills中的顺序）
+                return monster.skills.indexOf(a.id) - monster.skills.indexOf(b.id);
+            });
+
+            const skillToUse = triggeredSkills[0];
+            const skillData = skillToUse; // skillToUse 已经包含了完整的技能数据
+
+            this.logBattle(`${monster.name} 血量 (${(hpPercent * 100).toFixed(1)}%) 触发技能 ${skillData.name}!`);
+            if (typeof JobSkills !== 'undefined' && typeof JobSkills.useSkill === 'function') {
+                try {
+                    if (typeof Character !== 'undefined') { Character.characters = Character.characters || {}; Character.characters[monster.id] = monster; }
+                    if (typeof JobSkillsTemplate !== 'undefined' && !JobSkillsTemplate.templates[skillData.id]) { JobSkillsTemplate.templates[skillData.id] = skillData; }
+
+                    const targets = this.getEffectTargets(skillData.targetType, monster, teamMembers, monster);
+                    const targetForSkill = this.selectMonsterTarget(monster, teamMembers); // HP触发技能也需要目标
+                    const result = JobSkills.useSkill(monster.id, skillData.id, targets, targetForSkill);
+
+                    if (result.success) {
+                        this.logBattle(result.message || `${monster.name} 使用了血量触发技能 ${skillData.name}。`);
+                        // 血量触发技能不进入CD，也不记录常规使用次数
+                        this.handleProcTrigger(monster, 'onSkillUse', { skillId: skillData.id, skillData, targets, battleStats });
+                        usedActionThisTurn = true;
+                    } else {
+                        this.logBattle(`${monster.name} 尝试使用血量触发技能 ${skillData.name} 失败。${result.message ? '原因: ' + result.message : ''}`);
+                    }
+                } catch (error) {
+                    console.error(`怪物血量触发技能 ${skillData.id} 使用错误:`, error);
+                    this.logBattle(`${monster.name} 尝试使用血量触发技能 ${skillData.name} 时发生错误。`);
+                }
+            }
+        }
+
+        // --- 阶段二：常规技能 ---
+        if (!usedActionThisTurn) {
+            const availableSkills = this.getAvailableSkills(monster); // getAvailableSkills 内部会检查CD
+
+            if (availableSkills.length > 0) {
+                // 按原始顺序选择第一个可用技能
+                let skillToUseId = null;
+                let skillDataToUse = null;
+
+                for (const id of monster.skills) { // 遍历Boss原始技能列表以保持顺序
+                    if (availableSkills.includes(id)) {
+                         skillToUseId = id;
+                         skillDataToUse = SkillLoader.getSkillInfo(skillToUseId) || (window.bossSkills && window.bossSkills[skillToUseId]);
+                         if (skillDataToUse) break; // 找到第一个可用的
+                    }
+                }
+
+
+                if (skillToUseId && skillDataToUse) {
+                    this.logBattle(`${monster.name} 准备使用常规技能 ${skillDataToUse.name}。`);
+                    if (typeof JobSkills !== 'undefined' && typeof JobSkills.useSkill === 'function') {
+                        try {
+                            if (typeof Character !== 'undefined') { Character.characters = Character.characters || {}; Character.characters[monster.id] = monster; }
+                            if (typeof JobSkillsTemplate !== 'undefined' && !JobSkillsTemplate.templates[skillToUseId]) { JobSkillsTemplate.templates[skillToUseId] = skillDataToUse; }
+
+                            const targets = this.getEffectTargets(skillDataToUse.targetType, monster, teamMembers, monster);
+                            const targetForSkill = this.selectMonsterTarget(monster, teamMembers);
+                            const result = JobSkills.useSkill(monster.id, skillToUseId, targets, targetForSkill);
+
+                            if (result.success) {
+                                this.logBattle(result.message || `${monster.name} 使用了技能 ${skillDataToUse.name}。`);
+                                this.setSkillCooldown(monster, skillToUseId, skillDataToUse); // 常规技能设置CD
+                                this.recordSkillUsage(monster, skillToUseId);
+                                this.handleProcTrigger(monster, 'onSkillUse', { skillId: skillToUseId, skillData: skillDataToUse, targets, battleStats });
+                                usedActionThisTurn = true;
+                            } else {
+                                 this.logBattle(`${monster.name} 尝试使用技能 ${skillDataToUse.name} 失败。${result.message ? '原因: ' + result.message : ''}`);
+                            }
+                        } catch (error) {
+                            console.error(`怪物常规技能 ${skillToUseId} 使用错误:`, error);
+                            this.logBattle(`${monster.name} 尝试使用技能 ${skillDataToUse.name} 时发生错误。`);
+                        }
+                    }
+                }
+            }
+        }
+
+        // --- 阶段三：无技能可用 (普通攻击) ---
+        if (!usedActionThisTurn) {
+            const target = this.selectMonsterTarget(monster, teamMembers);
+            if (!target) return; // 没有有效目标
+
+            this.logBattle(`${monster.name} 没有可用技能，进行普通攻击。`);
             let daRate = monster.currentStats.daRate || 0.1;
             let taRate = monster.currentStats.taRate || 0.03;
 
@@ -1258,10 +1314,9 @@ this.resetProcCounts(); // 重置技能Proc触发计数
             let criticalHits = 0;
 
             for (let i = 0; i < attackCount; i++) {
-                if (target.currentStats.hp <= 0) break; // 目标已阵亡
+                if (target.currentStats.hp <= 0) break;
 
                 this.handleProcTrigger(monster, 'beforeAttack', { target, attackIndex: i, battleStats });
-
                 const rawDamage = Character.calculateAttackPower(monster);
                 const damageResult = this.applyDamageToTarget(monster, target, rawDamage, {
                     isMultiAttack: attackCount > 1,
@@ -1271,33 +1326,28 @@ this.resetProcCounts(); // 重置技能Proc触发计数
 
                 totalDamageDealt += damageResult.damage;
                 totalHits++;
-                 if (damageResult.isCritical) criticalHits++;
-
+                if (damageResult.isCritical) criticalHits++;
                 this.handleProcTrigger(monster, 'onAttackHit', { target, damageDealt: damageResult.damage, isCritical: damageResult.isCritical, attackIndex: i, battleStats });
 
-                // 检查目标是否阵亡
                 if (target.currentStats.hp <= 0) {
                     this.logBattle(`${target.name} 被击败了！`);
-                    this.handleCharacterDefeat(target, teamMembers); // 处理角色阵亡和替补
-                    break; // 停止对已阵亡目标的后续攻击
+                    this.handleCharacterDefeat(target, teamMembers);
+                    break;
                 }
             }
 
             if (totalHits > 0) {
-                 let summaryMessage = `${monster.name} ${attackType} (${totalHits}次攻击)`;
-                 if (criticalHits > 0) summaryMessage += ` (${criticalHits}次暴击)`;
-                 summaryMessage += `，总共对 ${target.name} 造成 ${totalDamageDealt} 点伤害！`;
-                 this.logBattle(summaryMessage);
+                let summaryMessage = `${monster.name} ${attackType} (${totalHits}次攻击)`;
+                if (criticalHits > 0) summaryMessage += ` (${criticalHits}次暴击)`;
+                summaryMessage += `，总共对 ${target.name} 造成 ${totalDamageDealt} 点伤害！`;
+                this.logBattle(summaryMessage);
             }
 
-            // 更新统计
             if (monster.stats) monster.stats.totalDamage = (monster.stats.totalDamage || 0) + totalDamageDealt;
             if (battleStats && battleStats.monsterStats) battleStats.monsterStats.totalDamage += totalDamageDealt;
-
-            // 触发攻击完成 Proc
             this.handleProcTrigger(monster, 'onAttackFinish', { target, totalDamage: totalDamageDealt, isDA, isTA, battleStats });
-             if (isTA) this.handleProcTrigger(monster, 'onTripleAttack', { target, totalDamage: totalDamageDealt, battleStats });
-             else if (isDA) this.handleProcTrigger(monster, 'onDoubleAttack', { target, totalDamage: totalDamageDealt, battleStats });
+            if (isTA) this.handleProcTrigger(monster, 'onTripleAttack', { target, totalDamage: totalDamageDealt, battleStats });
+            else if (isDA) this.handleProcTrigger(monster, 'onDoubleAttack', { target, totalDamage: totalDamageDealt, battleStats });
         }
     },
 

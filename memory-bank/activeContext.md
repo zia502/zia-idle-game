@@ -41,7 +41,13 @@ This file tracks the project's current status, including recent changes, current
     *   确认突破加成 (`multiBonusStats`) 维持基于角色当前最新 `baseStats` 的计算方式。
     *   最终地下城内属性计算流程为：`currentStats = (dungeonOriginalStats + 基于 dungeonOriginalStats 的武器盘加成) + 基于当前 baseStats 的突破加成`。
 ## Recent Changes
+*   [2025-05-09 17:07:00] - **Boss AI 技能选择逻辑实现：**
+    *   修改了 [`src/data/boss-skills.json`](src/data/boss-skills.json:0)，为示例技能添加了 `triggerCondition`。
+    *   修改了 [`src/js/core/battle.js`](src/js/core/battle.js:0) 中的 `processMonsterAction` 函数，实现了三阶段决策逻辑（血量触发、常规CD、普通攻击）。
+    *   在 `Battle` 对象和怪物实例中添加了 `skillCooldowns` 管理。
+    *   更新了 `updateBuffDurations` 以处理Boss技能CD。
 
+*   [2025-05-09 16:37:53] - 修改了 src/data/boss-skills.json：统一了多个技能的 effectType 为 "multi_effect"，更新了技能描述以匹配实际效果，并明确了防御相关技能描述中的固定数值。
 *   创建了 `memory-bank/productContext.md`。
 *   [2025-05-08 11:48:58] - 修改了 `test-battle-new.html` 以更新角色和职业选择UI及相关JavaScript逻辑。
 *   [2025-05-08 12:14:54] - 进一步修改 `test-battle-new.html` 以尝试修复错误并添加日志。

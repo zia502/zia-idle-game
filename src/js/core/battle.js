@@ -392,21 +392,17 @@ this.resetProcCounts(); // 重置技能Proc触发计数
     },
 
     /**
-     * 处理战斗过程
+     * 处理战斗过程 - 新的三阶段流程
      * @param {array} teamMembers - 队伍成员
      * @param {object} monster - 怪物角色对象
      * @returns {object} 战斗结果
      */
     processBattle(teamMembers, monster) {
-        // 最大回合数限制，防止无限循环
         const MAX_TURNS = 99;
-
-        // 初始化怪物HP
         console.log("初始化怪物HP前:", monster.currentStats);
         monster.currentStats.hp = monster.currentStats.maxHp || monster.currentStats.hp;
         console.log("初始化怪物HP后:", monster.currentStats);
 
-        // 确保HP是有效数字
         if (isNaN(monster.currentStats.hp) || monster.currentStats.hp === undefined) {
             console.error("怪物HP初始化为NaN或undefined，强制设置为maxHp");
             monster.currentStats.hp = monster.currentStats.maxHp;
@@ -417,341 +413,224 @@ this.resetProcCounts(); // 重置技能Proc触发计数
             }
         }
 
-        // 初始化战斗统计
         const battleStats = {
             totalDamage: 0,
             totalHealing: 0,
             characterStats: {},
-            monsterStats: {
-                totalDamage: 0,
-                totalHealing: 0
-            }
+            monsterStats: { totalDamage: 0, totalHealing: 0 }
         };
 
-        // 初始化角色统计
         for (const member of teamMembers) {
             battleStats.characterStats[member.id] = {
-                totalDamage: 0,
-                totalHealing: 0,
-                daCount: 0,
-                taCount: 0,
-                critCount: 0,
-                buffsApplied: 0,
-                debuffsApplied: 0
+                totalDamage: 0, totalHealing: 0, daCount: 0, taCount: 0, critCount: 0, buffsApplied: 0, debuffsApplied: 0
             };
-
-            // 初始化角色BUFF
-            if (!member.buffs) {
-                member.buffs = [];
-            }
-
-            // 触发战斗开始时的特性
+            if (!member.buffs) member.buffs = [];
             this.processBattleStartTraits(member, teamMembers);
         }
+        if (!monster.buffs) monster.buffs = [];
 
-        // 初始化怪物BUFF
-        if (!monster.buffs) {
-            monster.buffs = [];
-        }
-
-        // 战斗循环
         while (this.currentTurn < MAX_TURNS) {
             this.currentTurn++;
-            console.log(`[DEBUG] processBattle: 回合 ${this.currentTurn} 开始。怪物 ${monster.name} HP: ${monster.currentStats.hp}/${monster.currentStats.maxHp}`);
+            this.logBattle(`\n===== 回合 ${this.currentTurn} 开始 =====`);
+            if (typeof Dungeon !== 'undefined' && Dungeon.currentRun) this.dungeonTurn++;
 
-            // 如果在地下城中，增加地下城总回合数
-            if (typeof Dungeon !== 'undefined' && Dungeon.currentRun) {
-                this.dungeonTurn++;
-            }
-            // 处理回合开始时的BUFF效果
             this.processTurnStartBuffs(teamMembers, monster);
-            console.log(`[DEBUG] processBattle: 回合 ${this.currentTurn}，processTurnStartBuffs 后。怪物 ${monster.name} HP: ${monster.currentStats.hp}/${monster.currentStats.maxHp}`);
+            if (this.isBattleOver(teamMembers, monster)) break;
 
-            // 处理队伍成员和怪物的行动顺序（玩家永远先手，按照队伍1,2,3,4的顺序行动）
-            // 不再使用速度排序，而是保持队伍成员的原始顺序，然后将怪物放在最后
-            const allEntities = [...teamMembers, monster];
-            const extraTurnQueue = [];
+            // --- 我方技能阶段 ---
+            this.logBattle("--- 我方技能阶段 ---");
+            this.executePlayerSkillPhase(teamMembers, monster, battleStats);
+            if (this.isBattleOver(teamMembers, monster)) break;
 
-            // 处理每个实体的行动 (Main Pass)
-            for (const entity of allEntities) {
-                if (this.isBattleOver(teamMembers, monster)) break;
-                if (entity.currentStats.hp <= 0) continue;
-                if (this.isStunned(entity)) {
-                    this.logBattle(`${entity.name} 被眩晕，无法行动！`);
-                    continue;
-                }
+            // --- 我方普攻阶段 ---
+            this.logBattle("--- 我方普攻阶段 ---");
+            this.executePlayerAttackPhase(teamMembers, monster, battleStats);
+            if (this.isBattleOver(teamMembers, monster)) break;
 
-                if (entity === monster) {
-                    this.processMonsterAction(monster, teamMembers, battleStats);
-                } else { // Player Character
-                    this.processCharacterAction(entity, monster, battleStats, teamMembers);
+            // --- 敌方行动阶段 ---
+            this.logBattle("--- 敌方行动阶段 ---");
+            this.executeEnemyPhase(monster, teamMembers, battleStats);
+            if (this.isBattleOver(teamMembers, monster)) break;
 
-                    // 检查再攻击 BUFF
-                    if (entity.currentStats.hp > 0 && !this.isStunned(entity) && typeof BuffSystem !== 'undefined') {
-                        const extraTurnBuffs = BuffSystem.getBuffsByType(entity, 'extraAttackTurn');
-                        if (extraTurnBuffs && extraTurnBuffs.length > 0) {
-                            const activeExtraTurnBuff = extraTurnBuffs.find(b => b.duration > 0); // Find first active one
-                            if (activeExtraTurnBuff) {
-                                this.logBattle(`${entity.name} 触发了 [再攻击]，将进行一次额外行动!`);
-                                BuffSystem.removeBuff(entity, activeExtraTurnBuff.id); // 消耗BUFF
-                                extraTurnQueue.push(entity); // 加入额外行动队列
-                            }
-                        }
-                    }
-                }
-                if (this.isBattleOver(teamMembers, monster)) break;
-            }
+            // --- 回合结束处理 ---
+            this.logBattle("--- 回合结束处理 ---");
+            this.updateBuffDurations(teamMembers, monster); // 更新Buff持续时间
 
-            // 处理额外行动队列
-            let safetyExtraTurnCounter = 0;
-            const maxExtraTurnsPerRound = allEntities.length * 2; // 安全上限
-
-            while (extraTurnQueue.length > 0 && safetyExtraTurnCounter < maxExtraTurnsPerRound) {
-                if (this.isBattleOver(teamMembers, monster)) break;
-                
-                const entityForExtraTurn = extraTurnQueue.shift(); // 取出队列中的第一个
-                safetyExtraTurnCounter++;
-
-                if (entityForExtraTurn.currentStats.hp <= 0 || this.isStunned(entityForExtraTurn)) {
-                    continue;
-                }
-
-                this.logBattle(`--- ${entityForExtraTurn.name} 开始额外行动 (第 ${safetyExtraTurnCounter} 次额外行动) ---`);
-                this.processCharacterAction(entityForExtraTurn, monster, battleStats, teamMembers); // 执行额外行动
-
-                // 重要：通常额外行动不应再触发“再攻击”从而无限循环。
-                // 由于我们消耗了原BUFF，此处的额外行动不会因同一个BUFF再次触发。
-                // 如果新BUFF在此额外行动中被施加，它将在下一轮主行动或下一轮额外行动队列处理时考虑（如果队列逻辑允许动态添加）。
-                // 当前设计：额外行动不检查新的再攻击buff以加入当前轮次的extraTurnQueue。
-                if (this.isBattleOver(teamMembers, monster)) break;
-            }
-            if (safetyExtraTurnCounter >= maxExtraTurnsPerRound && extraTurnQueue.length > 0) {
-                this.logBattle(`警告：额外行动次数达到上限 (${maxExtraTurnsPerRound})，剩余 ${extraTurnQueue.length} 个额外行动未执行。`);
-            }
-
-
-            // 更新BUFF持续时间 (在所有主行动和额外行动之后)
-            this.updateBuffDurations(teamMembers, monster);
-
-
-            // 检查怪物HP是否为NaN
-            if (isNaN(monster.currentStats.hp) || monster.currentStats.hp === undefined) {
-                console.error("怪物HP为NaN或undefined，尝试修复");
-                monster.currentStats.hp = monster.currentStats.maxHp || 10000;
-                if (isNaN(monster.currentStats.hp)) {
-                    monster.currentStats.hp = 10000;
-                    monster.currentStats.maxHp = 10000;
+            // 处理所有实体的回合结束效果
+            for (const entity of [...teamMembers, monster]) {
+                if (entity.currentStats.hp > 0) {
+                    this.processEndOfTurnEffect(entity, null, teamMembers, monster); // 调整调用方式
                 }
             }
-
-            // 计算百分比，确保不会产生NaN
-            const monsterHpPercent = monster.currentStats.maxHp > 0 ?
-                Math.floor((monster.currentStats.hp / monster.currentStats.maxHp) * 100) : 0;
-
-            //this.logBattle(`${monster.name} HP: ${Math.floor(monster.currentStats.hp)}/${monster.currentStats.maxHp} (${monsterHpPercent}%)`, true); // 强制记录，不过滤
-            console.log(`怪物当前hp: ${monster.currentStats.hp}, 怪物状态: `, monster.currentStats);
-
-            for (const member of teamMembers) {
+            
+            const monsterHpPercent = monster.currentStats.maxHp > 0 ? Math.floor((monster.currentStats.hp / monster.currentStats.maxHp) * 100) : 0;
+            this.logBattle(`${monster.name} HP: ${Math.floor(monster.currentStats.hp)}/${monster.currentStats.maxHp} (${monsterHpPercent}%)`);
+            teamMembers.forEach(member => {
                 if (member.currentStats.hp > 0) {
-                    // 计算百分比，确保不会产生NaN
-                    const memberHpPercent = member.currentStats.maxHp > 0 ?
-                        Math.floor((member.currentStats.hp / member.currentStats.maxHp) * 100) : 0;
-
-                    //this.logBattle(`${member.name} HP: ${Math.floor(member.currentStats.hp)}/${member.currentStats.maxHp} (${memberHpPercent}%)`, true); // 强制记录，不过滤
+                    const memberHpPercent = member.currentStats.maxHp > 0 ? Math.floor((member.currentStats.hp / member.currentStats.maxHp) * 100) : 0;
+                    this.logBattle(`${member.name} HP: ${Math.floor(member.currentStats.hp)}/${member.currentStats.maxHp} (${memberHpPercent}%)`);
                 } else {
-                    this.logBattle(`${member.name} 已阵亡`, true); // 强制记录，不过滤
+                    this.logBattle(`${member.name} 已阵亡`);
                 }
-            }
-
-            // 在每个回合结束时打印双方的HP
-            if (monster.currentStats.hp > 0) {
-                this.logBattle(`\n回合 ${this.dungeonTurn} 结束, ${monster.name} HP: ${Math.floor(monster.currentStats.hp)}/${monster.currentStats.maxHp} (${monsterHpPercent}%)`);
-            }
-
-            // 处理回合结束效果
-            console.log(`----- 回合结束触发事件 -----`);
+            });
 
 
-            // 处理队伍成员的回合结束效果
-            for (const member of teamMembers) {
-                if (member.currentStats.hp <= 0) continue;
-
-                // 处理技能的回合结束效果
-                if (member.skills) {
-                    for (const skillId of member.skills) {
-                        // 获取技能信息
-                        let skill = null;
-
-                        // 尝试从 JobSystem 获取技能
-                        if (typeof JobSystem !== 'undefined' && typeof JobSystem.getSkill === 'function') {
-                            skill = JobSystem.getSkill(skillId);
-                        }
-
-                        // 如果从 JobSystem 中没有找到，尝试从 JobSkillsTemplate 获取
-                        if (!skill && typeof JobSkillsTemplate !== 'undefined' && JobSkillsTemplate.templates) {
-                            skill = JobSkillsTemplate.templates[skillId];
-                        }
-
-                        // 如果没有找到技能信息，继续下一个技能
-                        if (!skill) continue;
-
-                        // 处理被动技能的回合结束效果
-                        if (skill.passive && skill.effects) {
-                            for (const effect of skill.effects) {
-                                // 处理回合结束类型的效果
-                                if (effect.type === 'endOfTurn') {
-                                    this.processEndOfTurnEffect(member, effect.effect, teamMembers, monster, skillId);
-                                    this.logBattle(`回合结束${member.name}触发技能${skill.name}`);
-                                }
-                            }
-                        }
-
-                        // 处理雷暴技能（特殊情况，如果技能模板没有正确定义）
-                        if (skillId === 'thunderstorm' && (!skill.effects || !skill.effects.some(e => e.type === 'endOfTurn'))) {
-                            // 创建标准的雷暴效果
-                            const thunderstormEffect = {
-                                type: 'multi_attack',
-                                count: 5,
-                                multiplier: 0.3,
-                                targetType: 'all_enemies'
-                            };
-
-                            // 使用通用处理方法
-                            this.processEndOfTurnEffect(member, thunderstormEffect, teamMembers, monster, 'thunderstorm');
-                        }
-                    }
-                }
-
-                // 处理BUFF的回合结束效果
-                if (member.buffs) {
-                    for (const buff of member.buffs) {
-                        if (buff.type === 'endOfTurn' && buff.effect) {
-                            this.processEndOfTurnEffect(member, buff.effect, teamMembers, monster);
-                        }
-                    }
-                }
-            }
-
-            // 处理怪物的回合结束效果
-            if (monster.currentStats.hp > 0) {
-                // 处理怪物的BUFF回合结束效果
-                if (monster.buffs) {
-                    for (const buff of monster.buffs) {
-                        if (buff.type === 'endOfTurn' && buff.effect) {
-                            this.processEndOfTurnEffect(monster, buff.effect, teamMembers, monster);
-                        }
-                    }
-                }
-            }
-
-            // 检查战斗是否已结束
-            if (this.isBattleOver(teamMembers, monster)) {
-                break;
-            }
-
-            // 触发回合结束事件，用于更新UI
             if (typeof Events !== 'undefined' && typeof Events.emit === 'function') {
                 Events.emit('battle:turn-end');
             }
-
-            // 第一回合结束
-            if (this.currentTurn === 1) {
-                this.isFirstTurn = false;
-            }
+            if (this.currentTurn === 1) this.isFirstTurn = false;
         }
 
-        // 判断战斗结果
         const teamAlive = teamMembers.some(member => member.currentStats.hp > 0);
         const monsterAlive = monster.currentStats.hp > 0;
-
-        // 计算奖励
         let gold = 0;
         let exp = 0;
 
         if (teamAlive && !monsterAlive) {
-
-            if (monster.xpReward) {
-                exp = monster.xpReward;
-                // this.logBattle(`地下城回合${this.dungeonTurn}- 战斗胜利，获得 ${exp} 经验值！`);
+            this.logBattle(`===== 战斗胜利！回合数: ${this.currentTurn} =====`);
+            if (monster.xpReward) exp = monster.xpReward;
+            // 地下城中不清除BUFF
+            if (!(typeof Dungeon !== 'undefined' && Dungeon.currentRun)) {
+                teamMembers.forEach(member => BuffSystem.clearAllBuffs(member));
             }
-
-            // 在地下城中不清除BUFF，只在非地下城战斗中清除
-            const inDungeon = typeof Dungeon !== 'undefined' && Dungeon.currentRun;
-            if (!inDungeon) {
-                // 非地下城战斗，清除所有BUFF
-                for (const member of teamMembers) {
-                    if (typeof BuffSystem !== 'undefined') {
-                        BuffSystem.clearAllBuffs(member);
-                    } else {
-                        member.buffs = [];
-                    }
-                }
-            }
-
-            return {
-                victory: true,
-                gold,
-                exp,
-                battleStats,
-                turns: this.currentTurn,
-                battleLog: this.battleLog
-            };
+            return { victory: true, gold, exp, battleStats, turns: this.currentTurn, battleLog: this.battleLog };
         } else {
-            // 队伍失败
-            this.logBattle(`===== 战斗失败！=====`);
-
-            // 在地下城中不清除BUFF，只在非地下城战斗中清除
-            const inDungeon = typeof Dungeon !== 'undefined' && Dungeon.currentRun;
-            if (!inDungeon) {
-                for (const member of teamMembers) {
-                    if (typeof BuffSystem !== 'undefined') {
-                        BuffSystem.clearAllBuffs(member);
-                    } else {
-                        member.buffs = [];
-                    }
-                }
+            this.logBattle(`===== 战斗失败！回合数: ${this.currentTurn} =====`);
+            if (!(typeof Dungeon !== 'undefined' && Dungeon.currentRun)) {
+                teamMembers.forEach(member => BuffSystem.clearAllBuffs(member));
             } else {
-
-                // 在地下城战斗失败时，立即调用DungeonRunner.exitDungeon()
                 if (typeof DungeonRunner !== 'undefined' && typeof DungeonRunner.exitDungeon === 'function') {
-                    console.log('地下城战斗失败，立即退出地下城');
                     DungeonRunner.exitDungeon();
                 }
             }
-
-            // 确保战斗统计信息包含队伍成员的统计
-            for (const member of teamMembers) {
-                if (!member.stats) {
-                    member.stats = {
-                        totalDamage: 0,
-                        totalHealing: 0,
-                        daCount: 0,
-                        taCount: 0,
-                        critCount: 0
-                    };
+            teamMembers.forEach(member => {
+                if (!member.stats) member.stats = { totalDamage: 0, totalHealing: 0, daCount: 0, taCount: 0, critCount: 0 };
+                if (battleStats.characterStats && !battleStats.characterStats[member.id]) {
+                    battleStats.characterStats[member.id] = { ...member.stats };
                 }
-
-                // 确保战斗统计中包含这个队员的数据
-                if (battleStats && battleStats.characterStats && !battleStats.characterStats[member.id]) {
-                    battleStats.characterStats[member.id] = {
-                        totalDamage: member.stats.totalDamage || 0,
-                        totalHealing: member.stats.totalHealing || 0,
-                        daCount: member.stats.daCount || 0,
-                        taCount: member.stats.taCount || 0,
-                        critCount: member.stats.critCount || 0
-                    };
-                }
-            }
-
-            return {
-                victory: false,
-                battleStats,
-                turns: this.currentTurn,
-                battleLog: this.battleLog
-            };
+            });
+            return { victory: false, battleStats, turns: this.currentTurn, battleLog: this.battleLog };
         }
     },
 
+    /**
+     * 执行玩家技能阶段
+     */
+    executePlayerSkillPhase(teamMembers, monster, battleStats) {
+        for (const character of teamMembers) {
+            if (this.isBattleOver(teamMembers, monster)) break;
+            if (character.currentStats.hp <= 0 || this.isStunned(character)) continue;
+            
+            this.logBattle(`-- ${character.name} 的技能行动 --`);
+            this.processCharacterSkills(character, monster, battleStats, teamMembers);
+        }
+    },
+
+    /**
+     * 执行玩家普攻阶段
+     */
+    executePlayerAttackPhase(teamMembers, monster, battleStats) {
+        for (const character of teamMembers) {
+            if (this.isBattleOver(teamMembers, monster)) break;
+            if (character.currentStats.hp <= 0 || this.isStunned(character)) continue;
+
+            // 检查角色是否在本回合已经通过技能执行了“主要攻击动作”
+            // 这个逻辑可能需要根据游戏设计细化，例如，某些技能可能取代普攻
+            // 简单起见，如果角色在本回合未使用任何“攻击性”技能，则允许普攻
+            // 或者，如果架构师方案中没有明确此规则，则默认所有角色都可以普攻（如果技能阶段没普攻）
+            // 当前简化：如果角色在技能阶段没有标记自己已行动（例如通过一个内部状态），则普攻
+            // 另一个简化：总是允许普攻，除非角色有特殊状态阻止（如某些技能的后摇）
+            // 采纳：如果角色未被眩晕且存活，就尝试普攻。具体是否攻击由 processCharacterNormalAttack 内部逻辑决定。
+            this.logBattle(`-- ${character.name} 的普攻行动 --`);
+            this.processCharacterNormalAttack(character, monster, battleStats, teamMembers);
+        }
+    },
+
+    /**
+     * 执行敌方行动阶段
+     */
+    executeEnemyPhase(monster, teamMembers, battleStats) {
+        if (this.isBattleOver(teamMembers, monster)) return;
+        if (monster.currentStats.hp <= 0 || this.isStunned(monster)) return;
+
+        this.logBattle(`-- ${monster.name} 的行动 --`);
+        this.processMonsterAction(monster, teamMembers, battleStats);
+    },
+    
+    /**
+     * 处理角色技能（新辅助函数）
+     */
+    processCharacterSkills(character, monster, battleStats, teamMembers) {
+        // 移植原 processCharacterAction 中的技能使用逻辑
+        let usedAnySkillThisTurn = false;
+        const availableSkills = this.getAvailableSkills(character);
+
+        if (availableSkills && availableSkills.length > 0) {
+            for (const skillToUseId of availableSkills) {
+                if (this.isBattleOver(teamMembers, monster) || character.currentStats.hp <= 0 || monster.currentStats.hp <= 0) break;
+
+                const skillData = SkillLoader.getSkillInfo(skillToUseId);
+                if (skillData && this.canUseSkill(character, skillToUseId, skillData)) {
+                    if (typeof JobSkills !== 'undefined' && typeof JobSkills.useSkill === 'function') {
+                        try {
+                            if (typeof Character !== 'undefined' && !Character.characters[character.id]) Character.characters[character.id] = character;
+                            if (typeof JobSkillsTemplate !== 'undefined' && !JobSkillsTemplate.templates[skillToUseId]) JobSkillsTemplate.templates[skillToUseId] = skillData;
+                            
+                            const targets = this.getEffectTargets(skillData.targetType, character, teamMembers, monster);
+                            const result = JobSkills.useSkill(character.id, skillToUseId, targets, monster); // 假设 useSkill 的最后一个参数是主要目标
+
+                            if (result.success) {
+                                usedAnySkillThisTurn = true;
+                                this.logBattle(result.message || `${character.name} 使用了技能 ${skillData.name}。`);
+                                this.setSkillCooldown(character, skillToUseId, skillData);
+                                this.recordSkillUsage(character, skillToUseId);
+                                this.handleProcTrigger(character, 'onSkillUse', { skillId: skillToUseId, skillData, targets, battleStats });
+                                // 根据架构，这里不再判断攻击性技能来打断，而是允许使用所有可用技能
+                            } else {
+                                this.logBattle(`${character.name} 尝试使用技能 ${skillData.name || skillToUseId} 失败。${result.message ? '原因: ' + result.message : ''}`);
+                            }
+                        } catch (error) {
+                            console.error(`技能 ${skillToUseId} 使用错误:`, error);
+                            this.logBattle(`${character.name} 尝试使用技能 ${skillData.name || skillToUseId} 时发生错误。`);
+                        }
+                    }
+                }
+            }
+        } else {
+            this.logBattle(`${character.name} 没有可用的技能。`);
+        }
+        // 返回是否使用了技能，可能用于 processCharacterNormalAttack 的判断
+        return usedAnySkillThisTurn;
+    },
+
+    /**
+     * 处理角色普通攻击（新辅助函数）
+     */
+    processCharacterNormalAttack(character, monster, battleStats, teamMembers) {
+        // 移植原 processCharacterAction 中的普攻决策逻辑
+        // 架构方案中提到普攻阶段，意味着角色通常会进行普攻，除非有特殊情况
+        // 简化：如果角色存活且敌人存活，就执行普攻
+        // 之前的逻辑是：如果没有使用“攻击性”技能，则普攻。
+        // 新逻辑：在专门的普攻阶段，角色执行普攻。
+        // 进一步思考：如果一个角色在技能阶段使用了某种“替代普攻”的技能，是否还应普攻？
+        // 暂时假设：普攻阶段就是普攻，除非角色有特殊状态（如无法攻击）。
+        // 之前的 `performedNormalAttack` 标记在 `processCharacterAction` 中，现在需要一种新的方式来避免重复普攻（如果适用）。
+        // 但由于这是独立的普攻阶段，每个角色应该都有机会普攻一次。
+
+        if (character.currentStats.hp > 0 && monster.currentStats.hp > 0) {
+            if (!this.isBattleOver(teamMembers, monster)) {
+                // this.logBattle(`${character.name} 执行普通攻击。`); // executeNormalAttack 内部会打日志
+                this.executeNormalAttack(character, monster, battleStats, teamMembers);
+            } else {
+                 this.logBattle(`${character.name} 或 ${monster.name} 已被击败，无法执行普通攻击。`);
+            }
+        } else if (character.currentStats.hp <= 0) {
+            this.logBattle(`${character.name} 已被击败，无法执行普通攻击。`);
+        } else if (monster.currentStats.hp <= 0) {
+            this.logBattle(`${monster.name} 已被击败，${character.name} 无需执行普通攻击。`);
+        }
+    },
+    
     /**
      * 处理战斗开始时的特性触发
      * @param {object} character - 角色对象
@@ -952,156 +831,19 @@ this.resetProcCounts(); // 重置技能Proc触发计数
         return entity.buffs.some(buff => buff.type === 'stun');
     },
 
-    /**
-     * 处理角色行动
-     * @param {object} character - 角色对象
-     * @param {object} monster - 怪物对象
-     * @param {object} battleStats - 战斗统计
-     */
+    // processCharacterAction 函数将被移除或大幅修改，其核心逻辑已移至
+    // processCharacterSkills 和 processCharacterNormalAttack，并通过新的三阶段流程调用。
+    // 为保持 executeNormalAttack 的独立性，暂时保留 processCharacterAction 的空壳或注释掉。
+    // 后续可以完全移除 processCharacterAction。
+    /*
     processCharacterAction(character, monster, battleStats, currentTeamMembers) {
-monster._debugRefId = monster._debugRefId || Math.random().toString(36).slice(2, 11); // Assign a unique ID if it doesn't have one
-console.log(`[DEBUG PCA Entry] Monster: ${monster.name}, RefID: ${monster._debugRefId}, HP: ${monster.currentStats.hp}/${monster.currentStats.maxHp}`);
-        // monster._debugId = monster._debugId || Math.random().toString(36).substr(2, 9); 
-        // console.log(`[DEBUG PCA Entry] Monster Ref ID: ${monster._debugId}, HP: ${monster.currentStats.hp}`);
-        if (character.currentStats.hp <= 0) return;
-
-        // // DEBUG LOG: 函数入口
-        // console.log(`[DEBUG] processCharacterAction: Character ID: ${character.id}, Name: ${character.name}`);
-
-        // // DEBUG LOG: 角色技能列表及冷却
-        // if (character.skills && character.skills.length > 0) {
-        //     const skillStates = character.skills.map(skillId => {
-        //         const sData = SkillLoader.getSkillInfo(skillId);
-        //         const cd = character.skillCooldowns && character.skillCooldowns[skillId] ? character.skillCooldowns[skillId] : 0;
-        //         return `${skillId} (Cooldown: ${cd}, Name: ${sData ? sData.name : 'N/A'})`;
-        //     });
-        //     console.log(`[DEBUG] Character ${character.id} skills: [${skillStates.join(', ')}]`);
-        // } else {
-        //     console.log(`[DEBUG] Character ${character.id} has no skills in character.skills array.`);
-        // }
-
-        let usedAnySkillThisTurn = false;
-        let performedNormalAttack = false; // 新增：标记是否已执行普攻
-        // const offensiveSkillTypes = ['damage', 'debuff', 'multi_effect', 'trigger']; // 不再需要此变量
-
-        // --- 技能使用阶段 ---
-        const availableSkills = this.getAvailableSkills(character);
-        // // DEBUG LOG: getAvailableSkills 结果
-        // console.log(`[DEBUG] Character ${character.id} getAvailableSkills result: [${availableSkills.join(', ')}]`);
-
-        if (availableSkills && availableSkills.length > 0) {
-            for (const skillToUseId of availableSkills) {
-                // 检查战斗结束条件
-                if (this.isBattleOver(currentTeamMembers, monster) || character.currentStats.hp <= 0 || monster.currentStats.hp <= 0) {
-                    break;
-                }
-
-                // // DEBUG LOG: 尝试使用的技能
-                // console.log(`[DEBUG] Character ${character.id} attempting to use skill ID: ${skillToUseId}`);
-                const skillData = SkillLoader.getSkillInfo(skillToUseId);
-
-                if (skillData) {
-                    // // DEBUG LOG: 获取到的技能数据
-                    // console.log(`[DEBUG] Character ${character.id} skillData for ${skillToUseId}:`, JSON.parse(JSON.stringify(skillData)));
-                    if (this.canUseSkill(character, skillToUseId, skillData)) {
-                        // // DEBUG LOG: canUseSkill 返回 true
-                        // console.log(`[DEBUG] Character ${character.id} canUseSkill for ${skillToUseId} returned true.`);
-                        if (typeof JobSkills !== 'undefined' && typeof JobSkills.useSkill === 'function') {
-                            try {
-                                if (typeof Character !== 'undefined' && !Character.characters[character.id]) {
-                                    Character.characters[character.id] = character;
-                                }
-                                if (typeof JobSkillsTemplate !== 'undefined' && !JobSkillsTemplate.templates[skillToUseId]) {
-                                    JobSkillsTemplate.templates[skillToUseId] = skillData;
-console.log(`[DEBUG After JS.useSkill returns] Monster: ${monster.name}, RefID: ${monster._debugRefId || 'NO_REF_ID'}, HP: ${monster.currentStats.hp}/${monster.currentStats.maxHp}`);
-                                this.logBattle(`[调试][立刻] JobSkills返回后: ${monster.name} HP: ${monster.currentStats.hp}/${monster.currentStats.maxHp}`);
-                                }
-
-                                const targets = this.getEffectTargets(skillData.targetType, character, currentTeamMembers, monster);
-                                const result = JobSkills.useSkill(character.id, skillToUseId, targets, monster);
-
-                                if (result.success) {
-                                    usedAnySkillThisTurn = true;
-                                    // // DEBUG LOG: 技能使用成功
-                                    // console.log(`[DEBUG] Character ${character.id} successfully used skill ${skillToUseId}. Message: ${result.message}`);
-                                    this.logBattle(result.message || `${character.name} 使用了技能 ${skillData.name}。`);
-                                    this.setSkillCooldown(character, skillToUseId, skillData);
-                                    this.recordSkillUsage(character, skillToUseId);
-
-                                    // 不再因为技能是“攻击性”而打断循环
-                                    // if (offensiveSkillTypes.includes(skillData.effectType)) {
-                                    //     hasPerformedOffensiveActionThisTurn = true; // This variable is removed
-                                    //     this.logBattle(`${character.name} 使用的技能 ${skillData.name} 是攻击性技能。`);
-                                    // }
-                                    // 触发技能使用后的 Proc
-                                    this.handleProcTrigger(character, 'onSkillUse', { skillId: skillToUseId, skillData, targets, battleStats });
-                                } else {
-                                    // // DEBUG LOG: 技能使用失败 (JobSkills.useSkill 返回 false)
-                                    // console.log(`[DEBUG] Character ${character.id} failed to use skill ${skillToUseId} (JobSkills.useSkill returned false). Message: ${result.message}`);
-                                    this.logBattle(`${character.name} 尝试使用技能 ${skillData.name || skillToUseId} 失败。${result.message ? '原因: ' + result.message : ''}`);
-                                }
-                            } catch (error) {
-                                console.error(`技能 ${skillToUseId} 使用错误:`, error);
-                                // // DEBUG LOG: 技能使用时发生异常
-                                // console.log(`[DEBUG] Character ${character.id} error using skill ${skillToUseId}:`, error);
-                                this.logBattle(`${character.name} 尝试使用技能 ${skillData.name || skillToUseId} 时发生错误。`);
-                            }
-                        } else {
-                            // // DEBUG LOG: JobSkills 或 JobSkills.useSkill 未定义
-                            // console.log(`[DEBUG] Character ${character.id} cannot use skill ${skillToUseId}: JobSkills.useSkill is not defined.`);
-                        }
-                    } else {
-                        // // DEBUG LOG: canUseSkill 返回 false
-                        // console.log(`[DEBUG] Character ${character.id} canUseSkill for ${skillToUseId} returned false. SkillData:`, JSON.parse(JSON.stringify(skillData)));
-                         // this.logBattle(`${character.name} 无法使用技能 ${skillData.name || skillToUseId} (不满足使用条件)。`); // 可选：过于详细的日志
-                    }
-                } else {
-                    // // DEBUG LOG: 未获取到技能数据
-                    // console.log(`[DEBUG] Character ${character.id} could not get skillData for skill ID: ${skillToUseId}.`);
-                }
-            }
-        } else {
-            // // DEBUG LOG: 没有可用技能
-            // console.log(`[DEBUG] Character ${character.id} has no available skills this turn.`);
-            this.logBattle(`${character.name} 没有可用的技能。`);
-        }
-
-        // --- 普通攻击阶段 ---
-        // 在所有技能尝试完毕后，如果角色和目标存活，且本回合未执行过普攻，则执行一次普通攻击
-console.log(`[DEBUG] Before Normal Attack: Monster HP is ${monster.currentStats.hp}/${monster.currentStats.maxHp}`);
-        this.logBattle(`[调试] 普通攻击前: ${monster.name} HP: ${monster.currentStats.hp}/${monster.currentStats.maxHp}`);
-        if (character.currentStats.hp > 0 && monster.currentStats.hp > 0 && !performedNormalAttack) {
-            if (!this.isBattleOver(currentTeamMembers, monster)) {
-                this.logBattle(`${character.name} 在技能使用后，执行普通攻击。`);
-                this.executeNormalAttack(character, monster, battleStats, currentTeamMembers); // 调用封装的普攻逻辑
-                performedNormalAttack = true;
-            } else {
-                 this.logBattle(`${character.name} 或 ${monster.name} 已被击败，无法执行普通攻击。`);
-            }
-        } else if (performedNormalAttack) {
-            this.logBattle(`${character.name} 本回合已执行过普通攻击。`);
-        } else if (character.currentStats.hp <= 0) {
-            this.logBattle(`${character.name} 已被击败，无法执行普通攻击。`);
-        } else if (monster.currentStats.hp <= 0) {
-            this.logBattle(`${monster.name} 已被击败，${character.name} 无需执行普通攻击。`);
-        }
-
-
-        // 原普通攻击逻辑已移至 executeNormalAttack 函数，此处不再需要重复代码。
-// --- End of Turn Triggers for the current character ---
-    if (character.currentStats.hp > 0) { // Only for living characters
-        // Standard onTurnEnd proc
-        this.handleProcTrigger(character, 'onTurnEnd', { battleStats });
-
-        // Specific HP-based onTurnEnd proc
-        const hpPercent = character.currentStats.hp / character.currentStats.maxHp;
-        if (hpPercent < 0.25) {
-            this.logBattle(`${character.name} HP (${(hpPercent*100).toFixed(1)}%) 低于25%，检查特定回合结束触发...`);
-            this.handleProcTrigger(character, 'onTurnEndHpBelow25Percent', { battleStats });
-        }
-    }
+        // 此函数的功能已被新的三阶段战斗流程取代
+        // 技能处理在 executePlayerSkillPhase -> processCharacterSkills
+        // 普攻处理在 executePlayerAttackPhase -> processCharacterNormalAttack
+        console.warn("旧的 processCharacterAction 被调用，这可能不符合新的战斗流程。");
     },
-executeNormalAttack(character, monster, battleStats, currentTeamMembers) {
+    */
+    executeNormalAttack(character, monster, battleStats, currentTeamMembers) {
         // // DEBUG LOG: 进入普通攻击阶段
         // console.log(`[DEBUG] Character ${character.id} executing normal attack.`);
 
@@ -2174,11 +1916,71 @@ this.logBattle(`[DEBUG applyDamageToTarget EXIT] Target: ${actualTarget.name}, H
 
      // --- Proc Activation Count Tracking ---
      procActivationCounts: {}, // Stores counts like { 'entityId_skillId_procName': count }
-
+ 
      // Reset proc counts at the start of each battle
      resetProcCounts() {
          this.procActivationCounts = {};
      },
+ 
+     /**
+      * 处理回合结束时的效果（通用）
+      * @param {object} entity - 当前实体 (角色或怪物)
+      * @param {object} specificEffect - （可选）来自技能或BUFF的特定回合结束效果定义
+      * @param {array} teamMembers - 玩家队伍
+      * @param {object} monster - 怪物对象
+      * @param {string} sourceSkillId - （可选）触发此效果的技能ID
+      */
+     processEndOfTurnEffect(entity, specificEffect, teamMembers, monster, sourceSkillId = null) {
+         if (!entity || entity.currentStats.hp <= 0) return;
+ 
+         // 1. 处理来自技能定义的被动回合结束效果
+         if (entity.skills && !specificEffect) { // 只有在没有特定效果时才检查技能的通用回合结束
+             for (const skillId of entity.skills) {
+                 const skill = SkillLoader.getSkillInfo(skillId); // 使用SkillLoader
+                 if (skill && skill.passive && skill.effects) {
+                     for (const effect of skill.effects) {
+                         if (effect.type === 'endOfTurn' || (effect.procDefinition && effect.procDefinition.triggerCondition === 'onTurnEnd')) {
+                              // 如果是 proc，则通过 handleProcTrigger
+                             if (effect.type === 'proc') {
+                                 this.handleProcTrigger(entity, 'onTurnEnd', { teamMembers, monster, battleStats: this.currentBattle ? this.currentBattle.battleStats : {} });
+                             } else if (effect.effect) { // 直接效果
+                                 this.logBattle(`${entity.name} 的技能 [${skill.name}] 触发回合结束效果。`);
+                                 this.executeTriggeredEffect(entity, effect.effect, { teamMembers, monster, battleStats: this.currentBattle ? this.currentBattle.battleStats : {} }, effect);
+                             }
+                         }
+                          // 特殊处理：如萝莎米娅的被动，HP为1时回合结束触发
+                         if (effect.procDefinition && effect.procDefinition.triggerCondition === 'onTurnEndIfHpIsOne' && entity.currentStats.hp === 1) {
+                             this.logBattle(`${entity.name} HP为1，触发技能 [${skill.name}] 的特殊回合结束效果。`);
+                             this.handleProcTrigger(entity, 'onTurnEndIfHpIsOne', { teamMembers, monster, battleStats: this.currentBattle ? this.currentBattle.battleStats : {} });
+                         }
+                     }
+                 }
+             }
+         }
+ 
+         // 2. 处理来自BUFF的回合结束效果
+         if (entity.buffs && !specificEffect) { // 只有在没有特定效果时才检查BUFF的通用回合结束
+             const currentBuffs = [...entity.buffs]; // 复制数组以防修改
+             for (const buff of currentBuffs) {
+                 if (buff.onTurnEndEffect) { // 假设buff对象有 onTurnEndEffect 属性
+                     this.logBattle(`${entity.name} 的BUFF [${buff.name}] 触发回合结束效果。`);
+                     this.executeTriggeredEffect(entity, buff.onTurnEndEffect, { teamMembers, monster, battleStats: this.currentBattle ? this.currentBattle.battleStats : {} }, buff);
+                 }
+                 // 也检查 proc 类型的 buff
+                 if (buff.procDefinition && buff.procDefinition.triggerCondition === 'onTurnEnd') {
+                      this.handleProcTrigger(entity, 'onTurnEnd', { teamMembers, monster, battleStats: this.currentBattle ? this.currentBattle.battleStats : {} });
+                 }
+             }
+         }
+         
+         // 3. 如果传入了 specificEffect (通常来自旧的直接调用点，现在应较少使用)
+         if (specificEffect) {
+             this.logBattle(`${entity.name} ${sourceSkillId ? `的技能 [${sourceSkillId}]` : ''} 触发特定回合结束效果。`);
+             this.executeTriggeredEffect(entity, specificEffect, { teamMembers, monster, battleStats: this.currentBattle ? this.currentBattle.battleStats : {} }, {});
+         }
+     }
+ };
 
-
-};
+if (typeof window !== 'undefined') {
+    window.Battle = Battle;
+}

@@ -17,6 +17,27 @@ This file records architectural and implementation decisions using a list format
 
 *
 ---
+### Decision (Architecture)
+[2025-05-10 19:26:00] - 采纳新的三阶段战斗顺序：我方技能 -> 我方普攻 -> 敌方行动。
+
+**Rationale:**
+根据规范编写器模式的建议，为了提供更清晰和结构化的战斗流程，将原有的战斗顺序调整为明确的三个阶段。这有助于更好地管理技能释放、普通攻击的执行时机以及敌方行动的插入点。
+
+**Implications/Details:**
+*   **战斗主循环修改:** 需要重构战斗主循环逻辑（主要在 [`src/js/core/battle.js`](src/js/core/battle.js:1) 的 `processTurn` 或类似函数）。
+*   **阶段划分:**
+    *   **我方技能阶段:** 允许我方所有角色依次使用可用技能。
+    *   **我方普攻阶段:** 在所有我方角色技能阶段结束后，允许我方所有存活且本回合未进行过主要攻击动作（如某些特殊技能可能取代普攻）的角色执行普通攻击。
+    *   **敌方行动阶段:** 在我方所有行动完成后，敌方单位执行其行动逻辑。
+*   **角色状态管理:**
+    *   Buff/Debuff 的持续时间应在每个完整回合结束时（即敌方行动阶段之后）统一更新。
+    *   技能和普攻的资源消耗（如MP、能量）在其各自执行时处理。
+*   **函数/模块设计:**
+    *   可能需要为每个阶段创建独立的处理函数，例如 `executePlayerSkillPhase()`, `executePlayerAttackPhase()`, `executeEnemyPhase()`。
+    *   `processCharacterAction` 可能会被分解或调整，以适应新的阶段划分。
+*   **现有逻辑兼容性:** 需要评估当前技能使用逻辑（如每回合多技能、攻击性技能判断）如何融入新的“我方技能阶段”。
+*   **UI更新:** 战斗日志和界面反馈可能需要调整以清晰反映新的三阶段流程。
+---
 ### Decision (Code)
 [2025-05-09 14:51:00] - 调整角色进入地下城时属性快照的设置时机，并确认突破加成的计算基准。
 
@@ -287,3 +308,47 @@ The variable `expiredBuffs` in [`src/js/core/battle.js`](src/js/core/battle.js:8
 
 **Details:**
 *   在 [`src/js/core/battle.js`](src/js/core/battle.js:1) 的 `processCharacterAction` 函数中，移除了 `this.executeNormalAttack(...)` 调用（约第1068行）之后的残留普通攻击逻辑代码块（原第1083行至第1200行）。
+---
+### Decision (Code)
+[2025-05-10 19:35:00] - 在 `src/js/core/battle.js` 中实现新的三阶段战斗流程。
+
+**Rationale:**
+根据架构师提供的战斗系统修改架构方案，将战斗流程明确划分为“我方技能”、“我方普攻”、“敌方行动”三个阶段，以提高代码的模块化和可维护性。
+
+**Details:**
+*   重构了 `processBattle` ([`src/js/core/battle.js:400`](src/js/core/battle.js:400)) 函数，使其按顺序调用新的阶段处理函数。
+*   新增了 `executePlayerSkillPhase(teamMembers, monster, battleStats)` ([`src/js/core/battle.js:519`](src/js/core/battle.js:519)) 函数，负责处理所有我方角色的技能使用。
+*   新增了 `executePlayerAttackPhase(teamMembers, monster, battleStats)` ([`src/js/core/battle.js:533`](src/js/core/battle.js:533)) 函数，负责处理所有我方角色的普通攻击。
+*   新增了 `executeEnemyPhase(monster, teamMembers, battleStats)` ([`src/js/core/battle.js:552`](src/js/core/battle.js:552)) 函数，复用原有的 `processMonsterAction` ([`src/js/core/battle.js:965`](src/js/core/battle.js:965)) 逻辑处理敌方行动。
+*   新增了 `processCharacterSkills(character, monster, battleStats, teamMembers)` ([`src/js/core/battle.js:563`](src/js/core/battle.js:563)) 辅助函数，用于处理单个角色的技能选择和使用逻辑，取代了部分原 `processCharacterAction` ([`src/js/core/battle.js:839`](src/js/core/battle.js:839)) 的功能。
+*   新增了 `processCharacterNormalAttack(character, monster, battleStats, teamMembers)` ([`src/js/core/battle.js:609`](src/js/core/battle.js:609)) 辅助函数，用于处理单个角色的普通攻击逻辑，调用了现有的 `this.executeNormalAttack` ([`src/js/core/battle.js:846`](src/js/core/battle.js:846))。
+*   调整了 `updateBuffDurations` ([`src/js/core/battle.js:746`](src/js/core/battle.js:746))、`processTurnStartBuffs` ([`src/js/core/battle.js:715`](src/js/core/battle.js:715)) 和 `processEndOfTurnEffect` ([`src/js/core/battle.js:1933`](src/js/core/battle.js:1933)) 的调用时机，以适应新的三阶段流程。`processEndOfTurnEffect` ([`src/js/core/battle.js:1933`](src/js/core/battle.js:1933)) 现在在 `processBattle` ([`src/js/core/battle.js:400`](src/js/core/battle.js:400)) 的每回合末尾统一调用。
+*   原 `processCharacterAction` ([`src/js/core/battle.js:839`](src/js/core/battle.js:839)) 函数已被注释掉，其功能由新的辅助函数和阶段处理函数承担。
+---
+### Decision (Debug)
+[2025-05-10 20:45:06] - Fix "未知的BUFF类型: critRateUp" error by correcting buff type casing.
+
+**Rationale:**
+The error "未知的BUFF类型: critRateUp" was caused by an incorrect casing of the buff type identifier. The buff system defines this buff as 'criticalRateUp' (camelCase with capital 'C') in [`src/js/core/buff-system.js`](src/js/core/buff-system.js:28), but it was referenced as 'critRateUp' (lowercase 'c') in [`src/js/core/weapon-board-bonus-system.js`](src/js/core/weapon-board-bonus-system.js:322). JavaScript object property names are case-sensitive, leading to the lookup failure.
+
+**Details:**
+*   Modified [`src/js/core/weapon-board-bonus-system.js`](src/js/core/weapon-board-bonus-system.js:322) to change `type: 'critRateUp'` to `type: 'criticalRateUp'`.
+*   This aligns the reference with the definition in [`src/js/core/buff-system.js`](src/js/core/buff-system.js:28), resolving the error.
+---
+### Decision (Code)
+[2025-05-10 20:51:00] - 统一暴击率相关的 BUFF 类型为 `critRateUp`。
+
+**Rationale:**
+根据用户反馈，为了保持代码库中 BUFF 类型命名的一致性，将之前因大小写问题临时修改的 `criticalRateUp` 统一改回 `critRateUp`。
+
+**Details:**
+*   **还原更改:**
+    *   [`src/js/core/weapon-board-bonus-system.js`](src/js/core/weapon-board-bonus-system.js:322): `criticalRateUp` -> `critRateUp`
+*   **修改定义:**
+    *   [`src/js/core/buff-system.js`](src/js/core/buff-system.js:28): 定义 `criticalRateUp` -> `critRateUp`
+*   **全局替换:**
+    *   [`src/js/core/job-skills.js`](src/js/core/job-skills.js:649): `criticalRateUp` -> `critRateUp`
+    *   [`src/js/core/buff-system.js`](src/js/core/buff-system.js:696): `criticalRateUp` -> `critRateUp`
+    *   [`src/js/core/buff-system.js`](src/js/core/buff-system.js:772): `criticalRateUp` -> `critRateUp`
+*   **文档更新:**
+    *   [`docs/skill_effect_types_reference.md`](docs/skill_effect_types_reference.md:65): `BuffSystem.buffTypes.criticalRateUp` -> `BuffSystem.buffTypes.critRateUp`

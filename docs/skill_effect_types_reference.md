@@ -62,7 +62,7 @@
 
 ### `critRateUp`
 -   **功能**: 提升目标的暴击率 (Critical Hit Rate)。
--   **处理逻辑**: 由 `BuffSystem.buffTypes.criticalRateUp` 定义。
+-   **处理逻辑**: 由 `BuffSystem.buffTypes.critRateUp` 定义。
 
 ### `damageReduction`
 -   **功能**: 减少目标受到的伤害。可能指定特定属性的伤害减免（通过 `elementType` 参数）或所有伤害减免。

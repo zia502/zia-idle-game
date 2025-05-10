@@ -168,3 +168,16 @@ This file tracks the project's progress using a task list format.
 * [2025-05-10 18:48:41] - Debugging Task Status Update: Added final diagnostic log in `battle.js` for pinpointing HP rollback.
 * [2025-05-10 18:54:10] - Debugging Task Status Update: Added final HP check log in `JobSkills.useSkill` exit.
 * [2025-05-10 19:02:54] - Debugging Task Status Update: Corrected log insertion in `JobSkills.useSkill`. Ready for new user logs.
+*   [2025-05-10 19:34:00] - **Completed Task:** 在 [`src/js/core/battle.js`](src/js/core/battle.js:1) 中实现了新的三阶段战斗流程（我方技能 -> 我方普攻 -> 敌方行动）。
+    *   重构了 `processBattle` ([`src/js/core/battle.js:400`](src/js/core/battle.js:400)) 函数。
+    *   创建了新的阶段处理函数: `executePlayerSkillPhase` ([`src/js/core/battle.js:519`](src/js/core/battle.js:519)), `executePlayerAttackPhase` ([`src/js/core/battle.js:533`](src/js/core/battle.js:533)), `executeEnemyPhase` ([`src/js/core/battle.js:552`](src/js/core/battle.js:552))。
+    *   创建了新的辅助函数: `processCharacterSkills` ([`src/js/core/battle.js:563`](src/js/core/battle.js:563)), `processCharacterNormalAttack` ([`src/js/core/battle.js:609`](src/js/core/battle.js:609))。
+    *   调整了状态处理函数的调用时机。
+- [2025-05-10 19:44:00] 开始为 `src/js/core/battle.js` 的新三阶段战斗流程编写测试用例。
+- [2025-05-10 19:44:00] 创建并修正了测试文件 `test-battle-logic.html` 用于执行战斗逻辑测试。
+* [2025-05-10 20:44:56] - Completed Debugging Task: Investigated and fixed "未知的BUFF类型: critRateUp" error. Corrected buff type casing in [`src/js/core/weapon-board-bonus-system.js`](src/js/core/weapon-board-bonus-system.js:322).
+* [2025-05-10 20:51:00] - **Completed Task:** 统一暴击率相关的 BUFF 类型为 `critRateUp`。
+    *   还原了 [`src/js/core/weapon-board-bonus-system.js`](src/js/core/weapon-board-bonus-system.js:322) 中的 `criticalRateUp` 为 `critRateUp`。
+    *   修改了 [`src/js/core/buff-system.js`](src/js/core/buff-system.js:28) 中的 BUFF 定义从 `criticalRateUp` 为 `critRateUp`。
+    *   在 [`src/js/core/job-skills.js`](src/js/core/job-skills.js:649), [`src/js/core/buff-system.js`](src/js/core/buff-system.js:696) 和 [`src/js/core/buff-system.js:772`](src/js/core/buff-system.js:772) 中将 `criticalRateUp` 替换为 `critRateUp`。
+    *   更新了 [`docs/skill_effect_types_reference.md`](docs/skill_effect_types_reference.md:65) 中的文档。

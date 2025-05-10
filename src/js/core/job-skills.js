@@ -646,7 +646,7 @@ console.log(`[DEBUG JS.useSkill EXIT] Monster: ${monster.name}, RefID: ${monster
                 case 'daBoost':
                 case 'taBoost':
                 case 'damageReduction':
-                case 'criticalRateUp':
+                case 'critRateUp':
                 case 'criticalDamageUp':
                 case 'skillDamageUp':
                 case 'directDamageValueUp':

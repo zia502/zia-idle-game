@@ -1,0 +1,928 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>战斗逻辑测试</title>
+    <style>
+        body { font-family: sans-serif; margin: 20px; }
+        .test-case { margin-bottom: 15px; border: 1px solid #ccc; padding: 10px; }
+        .test-case h3 { margin-top: 0; }
+        .pass { color: green; }
+        .fail { color: red; }
+        pre { background-color: #f0f0f0; padding: 10px; border-radius: 5px; white-space: pre-wrap; word-wrap: break-word; }
+    </style>
+</head>
+<body>
+    <h1>战斗逻辑测试</h1>
+    <div id="test-results"></div>
+
+    <script>
+        // 辅助函数，用于在页面上显示测试结果
+        function logResult(testName, passed, details = '') {
+            const resultsDiv = document.getElementById('test-results');
+            const testDiv = document.createElement('div');
+            testDiv.className = 'test-case';
+            let html = `<h3>${testName}</h3>`;
+            if (passed) {
+                html += '<p class="pass">通过</p>';
+            } else {
+                html += '<p class="fail">失败</p>';
+            }
+            if (details) {
+                html += `<pre>${escapeHtml(details)}</pre>`;
+            }
+            testDiv.innerHTML = html;
+            resultsDiv.appendChild(testDiv);
+            console.log(`${testName}: ${passed ? 'PASS' : 'FAIL'}`, details);
+        }
+
+        function escapeHtml(unsafe) {
+            if (typeof unsafe !== 'string') {
+                try {
+                    unsafe = JSON.stringify(unsafe, null, 2);
+                } catch (e) {
+                    unsafe = String(unsafe);
+                }
+            }
+            return unsafe
+                .replace(/&/g, "&")
+                .replace(/</g, "<")
+                .replace(/>/g, ">")
+                .replace(/"/g, String.fromCharCode(34))
+                .replace(/'/g, String.fromCharCode(39));
+        }
+
+        // 模拟依赖对象 (如果需要)
+        const MockCharacter = {
+            characters: {},
+            getCharacter: function(id) {
+                return this.characters[id] || null;
+            },
+            calculateAttackPower: function(character) {
+                return character.currentStats.attack || 50;
+            },
+            // ... 其他模拟方法
+            traits: {},
+            assessBattleMVP: function(memberIds) {
+                if (!memberIds || memberIds.length === 0) return { mvpId: null, score: 0 };
+                let mvpId = null;
+                let maxDamage = -1;
+                memberIds.forEach(id => {
+                    const char = this.getCharacter(id);
+                    if (char && char.stats && char.stats.totalDamage > maxDamage) {
+                        maxDamage = char.stats.totalDamage;
+                        mvpId = id;
+                    }
+                });
+                return { mvpId: mvpId, score: maxDamage };
+            }
+        };
+        window.Character = MockCharacter;
+
+        const MockSkillLoader = {
+            skills: {},
+            getSkillInfo: function(skillId) {
+                return this.skills[skillId] || null;
+            }
+        };
+        window.SkillLoader = MockSkillLoader;
+
+        const MockJobSkills = {
+            useSkill: function(casterId, skillId, targets, mainTarget) {
+                const caster = Character.getCharacter(casterId);
+                const skillData = SkillLoader.getSkillInfo(skillId);
+                if (!caster || !skillData) return { success: false, message: "施法者或技能数据未找到" };
+
+                let message = `${caster.name} 使用技能 ${skillData.name}。`;
+                let totalDamage = 0;
+
+                // 模拟技能效果
+                if (skillData.effects) {
+                    skillData.effects.forEach(effect => {
+                        if (effect.type === 'damage') {
+                            const damage = (effect.value || 50) * (effect.multiplier || 1);
+                            targets.forEach(target => {
+                                if (target && target.currentStats && target.currentStats.hp > 0) {
+                                    target.currentStats.hp -= damage;
+                                    totalDamage += damage;
+                                    message += ` 对 ${target.name} 造成 ${damage} 伤害。`;
+                                    if (target.currentStats.hp <= 0) {
+                                        target.currentStats.hp = 0;
+                                        message += ` ${target.name} 被击败。`;
+                                    }
+                                }
+                            });
+                        } else if (effect.type === 'heal') {
+                            const heal = effect.value || 30;
+                             targets.forEach(target => {
+                                if (target && target.currentStats && target.currentStats.hp > 0) {
+                                    target.currentStats.hp += heal;
+                                    if (target.currentStats.hp > target.currentStats.maxHp) {
+                                        target.currentStats.hp = target.currentStats.maxHp;
+                                    }
+                                    message += ` 为 ${target.name} 恢复 ${heal} HP。`;
+                                }
+                            });
+                        } else if (effect.type === 'applyBuff' && BuffSystem) {
+                            targets.forEach(target => {
+                                if (target && target.currentStats && target.currentStats.hp > 0) {
+                                    const buff = BuffSystem.createBuff(effect.buffType, effect.value, effect.duration, caster);
+                                    if (buff) {
+                                        BuffSystem.applyBuff(target, buff);
+                                        message += ` 为 ${target.name} 施加了 ${buff.name}。`;
+                                    }
+                                }
+                            });
+                        }
+                    });
+                }
+                // 模拟消耗资源
+                if (skillData.cost && caster.currentStats.mp) {
+                    caster.currentStats.mp -= skillData.cost;
+                }
+                // 模拟冷却
+                if (caster.skillCooldowns && skillData.cooldown) {
+                    caster.skillCooldowns[skillId] = skillData.cooldown;
+                }
+
+                return { success: true, message: message, damageDealt: totalDamage };
+            }
+        };
+        window.JobSkills = MockJobSkills;
+
+        const MockJobSkillsTemplate = { // 添加这个模拟对象
+            templates: {}
+        };
+        window.JobSkillsTemplate = MockJobSkillsTemplate;
+
+
+        const MockBuffSystem = {
+            buffsData: { // 模拟一些buff定义
+                'atk_up_s': { id: 'atk_up_s', name: '攻击提升(小)', type: 'statBuff', stat: 'attack', value: 20, duration: 3, isPositive: true, canDispel: true },
+                'def_down_s': { id: 'def_down_s', name: '防御下降(小)', type: 'statBuff', stat: 'defense', value: -20, duration: 2, isPositive: false, canDispel: true },
+                'stun': { id: 'stun', name: '眩晕', type: 'stun', duration: 1, isPositive: false, canDispel: true },
+                'poison': { id: 'poison', name: '中毒', type: 'dot', damage: 10, duration: 3, isPositive: false, canDispel: true },
+                'regen': { id: 'regen', name: '再生', type: 'hot', heal: 15, duration: 2, isPositive: true, canDispel: true },
+                'silence': { id: 'silence', name: '沉默', type: 'silence', duration: 2, isPositive: false, canDispel: true },
+            },
+            createBuff: function(buffIdOrType, value, duration, source, options = {}) {
+                const buffData = this.buffsData[buffIdOrType] || {
+                    id: buffIdOrType,
+                    name: buffIdOrType,
+                    type: buffIdOrType,
+                    value: value,
+                    duration: duration,
+                    sourceId: source ? source.id : null,
+                    isPositive: options.isPositive !== undefined ? options.isPositive : true,
+                    canDispel: options.canDispel !== undefined ? options.canDispel : true,
+                    ...options
+                };
+                return { ...buffData, currentDuration: duration, uniqueId: Date.now() + Math.random() }; // 确保唯一性
+            },
+            applyBuff: function(target, buff) {
+                if (!target.buffs) target.buffs = [];
+                // 简单叠加，不处理复杂逻辑
+                target.buffs.push(buff);
+                // 立即应用属性变化 (简化)
+                if (buff.type === 'statBuff' && target.currentStats[buff.stat] !== undefined) {
+                    target.currentStats[buff.stat] += buff.value;
+                }
+            },
+            removeBuff: function(target, buffIdToRemove) { // uniqueId
+                if (!target.buffs) return false;
+                const index = target.buffs.findIndex(b => b.uniqueId === buffIdToRemove);
+                if (index > -1) {
+                    const buff = target.buffs[index];
+                    // 移除属性变化 (简化)
+                    if (buff.type === 'statBuff' && target.currentStats[buff.stat] !== undefined) {
+                        target.currentStats[buff.stat] -= buff.value;
+                    }
+                    target.buffs.splice(index, 1);
+                    return true;
+                }
+                return false;
+            },
+            updateBuffDurations: function(entity) {
+                if (!entity.buffs) return [];
+                const expiredBuffs = [];
+                for (let i = entity.buffs.length - 1; i >= 0; i--) {
+                    const buff = entity.buffs[i];
+                    buff.currentDuration--;
+                    if (buff.currentDuration <= 0) {
+                        expiredBuffs.push(buff);
+                        this.removeBuff(entity, buff.uniqueId); // 使用 uniqueId
+                    }
+                }
+                return expiredBuffs;
+            },
+            processBuffsAtTurnStart: function(entity) {
+                let damage = 0;
+                let healing = 0;
+                if (entity.buffs) {
+                    entity.buffs.forEach(buff => {
+                        if (buff.type === 'dot' && buff.currentDuration > 0) damage += buff.damage;
+                        if (buff.type === 'hot' && buff.currentDuration > 0) healing += buff.heal;
+                    });
+                }
+                return { damage, healing };
+            },
+            clearAllBuffs: function(entity) {
+                if (entity.buffs) {
+                    for (let i = entity.buffs.length - 1; i >= 0; i--) {
+                        this.removeBuff(entity, entity.buffs[i].uniqueId);
+                    }
+                }
+                entity.buffs = [];
+            },
+            getBuffsByType: function(entity, buffType) {
+                if (!entity || !entity.buffs) return [];
+                return entity.buffs.filter(buff => buff.type === buffType);
+            }
+        };
+        window.BuffSystem = MockBuffSystem;
+
+        const MockEvents = {
+            listeners: {},
+            emit: function(eventName, data) {
+                // console.log(`Event emitted: ${eventName}`, data);
+                if (this.listeners[eventName]) {
+                    this.listeners[eventName].forEach(callback => callback(data));
+                }
+            },
+            on: function(eventName, callback) {
+                if (!this.listeners[eventName]) {
+                    this.listeners[eventName] = [];
+                }
+                this.listeners[eventName].push(callback);
+            }
+        };
+        window.Events = MockEvents;
+
+        const MockDungeon = { // 模拟 Dungeon 对象
+            currentRun: null // 或 true/false 根据测试需要设置
+        };
+        window.Dungeon = MockDungeon;
+
+        const MockJobSystem = { // 模拟 JobSystem
+            getSkill: function(skillId) {
+                return SkillLoader.getSkillInfo(skillId); // 复用 SkillLoader 的模拟
+            }
+        };
+        window.JobSystem = MockJobSystem;
+
+        // 占位符，如果 battle.js 内部有 UI 更新逻辑
+        const MockMainUI = {
+            updateBattleLog: function() { /* console.log("MockMainUI.updateBattleLog called"); */ }
+        };
+        window.MainUI = MockMainUI;
+
+
+        // --- 模拟数据定义 ---
+        let player1, player2, monster1;
+        let team, battleInstance;
+
+        function setupMockData() {
+            MockCharacter.characters = {}; // 清空之前的角色数据
+            MockSkillLoader.skills = { // 清空并重新定义技能
+                'skill_attack_single': { id: 'skill_attack_single', name: '强力一击', type: 'attack', targetType: 'enemy', effects: [{ type: 'damage', value: 100 }], cost: 10, cooldown: 2, initialCooldown: 0 },
+                'skill_heal_single': { id: 'skill_heal_single', name: '治疗术', type: 'heal', targetType: 'ally_lowest_hp', effects: [{ type: 'heal', value: 80 }], cost: 15, cooldown: 3, initialCooldown: 1 },
+                'skill_buff_self': { id: 'skill_buff_self', name: '自我强化', type: 'buff', targetType: 'self', effects: [{ type: 'applyBuff', buffType: 'atk_up_s', duration: 3 }], cost: 5, cooldown: 4 },
+                'skill_aoe_attack': { id: 'skill_aoe_attack', name: '群体攻击', type: 'attack', targetType: 'all_enemies', effects: [{ type: 'damage', value: 60 }], cost: 20, cooldown: 3 },
+                'skill_debuff_enemy': { id: 'skill_debuff_enemy', name: '削弱敌人', type: 'debuff', targetType: 'enemy', effects: [{ type: 'applyBuff', buffType: 'def_down_s', duration: 2 }], cost: 10, cooldown: 2 },
+                'skill_stun_enemy': { id: 'skill_stun_enemy', name: '眩晕打击', type: 'control', targetType: 'enemy', effects: [{ type: 'applyBuff', buffType: 'stun', duration: 1 }], cost: 25, cooldown: 5 },
+                'skill_passive_regen': { id: 'skill_passive_regen', name: '被动再生', passive: true, effects: [{ type: 'proc', triggerCondition: 'onTurnEnd', chance: 1.0, triggeredEffects: [{ type: 'heal', targetType: 'self', value: 10 }] }] },
+                'skill_no_cost_quick': { id: 'skill_no_cost_quick', name: '迅捷打击', type: 'attack', targetType: 'enemy', effects: [{ type: 'damage', value: 30 }], cost: 0, cooldown: 0 },
+                'skill_high_cooldown': { id: 'skill_high_cooldown', name: '终极爆发', type: 'attack', targetType: 'enemy', effects: [{ type: 'damage', value: 500 }], cost: 50, cooldown: 10, initialCooldown: 3 },
+                'skill_silence_enemy': { id: 'skill_silence_enemy', name: '沉默术', type: 'control', targetType: 'enemy', effects: [{ type: 'applyBuff', buffType: 'silence', duration: 2 }], cost: 15, cooldown: 4 },
+            };
+            // 将技能也加载到 JobSkillsTemplate (因为 battle.js 中有这样的调用)
+            MockJobSkillsTemplate.templates = { ...MockSkillLoader.skills };
+
+
+            player1 = {
+                id: 'player1', name: '勇者', level: 10,
+                baseStats: { hp: 200, maxHp: 200, mp: 100, maxMp: 100, attack: 50, defense: 30, speed: 40, daRate: 0.1, taRate: 0.05 },
+                currentStats: { hp: 200, maxHp: 200, mp: 100, maxMp: 100, attack: 50, defense: 30, speed: 40, daRate: 0.1, taRate: 0.05 },
+                skills: ['skill_attack_single', 'skill_buff_self', 'skill_passive_regen'], // 勇者带被动回血
+                buffs: [], skillCooldowns: {}, skillUsageCount: {}, stats: { totalDamage: 0, totalHealing: 0, daCount: 0, taCount: 0, critCount: 0 },
+                originalStats: {}, weaponBonusStats: { hp: 200, maxHp: 200, mp: 100, maxMp: 100, attack: 50, defense: 30, speed: 40, daRate: 0.1, taRate: 0.05 }
+            };
+            player2 = {
+                id: 'player2', name: '法师', level: 10,
+                baseStats: { hp: 150, maxHp: 150, mp: 150, maxMp: 150, attack: 30, defense: 20, speed: 50, daRate: 0.05, taRate: 0.02 },
+                currentStats: { hp: 150, maxHp: 150, mp: 150, maxMp: 150, attack: 30, defense: 20, speed: 50, daRate: 0.05, taRate: 0.02 },
+                skills: ['skill_heal_single', 'skill_aoe_attack', 'skill_stun_enemy'],
+                buffs: [], skillCooldowns: {}, skillUsageCount: {}, stats: { totalDamage: 0, totalHealing: 0, daCount: 0, taCount: 0, critCount: 0 },
+                originalStats: {}, weaponBonusStats: { hp: 150, maxHp: 150, mp: 150, maxMp: 150, attack: 30, defense: 20, speed: 50, daRate: 0.05, taRate: 0.02 }
+            };
+            MockCharacter.characters['player1'] = player1;
+            MockCharacter.characters['player2'] = player2;
+
+            monster1 = {
+                id: 'monster1', name: '哥布林', level: 8, type: 'attack', attribute: 'dark',
+                baseStats: { hp: 300, maxHp: 300, attack: 40, defense: 20, speed: 30 },
+                currentStats: { hp: 300, maxHp: 300, attack: 40, defense: 20, speed: 30 },
+                skills: ['skill_attack_single'], // 怪物也用一个简单的攻击技能
+                buffs: [], skillCooldowns: {}, skillUsageCount: {}, stats: { totalDamage: 0, totalHealing: 0 },
+                xpReward: 50, isBoss: false
+            };
+            // 确保怪物的 hp 和 maxHp 在 currentStats 中
+            monster1.currentStats.hp = monster1.baseStats.hp;
+            monster1.currentStats.maxHp = monster1.baseStats.maxHp;
+
+
+            team = { id: 'team1', name: '玩家小队', members: ['player1', 'player2'] };
+
+            // Battle 对象在 battle.js 中定义，这里直接使用
+            battleInstance = window.Battle; // Battle is globally available from battle.js
+            battleInstance.reset(); // 重置战斗状态
+        }
+
+        // --- 测试用例 ---
+        async function runTests() {
+            setupMockData(); // 每次运行测试前重置数据
+
+            // 测试1: 验证核心流程顺序
+            await testPhaseOrder();
+
+            // 测试2: 验证我方技能阶段
+            await testPlayerSkillPhase();
+
+            // 测试3: 验证我方普攻阶段
+            await testPlayerAttackPhase();
+
+            // 测试4: 验证敌方行动阶段
+            await testEnemyPhase();
+
+            // 测试5: 验证状态处理 (Buff/Debuff, 回合效果)
+            await testStatusEffects();
+
+            // 测试6: 覆盖边缘情况
+            await testEdgeCases();
+
+            logResult("所有测试完成", true, "查看上方各个测试的详细结果。");
+        }
+
+        // --- 测试函数定义 ---
+
+        async function testPhaseOrder() {
+            setupMockData();
+            const testName = "测试1: 验证核心流程顺序";
+            let passed = true;
+            let details = "";
+
+            const originalLogBattle = battleInstance.logBattle;
+            const phaseLogs = [];
+            battleInstance.logBattle = (message) => {
+                // originalLogBattle.call(battleInstance, message); // 可以在控制台也打印
+                phaseLogs.push(message);
+            };
+
+            // 运行一回合战斗
+            battleInstance.startBattle(team, JSON.parse(JSON.stringify(monster1))); // 使用怪物的深拷贝
+
+            // 恢复原始 logBattle
+            battleInstance.logBattle = originalLogBattle;
+
+            const expectedOrder = [
+                "--- 我方技能阶段 ---",
+                "--- 我方普攻阶段 ---",
+                "--- 敌方行动阶段 ---",
+                "--- 回合结束处理 ---"
+            ];
+
+            let currentExpectedIndex = 0;
+            for (const log of phaseLogs) {
+                if (currentExpectedIndex < expectedOrder.length && log.includes(expectedOrder[currentExpectedIndex])) {
+                    currentExpectedIndex++;
+                }
+            }
+
+            if (currentExpectedIndex !== expectedOrder.length) {
+                passed = false;
+                details += `预期阶段顺序未完全匹配。\n预期: ${expectedOrder.join(' -> ')}\n实际日志包含的阶段标记: \n`;
+                phaseLogs.forEach(log => {
+                    if (log.startsWith("---") || log.startsWith("=====")) details += log + "\n";
+                });
+            } else {
+                details = "战斗阶段顺序正确。";
+            }
+
+            logResult(testName, passed, details);
+        }
+
+        async function testPlayerSkillPhase() {
+            setupMockData();
+            const testName = "测试2: 验证我方技能阶段";
+            let passed = true;
+            let details = "";
+
+            // 给 player1 一个CD为0的技能，player2一个需要CD的技能
+            MockSkillLoader.skills['skill_p1_instant'] = { id: 'skill_p1_instant', name: '瞬发技', type: 'attack', targetType: 'enemy', effects: [{ type: 'damage', value: 10 }], cost: 0, cooldown: 0 };
+            MockSkillLoader.skills['skill_p2_cd'] = { id: 'skill_p2_cd', name: '冷却技', type: 'buff', targetType: 'self', effects: [{ type: 'applyBuff', buffType: 'atk_up_s', duration: 1 }], cost: 0, cooldown: 1, initialCooldown: 1 }; // 初始CD 1
+            player1.skills = ['skill_p1_instant'];
+            player2.skills = ['skill_p2_cd'];
+            player1.skillCooldowns = {}; player1.skillUsageCount = {};
+            player2.skillCooldowns = {}; player2.skillUsageCount = {};
+
+
+            const battleLog = [];
+            const originalLog = battleInstance.logBattle;
+            battleInstance.logBattle = (msg) => { battleLog.push(msg); /* originalLog.call(battleInstance, msg); */ };
+
+            battleInstance.startBattle(team, JSON.parse(JSON.stringify(monster1))); // 仅运行一回合
+
+            battleInstance.logBattle = originalLog;
+
+            // 验证 player1 使用了瞬发技
+            const p1UsedSkill = battleLog.some(log => log.includes(`${player1.name} 使用了技能 ${MockSkillLoader.skills['skill_p1_instant'].name}`));
+            if (!p1UsedSkill) {
+                passed = false;
+                details += `${player1.name} 未按预期使用瞬发技能。\n`;
+            }
+
+            // 验证 player2 因为初始冷却未使用技能
+            const p2UsedSkill = battleLog.some(log => log.includes(`${player2.name} 使用了技能 ${MockSkillLoader.skills['skill_p2_cd'].name}`));
+            if (p2UsedSkill) {
+                passed = false;
+                details += `${player2.name} 不应在第一回合使用有初始冷却的技能，但日志显示使用了。\n`;
+            }
+            if (player2.skillCooldowns['skill_p2_cd'] === undefined || player2.skillCooldowns['skill_p2_cd'] === 0) {
+                 // 技能如果没用，CD不应该被设置，或者如果被尝试使用但失败，CD也不应该进入0
+                 // 这里要看 canUseSkill 和 setSkillCooldown 的具体逻辑
+                 // 假设如果 canUseSkill 返回 false，则不会调用 setSkillCooldown
+            }
+
+
+            // 验证技能消耗和冷却 (对于 player1 的技能)
+            if (p1UsedSkill && player1.skillCooldowns['skill_p1_instant'] !== 0) { // 瞬发技CD为0
+                passed = false;
+                details += `${player1.name} 的瞬发技能冷却设置不正确，应为0，实际为 ${player1.skillCooldowns['skill_p1_instant']}\n`;
+            }
+
+            // 模拟第二回合，player2的技能应该可用
+            // setupMockData(); // 不要完全重置，保留 player1 和 player2 对象实例，但重置其状态和技能
+            player1.skills = [];
+            player1.currentStats = JSON.parse(JSON.stringify(player1.baseStats)); // 重置状态
+            player1.buffs = []; player1.skillCooldowns = {}; player1.skillUsageCount = {}; player1.stats = { totalDamage: 0, totalHealing: 0, daCount: 0, taCount: 0, critCount: 0 };
+
+            player2.skills = ['skill_p2_cd'];
+            player2.currentStats = JSON.parse(JSON.stringify(player2.baseStats)); // 重置状态
+            player2.buffs = []; player2.skillCooldowns = {}; player2.skillUsageCount = {}; player2.stats = { totalDamage: 0, totalHealing: 0, daCount: 0, taCount: 0, critCount: 0 };
+            
+            // 确保 skill_p2_cd 存在并修改其 initialCooldown
+            if (!MockSkillLoader.skills['skill_p2_cd']) {
+                MockSkillLoader.skills['skill_p2_cd'] = { id: 'skill_p2_cd', name: '冷却技', type: 'buff', targetType: 'self', effects: [{ type: 'applyBuff', buffType: 'atk_up_s', duration: 1 }], cost: 0, cooldown: 1, initialCooldown: 1 };
+            }
+            MockSkillLoader.skills['skill_p2_cd'].initialCooldown = 0;
+            
+            monster1.currentStats = JSON.parse(JSON.stringify(monster1.baseStats)); // 重置怪物状态
+            monster1.currentStats.hp = 300;
+            monster1.buffs = []; monster1.skillCooldowns = {}; monster1.skillUsageCount = {}; monster1.stats = { totalDamage: 0, totalHealing: 0 };
+
+
+            // 确保 JobSkillsTemplate 也有这个技能
+            if (!MockJobSkillsTemplate.templates['skill_p2_cd']) {
+                MockJobSkillsTemplate.templates['skill_p2_cd'] = MockSkillLoader.skills['skill_p2_cd'];
+            }
+
+            const battleLogTurn2 = [];
+            battleInstance.logBattle = (msg) => { battleLogTurn2.push(msg); };
+            battleInstance.currentTurn = 0; // 手动重置回合计数器，模拟新战斗或特定回合
+            battleInstance.isFirstTurn = true; // 确保初始冷却逻辑正确（如果适用）
+            battleInstance.processBattle([player1, player2], monster1); // 直接调用 processBattle
+
+            battleInstance.logBattle = originalLog;
+
+            const p2UsedSkillTurn2 = battleLogTurn2.some(log => log.includes(`${player2.name} 使用了技能 ${MockSkillLoader.skills['skill_p2_cd'].name}`));
+            if (!p2UsedSkillTurn2) {
+                passed = false;
+                details += `${player2.name} 在第二回合（模拟）未按预期使用冷却结束的技能。\n`;
+            }
+            if (p2UsedSkillTurn2 && player2.skillCooldowns['skill_p2_cd'] !== MockSkillLoader.skills['skill_p2_cd'].cooldown) {
+                passed = false;
+                details += `${player2.name} 的技能冷却设置不正确，预期 ${MockSkillLoader.skills['skill_p2_cd'].cooldown}，实际 ${player2.skillCooldowns['skill_p2_cd']}\n`;
+            }
+
+
+            if (passed) details = "我方技能阶段基本逻辑正确。";
+            logResult(testName, passed, details + "\n战斗日志:\n" + battleLog.join("\n") + "\n模拟第二回合日志:\n" + battleLogTurn2.join("\n"));
+        }
+
+        async function testPlayerAttackPhase() {
+            setupMockData();
+            const testName = "测试3: 验证我方普攻阶段";
+            let passed = true;
+            let details = "";
+
+            // 确保角色在技能阶段后能普攻
+            player1.skills = []; // 无技能
+            player2.skills = []; // 无技能
+
+            const battleLog = [];
+            const originalLog = battleInstance.logBattle;
+            battleInstance.logBattle = (msg) => { battleLog.push(msg); /* originalLog.call(battleInstance, msg); */};
+
+            battleInstance.startBattle(team, JSON.parse(JSON.stringify(monster1)));
+
+            battleInstance.logBattle = originalLog;
+
+            const p1Attacked = battleLog.some(log => log.includes(`${player1.name}`) && (log.includes("普通攻击") || log.includes("双重攻击") || log.includes("三重攻击")) && log.includes(`对 ${monster1.name} 造成`));
+            const p2Attacked = battleLog.some(log => log.includes(`${player2.name}`) && (log.includes("普通攻击") || log.includes("双重攻击") || log.includes("三重攻击")) && log.includes(`对 ${monster1.name} 造成`));
+
+            if (!p1Attacked) {
+                passed = false;
+                details += `${player1.name} 未执行普通攻击。\n`;
+            }
+            if (!p2Attacked) {
+                passed = false;
+                details += `${player2.name} 未执行普通攻击。\n`;
+            }
+
+            // 验证伤害是否记录
+            if (p1Attacked && player1.stats.totalDamage <= 0) {
+                passed = false;
+                details += `${player1.name} 执行了普攻但伤害未记录到 stats.totalDamage。\n`;
+            }
+             if (p2Attacked && player2.stats.totalDamage <= 0) {
+                passed = false;
+                details += `${player2.name} 执行了普攻但伤害未记录到 stats.totalDamage。\n`;
+            }
+            // 验证怪物受到伤害
+            const monsterHpBefore = 300;
+            if ((p1Attacked || p2Attacked) && monster1.currentStats.hp >= monsterHpBefore) {
+                 // 注意：monster1 在 battleInstance.startBattle 中是深拷贝的，所以这里的 monster1 是原始的。
+                 // 我们需要从 battleInstance.currentBattle.monster 获取战斗后的怪物状态
+                const battleResultMonster = battleInstance.currentBattle ? battleInstance.currentBattle.monster : null;
+                if (battleResultMonster && battleResultMonster.currentStats.hp >= monsterHpBefore) {
+                    passed = false;
+                    details += `怪物 ${monster1.name} 在受到攻击后HP未减少。HP: ${battleResultMonster.currentStats.hp}\n`;
+                } else if (!battleResultMonster) {
+                    passed = false;
+                    details += `无法获取战斗后的怪物状态来验证HP减少。\n`;
+                }
+            }
+
+
+            if (passed) details = "我方普攻阶段基本逻辑正确。";
+            logResult(testName, passed, details + "\n战斗日志:\n" + battleLog.join("\n"));
+        }
+
+        async function testEnemyPhase() {
+            setupMockData();
+            const testName = "测试4: 验证敌方行动阶段";
+            let passed = true;
+            let details = "";
+
+            // 确保怪物能行动
+            const battleLog = [];
+            const originalLog = battleInstance.logBattle;
+            battleInstance.logBattle = (msg) => { battleLog.push(msg); /* originalLog.call(battleInstance, msg); */ };
+
+            battleInstance.startBattle(team, JSON.parse(JSON.stringify(monster1)));
+
+            battleInstance.logBattle = originalLog;
+
+            const enemyActed = battleLog.some(log => log.includes(`${monster1.name}`) && (log.includes("普通攻击") || log.includes("使用了技能")));
+            if (!enemyActed) {
+                passed = false;
+                details += `${monster1.name} 未执行任何行动。\n`;
+            }
+
+            // 验证怪物攻击是否对玩家造成伤害
+            const player1HpBefore = player1.currentStats.hp;
+            const player2HpBefore = player2.currentStats.hp;
+
+            const battleResultTeam = battleInstance.currentBattle ? battleInstance.currentBattle.teamMembers : null;
+            if (enemyActed && battleResultTeam) {
+                const p1After = battleResultTeam.find(p => p.id === player1.id);
+                const p2After = battleResultTeam.find(p => p.id === player2.id);
+                let playerDamaged = false;
+                if (p1After && p1After.currentStats.hp < player1HpBefore) playerDamaged = true;
+                if (p2After && p2After.currentStats.hp < player2HpBefore) playerDamaged = true;
+
+                if (!playerDamaged && battleLog.some(log => log.includes(`${monster1.name} 对`) && log.includes("造成"))) {
+                    // 怪物日志显示造成伤害，但玩家血量没变
+                     passed = false;
+                     details += `${monster1.name} 行动日志显示造成伤害，但玩家HP未减少。\n`;
+                     details += `P1 HP: ${player1HpBefore} -> ${p1After ? p1After.currentStats.hp : 'N/A'}\n`;
+                     details += `P2 HP: ${player2HpBefore} -> ${p2After ? p2After.currentStats.hp : 'N/A'}\n`;
+                }
+            } else if (enemyActed && !battleResultTeam) {
+                passed = false;
+                details += `无法获取战斗后的队伍状态来验证玩家HP减少。\n`;
+            }
+
+
+            if (passed) details = "敌方行动阶段基本逻辑正确。";
+            logResult(testName, passed, details + "\n战斗日志:\n" + battleLog.join("\n"));
+        }
+
+        async function testStatusEffects() {
+            setupMockData();
+            const testName = "测试5: 验证状态处理";
+            let passed = true;
+            let details = "";
+            const battleLog = [];
+            const originalLog = battleInstance.logBattle;
+            battleInstance.logBattle = (msg) => { battleLog.push(msg); /* originalLog.call(battleInstance, msg); */ };
+
+            // 5.1 Buff/Debuff 施加、持续时间、移除
+            MockSkillLoader.skills['skill_apply_buff_p1'] = { id: 'skill_apply_buff_p1', name: '施加增益', type: 'buff', targetType: 'self', effects: [{ type: 'applyBuff', buffType: 'atk_up_s', duration: 2 }], cost: 0, cooldown: 0 };
+            MockSkillLoader.skills['skill_apply_debuff_m1'] = { id: 'skill_apply_debuff_m1', name: '施加减益', type: 'debuff', targetType: 'enemy', effects: [{ type: 'applyBuff', buffType: 'def_down_s', duration: 1 }], cost: 0, cooldown: 0 }; // 持续1回合，方便测试移除
+            player1.skills = ['skill_apply_buff_p1'];
+            monster1.skills = ['skill_apply_debuff_m1']; // 怪物使用减益技能
+            player1.buffs = []; monster1.buffs = []; // 清空buff
+
+            battleInstance.startBattle(team, JSON.parse(JSON.stringify(monster1))); // 第1回合
+
+            const p1HasAtkUp = player1.buffs.some(b => b.id === 'atk_up_s' && b.currentDuration === 1); // 使用后消耗1回合
+            if (!p1HasAtkUp) {
+                passed = false;
+                details += "Player1 未能成功施加 atk_up_s 或持续时间不正确 (应为1)。Buffs: " + JSON.stringify(player1.buffs.map(b=>({id:b.id, dur:b.currentDuration}))) + "\n";
+            }
+
+            const monsterHasDefDown = monster1.buffs.some(b => b.id === 'def_down_s' && b.currentDuration === 0); // 怪物行动后，它的buff也应该消耗1回合
+            // 注意：这里的 monster1 是 startBattle 内部的拷贝，我们需要从 battleInstance.currentBattle.monster 获取
+            const battleMonster = battleInstance.currentBattle.monster;
+            const monsterHasDefDownAfterBattle = battleMonster.buffs.some(b => b.id === 'def_down_s' && b.currentDuration === 0);
+
+
+            if (!monsterHasDefDownAfterBattle) {
+                passed = false;
+                details += "Monster1 未能成功被施加 def_down_s 或其持续时间不正确 (应为0)。Buffs: " + JSON.stringify(battleMonster.buffs.map(b=>({id:b.id, dur:b.currentDuration}))) + "\n";
+            }
+
+            // 模拟进入下一回合，检查buff是否移除
+            // 需要手动调用回合结束和开始的buff处理逻辑，或者完整模拟一回合
+            // 为了简化，我们直接检查 battle.js 的 updateBuffDurations
+            // 假设战斗继续，再过一回合
+            if (p1HasAtkUp) { // 如果P1有buff
+                battleInstance.updateBuffDurations([player1], battleMonster); // 手动更新P1的buff
+                const p1AtkUpRemoved = !player1.buffs.some(b => b.id === 'atk_up_s');
+                if (!p1AtkUpRemoved) {
+                    passed = false;
+                    details += "Player1 的 atk_up_s 在预期持续时间结束后未被移除。Buffs: " + JSON.stringify(player1.buffs.map(b=>({id:b.id, dur:b.currentDuration}))) + "\n";
+                }
+            }
+
+            if (monsterHasDefDownAfterBattle) { // 如果怪物有buff
+                 battleInstance.updateBuffDurations([], battleMonster); // 手动更新怪物的buff
+                 const monsterDefDownRemoved = !battleMonster.buffs.some(b => b.id === 'def_down_s');
+                 if (!monsterDefDownRemoved) {
+                    passed = false;
+                    details += "Monster1 的 def_down_s 在预期持续时间结束后未被移除。Buffs: " + JSON.stringify(battleMonster.buffs.map(b=>({id:b.id, dur:b.currentDuration}))) + "\n";
+                 }
+            }
+
+
+            // 5.2 回合开始/结束效果 (例如中毒、再生)
+            setupMockData(); // 重置
+            MockSkillLoader.skills['skill_apply_poison'] = { id: 'skill_apply_poison', name: '施加中毒', type: 'debuff', targetType: 'enemy', effects: [{ type: 'applyBuff', buffType: 'poison', duration: 2 }], cost: 0, cooldown: 0 };
+            player1.skills = ['skill_apply_poison'];
+            monster1.skills = []; // 怪物不行动，方便观察
+            monster1.currentStats.hp = 100; // 设置一个固定血量
+            const monsterHpBeforePoison = monster1.currentStats.hp;
+
+            battleInstance.startBattle(team, JSON.parse(JSON.stringify(monster1))); // 第1回合，P1给怪物上毒
+
+            const battleMonsterAfterPoison = battleInstance.currentBattle.monster;
+            const monsterIsPoisoned = battleMonsterAfterPoison.buffs.some(b => b.id === 'poison');
+            if (!monsterIsPoisoned) {
+                passed = false;
+                details += "怪物未能成功中毒。\n";
+            }
+
+            // 检查回合结束时中毒是否造成伤害 (processTurnStartBuffs 在新流程中处理DOT)
+            // battle.js 的 processBattle -> processTurnStartBuffs (在下一回合开始时) -> BuffSystem.processBuffsAtTurnStart
+            // 所以毒伤应该在第二回合开始时结算
+            // 我们需要模拟到第二回合开始
+            let monsterHpAfterPoisonTick = battleMonsterAfterPoison.currentStats.hp;
+            if (monsterIsPoisoned) {
+                // 模拟回合结束和下一回合开始的buff处理
+                battleInstance.processTurnStartBuffs([], battleMonsterAfterPoison); // 手动调用下一回合开始的buff处理
+                monsterHpAfterPoisonTick = battleMonsterAfterPoison.currentStats.hp;
+                const poisonDamage = MockBuffSystem.buffsData['poison'].damage;
+                if (monsterHpAfterPoisonTick >= monsterHpBeforePoison) { // 如果是严格等于，说明没掉血
+                    passed = false;
+                    details += `中毒效果在回合开始时未对怪物造成伤害。HP: ${monsterHpBeforePoison} -> ${monsterHpAfterPoisonTick}。预期伤害: ${poisonDamage}\n`;
+                } else if (monsterHpBeforePoison - monsterHpAfterPoisonTick !== poisonDamage) {
+                    passed = false;
+                    details += `中毒伤害不符合预期。实际伤害: ${monsterHpBeforePoison - monsterHpAfterPoisonTick}，预期伤害: ${poisonDamage}\n`;
+                }
+            }
+
+            // 测试再生 (回合结束效果，由 processEndOfTurnEffect -> handleProcTrigger -> onTurnEnd)
+            setupMockData();
+            player1.skills = ['skill_passive_regen']; // 被动再生技能
+            player1.currentStats.hp = 50; // 设置一个较低的血量
+            const playerHpBeforeRegen = player1.currentStats.hp;
+            monster1.skills = [];
+
+            battleInstance.startBattle(team, JSON.parse(JSON.stringify(monster1))); // 运行一回合
+
+            const playerHpAfterRegen = player1.currentStats.hp; // player1 是引用，会被修改
+            const regenAmount = MockSkillLoader.skills['skill_passive_regen'].effects[0].triggeredEffects[0].value;
+
+            if (playerHpAfterRegen <= playerHpBeforeRegen) {
+                passed = false;
+                details += `再生效果在回合结束时未恢复HP。HP: ${playerHpBeforeRegen} -> ${playerHpAfterRegen}。预期治疗: ${regenAmount}\n`;
+            } else if (playerHpAfterRegen - playerHpBeforeRegen !== regenAmount && playerHpBeforeRegen + regenAmount <= player1.currentStats.maxHp) {
+                // 只有在没达到满血的情况下，治疗量才应该精确匹配
+                passed = false;
+                details += `再生治疗量不符合预期。实际治疗: ${playerHpAfterRegen - playerHpBeforeRegen}，预期治疗: ${regenAmount}\n`;
+            }
+
+
+            battleInstance.logBattle = originalLog;
+            if (passed) details = "状态处理基本逻辑正确。";
+            logResult(testName, passed, details + "\n战斗日志:\n" + battleLog.join("\n"));
+        }
+
+        async function testEdgeCases() {
+            setupMockData();
+            const testName = "测试6: 覆盖边缘情况";
+            let passed = true;
+            let details = "";
+            const battleLog = [];
+            const originalLog = battleInstance.logBattle;
+            battleInstance.logBattle = (msg) => { battleLog.push(msg); /* originalLog.call(battleInstance, msg); */ };
+
+            // 6.1 角色在回合中死亡
+            player1.currentStats.hp = 10; // P1血量很低
+            monster1.currentStats.attack = 100; // 怪物高攻，确保能秒杀P1
+            monster1.skills = ['skill_attack_single']; // 怪物用单体攻击
+            MockSkillLoader.skills['skill_attack_single'].effects = [{ type: 'damage', value: 100 }]; // 确保技能伤害足够
+
+            battleInstance.startBattle(JSON.parse(JSON.stringify(team)), JSON.parse(JSON.stringify(monster1)));
+
+            const p1Dead = player1.currentStats.hp <= 0;
+            if (!p1Dead) {
+                passed = false;
+                details += "角色在回合中受到致命伤害后未死亡。\n";
+            }
+            // 检查死亡角色是否不再行动 (例如，P1死亡后，P2是否还行动)
+            // 这个比较复杂，因为P1可能在怪物行动前就死了，也可能在怪物行动后。
+            // 如果P1在怪物行动阶段死亡，那么P1本回合的技能和普攻阶段应该已经执行过了。
+            // 我们主要关注战斗是否能正确处理死亡状态。
+            const p1ActedAfterNearDeath = battleLog.some(log => log.includes("勇者 使用了技能") || log.includes("勇者 普通攻击")) && p1Dead;
+            // 这个判断不完美，因为日志顺序问题。更可靠的是检查战斗结果。
+
+            // 6.2 没有可用技能的角色 (应该只普攻)
+            setupMockData();
+            player1.skills = []; // P1无技能
+            player2.skills = ['skill_high_cooldown']; // P2技能在CD中
+            player2.skillCooldowns['skill_high_cooldown'] = MockSkillLoader.skills['skill_high_cooldown'].initialCooldown; // 确保在CD
+
+            battleLog.length = 0; // 清空日志
+            battleInstance.startBattle(team, JSON.parse(JSON.stringify(monster1)));
+
+            const p1UsedSkillNoSkill = battleLog.some(log => log.includes(`${player1.name} 使用了技能`));
+            const p2UsedSkillOnCD = battleLog.some(log => log.includes(`${player2.name} 使用了技能 ${MockSkillLoader.skills['skill_high_cooldown'].name}`));
+
+            if (p1UsedSkillNoSkill) {
+                passed = false;
+                details += `${player1.name} 没有技能但不应尝试使用技能。\n`;
+            }
+            if (p2UsedSkillOnCD) {
+                passed = false;
+                details += `${player2.name} 技能在冷却中但不应尝试使用技能。\n`;
+            }
+            const p1AttackedNoSkill = battleLog.some(log => log.includes(`${player1.name}`) && (log.includes("普通攻击") || log.includes("双重攻击") || log.includes("三重攻击")));
+            const p2AttackedSkillOnCD = battleLog.some(log => log.includes(`${player2.name}`) && (log.includes("普通攻击") || log.includes("双重攻击") || log.includes("三重攻击")));
+            if (!p1AttackedNoSkill) {
+                passed = false;
+                details += `${player1.name} 没有技能时未执行普攻。\n`;
+            }
+            if (!p2AttackedSkillOnCD) {
+                passed = false;
+                details += `${player2.name} 技能冷却时未执行普攻。\n`;
+            }
+
+            // 6.3 技能效果（如眩晕、沉默）对后续行动的影响
+            setupMockData();
+            // P1给怪物上眩晕
+            player1.skills = ['skill_stun_enemy'];
+            player1.currentStats.mp = 100; // 确保蓝够
+            MockSkillLoader.skills['skill_stun_enemy'].cost = 10;
+            MockSkillLoader.skills['skill_stun_enemy'].cooldown = 0;
+            monster1.skills = ['skill_attack_single']; // 怪物有个攻击技能
+            monster1.currentStats.hp = 500; // 确保怪物第一回合不死
+
+            battleLog.length = 0;
+            battleInstance.startBattle(team, JSON.parse(JSON.stringify(monster1))); // P1行动，给怪物上眩晕
+
+            const battleMonsterStunned = battleInstance.currentBattle.monster;
+            const monsterIsStunned = battleMonsterStunned.buffs.some(b => b.id === 'stun');
+            if (!monsterIsStunned) {
+                passed = false;
+                details += "怪物未能成功被眩晕。\n";
+            }
+
+            const monsterActedWhileStunned = battleLog.some(log => log.includes(`${monster1.name} 使用了技能`) || log.includes(`${monster1.name} 普通攻击`));
+            if (monsterIsStunned && monsterActedWhileStunned) {
+                passed = false;
+                details += "怪物在眩晕状态下依然行动了。\n";
+            }
+
+            // 测试沉默
+            setupMockData();
+            player1.skills = ['skill_silence_enemy']; // P1给怪物上沉默
+            player1.currentStats.mp = 100;
+            MockSkillLoader.skills['skill_silence_enemy'].cost = 10;
+            MockSkillLoader.skills['skill_silence_enemy'].cooldown = 0;
+            monster1.skills = ['skill_attack_single']; // 怪物有个技能
+            monster1.currentStats.hp = 500;
+
+            battleLog.length = 0;
+            battleInstance.startBattle(team, JSON.parse(JSON.stringify(monster1)));
+
+            const battleMonsterSilenced = battleInstance.currentBattle.monster;
+            const monsterIsSilenced = battleMonsterSilenced.buffs.some(b => b.id === 'silence');
+            if (!monsterIsSilenced) {
+                passed = false;
+                details += "怪物未能成功被沉默。\n";
+            }
+            const monsterUsedSkillWhileSilenced = battleLog.some(log => log.includes(`${monster1.name} 使用了技能`));
+            const monsterAttackedWhileSilenced = battleLog.some(log => log.includes(`${monster1.name} 普通攻击`));
+            if (monsterIsSilenced && monsterUsedSkillWhileSilenced) {
+                passed = false;
+                details += "怪物在沉默状态下依然使用了技能。\n";
+            }
+            if (monsterIsSilenced && !monsterAttackedWhileSilenced) {
+                // 沉默通常不阻止普攻，除非特殊设计
+                // details += "怪物在沉默状态下没有执行普攻 (如果设计是沉默也阻止普攻，则此条忽略)。\n";
+            }
+
+
+            // 6.4 战斗提前结束（某一方全部阵亡）
+            setupMockData();
+            player1.currentStats.hp = 1; player2.currentStats.hp = 1; // 玩家血少
+            monster1.currentStats.attack = 10; // 怪物攻击力不高但能打死
+            monster1.skills = ['skill_attack_single'];
+            MockSkillLoader.skills['skill_attack_single'].effects = [{ type: 'damage', value: 10 }];
+
+            battleLog.length = 0;
+            const resultTeamWipe = battleInstance.startBattle(team, JSON.parse(JSON.stringify(monster1)));
+            if (resultTeamWipe.victory) {
+                passed = false;
+                details += "玩家方全部阵亡，但战斗结果判定为胜利。\n";
+            }
+            if (battleInstance.currentTurn >= battleInstance.MAX_TURNS) { // MAX_TURNS 默认是 99
+                // passed = false; // 这个不一定，可能确实打了很多回合
+                // details += "战斗在一方全灭后未及时结束，可能达到了最大回合数。\n";
+            }
+            const teamAliveAfterWipe = resultTeamWipe.teamMembers.some(m => m.currentStats.hp > 0);
+            if (teamAliveAfterWipe) {
+                passed = false;
+                details += "玩家方应全部阵亡，但仍有角色存活。\n";
+            }
+
+            setupMockData();
+            monster1.currentStats.hp = 1; // 怪物血少
+            player1.currentStats.attack = 10;
+            player1.skills = ['skill_no_cost_quick']; // P1有个快速攻击技能
+
+            battleLog.length = 0;
+            const resultMonsterWipe = battleInstance.startBattle(team, JSON.parse(JSON.stringify(monster1)));
+            if (!resultMonsterWipe.victory) {
+                passed = false;
+                details += "怪物方全部阵亡，但战斗结果判定为失败。\n";
+            }
+            if (resultMonsterWipe.monster.currentStats.hp > 0) {
+                passed = false;
+                details += "怪物方应全部阵亡，但怪物仍存活。\n";
+            }
+
+
+            battleInstance.logBattle = originalLog;
+            if (passed) details = "边缘情况处理基本逻辑正确。";
+            logResult(testName, passed, details + "\n部分战斗日志:\n" + battleLog.slice(-50).join("\n")); // 只显示最后一些日志
+        }
+
+
+        // 自动运行测试
+        window.onload = function() {
+            // 确保 battle.js 已加载并 Battle 对象可用
+            if (typeof Battle !== 'undefined') {
+                runTests().catch(err => {
+                    logResult("测试执行出错", false, "错误: " + err.message + "\n" + err.stack);
+                    console.error("测试执行出错:", err);
+                });
+            } else {
+                logResult("Battle对象未定义", false, "请确保 battle.js 已正确加载。");
+                console.error("Battle对象未定义!");
+            }
+        };
+    </script>
+    <!-- 引入核心战斗逻辑脚本 -->
+    <!-- 注意：这些路径需要根据你的项目结构进行调整 -->
+    <!-- 如果这些文件有其他依赖，也需要一并引入 -->
+    <script src="src/js/core/buff-system.js"></script>
+    <script src="src/js/core/skill-loader.js"></script> <!-- SkillLoader 依赖于此 -->
+    <script src="src/js/core/job-system.js"></script> <!-- JobSystem 依赖于此 -->
+    <script src="src/js/core/job-skills.js"></script> <!-- JobSkills 依赖于此 -->
+    <script src="src/js/core/character.js"></script> <!-- Character 依赖于此 -->
+    <script src="src/js/core/battle.js"></script>
+</body>
+</html>

@@ -40,6 +40,7 @@ This file tracks the project's current status, including recent changes, current
     *   根据用户决策，修改了 [`src/js/core/dungeon-runner.js`](src/js/core/dungeon-runner.js:1) 的 `startDungeonRun` 函数，确保在队伍进入地下城时立即为每个成员设置 `dungeonOriginalStats` 属性快照，并清除进入前的buff、重置技能冷却和地下城被动。
     *   确认突破加成 (`multiBonusStats`) 维持基于角色当前最新 `baseStats` 的计算方式。
     *   最终地下城内属性计算流程为：`currentStats = (dungeonOriginalStats + 基于 dungeonOriginalStats 的武器盘加成) + 基于当前 baseStats 的突破加成`。
+*   [2025-05-10 19:26:00] - **架构设计:** 根据规范编写器提供的战斗顺序修改方案（我方技能 -> 我方普攻 -> 敌方行动），进行详细的架构设计。重点关注 Memory Bank 更新、关键文件/函数识别、新三阶段流程设计、角色状态处理。
 ## Recent Changes
 *   [2025-05-09 21:18:00] - **Debug Fixes Applied:** 针对战斗日志分析出的4个新问题进行了修复。
     *   问题1 (怪物HP初始化): 修改了 [`src/js/core/battle.js`](src/js/core/battle.js:1) 的HP初始化逻辑，增加从 `monster.baseStats` 获取 `maxHp` 的途径。
@@ -238,3 +239,14 @@ This file tracks the project's current status, including recent changes, current
 * [2025-05-10 18:48:29] - Debug Status Update: Inserted immediate HP check log in `Battle.processCharacterAction` after `JobSkills.useSkill` returns. Awaiting final diagnostic logs for HP rollback.
 * [2025-05-10 18:53:56] - Debug Status Update: Inserted final diagnostic log at the end of `JobSkills.useSkill` to pinpoint HP rollback. Awaiting new logs.
 * [2025-05-10 19:02:40] - Debug Status Update: Corrected insertion point for `JobSkills.useSkill` exit logs. All diagnostic logs are now believed to be correctly in place. Awaiting new logs from user for a scenario that reproduces the HP rollback.
+*   [2025-05-10 19:33:00] - 重构了 [`src/js/core/battle.js`](src/js/core/battle.js:1) 以实现新的三阶段战斗流程（我方技能 -> 我方普攻 -> 敌方行动），遵循架构师的设计方案。主要改动包括：重构 `processBattle` ([`src/js/core/battle.js:400`](src/js/core/battle.js:400)) 函数；新增阶段处理函数 `executePlayerSkillPhase` ([`src/js/core/battle.js:519`](src/js/core/battle.js:519))、`executePlayerAttackPhase` ([`src/js/core/battle.js:533`](src/js/core/battle.js:533))、`executeEnemyPhase` ([`src/js/core/battle.js:552`](src/js/core/battle.js:552))；新增辅助函数 `processCharacterSkills` ([`src/js/core/battle.js:563`](src/js/core/battle.js:563)) 和 `processCharacterNormalAttack` ([`src/js/core/battle.js:609`](src/js/core/battle.js:609))。旧的 `processCharacterAction` ([`src/js/core/battle.js:839`](src/js/core/battle.js:839)) 函数已被新逻辑取代。`processEndOfTurnEffect` ([`src/js/core/battle.js:1933`](src/js/core/battle.js:1933)) 函数也已更新，并在新的 `processBattle` ([`src/js/core/battle.js:400`](src/js/core/battle.js:400)) 循环中调用。
+[2025-05-10 19:44:12] 当前TDD任务：为 `src/js/core/battle.js` 中实现的新三阶段战斗流程（我方技能 -> 我方普攻 -> 敌方行动）编写全面的测试用例。
+主要测试文件：`test-battle-logic.html`。
+关键验证点包括：核心流程顺序、各阶段（我方技能、我方普攻、敌方行动）的正确性、状态处理（Buff/Debuff、回合效果）以及边缘情况。
+* [2025-05-10 20:44:32] - Debug Fix Applied: Resolved "未知的BUFF类型: critRateUp" error. Root cause was a case mismatch for the buff type 'critRateUp' in [`src/js/core/weapon-board-bonus-system.js`](src/js/core/weapon-board-bonus-system.js:322). Corrected to 'criticalRateUp' to match definition in [`src/js/core/buff-system.js`](src/js/core/buff-system.js:28).
+* [2025-05-10 20:51:00] - 将所有暴击率相关的 BUFF 类型统一为 `critRateUp`。
+    *   还原了 [`src/js/core/weapon-board-bonus-system.js`](src/js/core/weapon-board-bonus-system.js:322) 中的 `criticalRateUp` 为 `critRateUp`。
+    *   修改了 [`src/js/core/buff-system.js`](src/js/core/buff-system.js:28) 中的 BUFF 定义从 `criticalRateUp` 为 `critRateUp`。
+    *   修改了 [`src/js/core/job-skills.js`](src/js/core/job-skills.js:649) 中的引用。
+    *   修改了 [`src/js/core/buff-system.js`](src/js/core/buff-system.js:696) 和 [`src/js/core/buff-system.js:772`](src/js/core/buff-system.js:772) 中的引用。
+    *   更新了 [`docs/skill_effect_types_reference.md`](docs/skill_effect_types_reference.md:65) 中的文档。

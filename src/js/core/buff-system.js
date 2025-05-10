@@ -25,7 +25,7 @@ const BuffSystem = {
             canDispel: true, stackable: true, valueInteraction: 'add' // 效果值上限-50在属性计算中处理
         },
         // 暴击相关
-        criticalRateUp: { 
+        critRateUp: {
             name: '暴击率提升', description: '提高暴击率', icon: '🎯', isPositive: true,
             canDispel: true, stackable: true, valueInteraction: 'add' // 效果值上限100%在属性计算中处理
         },
@@ -693,7 +693,7 @@ const BuffSystem = {
             case 'attackDown': target.currentStats.attack = Math.max(0, (target.currentStats.attack || 0) - (target.baseStats.attack * value)); break;
             case 'defenseUp': target.currentStats.defense = Math.max(0, (target.currentStats.defense || 0) + (target.baseStats.defense * value)); break;
             case 'defenseDown': target.currentStats.defense = Math.max(0, (target.currentStats.defense || 0) - value); break; // 假设是固定值，上限-50在外部处理
-            case 'criticalRateUp': target.currentStats.critRate = Math.min(1, (target.currentStats.critRate || 0) + value); break; // 上限100%
+            case 'critRateUp': target.currentStats.critRate = Math.min(1, (target.currentStats.critRate || 0) + value); break; // 上限100%
             case 'criticalDamageUp': target.currentStats.critDamage = (target.currentStats.critDamage || 1.5) + value; break;
             case 'daBoost': target.currentStats.daRate = Math.min(1, (target.currentStats.daRate || 0) + value); break; // 上限100%
             case 'taBoost': target.currentStats.taRate = Math.min(1, (target.currentStats.taRate || 0) + value); break; // 上限100%
@@ -769,7 +769,7 @@ const BuffSystem = {
             case 'attackDown': target.currentStats.attack = Math.max(0, (target.currentStats.attack || 0) + (target.baseStats.attack * value)); break;
             case 'defenseUp': target.currentStats.defense = Math.max(0, (target.currentStats.defense || 0) - (target.baseStats.defense * value)); break;
             case 'defenseDown': target.currentStats.defense = Math.max(0, (target.currentStats.defense || 0) + value); break;
-            case 'criticalRateUp': target.currentStats.critRate = Math.max(0, (target.currentStats.critRate || 0) - value); break;
+            case 'critRateUp': target.currentStats.critRate = Math.max(0, (target.currentStats.critRate || 0) - value); break;
             case 'criticalDamageUp': target.currentStats.critDamage = Math.max(1.5, (target.currentStats.critDamage || 1.5) - value); break;
             case 'daBoost': target.currentStats.daRate = Math.max(0, (target.currentStats.daRate || 0) - value); break;
             case 'taBoost': target.currentStats.taRate = Math.max(0, (target.currentStats.taRate || 0) - value); break;

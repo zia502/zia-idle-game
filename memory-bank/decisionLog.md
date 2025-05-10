@@ -352,3 +352,16 @@ The error "未知的BUFF类型: critRateUp" was caused by an incorrect casing of
     *   [`src/js/core/buff-system.js`](src/js/core/buff-system.js:772): `criticalRateUp` -> `critRateUp`
 *   **文档更新:**
     *   [`docs/skill_effect_types_reference.md`](docs/skill_effect_types_reference.md:65): `BuffSystem.buffTypes.criticalRateUp` -> `BuffSystem.buffTypes.critRateUp`
+---
+### Decision (Debug)
+[2025-05-10 21:07:00] - Fix `TypeError: Cannot read properties of undefined (reading 'currentStats')` in `job-skills.js` for skill `blazingStrike2`.
+
+**Rationale:**
+The error occurred in `JobSkills.applyDebuffEffects` at line 807 when trying to access `targets[0].currentStats.hp`. Investigation revealed that the `targets` array was empty or invalid. This was traced back to an incorrect parameter being passed to `JobSkills.useSkill` in `Battle.processCharacterSkills` ([`src/js/core/battle.js:580`](src/js/core/battle.js:580)). Instead of passing the full `teamMembers` array as the third argument, it was passing `targets` (the result of `Battle.getEffectTargets`). This incorrect `teamMembers` list was then propagated down through `JobSkills.applySkillEffects` to `JobSkills.applyDebuffEffects`, where `JobSkills.getTargets` likely returned an empty array due to the incomplete input list, leading to `targets[0]` being undefined.
+
+**Details:**
+*   Modified [`src/js/core/battle.js`](src/js/core/battle.js) at line [580](src/js/core/battle.js:580).
+*   Changed the third argument of the `JobSkills.useSkill` call from `targets` to `teamMembers`.
+    *   Original: `JobSkills.useSkill(character.id, skillToUseId, targets, monster);`
+    *   Fixed: `JobSkills.useSkill(character.id, skillToUseId, teamMembers, monster);`
+*   This ensures that `JobSkills` methods receive the complete list of team members, allowing internal target selection logic to function correctly.

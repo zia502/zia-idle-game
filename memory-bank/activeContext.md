@@ -250,3 +250,4 @@ This file tracks the project's current status, including recent changes, current
     *   修改了 [`src/js/core/job-skills.js`](src/js/core/job-skills.js:649) 中的引用。
     *   修改了 [`src/js/core/buff-system.js`](src/js/core/buff-system.js:696) 和 [`src/js/core/buff-system.js:772`](src/js/core/buff-system.js:772) 中的引用。
     *   更新了 [`docs/skill_effect_types_reference.md`](docs/skill_effect_types_reference.md:65) 中的文档。
+* [2025-05-10 21:06:00] - Debug Status Update: Investigating runtime error `TypeError: Cannot read properties of undefined (reading 'currentStats')` in `job-skills.js:807` for skill `blazingStrike2`. Identified incorrect parameter passing to `JobSkills.useSkill` in `battle.js:580`.

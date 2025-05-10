@@ -181,3 +181,4 @@ This file tracks the project's progress using a task list format.
     *   修改了 [`src/js/core/buff-system.js`](src/js/core/buff-system.js:28) 中的 BUFF 定义从 `criticalRateUp` 为 `critRateUp`。
     *   在 [`src/js/core/job-skills.js`](src/js/core/job-skills.js:649), [`src/js/core/buff-system.js`](src/js/core/buff-system.js:696) 和 [`src/js/core/buff-system.js:772`](src/js/core/buff-system.js:772) 中将 `criticalRateUp` 替换为 `critRateUp`。
     *   更新了 [`docs/skill_effect_types_reference.md`](docs/skill_effect_types_reference.md:65) 中的文档。
+* [2025-05-10 21:07:00] - Debugging Task Status Update: Investigating `TypeError` in `job-skills.js:807`. Root cause identified as incorrect `teamMembers` argument passed to `JobSkills.useSkill` in `battle.js`. Preparing to apply fix.

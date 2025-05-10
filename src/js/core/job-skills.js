@@ -448,6 +448,15 @@ console.log(`[DEBUG JS.useSkill EXIT] Monster: ${monster.name}, RefID: ${monster
         }
 
         for (const effectDetail of template.effects) {
+            //检查战斗是否结束，是否目标HP或我方HP是0
+            if (monster.currentStats.hp <= 0) {
+                return {
+                    message: `${character.name} 使用了【${template.name}】。战斗结束，${monster.name} 已被击败。`,
+                    effects: {},
+                    success: true
+                };
+            }
+
             let currentEffectResult = { message: "", effects: {}, success: true };
             const actualEffectType = effectDetail.type || template.effectType;
 
@@ -1879,7 +1888,6 @@ console.log("[DEBUG JS.applyDamageEffects Pre-Call B.aDTT] Target Name:", target
      */
     getTargets(character, targetType, teamMembers, monster) {
         console.log(`获取目标，目标类型: ${targetType}`);
-        console.log(`获取目标，目标:`, monster.currentStats.hp);
         let targets = [];
 
         switch (targetType) {

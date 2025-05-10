@@ -187,3 +187,12 @@ This file tracks the project's progress using a task list format.
     *   更新了 `useSkill` 以适配新结构。
     *   验证了 [`src/js/core/battle.js`](src/js/core/battle.js:1) 调用方的兼容性。
     *   添加了相关JSDoc和测试说明。
+*   [2025-05-10 23:28:00] - **Completed Task:** 统一战斗系统日志记录功能。
+    *   创建了新的日志模块 [`src/js/core/battle-logger.js`](src/js/core/battle-logger.js) 并实现了 `BattleLogger` 对象及其多级日志方法。
+    *   将 [`src/js/core/battle.js`](src/js/core/battle.js) 中的旧日志调用替换为 `BattleLogger.log()`。
+    *   在伤害计算、技能使用、普通攻击、BUFF处理等关键节点添加了详细的控制台日志和简洁的界面日志。
+    *   确保控制台日志包含回合前缀和必要的计算细节。
+- [IN PROGRESS] 2025-05-10 23:30:12 - Start documenting BattleLogger system (docs/battle-logger-usage.md)
+- [DONE] 2025-05-10 23:31:14 - Completed documenting BattleLogger system (docs/battle-logger-usage.md)
+* [2025-05-10 23:34:18] - **Completed Debugging Task:** Fixed `TypeError: Battle.logBattle is not a function` in `buff-system.js`. Replaced `Battle.logBattle` with `BattleLogger.log(BattleLogger.levels.BATTLE_LOG, ...)`.
+* [2025-05-10 23:37:00] - **Completed Debugging Task:** Resolved `ReferenceError: BattleLogger is not defined` in [`src/js/core/buff-system.js`](src/js/core/buff-system.js:909). Added `<script src="src/js/core/battle-logger.js"></script>` to [`index.html`](index.html) before [`src/js/core/buff-system.js`](src/js/core/buff-system.js).

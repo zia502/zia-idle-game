@@ -26,4 +26,9 @@ This file provides a high-level overview of the project and the expected product
 * HTML5/CSS3 - 基础页面结构和样式
 * JavaScript (ES6+) - 游戏核心逻辑
 
+## Documentation
+
+*   [`docs/battle-logger-usage.md`](docs/battle-logger-usage.md) - BattleLogger 系统使用文档
+
 [2025-05-08 11:44:40] - 更新关键特性，明确职业系统为主角专属。
+[2025-05-10 23:31:28] - 添加 BattleLogger 系统文档链接。

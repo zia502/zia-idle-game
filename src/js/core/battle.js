@@ -429,29 +429,34 @@ this.resetProcCounts(); // 重置技能Proc触发计数
 
         while (this.currentTurn < MAX_TURNS) {
             this.currentTurn++;
-            this.logBattle(`\n===== 回合 ${this.currentTurn} 开始 =====`);
+            BattleLogger.log(BattleLogger.levels.BATTLE_LOG, `\n===== 回合 ${this.currentTurn} 开始 =====`, null, this.currentTurn);
+            BattleLogger.log(BattleLogger.levels.CONSOLE_INFO, `回合 ${this.currentTurn} 开始`, null, this.currentTurn);
             if (typeof Dungeon !== 'undefined' && Dungeon.currentRun) this.dungeonTurn++;
 
             this.processTurnStartBuffs(teamMembers, monster);
             if (this.isBattleOver(teamMembers, monster)) break;
 
             // --- 我方技能阶段 ---
-            this.logBattle("--- 我方技能阶段 ---");
+            BattleLogger.log(BattleLogger.levels.BATTLE_LOG, "--- 我方技能阶段 ---", null, this.currentTurn);
+            BattleLogger.log(BattleLogger.levels.CONSOLE_INFO, "我方技能阶段开始", null, this.currentTurn);
             this.executePlayerSkillPhase(teamMembers, monster, battleStats);
             if (this.isBattleOver(teamMembers, monster)) break;
 
             // --- 我方普攻阶段 ---
-            this.logBattle("--- 我方普攻阶段 ---");
+            BattleLogger.log(BattleLogger.levels.BATTLE_LOG, "--- 我方普攻阶段 ---", null, this.currentTurn);
+            BattleLogger.log(BattleLogger.levels.CONSOLE_INFO, "我方普攻阶段开始", null, this.currentTurn);
             this.executePlayerAttackPhase(teamMembers, monster, battleStats);
             if (this.isBattleOver(teamMembers, monster)) break;
 
             // --- 敌方行动阶段 ---
-            this.logBattle("--- 敌方行动阶段 ---");
+            BattleLogger.log(BattleLogger.levels.BATTLE_LOG, "--- 敌方行动阶段 ---", null, this.currentTurn);
+            BattleLogger.log(BattleLogger.levels.CONSOLE_INFO, "敌方行动阶段开始", null, this.currentTurn);
             this.executeEnemyPhase(monster, teamMembers, battleStats);
             if (this.isBattleOver(teamMembers, monster)) break;
 
             // --- 回合结束处理 ---
-            this.logBattle("--- 回合结束处理 ---");
+            BattleLogger.log(BattleLogger.levels.BATTLE_LOG, "--- 回合结束处理 ---", null, this.currentTurn);
+            BattleLogger.log(BattleLogger.levels.CONSOLE_INFO, "回合结束处理开始", null, this.currentTurn);
             this.updateBuffDurations(teamMembers, monster); // 更新Buff持续时间
 
             // 处理所有实体的回合结束效果
@@ -462,13 +467,16 @@ this.resetProcCounts(); // 重置技能Proc触发计数
             }
             
             const monsterHpPercent = monster.currentStats.maxHp > 0 ? Math.floor((monster.currentStats.hp / monster.currentStats.maxHp) * 100) : 0;
-            this.logBattle(`${monster.name} HP: ${Math.floor(monster.currentStats.hp)}/${monster.currentStats.maxHp} (${monsterHpPercent}%)`);
+            BattleLogger.log(BattleLogger.levels.BATTLE_LOG, `${monster.name} HP: ${Math.floor(monster.currentStats.hp)}/${monster.currentStats.maxHp} (${monsterHpPercent}%)`, null, this.currentTurn);
+            BattleLogger.log(BattleLogger.levels.CONSOLE_INFO, `${monster.name} HP: ${Math.floor(monster.currentStats.hp)}/${monster.currentStats.maxHp} (${monsterHpPercent}%)`, { summary: `${monster.name} HP`}, this.currentTurn);
             teamMembers.forEach(member => {
                 if (member.currentStats.hp > 0) {
                     const memberHpPercent = member.currentStats.maxHp > 0 ? Math.floor((member.currentStats.hp / member.currentStats.maxHp) * 100) : 0;
-                    this.logBattle(`${member.name} HP: ${Math.floor(member.currentStats.hp)}/${member.currentStats.maxHp} (${memberHpPercent}%)`);
+                    BattleLogger.log(BattleLogger.levels.BATTLE_LOG, `${member.name} HP: ${Math.floor(member.currentStats.hp)}/${member.currentStats.maxHp} (${memberHpPercent}%)`, null, this.currentTurn);
+                    BattleLogger.log(BattleLogger.levels.CONSOLE_INFO, `${member.name} HP: ${Math.floor(member.currentStats.hp)}/${member.currentStats.maxHp} (${memberHpPercent}%)`, { summary: `${member.name} HP`}, this.currentTurn);
                 } else {
-                    this.logBattle(`${member.name} 已阵亡`);
+                    BattleLogger.log(BattleLogger.levels.BATTLE_LOG, `${member.name} 已阵亡`, null, this.currentTurn);
+                    BattleLogger.log(BattleLogger.levels.CONSOLE_INFO, `${member.name} 已阵亡`, null, this.currentTurn);
                 }
             });
 
@@ -519,7 +527,8 @@ this.resetProcCounts(); // 重置技能Proc触发计数
             if (this.isBattleOver(teamMembers, monster)) break;
             if (character.currentStats.hp <= 0 || this.isStunned(character)) continue;
             
-            this.logBattle(`-- ${character.name} 的技能行动 --`);
+            BattleLogger.log(BattleLogger.levels.BATTLE_LOG, `-- ${character.name} 的技能行动 --`, null, this.currentTurn);
+            BattleLogger.log(BattleLogger.levels.CONSOLE_INFO, `${character.name} 的技能行动开始`, null, this.currentTurn);
             this.processCharacterSkills(character, monster, battleStats, teamMembers);
         }
     },
@@ -539,7 +548,8 @@ this.resetProcCounts(); // 重置技能Proc触发计数
             // 当前简化：如果角色在技能阶段没有标记自己已行动（例如通过一个内部状态），则普攻
             // 另一个简化：总是允许普攻，除非角色有特殊状态阻止（如某些技能的后摇）
             // 采纳：如果角色未被眩晕且存活，就尝试普攻。具体是否攻击由 processCharacterNormalAttack 内部逻辑决定。
-            this.logBattle(`-- ${character.name} 的普攻行动 --`);
+            BattleLogger.log(BattleLogger.levels.BATTLE_LOG, `-- ${character.name} 的普攻行动 --`, null, this.currentTurn);
+            BattleLogger.log(BattleLogger.levels.CONSOLE_INFO, `${character.name} 的普攻行动开始`, null, this.currentTurn);
             this.processCharacterNormalAttack(character, monster, battleStats, teamMembers);
         }
     },
@@ -551,7 +561,8 @@ this.resetProcCounts(); // 重置技能Proc触发计数
         if (this.isBattleOver(teamMembers, monster)) return;
         if (monster.currentStats.hp <= 0 || this.isStunned(monster)) return;
 
-        this.logBattle(`-- ${monster.name} 的行动 --`);
+        BattleLogger.log(BattleLogger.levels.BATTLE_LOG, `-- ${monster.name} 的行动 --`, null, this.currentTurn);
+        BattleLogger.log(BattleLogger.levels.CONSOLE_INFO, `${monster.name} 的行动开始`, null, this.currentTurn);
         this.processMonsterAction(monster, teamMembers, battleStats);
     },
     
@@ -579,23 +590,31 @@ this.resetProcCounts(); // 重置技能Proc触发计数
 
                             if (result.success) {
                                 usedAnySkillThisTurn = true;
-                                this.logBattle(result.message || `${character.name} 使用了技能 ${skillData.name}。`);
+                                const skillUsedMessage = result.message || `${character.name} 使用了技能 ${skillData.name}。`;
+                                BattleLogger.log(BattleLogger.levels.BATTLE_LOG, skillUsedMessage, null, this.currentTurn);
+                                BattleLogger.log(BattleLogger.levels.CONSOLE_INFO, skillUsedMessage, { caster: character.name, skill: skillData.name, target: targets.map(t => t.name) }, this.currentTurn);
                                 this.setSkillCooldown(character, skillToUseId, skillData);
                                 this.recordSkillUsage(character, skillToUseId);
                                 this.handleProcTrigger(character, 'onSkillUse', { skillId: skillToUseId, skillData, targets, battleStats });
                                 // 根据架构，这里不再判断攻击性技能来打断，而是允许使用所有可用技能
                             } else {
-                                this.logBattle(`${character.name} 尝试使用技能 ${skillData.name || skillToUseId} 失败。${result.message ? '原因: ' + result.message : ''}`);
+                                const skillFailedMessage = `${character.name} 尝试使用技能 ${skillData.name || skillToUseId} 失败。${result.message ? '原因: ' + result.message : ''}`;
+                                BattleLogger.log(BattleLogger.levels.BATTLE_LOG, skillFailedMessage, null, this.currentTurn);
+                                BattleLogger.log(BattleLogger.levels.CONSOLE_INFO, skillFailedMessage, { caster: character.name, skill: skillData.name }, this.currentTurn);
                             }
                         } catch (error) {
                             console.error(`技能 ${skillToUseId} 使用错误:`, error);
-                            this.logBattle(`${character.name} 尝试使用技能 ${skillData.name || skillToUseId} 时发生错误。`);
+                            const skillErrorMessage = `${character.name} 尝试使用技能 ${skillData.name || skillToUseId} 时发生错误。`;
+                            BattleLogger.log(BattleLogger.levels.BATTLE_LOG, skillErrorMessage, null, this.currentTurn);
+                            BattleLogger.log(BattleLogger.levels.CONSOLE_ERROR, skillErrorMessage, { error: error.toString() }, this.currentTurn); // Assuming CONSOLE_ERROR level or similar
                         }
                     }
                 }
             }
         } else {
-            this.logBattle(`${character.name} 没有可用的技能。`);
+            const noSkillMessage = `${character.name} 没有可用的技能。`;
+            BattleLogger.log(BattleLogger.levels.BATTLE_LOG, noSkillMessage, null, this.currentTurn);
+            BattleLogger.log(BattleLogger.levels.CONSOLE_INFO, noSkillMessage, null, this.currentTurn);
         }
         // 返回是否使用了技能，可能用于 processCharacterNormalAttack 的判断
         return usedAnySkillThisTurn;
@@ -617,15 +636,18 @@ this.resetProcCounts(); // 重置技能Proc触发计数
 
         if (character.currentStats.hp > 0 && monster.currentStats.hp > 0) {
             if (!this.isBattleOver(teamMembers, monster)) {
-                // this.logBattle(`${character.name} 执行普通攻击。`); // executeNormalAttack 内部会打日志
+                // BattleLogger.log in executeNormalAttack will handle this
                 this.executeNormalAttack(character, monster, battleStats, teamMembers);
             } else {
-                 this.logBattle(`${character.name} 或 ${monster.name} 已被击败，无法执行普通攻击。`);
+                 BattleLogger.log(BattleLogger.levels.BATTLE_LOG, `${character.name} 或 ${monster.name} 已被击败，无法执行普通攻击。`, null, this.currentTurn);
+                 BattleLogger.log(BattleLogger.levels.CONSOLE_INFO, `${character.name} 或 ${monster.name} 已被击败，无法执行普通攻击。`, null, this.currentTurn);
             }
         } else if (character.currentStats.hp <= 0) {
-            this.logBattle(`${character.name} 已被击败，无法执行普通攻击。`);
+            BattleLogger.log(BattleLogger.levels.BATTLE_LOG, `${character.name} 已被击败，无法执行普通攻击。`, null, this.currentTurn);
+            BattleLogger.log(BattleLogger.levels.CONSOLE_INFO, `${character.name} 已被击败，无法执行普通攻击。`, null, this.currentTurn);
         } else if (monster.currentStats.hp <= 0) {
-            this.logBattle(`${monster.name} 已被击败，${character.name} 无需执行普通攻击。`);
+            BattleLogger.log(BattleLogger.levels.BATTLE_LOG, `${monster.name} 已被击败，${character.name} 无需执行普通攻击。`, null, this.currentTurn);
+            BattleLogger.log(BattleLogger.levels.CONSOLE_INFO, `${monster.name} 已被击败，${character.name} 无需执行普通攻击。`, null, this.currentTurn);
         }
     },
     
@@ -684,22 +706,22 @@ this.resetProcCounts(); // 重置技能Proc触发计数
             case 'daBoost':
                 // 提升DA（连击）概率
                 character.currentStats.daRate = (character.currentStats.daRate || 0) + effect.value;
-                //this.logBattle(`${character.name} 的被动技能提升了 ${effect.value * 100}% 的连击概率！`);
+                //BattleLogger.log(BattleLogger.levels.CONSOLE_INFO, `${character.name} 的被动技能提升了 ${effect.value * 100}% 的连击概率！`, null, this.currentTurn);
                 break;
             case 'taBoost':
                 // 提升TA（三连击）概率
                 character.currentStats.taRate = (character.currentStats.taRate || 0) + effect.value;
-                //this.logBattle(`${character.name} 的被动技能提升了 ${effect.value * 100}% 的三连击概率！`);
+                //BattleLogger.log(BattleLogger.levels.CONSOLE_INFO, `${character.name} 的被动技能提升了 ${effect.value * 100}% 的三连击概率！`, null, this.currentTurn);
                 break;
             case 'attackUp':
                 // 提升攻击力
                 character.currentStats.attack = Math.floor(character.currentStats.attack * (1 + effect.value));
-                //this.logBattle(`${character.name} 的被动技能提升了 ${effect.value * 100}% 的攻击力！`);
+                //BattleLogger.log(BattleLogger.levels.CONSOLE_INFO, `${character.name} 的被动技能提升了 ${effect.value * 100}% 的攻击力！`, null, this.currentTurn);
                 break;
             case 'defenseUp':
                 // 提升防御力
                 character.currentStats.defense = Math.floor(character.currentStats.defense * (1 + effect.value));
-                //this.logBattle(`${character.name} 的被动技能提升了 ${effect.value * 100}% 的防御力！`);
+                //BattleLogger.log(BattleLogger.levels.CONSOLE_INFO, `${character.name} 的被动技能提升了 ${effect.value * 100}% 的防御力！`, null, this.currentTurn);
                 break;
             // 可以添加其他类型的被动效果
         }
@@ -720,14 +742,15 @@ this.resetProcCounts(); // 重置技能Proc触发计数
                 const result = BuffSystem.processBuffsAtTurnStart(entity);
                 if (result.damage > 0) {
                     // 应用持续伤害
-                    const damageResult = this.applyDamageToTarget(null, entity, result.damage, { isDot: true }); // 假设 applyDamageToTarget 能处理
-                    this.logBattle(`${entity.name} 受到 ${damageResult.damage} 点持续伤害！`);
+                    const damageResult = this.applyDamageToTarget(null, entity, result.damage, { isDot: true, buffName: result.sourceBuffName || '持续伤害' });
+                    // applyDamageToTarget 内部会记录日志
                 }
                 if (result.healing > 0) {
                     // 应用持续治疗
                     const actualHeal = Math.min(result.healing, entity.currentStats.maxHp - entity.currentStats.hp);
                     entity.currentStats.hp += actualHeal;
-                    this.logBattle(`${entity.name} 恢复了 ${actualHeal} 点生命值！`);
+                    BattleLogger.log(BattleLogger.levels.BATTLE_LOG, `${entity.name} 恢复了 ${actualHeal} 点生命值！ (来自${result.sourceBuffName || '持续恢复'})`, null, this.currentTurn);
+                    BattleLogger.log(BattleLogger.levels.CONSOLE_INFO, `${entity.name} 恢复了 ${actualHeal} 点生命值！ (来自${result.sourceBuffName || '持续恢复'})`, { healAmount: actualHeal, currentHp: entity.currentStats.hp }, this.currentTurn);
                 }
             }
 
@@ -753,7 +776,9 @@ this.resetProcCounts(); // 重置技能Proc触发计数
                     buffNames += buff.name + ", ";
                 }
                 if (buffNames !== "") {
-                    this.logBattle(`${member.name} 的 ${buffNames} 效果已结束！`);
+                    const expiredMsg = `${member.name} 的 ${buffNames} 效果已结束！`;
+                    BattleLogger.log(BattleLogger.levels.BATTLE_LOG, expiredMsg, null, this.currentTurn);
+                    BattleLogger.log(BattleLogger.levels.CONSOLE_INFO, expiredMsg, { buffs: actualExpiredBuffs.map(b => b.name) }, this.currentTurn);
                 };
             }
 
@@ -775,9 +800,9 @@ this.resetProcCounts(); // 重置技能Proc触发计数
                             }
 
                             // if (skill) {
-                            //     this.logBattle(`${member.name} 的技能 ${skill.name} 冷却结束，可以再次使用！`);
+                            //     BattleLogger.log(BattleLogger.levels.CONSOLE_INFO, `${member.name} 的技能 ${skill.name} 冷却结束，可以再次使用！`, null, this.currentTurn);
                             // } else {
-                            //     this.logBattle(`${member.name} 的技能 ${skillId} 冷却结束，可以再次使用！`);
+                            //     BattleLogger.log(BattleLogger.levels.CONSOLE_INFO, `${member.name} 的技能 ${skillId} 冷却结束，可以再次使用！`, null, this.currentTurn);
                             // }
                         }
                     }
@@ -796,7 +821,9 @@ this.resetProcCounts(); // 重置技能Proc触发计数
                 buffNames += buff.name + ", ";
             }
             if (buffNames !== "") {
-                this.logBattle(`${monster.name} 的 ${buffNames} 效果已结束！`);
+                const monsterExpiredMsg = `${monster.name} 的 ${buffNames} 效果已结束！`;
+                BattleLogger.log(BattleLogger.levels.BATTLE_LOG, monsterExpiredMsg, null, this.currentTurn);
+                BattleLogger.log(BattleLogger.levels.CONSOLE_INFO, monsterExpiredMsg, { buffs: expiredBuffs.map(b => b.name) }, this.currentTurn);
             };
         }
 
@@ -807,11 +834,11 @@ this.resetProcCounts(); // 重置技能Proc触发计数
                     monster.skillCooldowns[skillId]--;
                     if (monster.skillCooldowns[skillId] === 0) {
                         const skillData = SkillLoader.getSkillInfo(skillId) || (window.bossSkills && window.bossSkills[skillId]);
-                        if (skillData) {
-                            // this.logBattle(`${monster.name} 的技能 ${skillData.name} 冷却结束，可以再次使用！`);
-                        } else {
-                            // this.logBattle(`${monster.name} 的技能 ${skillId} 冷却结束，可以再次使用！`);
-                        }
+                        // if (skillData) {
+                        //     BattleLogger.log(BattleLogger.levels.CONSOLE_INFO, `${monster.name} 的技能 ${skillData.name} 冷却结束，可以再次使用！`, null, this.currentTurn);
+                        // } else {
+                        //     BattleLogger.log(BattleLogger.levels.CONSOLE_INFO, `${monster.name} 的技能 ${skillId} 冷却结束，可以再次使用！`, null, this.currentTurn);
+                        // }
                     }
                 }
             }
@@ -910,17 +937,7 @@ this.resetProcCounts(); // 重置技能Proc触发计数
             this.handleProcTrigger(character, 'onAttackHit', { target: monster, damageDealt: damageResult.damage, isCritical: damageResult.isCritical, attackIndex: i, battleStats });
 
             // 只在第一次攻击时记录攻击类型日志
-            if (i === 0) {
-                let damageMessage = `${character.name} ${attackType}，`;
-                if (damageResult.missed) {
-                    damageMessage += `对 ${monster.name} 的攻击未命中！`;
-                } else {
-                    damageMessage += `对 ${monster.name} 造成 ${damageResult.damage} 点伤害`;
-                    if (damageResult.isCritical) damageMessage += '（暴击！）';
-                }
-                // 暂时不打印单次伤害日志，在后面打印总伤害
-                // this.logBattle(damageMessage);
-            }
+            // 单次攻击的详细日志由 applyDamageToTarget 内部处理
         }
 
         // 记录总伤害日志
@@ -928,7 +945,15 @@ this.resetProcCounts(); // 重置技能Proc触发计数
              let summaryMessage = `${character.name} ${attackType} (${totalHits}次攻击)`;
              if (criticalHits > 0) summaryMessage += ` (${criticalHits}次暴击)`;
              summaryMessage += `，总共对 ${monster.name} 造成 ${totalDamageDealt} 点伤害！`;
-             this.logBattle(summaryMessage);
+             BattleLogger.log(BattleLogger.levels.BATTLE_LOG, summaryMessage, null, this.currentTurn);
+             BattleLogger.log(BattleLogger.levels.CONSOLE_INFO, summaryMessage, {
+                attacker: character.name,
+                target: monster.name,
+                attackType: attackType,
+                hits: totalHits,
+                criticalHits: criticalHits,
+                totalDamage: totalDamageDealt
+             }, this.currentTurn);
         }
 
 
@@ -993,8 +1018,10 @@ this.resetProcCounts(); // 重置技能Proc触发计数
 
             const skillToUse = triggeredSkills[0];
             const skillData = skillToUse; // skillToUse 已经包含了完整的技能数据
+            const hpTriggerMsg = `${monster.name} 血量 (${(hpPercent * 100).toFixed(1)}%) 触发技能 ${skillData.name}!`;
+            BattleLogger.log(BattleLogger.levels.BATTLE_LOG, hpTriggerMsg, null, this.currentTurn);
+            BattleLogger.log(BattleLogger.levels.CONSOLE_INFO, hpTriggerMsg, { skill: skillData.name, hpPercent: hpPercent }, this.currentTurn);
 
-            this.logBattle(`${monster.name} 血量 (${(hpPercent * 100).toFixed(1)}%) 触发技能 ${skillData.name}!`);
             if (typeof JobSkills !== 'undefined' && typeof JobSkills.useSkill === 'function') {
                 try {
                     if (typeof Character !== 'undefined') { Character.characters = Character.characters || {}; Character.characters[monster.id] = monster; }
@@ -1005,16 +1032,21 @@ this.resetProcCounts(); // 重置技能Proc触发计数
                     const result = JobSkills.useSkill(monster.id, skillData.id, targets, targetForSkill);
 
                     if (result.success) {
-                        this.logBattle(result.message || `${monster.name} 使用了血量触发技能 ${skillData.name}。`);
-                        // 血量触发技能不进入CD，也不记录常规使用次数
+                        const skillSuccessMsg = result.message || `${monster.name} 使用了血量触发技能 ${skillData.name}。`;
+                        BattleLogger.log(BattleLogger.levels.BATTLE_LOG, skillSuccessMsg, null, this.currentTurn);
+                        BattleLogger.log(BattleLogger.levels.CONSOLE_INFO, skillSuccessMsg, { caster: monster.name, skill: skillData.name, target: targets.map(t=>t.name) }, this.currentTurn);
                         this.handleProcTrigger(monster, 'onSkillUse', { skillId: skillData.id, skillData, targets, battleStats });
                         usedActionThisTurn = true;
                     } else {
-                        this.logBattle(`${monster.name} 尝试使用血量触发技能 ${skillData.name} 失败。${result.message ? '原因: ' + result.message : ''}`);
+                        const skillFailMsg = `${monster.name} 尝试使用血量触发技能 ${skillData.name} 失败。${result.message ? '原因: ' + result.message : ''}`;
+                        BattleLogger.log(BattleLogger.levels.BATTLE_LOG, skillFailMsg, null, this.currentTurn);
+                        BattleLogger.log(BattleLogger.levels.CONSOLE_INFO, skillFailMsg, { caster: monster.name, skill: skillData.name }, this.currentTurn);
                     }
                 } catch (error) {
                     console.error(`怪物血量触发技能 ${skillData.id} 使用错误:`, error);
-                    this.logBattle(`${monster.name} 尝试使用血量触发技能 ${skillData.name} 时发生错误。`);
+                    const skillErrorMsg = `${monster.name} 尝试使用血量触发技能 ${skillData.name} 时发生错误。`;
+                    BattleLogger.log(BattleLogger.levels.BATTLE_LOG, skillErrorMsg, null, this.currentTurn);
+                    BattleLogger.log(BattleLogger.levels.CONSOLE_ERROR, skillErrorMsg, { error: error.toString() }, this.currentTurn);
                 }
             }
         }
@@ -1024,21 +1056,21 @@ this.resetProcCounts(); // 重置技能Proc触发计数
             const availableSkills = this.getAvailableSkills(monster); // getAvailableSkills 内部会检查CD
 
             if (availableSkills.length > 0) {
-                // 按原始顺序选择第一个可用技能
                 let skillToUseId = null;
                 let skillDataToUse = null;
 
-                for (const id of monster.skills) { // 遍历Boss原始技能列表以保持顺序
+                for (const id of monster.skills) {
                     if (availableSkills.includes(id)) {
                          skillToUseId = id;
                          skillDataToUse = SkillLoader.getSkillInfo(skillToUseId) || (window.bossSkills && window.bossSkills[skillToUseId]);
-                         if (skillDataToUse) break; // 找到第一个可用的
+                         if (skillDataToUse) break;
                     }
                 }
 
-
                 if (skillToUseId && skillDataToUse) {
-                    this.logBattle(`${monster.name} 准备使用常规技能 ${skillDataToUse.name}。`);
+                    const prepSkillMsg = `${monster.name} 准备使用常规技能 ${skillDataToUse.name}。`;
+                    BattleLogger.log(BattleLogger.levels.BATTLE_LOG, prepSkillMsg, null, this.currentTurn);
+                    BattleLogger.log(BattleLogger.levels.CONSOLE_INFO, prepSkillMsg, { skill: skillDataToUse.name }, this.currentTurn);
                     if (typeof JobSkills !== 'undefined' && typeof JobSkills.useSkill === 'function') {
                         try {
                             if (typeof Character !== 'undefined') { Character.characters = Character.characters || {}; Character.characters[monster.id] = monster; }
@@ -1049,17 +1081,23 @@ this.resetProcCounts(); // 重置技能Proc触发计数
                             const result = JobSkills.useSkill(monster.id, skillToUseId, targets, targetForSkill);
 
                             if (result.success) {
-                                this.logBattle(result.message || `${monster.name} 使用了技能 ${skillDataToUse.name}。`);
-                                this.setSkillCooldown(monster, skillToUseId, skillDataToUse); // 常规技能设置CD
+                                const skillSuccessMsg = result.message || `${monster.name} 使用了技能 ${skillDataToUse.name}。`;
+                                BattleLogger.log(BattleLogger.levels.BATTLE_LOG, skillSuccessMsg, null, this.currentTurn);
+                                BattleLogger.log(BattleLogger.levels.CONSOLE_INFO, skillSuccessMsg, { caster: monster.name, skill: skillDataToUse.name, target: targets.map(t=>t.name) }, this.currentTurn);
+                                this.setSkillCooldown(monster, skillToUseId, skillDataToUse);
                                 this.recordSkillUsage(monster, skillToUseId);
                                 this.handleProcTrigger(monster, 'onSkillUse', { skillId: skillToUseId, skillData: skillDataToUse, targets, battleStats });
                                 usedActionThisTurn = true;
                             } else {
-                                 this.logBattle(`${monster.name} 尝试使用技能 ${skillDataToUse.name} 失败。${result.message ? '原因: ' + result.message : ''}`);
+                                 const skillFailMsg = `${monster.name} 尝试使用技能 ${skillDataToUse.name} 失败。${result.message ? '原因: ' + result.message : ''}`;
+                                 BattleLogger.log(BattleLogger.levels.BATTLE_LOG, skillFailMsg, null, this.currentTurn);
+                                 BattleLogger.log(BattleLogger.levels.CONSOLE_INFO, skillFailMsg, { caster: monster.name, skill: skillDataToUse.name }, this.currentTurn);
                             }
                         } catch (error) {
                             console.error(`怪物常规技能 ${skillToUseId} 使用错误:`, error);
-                            this.logBattle(`${monster.name} 尝试使用技能 ${skillDataToUse.name} 时发生错误。`);
+                            const skillErrorMsg = `${monster.name} 尝试使用技能 ${skillDataToUse.name} 时发生错误。`;
+                            BattleLogger.log(BattleLogger.levels.BATTLE_LOG, skillErrorMsg, null, this.currentTurn);
+                            BattleLogger.log(BattleLogger.levels.CONSOLE_ERROR, skillErrorMsg, { error: error.toString() }, this.currentTurn);
                         }
                     }
                 }
@@ -1069,9 +1107,11 @@ this.resetProcCounts(); // 重置技能Proc触发计数
         // --- 阶段三：无技能可用 (普通攻击) ---
         if (!usedActionThisTurn) {
             const target = this.selectMonsterTarget(monster, teamMembers);
-            if (!target) return; // 没有有效目标
+            if (!target) return;
 
-            this.logBattle(`${monster.name} 没有可用技能，进行普通攻击。`);
+            const monsterAttackMsg = `${monster.name} 没有可用技能，进行普通攻击。`;
+            BattleLogger.log(BattleLogger.levels.BATTLE_LOG, monsterAttackMsg, null, this.currentTurn);
+            BattleLogger.log(BattleLogger.levels.CONSOLE_INFO, monsterAttackMsg, null, this.currentTurn);
             let daRate = monster.currentStats.daRate || 0.1;
             let taRate = monster.currentStats.taRate || 0.03;
 
@@ -1106,8 +1146,8 @@ this.resetProcCounts(); // 重置技能Proc触发计数
                     isMultiAttack: attackCount > 1,
                     attackIndex: i + 1,
                     totalAttacks: attackCount,
-                    isNormalAttack: true, // 添加此行以指明是普通攻击
-                    isSkillDamage: false  // 明确这不是技能伤害
+                    isNormalAttack: true,
+                    isSkillDamage: false
                 });
 
                 totalDamageDealt += damageResult.damage;
@@ -1116,7 +1156,8 @@ this.resetProcCounts(); // 重置技能Proc触发计数
                 this.handleProcTrigger(monster, 'onAttackHit', { target, damageDealt: damageResult.damage, isCritical: damageResult.isCritical, attackIndex: i, battleStats });
 
                 if (target.currentStats.hp <= 0) {
-                    this.logBattle(`${target.name} 被击败了！`);
+                    BattleLogger.log(BattleLogger.levels.BATTLE_LOG, `${target.name} 被击败了！`, null, this.currentTurn);
+                    BattleLogger.log(BattleLogger.levels.CONSOLE_INFO, `${target.name} 被击败了！`, null, this.currentTurn);
                     this.handleCharacterDefeat(target, teamMembers);
                     break;
                 }
@@ -1126,7 +1167,15 @@ this.resetProcCounts(); // 重置技能Proc触发计数
                 let summaryMessage = `${monster.name} ${attackType} (${totalHits}次攻击)`;
                 if (criticalHits > 0) summaryMessage += ` (${criticalHits}次暴击)`;
                 summaryMessage += `，总共对 ${target.name} 造成 ${totalDamageDealt} 点伤害！`;
-                this.logBattle(summaryMessage);
+                BattleLogger.log(BattleLogger.levels.BATTLE_LOG, summaryMessage, null, this.currentTurn);
+                BattleLogger.log(BattleLogger.levels.CONSOLE_INFO, summaryMessage, {
+                    attacker: monster.name,
+                    target: target.name,
+                    attackType: attackType,
+                    hits: totalHits,
+                    criticalHits: criticalHits,
+                    totalDamage: totalDamageDealt
+                }, this.currentTurn);
             }
 
             if (monster.stats) monster.stats.totalDamage = (monster.stats.totalDamage || 0) + totalDamageDealt;
@@ -1211,9 +1260,13 @@ this.resetProcCounts(); // 重置技能Proc触发计数
                         continue; // 已达上限
                     }
                     this.procActivationCounts[activationKey] = activationCount + 1;
-                    this.logBattle(`Proc [${procDef.name || triggerType}] 触发 (${activationCount + 1}/${procDef.maxActivations})`);
+                    const procActivationMsg = `Proc [${procDef.name || triggerType}] 触发 (${activationCount + 1}/${procDef.maxActivations})`;
+                    BattleLogger.log(BattleLogger.levels.BATTLE_LOG, procActivationMsg, null, this.currentTurn);
+                    BattleLogger.log(BattleLogger.levels.CONSOLE_INFO, procActivationMsg, { entity: entity.name, proc: procDef.name || triggerType }, this.currentTurn);
                 } else {
-                     this.logBattle(`Proc [${procDef.name || triggerType}] 触发!`);
+                     const procTriggerMsg = `Proc [${procDef.name || triggerType}] 触发!`;
+                     BattleLogger.log(BattleLogger.levels.BATTLE_LOG, procTriggerMsg, null, this.currentTurn);
+                     BattleLogger.log(BattleLogger.levels.CONSOLE_INFO, procTriggerMsg, { entity: entity.name, proc: procDef.name || triggerType }, this.currentTurn);
                 }
 
 
@@ -1243,29 +1296,31 @@ this.resetProcCounts(); // 重置技能Proc触发计数
         const effectTargets = this.getEffectTargets(effectDef.targetType || 'target', source, teamMembers, monster, triggerContext); // 传递 triggerContext
 
         for (const currentTarget of effectTargets) {
-            if (!currentTarget || currentTarget.currentStats.hp <= 0) continue; // 跳过无效或已阵亡目标
+            if (!currentTarget || currentTarget.currentStats.hp <= 0) continue;
 
-            this.logBattle(`  执行效果: ${effectDef.type} on ${currentTarget.name}`);
+            BattleLogger.log(BattleLogger.levels.CONSOLE_INFO, `  执行效果: ${effectDef.type} on ${currentTarget.name}`, { effectDetails: effectDef }, this.currentTurn);
 
             switch (effectDef.type) {
                 case 'damage':
                     let rawDamage = 0;
-                    const multiplier = effectDef.multiplier || effectDef.minMultiplier || 0; // 处理倍率
+                    const multiplier = effectDef.multiplier || effectDef.minMultiplier || 0;
                     if (multiplier > 0) {
                          rawDamage = Character.calculateAttackPower(source) * multiplier;
-                         // TODO: 处理 min/maxMultiplier
-                    } else if (effectDef.value) { // 固定伤害
+                    } else if (effectDef.value) {
                          rawDamage = effectDef.value;
                     }
                     if (rawDamage > 0) {
                         const damageResult = this.applyDamageToTarget(source, currentTarget, rawDamage, {
-                            isProc: true, // 标记为Proc伤害
-                            damageType: effectDef.damageType, // 如 'plain_damage'
-                            elementType: effectDef.elementType // 传递元素类型
+                            isProc: true,
+                            damageType: effectDef.damageType,
+                            elementType: effectDef.elementType,
+                            skillName: procDefinition ? (procDefinition.name || procDefinition.triggerCondition) : '触发效果'
                         });
-                        this.logBattle(`    对 ${currentTarget.name} 造成 ${damageResult.damage} 点伤害.`);
+                        // applyDamageToTarget will log BATTLE_LOG and CONSOLE_DETAIL
                         if (currentTarget.currentStats.hp <= 0) {
-                             this.logBattle(`    ${currentTarget.name} 被击败!`);
+                             const defeatedMsg = `    ${currentTarget.name} 被击败!`;
+                             BattleLogger.log(BattleLogger.levels.BATTLE_LOG, defeatedMsg, null, this.currentTurn);
+                             BattleLogger.log(BattleLogger.levels.CONSOLE_INFO, defeatedMsg, null, this.currentTurn);
                              this.handleCharacterDefeat(currentTarget, teamMembers);
                         }
                     }
@@ -1280,71 +1335,84 @@ this.resetProcCounts(); // 重置技能Proc触发计数
                          if (hitRawDamage > 0) {
                              const hitDamageResult = this.applyDamageToTarget(source, currentTarget, hitRawDamage, {
                                  isProc: true, isMultiHit: true, attackIndex: i, totalAttacks: hitCount,
-                                 damageType: effectDef.damageType, elementType: effectDef.elementType
+                                 damageType: effectDef.damageType, elementType: effectDef.elementType,
+                                 skillName: procDefinition ? (procDefinition.name || procDefinition.triggerCondition) : '触发多段效果'
                              });
                              totalMultiHitDamage += hitDamageResult.damage;
                              if (currentTarget.currentStats.hp <= 0) {
-                                 this.logBattle(`    ${currentTarget.name} 在第 ${i+1} 次攻击后被击败!`);
+                                 const defeatedMultiHitMsg = `    ${currentTarget.name} 在第 ${i+1} 次攻击后被击败!`;
+                                 BattleLogger.log(BattleLogger.levels.BATTLE_LOG, defeatedMultiHitMsg, null, this.currentTurn);
+                                 BattleLogger.log(BattleLogger.levels.CONSOLE_INFO, defeatedMultiHitMsg, null, this.currentTurn);
                                  this.handleCharacterDefeat(currentTarget, teamMembers);
                                  break;
                              }
                          }
                      }
-                     this.logBattle(`    对 ${currentTarget.name} 进行 ${hitCount} 次攻击，共造成 ${totalMultiHitDamage} 点伤害.`);
+                     const multiHitSummary = `    对 ${currentTarget.name} 进行 ${hitCount} 次攻击，共造成 ${totalMultiHitDamage} 点伤害.`;
+                     BattleLogger.log(BattleLogger.levels.BATTLE_LOG, multiHitSummary, null, this.currentTurn);
+                     BattleLogger.log(BattleLogger.levels.CONSOLE_INFO, multiHitSummary, { totalDamage: totalMultiHitDamage, hits: hitCount }, this.currentTurn);
                     break;
                 case 'heal':
                     let healAmount = 0;
+                    const hpBeforeHeal = currentTarget.currentStats.hp;
                     if (effectDef.healType === 'percentageMaxHp') {
-const hpBeforeProcHeal = currentTarget.currentStats.hp;
-                        //console.log(`[DEBUG PROC HEAL] Attempting heal on ${currentTarget.name} (HP: ${hpBeforeProcHeal}/${currentTarget.currentStats.maxHp}). Source: ${source.name}, Proc: ${procDefinition ? procDefinition.name || procDefinition.triggerCondition : 'Unknown'}, Planned Heal: ${healAmount}`);
-                        //this.logBattle(`[DEBUG PROC HEAL] Attempting heal on ${currentTarget.name}. Source: ${source.name}, Proc: ${procDefinition ? procDefinition.name || procDefinition.triggerCondition : 'Unknown'}`);
                         healAmount = Math.floor(currentTarget.currentStats.maxHp * effectDef.value);
-                        //this.logBattle(`[DEBUG PROC HEAL] Applied heal on ${currentTarget.name}. Actual Heal: ${actualHeal}, HP After: ${currentTarget.currentStats.hp}`);
-                    } else { // 默认固定值
+                    } else {
                         healAmount = effectDef.value || 0;
                     }
                     if (healAmount > 0) {
                         const actualHeal = Math.min(healAmount, currentTarget.currentStats.maxHp - currentTarget.currentStats.hp);
                         currentTarget.currentStats.hp += actualHeal;
-                        this.logBattle(`    为 ${currentTarget.name} 恢复了 ${actualHeal} 点HP.`);
-                        // TODO: 更新治疗统计
+                        const healMsg = `    为 ${currentTarget.name} 恢复了 ${actualHeal} 点HP.`;
+                        BattleLogger.log(BattleLogger.levels.BATTLE_LOG, healMsg, null, this.currentTurn);
+                        BattleLogger.log(BattleLogger.levels.CONSOLE_DETAIL, healMsg, {
+                            calculation: "治疗量",
+                            steps: [`治疗前HP: ${hpBeforeHeal}`, `计划治疗: ${healAmount}`, `实际治疗: ${actualHeal}`],
+                            finalHp: currentTarget.currentStats.hp
+                        }, this.currentTurn);
                     }
                     break;
-                case 'applyBuff': // 重命名以区分 BuffSystem.applyBuff
+                case 'applyBuff':
                 case 'applyDebuff':
                     const buffOptions = {
                         canDispel: effectDef.dispellable,
                         stackable: effectDef.stackable,
                         maxStacks: effectDef.maxStacks,
-                        elementType: effectDef.elementType, // For elemental buffs/resists
-                        statusToImmune: effectDef.status, // For status immunity
-                        convertToElementType: effectDef.convertToElementType // For damage conversion
-                        // Add other specific options as needed
+                        elementType: effectDef.elementType,
+                        statusToImmune: effectDef.status,
+                        convertToElementType: effectDef.convertToElementType
                     };
                     const buffObject = BuffSystem.createBuff(effectDef.buffType, effectDef.value, effectDef.duration, source, buffOptions);
                     if (buffObject) {
                         BuffSystem.applyBuff(currentTarget, buffObject);
-                        this.logBattle(`    为 ${currentTarget.name} 施加了 ${buffObject.name}.`);
+                        const buffAppliedMsg = `    为 ${currentTarget.name} 施加了 ${buffObject.name}.`;
+                        BattleLogger.log(BattleLogger.levels.BATTLE_LOG, buffAppliedMsg, null, this.currentTurn);
+                        BattleLogger.log(BattleLogger.levels.CONSOLE_INFO, buffAppliedMsg, { buff: buffObject }, this.currentTurn);
                     }
                     break;
                  case 'applyBuffPackage':
-                     // 假设 effectDef 包含 buffName, duration, dispellable, stackable, maxStacks, buffs/effects, buffsPerStack
                      BuffSystem.applyBuffPackage(currentTarget, effectDef, source);
-                     this.logBattle(`    为 ${currentTarget.name} 施加了效果包 [${effectDef.buffName}].`);
+                     const buffPkgMsg = `    为 ${currentTarget.name} 施加了效果包 [${effectDef.buffName}].`;
+                     BattleLogger.log(BattleLogger.levels.BATTLE_LOG, buffPkgMsg, null, this.currentTurn);
+                     BattleLogger.log(BattleLogger.levels.CONSOLE_INFO, buffPkgMsg, { buffPackage: effectDef.buffName }, this.currentTurn);
                      break;
                 case 'dispel':
-                    const dispelPositive = effectDef.dispelPositive || false; // true驱散增益, false驱散减益
+                    const dispelPositive = effectDef.dispelPositive || false;
                     const dispelCount = effectDef.count || 1;
                     const dispelled = BuffSystem.dispelBuffs(currentTarget, dispelPositive, dispelCount);
                     if (dispelled.length > 0) {
-                        this.logBattle(`    驱散了 ${currentTarget.name} 的 ${dispelled.map(b => b.name).join(', ')}.`);
+                        const dispelMsg = `    驱散了 ${currentTarget.name} 的 ${dispelled.map(b => b.name).join(', ')}.`;
+                        BattleLogger.log(BattleLogger.levels.BATTLE_LOG, dispelMsg, null, this.currentTurn);
+                        BattleLogger.log(BattleLogger.levels.CONSOLE_INFO, dispelMsg, { dispelledBuffs: dispelled.map(b => b.name) }, this.currentTurn);
                     } else {
-                        this.logBattle(`    尝试驱散 ${currentTarget.name}，但没有可驱散的BUFF.`);
+                        const noDispelMsg = `    尝试驱散 ${currentTarget.name}，但没有可驱散的BUFF.`;
+                        BattleLogger.log(BattleLogger.levels.BATTLE_LOG, noDispelMsg, null, this.currentTurn);
+                        BattleLogger.log(BattleLogger.levels.CONSOLE_INFO, noDispelMsg, null, this.currentTurn);
                     }
                     break;
                  case 'dispelAll':
                      const dispelAllPositive = effectDef.dispelPositive || false;
-                     const allBuffs = [...currentTarget.buffs]; // 复制数组
+                     const allBuffs = [...currentTarget.buffs];
                      let dispelledAllCount = 0;
                      for(const buff of allBuffs) {
                          if (buff.canDispel && buff.isPositive === dispelAllPositive) {
@@ -1353,26 +1421,25 @@ const hpBeforeProcHeal = currentTarget.currentStats.hp;
                              }
                          }
                      }
-                     this.logBattle(`    驱散了 ${currentTarget.name} 的 ${dispelledAllCount} 个所有${dispelAllPositive ? '增益' : '减益'}状态.`);
+                     const dispelAllMsg = `    驱散了 ${currentTarget.name} 的 ${dispelledAllCount} 个所有${dispelAllPositive ? '增益' : '减益'}状态.`;
+                     BattleLogger.log(BattleLogger.levels.BATTLE_LOG, dispelAllMsg, null, this.currentTurn);
+                     BattleLogger.log(BattleLogger.levels.CONSOLE_INFO, dispelAllMsg, { count: dispelledAllCount }, this.currentTurn);
                      break;
                 case 'castSkill':
                     if (effectDef.skillId) {
-                        this.logBattle(`    触发释放技能: ${effectDef.skillId}`);
+                        const castSkillMsg = `    触发释放技能: ${effectDef.skillId}`;
+                        BattleLogger.log(BattleLogger.levels.CONSOLE_INFO, castSkillMsg, { skillId: effectDef.skillId }, this.currentTurn);
                         const skillData = SkillLoader.getSkillInfo(effectDef.skillId);
                         if (skillData && typeof JobSkills !== 'undefined' && typeof JobSkills.useSkill === 'function') {
-                             // 确定触发技能的目标
                              const castTargets = this.getEffectTargets(skillData.targetType, source, teamMembers, monster, triggerContext);
                              try {
-                                 // 确保实体和技能模板可用
                                  if (typeof Character !== 'undefined') { Character.characters = Character.characters || {}; Character.characters[source.id] = source; }
                                  if (typeof JobSkillsTemplate !== 'undefined' && !JobSkillsTemplate.templates[effectDef.skillId]) { JobSkillsTemplate.templates[effectDef.skillId] = skillData; }
-
-                                 // 调用技能 (注意：这里可能导致递归或复杂交互，需谨慎处理)
-                                 // 传递原始触发的目标可能不合适，应根据触发技能本身的目标类型来定
-                                 const castResult = JobSkills.useSkill(source.id, effectDef.skillId, castTargets, monster); // 传递新目标
+                                 const castResult = JobSkills.useSkill(source.id, effectDef.skillId, castTargets, monster);
                                  if (castResult.success) {
-                                     this.logBattle(`    由Proc触发的技能 ${skillData.name} 成功释放: ${castResult.message}`);
-                                     // 注意：被触发的技能通常不计入冷却或使用次数，除非特殊设计
+                                     const castSuccessMsg = `    由Proc触发的技能 ${skillData.name} 成功释放: ${castResult.message}`;
+                                     BattleLogger.log(BattleLogger.levels.BATTLE_LOG, castSuccessMsg, null, this.currentTurn);
+                                     BattleLogger.log(BattleLogger.levels.CONSOLE_INFO, castSuccessMsg, { skill: skillData.name }, this.currentTurn);
                                  }
                              } catch (error) {
                                  console.error(`Proc触发的技能 ${effectDef.skillId} 使用错误:`, error);
@@ -1382,45 +1449,13 @@ const hpBeforeProcHeal = currentTarget.currentStats.hp;
                         }
                     }
                     break;
-                // 添加其他效果类型...
                 default:
-                    this.logBattle(`    未知的触发效果类型: ${effectDef.type}`);
+                    BattleLogger.log(BattleLogger.levels.CONSOLE_WARN, `    未知的触发效果类型: ${effectDef.type}`, { effectDef: effectDef }, this.currentTurn);
             }
         }
     },
 
-    /**
-     * 记录战斗日志
-     * @param {string} message - 日志消息
-     * @param {boolean} forceLog - 是否强制记录（不过滤）
-     */
-    logBattle(message, forceLog = false) {
-        // 简单的日志过滤，避免重复或过于频繁的日志
-        // if (!forceLog && this.battleLog.length > 0 && this.battleLog[this.battleLog.length - 1] === message) {
-        //     return; // Skip duplicate messages unless forced
-        // }
-
-        // 添加新日志
-        this.battleLog.push(message);
-
-        // 限制日志长度
-        const MAX_LOG_LINES = 150; // 增加日志容量
-        if (this.battleLog.length > MAX_LOG_LINES) {
-            this.battleLog = this.battleLog.slice(-MAX_LOG_LINES);
-        }
-
-        console.log(`[战斗][回合 ${this.currentTurn}] ${message}`); // 添加回合信息
-
-        // 触发日志更新事件
-        if (typeof Events !== 'undefined') {
-            Events.emit('battle:log', { message });
-        }
-
-        // 更新UI (如果可用)
-        if (typeof MainUI !== 'undefined' && typeof MainUI.updateBattleLog === 'function') {
-            MainUI.updateBattleLog();
-        }
-    },
+    // Battle.logBattle 方法已被 BattleLogger.log 取代
 
     // --- Helper Methods for Skill Usage ---
 
@@ -1453,7 +1488,9 @@ const hpBeforeProcHeal = currentTarget.currentStats.hp;
         if (entity.buffs && entity.buffs.some(b => b.type === 'silence')) {
              // 检查是否有沉默免疫
              if (!(entity.buffs && entity.buffs.some(b => b.type === 'statusImmunity' && b.statusToImmune === 'silence'))) {
-                 this.logBattle(`${entity.name} 处于沉默状态，无法使用技能 ${skillData.name}!`);
+                 const silenceMsg = `${entity.name} 处于沉默状态，无法使用技能 ${skillData.name}!`;
+                 BattleLogger.log(BattleLogger.levels.BATTLE_LOG, silenceMsg, null, this.currentTurn);
+                 BattleLogger.log(BattleLogger.levels.CONSOLE_INFO, silenceMsg, null, this.currentTurn);
                  return false;
              }
         }
@@ -1570,48 +1607,50 @@ const hpBeforeProcHeal = currentTarget.currentStats.hp;
 reviveCharacter(character, hpPercentToRestore, teamData) { // teamData is e.g. Game.playerTeam
         if (!character || !teamData || !teamData.members) {
             console.error("Revive failed: Invalid character or team data provided for revival.");
-            this.logBattle(`对 ${character ? character.name : '未知角色'} 的复活操作失败: 缺少参数。`);
+            BattleLogger.log(BattleLogger.levels.CONSOLE_ERROR, `对 ${character ? character.name : '未知角色'} 的复活操作失败: 缺少参数。`, {character, teamData}, this.currentTurn);
             return false;
         }
 
         if (character.currentStats.hp > 0) {
-            this.logBattle(`${character.name} 还活着，不需要复活。`);
+            const aliveMsg = `${character.name} 还活着，不需要复活。`;
+            BattleLogger.log(BattleLogger.levels.BATTLE_LOG, aliveMsg, null, this.currentTurn);
+            BattleLogger.log(BattleLogger.levels.CONSOLE_INFO, aliveMsg, null, this.currentTurn);
             return false; // Already alive
         }
 
         // 1. Restore HP
+        const hpBeforeRevive = character.currentStats.hp;
         const hpRestored = Math.floor(character.currentStats.maxHp * hpPercentToRestore);
         character.currentStats.hp = Math.max(1, hpRestored); // Ensure at least 1 HP
         
-        this.logBattle(`${character.name} 被复活了，恢复了 ${character.currentStats.hp}点HP!`);
+        const reviveMsg = `${character.name} 被复活了，恢复了 ${character.currentStats.hp}点HP!`;
+        BattleLogger.log(BattleLogger.levels.BATTLE_LOG, reviveMsg, null, this.currentTurn);
+        BattleLogger.log(BattleLogger.levels.CONSOLE_DETAIL, reviveMsg, {
+            calculation: "复活HP恢复",
+            steps: [`最大HP: ${character.currentStats.maxHp}`, `恢复百分比: ${hpPercentToRestore*100}%`, `计划恢复: ${hpRestored}`],
+            hpBefore: hpBeforeRevive,
+            hpAfter: character.currentStats.hp
+        }, this.currentTurn);
+
 
         // 2. Clear any death-related statuses/buffs
-        // Example: remove a "Death" debuff if your system uses one
         if (typeof BuffSystem !== 'undefined' && character.buffs) {
             const deathDebuff = character.buffs.find(b => b.type === 'deathStatus' || b.name === '死亡');
             if (deathDebuff) {
                 BuffSystem.removeBuff(character, deathDebuff.id);
             }
         }
-        // character.isDead = false; // If using a direct flag
 
         // 3. Team Reordering
         const memberId = character.id;
         const currentIndex = teamData.members.indexOf(memberId);
 
         if (currentIndex > -1) {
-            teamData.members.splice(currentIndex, 1); 
-            teamData.members.push(memberId);      
-            this.logBattle(`${character.name} 在队伍中的顺序已移至末尾。`);
+            teamData.members.splice(currentIndex, 1);
+            teamData.members.push(memberId);
+            BattleLogger.log(BattleLogger.levels.CONSOLE_INFO, `${character.name} 在队伍中的顺序已移至末尾。`, null, this.currentTurn);
 
-            // Notify UI or other systems if necessary
-            // This part is highly dependent on how UI and global state are managed.
-            // Example:
             if (typeof Game !== 'undefined' && Game.playerTeam && Game.playerTeam.id === teamData.id) {
-                 // If direct Game.playerTeam was modified, UI might auto-update or need a signal
-                 if (typeof UI !== 'undefined' && typeof UI.renderTeam === 'function') {
-                    // UI.renderTeam(Game.playerTeam); // This might be too direct, an event is better
-                 }
                  if (typeof Events !== 'undefined' && Events.emit) {
                     Events.emit('team:orderChanged', { teamId: teamData.id, newOrder: teamData.members });
                  }
@@ -1620,8 +1659,6 @@ reviveCharacter(character, hpPercentToRestore, teamData) { // teamData is e.g. G
             }
         } else {
             console.error(`Revived character ${memberId} not found in the provided teamData.members list for reordering.`);
-            // Potentially add to end if they should be in team but weren't?
-            // teamData.members.push(memberId); // Risky if character shouldn't be in this specific team list
         }
         
         // Trigger 'onRevive' procs
@@ -1676,237 +1713,214 @@ reviveCharacter(character, hpPercentToRestore, teamData) { // teamData is e.g. G
                  if (potentialCoverers.length > 0) {
                      // TODO: Implement priority logic if multiple coverers (e.g., position, specific skill priority)
                      // For now, take the first one found.
-                     // A more robust selection would involve sorting or checking specific cover conditions.
-                     const selectedCovererInfo = potentialCoverers[0]; // Simplistic choice
+                     const selectedCovererInfo = potentialCoverers[0];
                      actualTarget = selectedCovererInfo.coverer;
-                     this.logBattle(`${actualTarget.name} 援护了 ${originalTarget.name}!`);
+                     const coverMsg = `${actualTarget.name} 援护了 ${originalTarget.name}!`;
+                     BattleLogger.log(BattleLogger.levels.BATTLE_LOG, coverMsg, null, this.currentTurn);
+                     BattleLogger.log(BattleLogger.levels.CONSOLE_INFO, coverMsg, { coverer: actualTarget.name, originalTarget: originalTarget.name }, this.currentTurn);
                  }
              }
          }
-         // All subsequent calculations use 'actualTarget'
-
+         
          let finalDamage = rawDamage;
          let isCritical = false;
          let missed = false;
+         const calculationSteps = [];
+         const attackerNameForLog = attacker ? attacker.name : '效果';
+         calculationSteps.push(`初始伤害: ${rawDamage} (来自 ${attackerNameForLog}${options.skillName ? ` 的技能 [${options.skillName}]` : (options.isNormalAttack ? ' 的普通攻击' : (options.buffName ? ` 的BUFF [${options.buffName}]` : ''))})`);
 
-         // TODO: Implement Hit/Evasion check against actualTarget
-         // if (Math.random() < calculateMissChance(attacker, actualTarget)) { missed = true; finalDamage = 0; }
 
          if (!missed) {
-             // TODO: Implement Critical Hit check & damage bonus (attacker vs actualTarget)
-             // if (!options.skipCritical && Math.random() < calculateCritChance(attacker, actualTarget)) {
-             //     isCritical = true;
-             //     finalDamage *= calculateCritMultiplier(attacker, actualTarget);
-             // }
+             // TODO: Implement Hit/Evasion check
+             // calculationSteps.push(`命中检定: ...`);
 
-             // TODO: Implement Defense reduction (actualTarget's defense)
-             // finalDamage *= calculateDefenseReduction(attacker, actualTarget);
+             // TODO: Implement Critical Hit check & damage bonus
+             // calculationSteps.push(`暴击检定: ...`);
+             // if (isCritical) calculationSteps.push(`暴击伤害调整: ${finalDamage}`);
+             
+             const initialDamageBeforeDefense = finalDamage;
 
-             // TODO: Implement Elemental Advantage/Disadvantage bonus/penalty (attacker vs actualTarget)
-             // finalDamage *= calculateElementMultiplier(attacker, actualTarget, options.elementType);
-
-             // TODO: Implement other damage modifiers (buffs/debuffs on attacker/actualTarget)
-
-             // --- New Defense Calculation ---
-
-             // --- Apply Attacker's Damage Cap Up (General and Skill-Specific) ---
-             let currentDamageCap = Battle.BASE_DAMAGE_CAP || 199999; // Default base cap
-             let capAppliedBy = "基础"; // For logging
+             // --- Apply Attacker's Damage Cap Up ---
+             let currentDamageCap = options.isSkillDamage ? (Battle.BASE_SKILL_DAMAGE_CAP || 899999) : (Battle.BASE_DAMAGE_CAP || 199999);
+             let capAppliedBy = options.isSkillDamage ? "技能基础上限" : "普攻基础上限";
+             calculationSteps.push(`初始上限: ${currentDamageCap} (类型: ${capAppliedBy})`);
 
              if (attacker && attacker.buffs && typeof BuffSystem !== 'undefined') {
                  if (options.isSkillDamage) {
                      let totalSkillDamageCapUpBonus = 0;
                      const skillCapBuffs = BuffSystem.getBuffsByType(attacker, 'skillDamageCapUp');
-                     if (skillCapBuffs) {
-                         skillCapBuffs.forEach(buff => {
-                             if (buff.duration > 0 && buff.value) {
-                                 totalSkillDamageCapUpBonus += buff.value;
-                             }
-                         });
-                     }
+                     if (skillCapBuffs) skillCapBuffs.forEach(b => { if (b.duration > 0 && b.value) totalSkillDamageCapUpBonus += b.value; });
                      if (totalSkillDamageCapUpBonus > 0) {
-                         const baseForSkillCap = Battle.BASE_SKILL_DAMAGE_CAP || Battle.BASE_DAMAGE_CAP || 899999;
-                         currentDamageCap = baseForSkillCap * (1 + totalSkillDamageCapUpBonus);
+                         currentDamageCap = (Battle.BASE_SKILL_DAMAGE_CAP || 899999) * (1 + totalSkillDamageCapUpBonus);
                          capAppliedBy = `技能伤害上限提升 (${totalSkillDamageCapUpBonus*100}%)`;
+                         calculationSteps.push(`攻击方技能上限提升后: ${currentDamageCap} (来自 ${capAppliedBy})`);
                      }
                  }
-                 
-                 // If not a skill, or if skill cap wasn't applied (no skillDamageCapUp buff), check for general damageCapUp
-                 // Or, if general damage cap can further increase skill cap (more complex, not implementing now)
-                 // Current logic: Skill cap takes precedence. If no skill cap applied, check general.
-                 if (capAppliedBy === "基础" || options.applyGeneralCapEvenWithSkillCap) { // Latter part for future flexibility
-                     let totalDamageCapUpBonus = 0;
-                     const damageCapBuffs = BuffSystem.getBuffsByType(attacker, 'damageCapUp');
-                     if (damageCapBuffs) {
-                         damageCapBuffs.forEach(buff => {
-                             if (buff.duration > 0 && buff.value) {
-                                 totalDamageCapUpBonus += buff.value;
-                             }
-                         });
-                     }
-                     if (totalDamageCapUpBonus > 0) {
-                         const generalCalculatedCap = (Battle.BASE_DAMAGE_CAP || 999999) * (1 + totalDamageCapUpBonus);
-                         // If skill cap was already set, only update if general cap is higher (or based on specific game rule)
-                         // For now, if skill cap was set, it's dominant. If not, general cap applies.
-                         if (capAppliedBy === "基础") {
-                            currentDamageCap = generalCalculatedCap;
-                            capAppliedBy = `伤害上限提升 (${totalDamageCapUpBonus*100}%)`;
-                         } else if (options.applyGeneralCapEvenWithSkillCap && generalCalculatedCap > currentDamageCap) {
-                            // Example: if general cap can exceed a specific skill cap
-                            // currentDamageCap = generalCalculatedCap;
-                            // capAppliedBy = `通用伤害上限提升 (${totalDamageCapUpBonus*100}%)`;
-                         }
+                 // General damageCapUp can also apply or take precedence if higher
+                 let totalDamageCapUpBonus = 0;
+                 const damageCapBuffs = BuffSystem.getBuffsByType(attacker, 'damageCapUp');
+                 if (damageCapBuffs) damageCapBuffs.forEach(b => { if (b.duration > 0 && b.value) totalDamageCapUpBonus += b.value; });
+                 if (totalDamageCapUpBonus > 0) {
+                     const generalCalculatedCap = (options.isSkillDamage ? (Battle.BASE_SKILL_DAMAGE_CAP || 899999) : (Battle.BASE_DAMAGE_CAP || 199999)) * (1 + totalDamageCapUpBonus);
+                     if (generalCalculatedCap > currentDamageCap) { // Only apply if general cap is higher or if it's the only cap
+                        currentDamageCap = generalCalculatedCap;
+                        capAppliedBy = `通用伤害上限提升 (${totalDamageCapUpBonus*100}%)`;
+                        calculationSteps.push(`攻击方通用上限提升后: ${currentDamageCap} (来自 ${capAppliedBy})`);
                      }
                  }
              }
-
-             // 伤害在0.95~1.05浮动
-             finalDamage= Math.floor(finalDamage * (0.95 + Math.random() * 0.1));
+             
+             const damageBeforeFluctuation = finalDamage;
+             finalDamage = Math.floor(finalDamage * (0.95 + Math.random() * 0.1));
+             calculationSteps.push(`伤害浮动 (0.95-1.05): ${damageBeforeFluctuation} -> ${finalDamage}`);
 
              if (finalDamage > currentDamageCap) {
-                 this.logBattle(`${attacker.name} 的 ${capAppliedBy} 触发，伤害从 ${Math.floor(finalDamage)} 限制到 ${Math.floor(currentDamageCap)}`);
+                 const capMsg = `${attackerNameForLog} 的 ${capAppliedBy} 触发，伤害从 ${Math.floor(finalDamage)} 限制到 ${Math.floor(currentDamageCap)}`;
+                 BattleLogger.log(BattleLogger.levels.CONSOLE_INFO, capMsg, null, this.currentTurn); // BATTLE_LOG might be too verbose for this
+                 calculationSteps.push(`攻击方上限应用: ${finalDamage} -> ${Math.floor(currentDamageCap)} (原因: ${capAppliedBy})`);
                  finalDamage = Math.floor(currentDamageCap);
              }
-             finalDamage = Math.floor(finalDamage);
+             
+             const damageBeforeTargetDefense = finalDamage;
+             const targetEffectiveDefense = Math.max(0, (actualTarget.currentStats.defense || 0) - (attacker?.currentStats?.ignoreDefense || 0));
+             finalDamage = Math.floor(finalDamage / (1 + targetEffectiveDefense / 100));
+             calculationSteps.push(`目标防御减免 (防御: ${targetEffectiveDefense}): ${damageBeforeTargetDefense} -> ${finalDamage}`);
+             
+             finalDamage = Math.max(1, Math.floor(finalDamage));
+             calculationSteps.push(`最小伤害保证: ${finalDamage}`);
 
              // --- Apply actualTarget's Defensive Measures ---
-             const targetEffectiveDefense = Math.max(0, (actualTarget.currentStats.defense || 0) - (attacker.currentStats.ignoreDefense || 0));
-             finalDamage = finalDamage / (1 + targetEffectiveDefense/100);
-             // --- End New Defense Calculation ---
-
-             finalDamage = Math.max(1, Math.floor(finalDamage)); // Minimum 1 damage unless missed
-
-             // 1. Invincibility
              if (actualTarget.buffs && actualTarget.buffs.some(b => b.type === 'invincible' && b.duration > 0)) {
-                 this.logBattle(`${actualTarget.name} 无敌，免疫了伤害!`);
+                 const invincibleMsg = `${actualTarget.name} 无敌，免疫了伤害!`;
+                 BattleLogger.log(BattleLogger.levels.BATTLE_LOG, invincibleMsg, null, this.currentTurn);
+                 BattleLogger.log(BattleLogger.levels.CONSOLE_INFO, invincibleMsg, null, this.currentTurn);
+                 calculationSteps.push(`目标无敌: ${finalDamage} -> 0`);
                  finalDamage = 0;
              }
 
-             // 2. EvasionAll
              if (finalDamage > 0 && actualTarget.buffs && actualTarget.buffs.some(b => b.type === 'evasionAll' && b.duration > 0)) {
-                 this.logBattle(`${actualTarget.name} 完全回避了伤害!`);
+                 const evasionMsg = `${actualTarget.name} 完全回避了伤害!`;
+                 BattleLogger.log(BattleLogger.levels.BATTLE_LOG, evasionMsg, null, this.currentTurn);
+                 BattleLogger.log(BattleLogger.levels.CONSOLE_INFO, evasionMsg, null, this.currentTurn);
+                 calculationSteps.push(`目标完全回避: ${finalDamage} -> 0`);
                  finalDamage = 0;
                  missed = true;
              }
 
-             // 3. Shield
              if (finalDamage > 0 && actualTarget.shield && actualTarget.shield > 0) {
                  const shieldDamage = Math.min(finalDamage, actualTarget.shield);
                  actualTarget.shield -= shieldDamage;
                  finalDamage -= shieldDamage;
-                 this.logBattle(`${actualTarget.name} 的护盾吸收了 ${shieldDamage} 点伤害 (剩余 ${actualTarget.shield})`);
+                 const shieldMsg = `${actualTarget.name} 的护盾吸收了 ${shieldDamage} 点伤害 (剩余 ${actualTarget.shield})`;
+                 BattleLogger.log(BattleLogger.levels.BATTLE_LOG, shieldMsg, null, this.currentTurn);
+                 BattleLogger.log(BattleLogger.levels.CONSOLE_INFO, shieldMsg, { absorbed: shieldDamage, shieldLeft: actualTarget.shield }, this.currentTurn);
+                 calculationSteps.push(`目标护盾吸收: ${shieldDamage} (剩余护盾: ${actualTarget.shield}), 伤害变为: ${finalDamage}`);
              }
 
-             // 4. Damage Cap (Elemental or All) - Applied to actualTarget
              if (actualTarget.buffs && options.damageElementType) {
                  actualTarget.buffs.forEach(buff => {
                      if (buff.type === 'elementalDamageCap' && buff.elementType === options.damageElementType && buff.duration > 0) {
                          if (finalDamage > buff.value) {
-                             this.logBattle(`${actualTarget.name} 的${buff.elementType}属性伤害上限触发，伤害从 ${finalDamage} 降低到 ${buff.value}`);
+                             const elemCapMsg = `${actualTarget.name} 的${buff.elementType}属性伤害上限触发，伤害从 ${finalDamage} 降低到 ${buff.value}`;
+                             BattleLogger.log(BattleLogger.levels.CONSOLE_INFO, elemCapMsg, null, this.currentTurn);
+                             calculationSteps.push(`目标元素伤害上限 (${buff.elementType}): ${finalDamage} -> ${buff.value}`);
                              finalDamage = buff.value;
                          }
                      }
-                     // TODO: Implement general damageCapUp logic for actualTarget (this is for damage TAKEN cap, different from attacker's damageCapUp)
                  });
              }
-             finalDamage = Math.floor(finalDamage); // Ensure integer damage after cap
+             finalDamage = Math.floor(finalDamage);
 
-             // 5. Damage Reduction (All Damage or Elemental) - Applied to actualTarget
              let damageReduction = 0;
              if (actualTarget.buffs) {
                  actualTarget.buffs.forEach(buff => {
-                     if (buff.type === 'allDamageTakenReduction' && buff.duration > 0) {
-                         damageReduction += buff.value; // Assuming buff.value is a percentage like 0.2 for 20%
-                     }
-                     //todo 根据elementalResistance 的 元素伤害类型来判断是否减伤
-                     else if (buff.type === 'elementalResistance' && buff.duration > 0) {
-                        damageReduction += buff.value; // Assuming buff.value is a percentage like 0.2 for 20%
-                    }
+                     if (buff.type === 'allDamageTakenReduction' && buff.duration > 0) damageReduction += buff.value;
+                     else if (buff.type === 'elementalResistance' && buff.elementType === options.damageElementType && buff.duration > 0) damageReduction += buff.value;
                  });
              }
-             finalDamage *= Math.max(0, 1 - damageReduction);
-             finalDamage = Math.floor(finalDamage);
-
-         } // End if (!missed)
-
-         // Apply final damage to actualTarget
-         const previousHp = actualTarget.currentStats.hp; // Store HP before damage
-         const actualDamageDealt = finalDamage; // finalDamage is the conclusive damage to be applied
- 
-         actualTarget.currentStats.hp = Math.max(0, previousHp - actualDamageDealt);
- 
-         // Enhanced Logging for Damage Dealt
-         let damageSourceInfo = "";
-         if (options && options.skillName) {
-             damageSourceInfo = `通过 [${options.skillName}]`;
-         } else if (options && options.isNormalAttack) {
-             damageSourceInfo = `通过 普通攻击`;
-         } else if (options && options.buffName) { // For DOTs or other buff-induced damage
-             damageSourceInfo = `通过 [${options.buffName}] 效果`;
-         } else if (options && options.isProc) {
-             damageSourceInfo = `通过 触发效果`;
+             if (damageReduction > 0) {
+                 const damageBeforeReduction = finalDamage;
+                 finalDamage *= Math.max(0, 1 - damageReduction);
+                 finalDamage = Math.floor(finalDamage);
+                 calculationSteps.push(`目标伤害减免 (${(damageReduction * 100).toFixed(0)}%): ${damageBeforeReduction} -> ${finalDamage}`);
+             }
+         } else {
+            calculationSteps.push(`攻击未命中!`);
          }
+
+         const previousHp = actualTarget.currentStats.hp;
+         const actualDamageDealt = finalDamage;
+         actualTarget.currentStats.hp = Math.max(0, previousHp - actualDamageDealt);
+         calculationSteps.push(`HP变化: ${previousHp} - ${actualDamageDealt} = ${actualTarget.currentStats.hp}`);
+
+         BattleLogger.log(BattleLogger.levels.CONSOLE_DETAIL, `${attackerNameForLog} 对 ${actualTarget.name} 的伤害计算`, {
+            calculation: `伤害计算: ${attackerNameForLog} -> ${actualTarget.name}`,
+            steps: calculationSteps,
+            rawDamageInput: rawDamage,
+            finalDamageApplied: actualDamageDealt,
+            targetInitialHp: previousHp,
+            targetFinalHp: actualTarget.currentStats.hp,
+            isCriticalHit: isCritical,
+            wasMissed: missed
+         }, this.currentTurn);
+ 
+         let damageSourceInfo = "";
+         if (options && options.skillName) damageSourceInfo = `通过 [${options.skillName}]`;
+         else if (options && options.isNormalAttack) damageSourceInfo = `通过 普通攻击`;
+         else if (options && options.buffName) damageSourceInfo = `通过 [${options.buffName}] 效果`;
+         else if (options && options.isProc) damageSourceInfo = `通过 触发效果`;
          
-         const attackerName = attacker ? attacker.name : '未知攻击者';
+         const attackerDisplayName = attacker ? attacker.name : '环境效果';
  
          if (actualDamageDealt > 0) {
-             this.logBattle(
-                 `${attackerName} ${damageSourceInfo} 对 ${actualTarget.name} 造成了 ${actualDamageDealt} 点伤害！` +
+             BattleLogger.log(BattleLogger.levels.BATTLE_LOG,
+                 `${attackerDisplayName} ${damageSourceInfo} 对 ${actualTarget.name} 造成了 ${actualDamageDealt} 点伤害！` +
                  ` HP: ${previousHp} -> ${actualTarget.currentStats.hp}` +
-                 `${isCritical ? ' (暴击!)' : ''}` // Missed is handled earlier or results in 0 damage
+                 `${isCritical ? ' (暴击!)' : ''}`, null, this.currentTurn
              );
-         } else if (missed) { // 'missed' flag should be set if an attack misses entirely
-             this.logBattle(
-                 `${attackerName} ${damageSourceInfo} 对 ${actualTarget.name} 的攻击未命中！`
+         } else if (missed) {
+             BattleLogger.log(BattleLogger.levels.BATTLE_LOG,
+                 `${attackerDisplayName} ${damageSourceInfo} 对 ${actualTarget.name} 的攻击未命中！`, null, this.currentTurn
              );
-         } else if (rawDamage > 0 && actualDamageDealt === 0) { // Damage was dealt but fully mitigated (e.g. invincible, shield)
-              this.logBattle(
-                 `${attackerName} ${damageSourceInfo} 对 ${actualTarget.name} 的攻击被完全吸收/免疫。 HP: ${actualTarget.currentStats.hp}`
+         } else if (rawDamage > 0 && actualDamageDealt === 0) {
+              BattleLogger.log(BattleLogger.levels.BATTLE_LOG,
+                 `${attackerDisplayName} ${damageSourceInfo} 对 ${actualTarget.name} 的攻击被完全吸收/免疫。 HP: ${actualTarget.currentStats.hp}`, null, this.currentTurn
              );
          }
-         // End Enhanced Logging
  
-         if (attacker && attacker.stats && actualDamageDealt > 0) { // Record attacker's damage dealt
+         if (attacker && attacker.stats && actualDamageDealt > 0) {
              attacker.stats.totalDamage = (attacker.stats.totalDamage || 0) + actualDamageDealt;
              if (battleStats.characterStats && battleStats.characterStats[attacker.id]) {
                  battleStats.characterStats[attacker.id].totalDamage += actualDamageDealt;
-             } else if (battleStats.monsterStats && attacker.id === options.enemyTeam?.[0]?.id) { // Basic monster damage tracking
+             } else if (battleStats.monsterStats && attacker.id === options.enemyTeam?.[0]?.id) {
                  battleStats.monsterStats.totalDamage += actualDamageDealt;
              }
          }
  
- 
-         // Trigger onDamaged proc for the actualTarget that took damage
          if (actualDamageDealt > 0) {
              this.handleProcTrigger(actualTarget, 'onDamaged', { attacker, damageTaken: actualDamageDealt, isCritical, isProc: options.isProc, battleStats, originalTarget: originalTarget });
              if (attacker) {
                  this.handleProcTrigger(actualTarget, 'onDamagedByEnemy', { attacker, damageTaken: actualDamageDealt, isCritical, isProc: options.isProc, battleStats, originalTarget: originalTarget });
              }
          }
-//this.logBattle(`[DEBUG applyDamageToTarget EXIT] Target: ${actualTarget.name}, HP before return: ${actualTarget.currentStats.hp}/${actualTarget.currentStats.maxHp}`);
-        //console.log(`[DEBUG applyDamageToTarget EXIT] Target: ${actualTarget.name}, HP before return: ${actualTarget.currentStats.hp}/${actualTarget.currentStats.maxHp}`);
-         // If original target was different and didn't take damage due to cover, maybe trigger 'onTargetedButCovered' proc? (Future enhancement)
  
          return { damage: actualDamageDealt, isCritical, missed, isProc: options.isProc, actualTarget: actualTarget, originalTarget: originalTarget };
      },
 
      // --- Helper Method for Character Defeat ---
      handleCharacterDefeat(defeatedCharacter, teamMembers) {
-         // Remove character from active team members? Or just mark as defeated?
-         // For now, just log and handle backup.
          if (this.backLineMembers && this.backLineMembers.length > 0) {
              const backup = this.backLineMembers.shift();
-             // Find the index of the defeated character in the current front line
              const targetIndex = teamMembers.findIndex(member => member.id === defeatedCharacter.id);
              if (targetIndex !== -1) {
-                 teamMembers[targetIndex] = backup; // Replace in the array
-                 this.logBattle(`${backup.name} 从后排上场替换阵亡的 ${defeatedCharacter.name}！`);
-                 // Trigger battle start traits for the new member
+                 teamMembers[targetIndex] = backup;
+                 const backupMsg = `${backup.name} 从后排上场替换阵亡的 ${defeatedCharacter.name}！`;
+                 BattleLogger.log(BattleLogger.levels.BATTLE_LOG, backupMsg, null, this.currentTurn);
+                 BattleLogger.log(BattleLogger.levels.CONSOLE_INFO, backupMsg, null, this.currentTurn);
                  this.processBattleStartTraits(backup, teamMembers);
              } else {
-                  // Should not happen if defeatedCharacter was in teamMembers
                   console.error(`无法在队伍中找到阵亡角色 ${defeatedCharacter.name} 的位置`);
-                  this.backLineMembers.unshift(backup); // Put back if replacement failed
+                  this.backLineMembers.unshift(backup);
              }
          }
      },
@@ -1931,23 +1945,21 @@ reviveCharacter(character, hpPercentToRestore, teamData) { // teamData is e.g. G
          if (!entity || entity.currentStats.hp <= 0) return;
  
          // 1. 处理来自技能定义的被动回合结束效果
-         if (entity.skills && !specificEffect) { // 只有在没有特定效果时才检查技能的通用回合结束
+         if (entity.skills && !specificEffect) {
              for (const skillId of entity.skills) {
-                 const skill = SkillLoader.getSkillInfo(skillId); // 使用SkillLoader
+                 const skill = SkillLoader.getSkillInfo(skillId);
                  if (skill && skill.passive && skill.effects) {
                      for (const effect of skill.effects) {
                          if (effect.type === 'endOfTurn' || (effect.procDefinition && effect.procDefinition.triggerCondition === 'onTurnEnd')) {
-                              // 如果是 proc，则通过 handleProcTrigger
                              if (effect.type === 'proc') {
                                  this.handleProcTrigger(entity, 'onTurnEnd', { teamMembers, monster, battleStats: this.currentBattle ? this.currentBattle.battleStats : {} });
-                             } else if (effect.effect) { // 直接效果
-                                 this.logBattle(`${entity.name} 的技能 [${skill.name}] 触发回合结束效果。`);
+                             } else if (effect.effect) {
+                                 BattleLogger.log(BattleLogger.levels.CONSOLE_INFO, `${entity.name} 的技能 [${skill.name}] 触发回合结束效果。`, { effect: effect.effect }, this.currentTurn);
                                  this.executeTriggeredEffect(entity, effect.effect, { teamMembers, monster, battleStats: this.currentBattle ? this.currentBattle.battleStats : {} }, effect);
                              }
                          }
-                          // 特殊处理：如萝莎米娅的被动，HP为1时回合结束触发
                          if (effect.procDefinition && effect.procDefinition.triggerCondition === 'onTurnEndIfHpIsOne' && entity.currentStats.hp === 1) {
-                             this.logBattle(`${entity.name} HP为1，触发技能 [${skill.name}] 的特殊回合结束效果。`);
+                             BattleLogger.log(BattleLogger.levels.CONSOLE_INFO, `${entity.name} HP为1，触发技能 [${skill.name}] 的特殊回合结束效果。`, { skill: skill.name }, this.currentTurn);
                              this.handleProcTrigger(entity, 'onTurnEndIfHpIsOne', { teamMembers, monster, battleStats: this.currentBattle ? this.currentBattle.battleStats : {} });
                          }
                      }
@@ -1956,23 +1968,22 @@ reviveCharacter(character, hpPercentToRestore, teamData) { // teamData is e.g. G
          }
  
          // 2. 处理来自BUFF的回合结束效果
-         if (entity.buffs && !specificEffect) { // 只有在没有特定效果时才检查BUFF的通用回合结束
-             const currentBuffs = [...entity.buffs]; // 复制数组以防修改
+         if (entity.buffs && !specificEffect) {
+             const currentBuffs = [...entity.buffs];
              for (const buff of currentBuffs) {
-                 if (buff.onTurnEndEffect) { // 假设buff对象有 onTurnEndEffect 属性
-                     this.logBattle(`${entity.name} 的BUFF [${buff.name}] 触发回合结束效果。`);
+                 if (buff.onTurnEndEffect) {
+                     BattleLogger.log(BattleLogger.levels.CONSOLE_INFO, `${entity.name} 的BUFF [${buff.name}] 触发回合结束效果。`, { buff: buff.name, effect: buff.onTurnEndEffect }, this.currentTurn);
                      this.executeTriggeredEffect(entity, buff.onTurnEndEffect, { teamMembers, monster, battleStats: this.currentBattle ? this.currentBattle.battleStats : {} }, buff);
                  }
-                 // 也检查 proc 类型的 buff
                  if (buff.procDefinition && buff.procDefinition.triggerCondition === 'onTurnEnd') {
                       this.handleProcTrigger(entity, 'onTurnEnd', { teamMembers, monster, battleStats: this.currentBattle ? this.currentBattle.battleStats : {} });
                  }
              }
          }
          
-         // 3. 如果传入了 specificEffect (通常来自旧的直接调用点，现在应较少使用)
+         // 3. 如果传入了 specificEffect
          if (specificEffect) {
-             this.logBattle(`${entity.name} ${sourceSkillId ? `的技能 [${sourceSkillId}]` : ''} 触发特定回合结束效果。`);
+             BattleLogger.log(BattleLogger.levels.CONSOLE_INFO, `${entity.name} ${sourceSkillId ? `的技能 [${sourceSkillId}]` : ''} 触发特定回合结束效果。`, { effect: specificEffect }, this.currentTurn);
              this.executeTriggeredEffect(entity, specificEffect, { teamMembers, monster, battleStats: this.currentBattle ? this.currentBattle.battleStats : {} }, {});
          }
      }

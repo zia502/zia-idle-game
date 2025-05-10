@@ -256,3 +256,18 @@ This file tracks the project's current status, including recent changes, current
     *   更新了 `useSkill` 方法以正确处理新的返回值。
     *   确认了 [`src/js/core/battle.js`](src/js/core/battle.js:1) 中的调用方已能正确处理此结构。
     *   为修改的函数添加了JSDoc注释，包括测试场景说明。
+*   [2025-05-10 23:21:00] - **架构设计:** 为战斗系统设计了新的日志记录方案 `BattleLogger`。
+    *   **目标:** 统一日志格式，分离控制台调试日志和战斗界面日志。
+    *   **核心:** 引入 `BattleLogger.log(level, message, details, turn)` 函数，支持 `CONSOLE_DETAIL`, `CONSOLE_INFO`, `BATTLE_LOG` 三种级别。
+    *   **集成:** 替换现有 `Battle.logBattle()`，并在关键战斗节点插入新日志调用。
+    *   **扩展性:** 支持未来添加新级别和输出目标。
+    *   **Memory Bank:** 更新了 [`systemPatterns.md`](memory-bank/systemPatterns.md:1) 和 [`decisionLog.md`](memory-bank/decisionLog.md:1)。
+*   [2025-05-10 23:28:00] - **战斗日志系统实现与集成:**
+    *   创建了新的日志模块 [`src/js/core/battle-logger.js`](src/js/core/battle-logger.js)，包含 `BattleLogger.log()` 方法和 `CONSOLE_DETAIL`, `CONSOLE_INFO`, `BATTLE_LOG` 日志级别。
+    *   `BattleLogger` 已设为全局可访问 (`window.BattleLogger`)。
+    *   修改了 [`src/js/core/battle.js`](src/js/core/battle.js)，将所有旧的 `Battle.logBattle()` 调用替换为 `BattleLogger.log()`。
+    *   在伤害计算 (`applyDamageToTarget`)、技能使用、普通攻击、BUFF/DEBUFF处理等关键节点添加了新的、多级别的日志调用，以满足控制台详细日志和界面简洁日志的需求。
+    *   控制台日志现在包含 `[战斗][回合 X]` 前缀，并且伤害计算细节（攻击力、伤害值、HP扣除）会分行显示在 `CONSOLE_DETAIL` 级别。
+* [2025-05-10 23:34:08] - Debug Fix: Corrected `Battle.logBattle` to `BattleLogger.log` in `buff-system.js:909` to resolve `TypeError: Battle.logBattle is not a function`.
+
+* [2025-05-10 23:37:00] - Debug Fix: Resolved `ReferenceError: BattleLogger is not defined` in `buff-system.js:909`. Caused by `battle-logger.js` not being loaded in `index.html`. Fixed by adding script tag for `battle-logger.js` before `buff-system.js` in `index.html`.

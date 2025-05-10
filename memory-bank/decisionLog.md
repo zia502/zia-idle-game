@@ -385,3 +385,48 @@ The error occurred in `JobSkills.applyDebuffEffects` at line 807 when trying to 
 *   `success` 的判定条件根据各函数具体逻辑确定（例如，造成伤害、成功施加buff/debuff、成功治疗/复活、成功驱散，或在没有有效目标/条件不满足时也可能视为“逻辑上的成功执行”）。
 *   `useSkill` 方法已更新，以正确处理和依赖这些函数返回的新结构中的 `success` 属性来判断技能的整体使用结果。
 *   调用方（如 [`src/js/core/battle.js`](src/js/core/battle.js:1) 中的 `processCharacterSkills`）经检查已能兼容此新结构。
+
+---
+### Decision (Architecture)
+[2025-05-10] - 设计并引入新的战斗日志系统 `BattleLogger`。
+
+**Rationale:**
+为了统一战斗系统中的日志打印格式，将详细的调试信息（如计算过程）与给玩家看的简洁战斗记录分离开来。当前日志系统（主要依赖 `Battle.logBattle()`）功能较为单一，不利于扩展和精细化控制。新的 `BattleLogger` 旨在提供多级日志、结构化详细信息记录以及更清晰的集成点。
+
+**Implications/Details:**
+*   **新模块/对象:** `BattleLogger`
+*   **核心方法:** `BattleLogger.log(level, message, details = null, turn = null)`
+*   **日志级别 (`level`):**
+    *   `CONSOLE_DETAIL`: 用于控制台的详细调试日志，包含计算过程。前缀 `[战斗][回合 X]`。
+    *   `CONSOLE_INFO`: 用于控制台的一般信息日志。前缀 `[战斗][回合 X]`。
+    *   `BATTLE_LOG`: 用于战斗界面日志 (`battleLog`)，简洁，给玩家看。
+*   **`details` 参数:** 对象，用于 `CONSOLE_DETAIL` 级别，传递结构化数据（如伤害计算步骤、HP变化）。
+*   **集成方案:**
+*   替换现有 [`src/js/core/battle.js`](src/js/core/battle.js:1) (及其他相关文件) 中的 `Battle.logBattle()` 调用。
+*   在战斗流程的关键节点（伤害计算、技能使用、BUFF处理等）插入对 `BattleLogger.log()` 的调用，并根据上下文选择合适的 `level` 和 `details`。
+*   例如，在伤害计算中：
+    *   使用 `CONSOLE_DETAIL` 记录每一步计算（攻击力、防御、最终伤害）。
+    *   使用 `BATTLE_LOG` 记录最终对玩家显示的伤害结果。
+*   **可扩展性:**
+*   易于添加新的日志级别。
+*   易于添加新的日志输出目标（如服务器日志）。
+*   日志格式化和过滤机制可以后续增强。
+*   **内存银行更新:**
+*   相关的系统模式已更新到 [`memory-bank/systemPatterns.md`](memory-bank/systemPatterns.md:1)。
+*   **UI 依赖:** `BATTLE_LOG` 级别依赖一个UI接口函数（如 `UI.addBattleLogMessage(message)`）来将日志显示在界面上。如果此函数不存在，`BattleLogger` 会回退到 `console.log`。
+
+---
+### Decision (Debug)
+[2025-05-10 23:37:00] - Resolve `ReferenceError: BattleLogger is not defined` by ensuring script load order.
+
+**Rationale:**
+The error `ReferenceError: BattleLogger is not defined` occurred in [`src/js/core/buff-system.js`](src/js/core/buff-system.js:909) because the `BattleLogger` object, defined in [`src/js/core/battle-logger.js`](src/js/core/battle-logger.js), was not loaded and defined at the time `buff-system.js` was executed. While `battle-logger.js` correctly exposed `BattleLogger` to the global `window` object, the script itself was not included in [`index.html`](index.html).
+
+**Details:**
+*   **Verification:** Confirmed that [`src/js/core/battle-logger.js`](src/js/core/battle-logger.js) correctly assigns `BattleLogger` to `window.BattleLogger`.
+*   **Root Cause:** The `<script>` tag for [`src/js/core/battle-logger.js`](src/js/core/battle-logger.js) was missing from [`index.html`](index.html).
+*   **Fix:** Added `<script src="src/js/core/battle-logger.js"></script>` to [`index.html`](index.html) (line 427, before the script tag for `src/js/core/buff-system.js`). This ensures that `BattleLogger` is defined before any script that depends on it is executed.
+*   **Affected Files:**
+    *   [`index.html`](index.html) (Modified)
+    *   [`src/js/core/buff-system.js`](src/js/core/buff-system.js) (Error source, now fixed)
+    *   [`src/js/core/battle-logger.js`](src/js/core/battle-logger.js) (Verified)

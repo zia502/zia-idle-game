@@ -203,3 +203,76 @@ function applyDamageEffects(character, template, teamMembers, monster) {
 }
 ```
 此模式已应用于 [`src/js/core/job-skills.js`](src/js/core/job-skills.js:1) 中的所有 `apply*Effects` 系列函数。
+
+---
+### [2025-05-10] - 战斗日志系统模式
+
+**Context:** 为了统一战斗系统中的日志打印格式，分离调试信息和玩家可见信息，并提高日志系统的可维护性和扩展性，引入了 `BattleLogger` 模块。
+
+**Pattern:**
+
+**`BattleLogger` 对象/模块:**
+
+*   **核心函数:** `BattleLogger.log(level, message, details = null, turn = null)`
+    *   `level`: 字符串，定义日志级别。
+        *   `BattleLogger.levels.CONSOLE_DETAIL`: 详细控制台调试日志，包含计算过程。
+        *   `BattleLogger.levels.CONSOLE_INFO`: 一般控制台信息日志。
+        *   `BattleLogger.levels.BATTLE_LOG`: 简洁的战斗界面日志，给玩家看。
+    *   `message`: 字符串，主要的日志内容。
+    *   `details`: 对象（可选），用于 `CONSOLE_DETAIL`，包含结构化的计算步骤或额外数据。
+        *   示例: `{ calculation: "攻击力计算", steps: ["基础: 100", "加成: +20"], damageDealt: 30, currentHp: 70, maxHp: 100 }`
+    *   `turn`: 数字（可选），当前战斗回合，用于控制台日志前缀 `[战斗][回合 X]`。
+
+*   **内部逻辑:**
+    1.  根据 `level` 确定输出目标和格式。
+    2.  `CONSOLE_DETAIL`: 打印带回合前缀的消息和 `details` 中的详细步骤。
+    3.  `CONSOLE_INFO`: 打印带回合前缀的消息，可选择性打印 `details` 中的简要信息。
+    4.  `BATTLE_LOG`: 将 `message` 发送到UI更新函数 (如 `UI.addBattleLogMessage`)。
+    5.  使用 `console.log` 输出到控制台。
+
+**集成方式:**
+
+*   替换现有战斗系统（如 [`src/js/core/battle.js`](src/js/core/battle.js:1)）中的 `Battle.logBattle()` 调用。
+*   在关键战斗逻辑节点（如伤害计算、技能使用、Buff处理）插入对 `BattleLogger.log()` 的调用，根据需要选择合适的 `level` 并提供 `details`。
+
+**可扩展性:**
+
+*   **新级别:** 易于通过扩展 `BattleLogger.levels` 和 `switch` 语句添加。
+*   **新输出:** 可以在 `switch` 语句中为特定级别添加新的输出逻辑（如发送到服务器）。
+*   **格式化/过滤:** 可以引入专门的格式化函数或过滤配置。
+
+**示例调用:**
+
+```javascript
+// 详细伤害计算日志 (控制台)
+BattleLogger.log(
+    BattleLogger.levels.CONSOLE_DETAIL,
+    `${attacker.name} 对 ${target.name} 的伤害计算完成`,
+    {
+        calculation: "最终伤害应用",
+        steps: [
+            `原始计算伤害: ${calculatedDamage}`,
+            `减伤后: ${finalDamage}`
+        ],
+        damageDealt: finalDamage,
+        currentHp: target.currentStats.hp,
+        maxHp: target.currentStats.maxHp
+    }
+);
+
+// 玩家可见的伤害日志 (战斗界面)
+BattleLogger.log(
+    BattleLogger.levels.BATTLE_LOG,
+    `${attacker.name} 对 ${target.name} 造成了 ${finalDamage} 点伤害。`
+);
+
+// Buff 应用日志 (控制台信息 + 战斗界面)
+BattleLogger.log(
+    BattleLogger.levels.CONSOLE_INFO,
+    `${target.name} 获得了Buff: ${buff.name} (持续 ${buff.duration} 回合)`
+);
+BattleLogger.log(
+    BattleLogger.levels.BATTLE_LOG,
+    `${target.name} 获得了 ${buff.name} 效果。`
+);
+```

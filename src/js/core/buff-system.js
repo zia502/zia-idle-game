@@ -906,7 +906,7 @@ const BuffSystem = {
             }
             target.buffs = [];
             this.recalculateStatsWithBuffs(target);
-            Battle.logBattle(`${target.name} 的所有BUFF效果已被清除。`);
+            BattleLogger.log(BattleLogger.levels.BATTLE_LOG, `${target.name} 的所有BUFF效果已被清除。`);
         }
     },
 

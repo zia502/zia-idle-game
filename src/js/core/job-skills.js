@@ -308,22 +308,15 @@ const JobSkills = {
 
         // 确保 template.effects 是一个数组
         if (!Array.isArray(template.effects)) {
-            // Battle.logBattle(`技能 ${template.name} 的效果定义不是数组。`);
-            // 尝试从 template.effect (单数) 获取
             if (template.effect && typeof template.effect === 'object') {
-                template.effects = [template.effect]; //包装成数组
+                template.effects = [template.effect];
             } else {
-                 Battle.logBattle(`技能 ${template.name} 没有有效的效果定义。`);
+                Battle.logBattle(`技能 ${template.name} 没有有效的效果定义。`);
                 return { message: `${character.name} 使用了【${template.name}】，但技能效果配置错误。`, effects: {} };
             }
         }
-
-
-        // 遍历技能定义中的所有效果
-        // 注意：原版 switch(template.effectType) 是基于技能模板只有一个主效果类型。
-        // 如果一个技能可以有多种类型的效果（例如一个效果是伤害，另一个是buff），需要迭代处理 template.effects
         
-        let combinedResults = { messages: [], effectsApplied: [], success: true }; // 添加 success 标志
+        let combinedResults = { messages: [], effectsApplied: [], success: true };
 
         // 首先处理hpCostPercentageCurrent效果
         for (const effectDetail of template.effects) {
@@ -336,7 +329,7 @@ const JobSkills = {
                     continue;
                 }
 
-                let baseHpForCost = character.currentStats.hp; // 默认基于当前HP
+                let baseHpForCost = character.currentStats.hp;
                 if (effectDetail.basedOn === 'maxHp') {
                     baseHpForCost = character.currentStats.maxHp;
                 }
@@ -344,35 +337,28 @@ const JobSkills = {
                 const hpToCost = Math.floor(baseHpForCost * (costValue / 100));
                 
                 if (character.currentStats.hp - hpToCost < 1) {
-                    if (character.currentStats.hp > 1) { // 如果当前HP大于1，则至少保留1点HP
+                    if (character.currentStats.hp > 1) {
                         const actualCost = character.currentStats.hp - 1;
                         character.currentStats.hp = 1;
                         Battle.logBattle(`${character.name} 使用技能 ${template.name} 消耗了 ${actualCost} HP (不足以支付全部, HP降至1)。`);
                         combinedResults.messages.push(`${character.name} 消耗了 ${actualCost} HP (HP降至1)。`);
-                    } else { // 如果当前HP已经是1，则无法支付消耗
+                    } else {
                         Battle.logBattle(`${character.name} 尝试使用技能 ${template.name}，但HP不足以支付消耗 (当前HP: ${character.currentStats.hp})。`);
                         combinedResults.messages.push(`${character.name} HP不足，无法支付技能 ${template.name} 的消耗。`);
-                        combinedResults.success = false; // 标记为失败
-                        // return { // 如果HP不足，技能发动失败
-                        //     message: combinedResults.messages.join(' \n'),
-                        //     effects: combinedResults.effectsApplied.length > 0 ? combinedResults.effectsApplied : {},
-                        //     success: false
-                        // };
-                        continue; // 跳过此效果，可能导致后续效果也不执行
+                        combinedResults.success = false;
+                        continue;
                     }
                 } else {
                     character.currentStats.hp -= hpToCost;
                     Battle.logBattle(`${character.name} 使用技能 ${template.name} 消耗了 ${hpToCost} HP。`);
                     combinedResults.messages.push(`${character.name} 消耗了 ${hpToCost} HP。`);
                 }
-                // 更新UI等（如果需要）
                 if (typeof UI !== 'undefined' && UI.updateCharacterStatus) {
                     UI.updateCharacterStatus(character.id);
                 }
             }
         }
 
-        // 如果HP消耗导致技能失败，则不执行后续效果
         if (!combinedResults.success) {
             return {
                 message: combinedResults.messages.join(' \n'),
@@ -381,269 +367,231 @@ const JobSkills = {
             };
         }
 
-
         for (const effectDetail of template.effects) {
             let currentEffectResult = { message: "", effects: {}, success: true };
-            // effectDetail.type 是子效果的类型, template.effectType 可能是父技能的主类型
             const actualEffectType = effectDetail.type || template.effectType;
 
-            switch (actualEffectType) {
-                case 'buff':
-                    currentEffectResult = this.applyBuffEffects(character, { ...template, ...effectDetail, effects: [effectDetail] }, teamMembers, monster);
-                    break;
-                case 'debuff':
-                    currentEffectResult = this.applyDebuffEffects(character, { ...template, ...effectDetail, effects: [effectDetail] }, teamMembers, monster);
-                    break;
-                case 'damage':
-                case 'enmity': // 将 enmity 视为一种特殊的 damage 类型进行处理
-                    // 查找此技能模板中是否定义了 additionalDamage 和 directDamageBonus
-                    let totalAdditionalFixedDamage = 0;
-                    let totalDirectDamageBonus = 0;
-                    if (Array.isArray(template.effects)) { // template.effects 是原始技能的完整效果列表
-                        template.effects.forEach(siblingEffect => {
-                            if (siblingEffect.type === 'additionalDamage' && typeof siblingEffect.value === 'number') {
-                                totalAdditionalFixedDamage += siblingEffect.value;
-                            }
-                            if (siblingEffect.type === 'directDamageBonus' && typeof siblingEffect.value === 'number') {
-                                totalDirectDamageBonus += siblingEffect.value;
-                            }
-                        });
-                    }
-                    // 将追加伤害值和直接伤害奖励传递给 applyDamageEffects
-                    currentEffectResult = this.applyDamageEffects(character, { ...template, ...effectDetail, effects: [effectDetail], type: actualEffectType }, teamMembers, monster, totalAdditionalFixedDamage, totalDirectDamageBonus);
-                    break;
-                case 'heal':
-                    currentEffectResult = this.applyHealEffects(character, { ...template, ...effectDetail, effects: [effectDetail] }, teamMembers, monster);
-                    break;
-                case 'dispel': // Standard dispel
-                    currentEffectResult = this.applyDispelEffects(character, { ...template, ...effectDetail, effects: [effectDetail] }, teamMembers, monster);
-                    break;
-                case 'clearDebuff': // Specific action to clear debuffs
-                    currentEffectResult = this.applyDispelEffects(character, { ...template, ...effectDetail, dispelPositive: false, effects: [effectDetail] }, teamMembers, monster);
-                    break;
-                case 'revive':
-                    currentEffectResult = this.applyReviveEffects(character, { ...template, ...effectDetail, effects: [effectDetail] }, teamMembers, monster);
-                    break;
-                case 'damage_and_debuff': // 这类复合类型可能需要特殊处理或拆分
-                    currentEffectResult = this.applyDamageAndDebuffEffects(character, { ...template, ...effectDetail, effects: [effectDetail] }, teamMembers, monster);
-                    break;
-                case 'damage_and_buff':
-                    currentEffectResult = this.applyDamageAndBuffEffects(character, { ...template, ...effectDetail, effects: [effectDetail] }, teamMembers, monster);
-                    break;
-                case 'triggerSkill': // 旧的触发方式，保留兼容性或移除
-                     console.warn(`Deprecated effect type 'triggerSkill' used in skill ${template.name}. Use 'castSkill' instead.`);
-                     currentEffectResult = this.applyTriggerSkillEffect(character, { ...template, ...effectDetail }, teamMembers, monster); // Assumes applyTriggerSkillEffect uses triggerSkillId
-                     break;
-                case 'castSkill': // 新的触发方式
-                    if (effectDetail.skillId) {
-                        // 调用 applyTriggerSkillEffect 可能更合适，因为它处理了日志和 isTriggeredSkill 标记
-                        // 但需要确保它能基于 effectDetail.skillId 工作
-                         currentEffectResult = this.applyTriggerSkillEffect(character, { ...template, ...effectDetail, triggerSkillId: effectDetail.skillId }, teamMembers, monster);
-                    } else {
-                        currentEffectResult = { success: false, message: `技能 ${template.name} 的 castSkill 效果缺少 skillId` };
-                    }
-                    break;
-                case 'applyBuffPackage':
-                    // 目标应该是 effectDetail 中指定的 targetType，或者继承 template 的
-                    const targetForBuffPkg = this.getTargets(character, effectDetail.targetType || template.targetType, teamMembers, monster)[0]; // 通常buff包是单目标或自身
-                    if (targetForBuffPkg) {
-                        // BuffSystem.applyBuffPackage(target, buffPackageData, source)
-                        // buffPackageData 应该是 effectDetail 本身，它包含了 name, duration, dispellable, buffs 数组等
-                        const buffPackageApplied = BuffSystem.applyBuffPackage(targetForBuffPkg, effectDetail, character);
-                        currentEffectResult = {
-                            success: buffPackageApplied, // applyBuffPackage 应返回boolean
-                            message: buffPackageApplied ? `${character.name} 对 ${targetForBuffPkg.name} 施加了效果包 ${effectDetail.buffName || effectDetail.name || '效果包'}` : `施加效果包 ${effectDetail.buffName || effectDetail.name || '效果包'} 失败`,
-                            effects: { type: 'buffPackage', appliedTo: targetForBuffPkg.name, packageName: effectDetail.buffName || effectDetail.name }
-                        };
-                    } else {
-                        currentEffectResult = { success: false, message: `技能 ${template.name} 的 applyBuffPackage 效果找不到目标` };
-                    }
-                    break;
-                case 'applyDebuff': // 假设 applyDebuff 也是一个包，或者是一个直接的debuff
-                    // 如果 effectDetail.buffs 或 effectDetail.debuffs 存在，则按包处理
-                    const debuffsToApply = effectDetail.buffs || effectDetail.debuffs;
-                    if (Array.isArray(debuffsToApply)) { // 作为debuff包处理
-                        const targetForDebuffPkg = this.getTargets(character, effectDetail.targetType || template.targetType, teamMembers, monster)[0];
-                        if (targetForDebuffPkg) {
-                             // 假设 BuffSystem 有一个 applyDebuffPackage 或能通过 applyBuffPackage 处理 isDebuff:true 的包
-                            const debuffPackageData = { ...effectDetail, isDebuff: true, buffs: debuffsToApply }; // 确保标记为debuff
-                            const debuffPackageApplied = BuffSystem.applyBuffPackage(targetForDebuffPkg, debuffPackageData, character);
-                             currentEffectResult = {
-                                success: debuffPackageApplied,
-                                message: debuffPackageApplied ? `${character.name} 对 ${targetForDebuffPkg.name} 施加了DEBUFF包 ${effectDetail.buffName || effectDetail.name || 'DEBUFF包'}` : `施加DEBUFF包 ${effectDetail.buffName || effectDetail.name || 'DEBUFF包'} 失败`,
-                                effects: { type: 'debuffPackage', appliedTo: targetForDebuffPkg.name, packageName: effectDetail.buffName || effectDetail.name }
+            const buffDefinition = BuffSystem.getBuffDefinition(actualEffectType);
+
+            if (buffDefinition) {
+                const optionsForEffect = {
+                    ...template,
+                    ...effectDetail,
+                    effects: [effectDetail],
+                    buffType: actualEffectType
+                };
+
+                if (buffDefinition.isPositive) {
+                    currentEffectResult = this.applyBuffEffects(character, optionsForEffect, teamMembers, monster);
+                } else {
+                    currentEffectResult = this.applyDebuffEffects(character, optionsForEffect, teamMembers, monster);
+                }
+            } else {
+                // 不是已定义的 (de)buff，走原来的 switch 逻辑
+                switch (actualEffectType) {
+                    case 'damage':
+                    // TODO: Clarify if 'enmity' case is needed or if logic can be merged into 'damage'
+                    case 'enmity':
+                        let totalAdditionalFixedDamage = 0;
+                        let totalDirectDamageBonus = 0;
+                        if (Array.isArray(template.effects)) {
+                            template.effects.forEach(siblingEffect => {
+                                if (siblingEffect.type === 'additionalDamage' && typeof siblingEffect.value === 'number') {
+                                    totalAdditionalFixedDamage += siblingEffect.value;
+                                }
+                                if (siblingEffect.type === 'directDamageBonus' && typeof siblingEffect.value === 'number') {
+                                    totalDirectDamageBonus += siblingEffect.value;
+                                }
+                            });
+                        }
+                        currentEffectResult = this.applyDamageEffects(character, { ...template, ...effectDetail, effects: [effectDetail], type: actualEffectType }, teamMembers, monster, totalAdditionalFixedDamage, totalDirectDamageBonus);
+                        break;
+                    case 'heal':
+                        currentEffectResult = this.applyHealEffects(character, { ...template, ...effectDetail, effects: [effectDetail] }, teamMembers, monster);
+                        break;
+                    case 'dispel':
+                        currentEffectResult = this.applyDispelEffects(character, { ...template, ...effectDetail, effects: [effectDetail] }, teamMembers, monster);
+                        break;
+                    case 'cleanse':
+                        currentEffectResult = this.applyDispelEffects(character, { ...template, ...effectDetail, dispelPositive: false, effects: [effectDetail] }, teamMembers, monster);
+                        break;
+                    case 'revive':
+                        currentEffectResult = this.applyReviveEffects(character, { ...template, ...effectDetail, effects: [effectDetail] }, teamMembers, monster);
+                        break;
+                    case 'castSkill':
+                        if (effectDetail.skillId) {
+                             currentEffectResult = this.applyTriggerSkillEffect(character, { ...template, ...effectDetail, triggerSkillId: effectDetail.skillId }, teamMembers, monster);
+                        } else {
+                            currentEffectResult = { success: false, message: `技能 ${template.name} 的 castSkill 效果缺少 skillId` };
+                        }
+                        break;
+                    case 'applyBuffPackage':
+                        const targetForBuffPkg = this.getTargets(character, effectDetail.targetType || template.targetType, teamMembers, monster)[0];
+                        if (targetForBuffPkg) {
+                            const buffPackageApplied = BuffSystem.applyBuffPackage(targetForBuffPkg, effectDetail, character);
+                            currentEffectResult = {
+                                success: buffPackageApplied,
+                                message: buffPackageApplied ? `${character.name} 对 ${targetForBuffPkg.name} 施加了效果包 ${effectDetail.buffName || effectDetail.name || '效果包'}` : `施加效果包 ${effectDetail.buffName || effectDetail.name || '效果包'} 失败`,
+                                effects: { type: 'buffPackage', appliedTo: targetForBuffPkg.name, packageName: effectDetail.buffName || effectDetail.name }
                             };
                         } else {
-                             currentEffectResult = { success: false, message: `技能 ${template.name} 的 applyDebuff 包效果找不到目标` };
+                            currentEffectResult = { success: false, message: `技能 ${template.name} 的 applyBuffPackage 效果找不到目标` };
                         }
-                    } else { // 作为单个debuff处理
-                        currentEffectResult = this.applyDebuffEffects(character, { ...template, ...effectDetail, effects: [effectDetail] }, teamMembers, monster);
-                    }
-                    break;
-                case 'customBuff': // 假设 applyBuffEffects 能处理 effectDetail 本身作为 buff 定义
-                    currentEffectResult = this.applyBuffEffects(character, { ...template, ...effectDetail, effects: [effectDetail] }, teamMembers, monster);
-                    break;
-                case 'echo': // 假设 echo 是一个标准 buff 类型，由 BuffSystem 处理
-                    currentEffectResult = this.applyBuffEffects(character, { ...template, ...effectDetail, effects: [effectDetail] }, teamMembers, monster);
-                    break;
-                case 'fieldEffect':
-                    // TODO: Implement field effect logic
-                    console.warn(`Unhandled atomic effect type: fieldEffect in skill ${template.name}`);
-                    Battle.logBattle(`技能 ${template.name} 尝试应用未实现的场地效果。`);
-                    currentEffectResult = { success: true, message: `应用了场地效果（待实现）`, effects: {} }; // 暂时标记为成功
-                    break;
-                case 'additionalDamage': // Handled by 'damage'/'enmity' case
-                    console.log(`Atomic effect 'additionalDamage' for skill ${template.name} will be handled by its corresponding damage/enmity effect.`);
-                    currentEffectResult = { success: true, message: `追加伤害效果已记录。`, effects: {} };
-                    break;
-                case 'directDamageBonus': // Handled by 'damage'/'enmity' case
-                    console.log(`Atomic effect 'directDamageBonus' for skill ${template.name} will be handled by its corresponding damage/enmity effect.`);
-                    currentEffectResult = { success: true, message: `直接伤害奖励已记录。`, effects: {} };
-                    break;
-                case 'hpCostPercentageCurrent': // 此效果已在循环前处理，这里跳过
-                    continue; // 使用 continue 跳过当前循环迭代
-                // Proc效果内的 additionalEffects 数组和 maxStacks
-                case 'proc':
-                    // proc 效果通常在攻击时由 battle.js 处理，这里可能是主动技能直接触发一个proc定义
-                    // Battle.logBattle(`技能 ${template.name} 包含一个 proc 定义，通常由攻击触发。`);
-                    // 如果proc定义中有 additionalEffects，需要在这里处理
-                    if (effectDetail.additionalEffects && Array.isArray(effectDetail.additionalEffects)) {
-                        for (const additionalEffect of effectDetail.additionalEffects) {
-                            const tempSubTemplate = { ...template, ...additionalEffect, effects: [additionalEffect], name: `${template.name} (附加效果)` };
-                            const subEffectResult = this.applySkillEffects(character, tempSubTemplate, teamMembers, monster); // 递归调用
-                            if (subEffectResult.message) combinedResults.messages.push(subEffectResult.message);
-                            if (subEffectResult.effects) combinedResults.effectsApplied.push(subEffectResult.effects);
-                            if (subEffectResult.success === false) combinedResults.success = false; // 如果子效果失败，则整体失败
+                        break;
+                    case 'echo': // This should be caught by buffDefinition if 'echo' is a defined buff type
+                        currentEffectResult = this.applyBuffEffects(character, { ...template, ...effectDetail, effects: [effectDetail], buffType: actualEffectType }, teamMembers, monster);
+                        break;
+                    // TODO: Clarify if 'fieldEffect' is a planned/needed feature and add to spec if so.
+                    case 'fieldEffect':
+                        console.warn(`Unhandled atomic effect type: fieldEffect in skill ${template.name}`);
+                        Battle.logBattle(`技能 ${template.name} 尝试应用未实现的场地效果。`);
+                        currentEffectResult = { success: true, message: `应用了场地效果（待实现）`, effects: {} };
+                        break;
+                    case 'hpCostPercentageCurrent':
+                        continue;
+                    case 'proc':
+                        if (effectDetail.additionalEffects && Array.isArray(effectDetail.additionalEffects)) {
+                            for (const additionalEffect of effectDetail.additionalEffects) {
+                                const tempSubTemplate = { ...template, ...additionalEffect, effects: [additionalEffect], name: `${template.name} (附加效果)` };
+                                const subEffectResult = this.applySkillEffects(character, tempSubTemplate, teamMembers, monster);
+                                if (subEffectResult.message) combinedResults.messages.push(subEffectResult.message);
+                                if (subEffectResult.effects) combinedResults.effectsApplied.push(subEffectResult.effects);
+                                if (subEffectResult.success === false) combinedResults.success = false;
+                            }
                         }
-                    }
-                    // maxStacks for buffs applied by proc would be handled by BuffSystem
-                    currentEffectResult.message = `${character.name} 的技能 ${template.name} 包含proc定义。`;
-                    break;
-                default:
-                    currentEffectResult = {
-                        message: `${character.name} 使用了【${template.name}】中的未知效果类型: ${actualEffectType}。该效果被跳过。`,
-                        effects: {},
-                        // 设置为 true，使得此未知类型不会将整个 multi_effect 标记为失败，
-                        // 除非没有其他成功的已知效果。combinedResults.success 的最终状态
-                        // 将取决于是否有任何已知效果成功应用。
-                        success: true
-                    };
+                        currentEffectResult.message = `${character.name} 的技能 ${template.name} 包含proc定义。`;
+                        break;
+                    default:
+                        currentEffectResult = {
+                            message: `${character.name} 使用了【${template.name}】中的未知效果类型: ${actualEffectType}。该效果被跳过。`,
+                            effects: {},
+                            success: true
+                        };
+                }
             }
             if (currentEffectResult && currentEffectResult.message) combinedResults.messages.push(currentEffectResult.message);
             if (currentEffectResult && currentEffectResult.effects) combinedResults.effectsApplied.push(currentEffectResult.effects);
-            if (currentEffectResult && currentEffectResult.success === false) combinedResults.success = false; // 标记整体结果为失败
+            if (currentEffectResult && currentEffectResult.success === false) combinedResults.success = false;
         }
 
         const applyEffectsReturnObject = {
             message: combinedResults.messages.join(' \n') || `${character.name} 使用了【${template.name}】。`,
             effects: combinedResults.effectsApplied.length > 0 ? combinedResults.effectsApplied : {},
-            success: combinedResults.success // 返回最终的成功状态
+            success: combinedResults.success
         };
-        // console.log(`[DEBUG] JobSkills.applySkillEffects: RETURNING - applyEffectsReturnObject:`, JSON.parse(JSON.stringify(applyEffectsReturnObject)));
         return applyEffectsReturnObject;
     },
 
     /**
      * 应用BUFF效果
      * @param {object} character - 角色对象
-     * @param {object} template - 技能模板
+     * @param {object} optionsForEffect - 包含技能模板和当前效果详情的选项对象
      * @param {array} teamMembers - 队伍成员
      * @param {object} monster - 怪物对象
      * @returns {object} 技能效果结果
      */
-    applyBuffEffects(character, template, teamMembers, monster) {
-        const targets = this.getTargets(character, template.targetType, teamMembers, monster);
-        const effects = [];
+    applyBuffEffects(character, optionsForEffect, teamMembers, monster) {
+        const targets = this.getTargets(character, optionsForEffect.targetType, teamMembers, monster);
+        const effectsAppliedDetails = [];
 
-        // 应用每个BUFF效果
         for (const target of targets) {
-            if (target.currentStats.hp <= 0) continue; // 跳过已倒下的目标
+            if (target.currentStats.hp <= 0) continue;
 
-            for (const effect of template.effects) {
-                // 创建BUFF
-                const buff = BuffSystem.createBuff(effect.type, effect.value, effect.duration || template.duration, character);
+            for (const effectDetail of optionsForEffect.effects) { // optionsForEffect.effects is [effectDetail]
+                const buffTypeToApply = optionsForEffect.buffType || effectDetail.type;
 
-                // 设置BUFF属性
-                if (buff && effect.name) buff.name = effect.name;
-                if (buff && effect.description) buff.description = effect.description;
-                if (buff && effect.icon) buff.icon = effect.icon;
-                if (buff && effect.maxHits) buff.maxHits = effect.maxHits;
+                const buff = BuffSystem.createBuff(
+                    buffTypeToApply,
+                    effectDetail.value,
+                    effectDetail.duration || optionsForEffect.duration,
+                    character,
+                    {
+                        name: effectDetail.name,
+                        description: effectDetail.description,
+                        icon: effectDetail.icon,
+                        maxHits: effectDetail.maxHits,
+                        elementType: effectDetail.elementType,
+                        statusToImmune: effectDetail.statusToImmune,
+                        convertToElementType: effectDetail.convertToElementType,
+                        buffsPerStack: effectDetail.buffsPerStack,
+                        canDispel: effectDetail.canDispel, // Pass specific canDispel from effectDetail
+                        stackable: effectDetail.stackable, // Pass specific stackable
+                        maxStacks: effectDetail.maxStacks, // Pass specific maxStacks
+                        valueInteraction: effectDetail.valueInteraction // Pass specific valueInteraction
+                    }
+                );
 
-                // 应用BUFF
                 if (buff) {
                     BuffSystem.applyBuff(target, buff);
                 }
 
-                // 特殊处理：DA和TA提升
-                if (effect.type === 'daBoost') {
-                    target.currentStats.daRate = (target.currentStats.daRate || 0.15) + effect.value;
-                } else if (effect.type === 'taBoost') {
-                    target.currentStats.taRate = (target.currentStats.taRate || 0.05) + effect.value;
+                // 特殊处理：DA和TA提升 (如果这些不是通过BuffSystem.applyBuffEffect处理的)
+                // 考虑将这些移到BuffSystem.applyBuffEffect中，如果它们是标准属性修改
+                if (buffTypeToApply === 'daBoost' && buff) {
+                    target.currentStats.daRate = (target.currentStats.daRate || 0.15) + buff.value;
+                } else if (buffTypeToApply === 'taBoost' && buff) {
+                    target.currentStats.taRate = (target.currentStats.taRate || 0.05) + buff.value;
                 }
 
-                effects.push({
+                effectsAppliedDetails.push({
                     target: target.name,
-                    type: effect.type,
-                    name: buff.name, // Add buff name for logging
-                    value: effect.value,
-                    duration: effect.duration || template.duration
+                    type: buffTypeToApply,
+                    name: buff ? buff.name : buffTypeToApply,
+                    value: effectDetail.value,
+                    duration: effectDetail.duration || optionsForEffect.duration
                 });
             }
         }
 
-        // 生成消息
-        let message = `${character.name} 使用了【${template.name}】，`;
+        let message = `${character.name} 使用了【${optionsForEffect.name}】，`;
 
-        if (template.targetType === 'self') {
+        if (optionsForEffect.targetType === 'self') {
             message += `获得了`;
-        } else if (template.targetType === 'ally') {
+        } else if (optionsForEffect.targetType === 'ally') {
             message += `为 ${targets[0]?.name || '队友'} 提供了`;
-        } else if (template.targetType === 'all_allies') {
+        } else if (optionsForEffect.targetType === 'all_allies') {
             message += `为全队提供了`;
         }
 
-        // 添加效果描述
         const effectDescriptions = [];
-        for (const effect of template.effects) {
+        for (const effectDetail of optionsForEffect.effects) {
             let desc = '';
+            const buffTypeForDesc = optionsForEffect.buffType || effectDetail.type;
+            const buffDef = BuffSystem.getBuffDefinition(buffTypeForDesc);
+            const buffDisplayName = buffDef ? buffDef.name : (effectDetail.name || buffTypeForDesc);
 
-            switch (effect.type) {
+            switch (buffTypeForDesc) {
                 case 'attackUp':
-                    desc = `攻击力提升${effect.value * 100}%`;
-                    break;
                 case 'defenseUp':
-                    desc = `防御力提升${effect.value * 100}%`;
-                    break;
                 case 'daBoost':
-                    desc = `DA率提升${effect.value * 100}%`;
-                    break;
                 case 'taBoost':
-                    desc = `TA率提升${effect.value * 100}%`;
-                    break;
                 case 'damageReduction':
-                    desc = `伤害减免${effect.value * 100}%`;
+                case 'criticalRateUp':
+                case 'criticalDamageUp':
+                case 'skillDamageUp':
+                case 'directDamageValueUp':
+                    desc = `${buffDisplayName}${typeof effectDetail.value === 'number' ? (buffDef && (buffDef.valueInteraction === 'add' || buffDef.valueInteraction === 'max') && !String(effectDetail.value).includes('%') && effectDetail.value < 2 && effectDetail.value > -2 ? (effectDetail.value * 100).toFixed(0) + '%' : effectDetail.value) : ''}`;
                     break;
                 case 'invincible':
-                    desc = `无敌效果（抵挡${effect.maxHits || 1}次攻击）`;
+                    desc = `${buffDisplayName}（抵挡${effectDetail.maxHits || 1}次攻击）`;
                     break;
-                case 'evade':
-                    desc = `完全回避效果`;
+                case 'evade': // Assuming 'evade' is a type in buffTypes
+                case 'evasionAll':
+                    desc = `${buffDisplayName}`;
                     break;
-                // Add other buff types as needed
                 default:
-                    desc = `${effect.name || effect.type || '未知BUFF'}效果`; // Fallback description
+                    desc = `${buffDisplayName}效果`;
             }
             if (desc) {
-                const durationText = (effect.duration || template.duration) ? `(持续${effect.duration || template.duration}回合)` : '';
+                const durationText = (effectDetail.duration || optionsForEffect.duration) ? `(持续${effectDetail.duration || optionsForEffect.duration}回合)` : '';
                 effectDescriptions.push(`${desc}${durationText}`);
             }
-        } // End of for (const effect of template.effects)
+        }
 
         if (effectDescriptions.length > 0) {
             message += effectDescriptions.join('，') + '！';
-        } else if (targets.length > 0 && template.effects && template.effects.length > 0) {
-            // If there were targets and effects defined, but no descriptions were generated (e.g. all unknown effect types)
-            message += `施加了 ${template.effects.length} 个效果。`;
+        } else if (targets.length > 0 && optionsForEffect.effects && optionsForEffect.effects.length > 0) {
+            message += `施加了 ${optionsForEffect.effects.length} 个效果。`;
         } else if (targets.length > 0) {
             message += '但未产生具体效果。';
         } else {
@@ -655,114 +603,135 @@ const JobSkills = {
             message: message,
             effects: {
                 type: 'buff',
-                targetType: template.targetType,
-                effects: effects
+                targetType: optionsForEffect.targetType,
+                effects: effectsAppliedDetails
             }
         };
-    }, // This comma is for the JobSkills object, applyBuffEffects function definition ends with the brace above.
+    },
 
     /**
      * 应用DEBUFF效果
      * @param {object} character - 角色对象
-     * @param {object} template - 技能模板
+     * @param {object} optionsForEffect - 包含技能模板和当前效果详情的选项对象
      * @param {array} teamMembers - 队伍成员
      * @param {object} monster - 怪物对象
      * @returns {object} 技能效果结果
      */
-    applyDebuffEffects(character, template, teamMembers, monster) {
-        const targets = this.getTargets(character, template.targetType, teamMembers, monster);
-        const effects = [];
+    applyDebuffEffects(character, optionsForEffect, teamMembers, monster) {
+        const targets = this.getTargets(character, optionsForEffect.targetType, teamMembers, monster);
+        const effectsAppliedDetails = [];
 
-        // 应用每个DEBUFF效果
         for (const target of targets) {
-            for (const effect of template.effects) {
-                // 创建DEBUFF
-                const debuff = BuffSystem.createBuff(effect.type, effect.value, effect.duration || template.duration, character);
+            if (target.currentStats.hp <= 0) continue;
 
-                // 设置DEBUFF属性
-                if (debuff && effect.name) debuff.name = effect.name;
-                if (debuff && effect.description) debuff.description = effect.description;
-                if (debuff && effect.icon) debuff.icon = effect.icon;
+            for (const effectDetail of optionsForEffect.effects) { // optionsForEffect.effects is [effectDetail]
+                const buffTypeToApply = optionsForEffect.buffType || effectDetail.type;
+                
+                const debuff = BuffSystem.createBuff(
+                    buffTypeToApply,
+                    effectDetail.value,
+                    effectDetail.duration || optionsForEffect.duration,
+                    character,
+                     {
+                        name: effectDetail.name,
+                        description: effectDetail.description,
+                        icon: effectDetail.icon,
+                        // Pass other relevant properties from effectDetail
+                        elementType: effectDetail.elementType,
+                        statusToImmune: effectDetail.statusToImmune,
+                        convertToElementType: effectDetail.convertToElementType,
+                        buffsPerStack: effectDetail.buffsPerStack,
+                        canDispel: effectDetail.canDispel,
+                        stackable: effectDetail.stackable,
+                        maxStacks: effectDetail.maxStacks,
+                        valueInteraction: effectDetail.valueInteraction
+                    }
+                );
 
-                // 应用DEBUFF
                 if (debuff) {
                     BuffSystem.applyBuff(target, debuff);
                 }
 
-                // 特殊处理：DA和TA降低
-                if (effect.type === 'daDown') {
-                    target.currentStats.daRate = Math.max(0, (target.currentStats.daRate || 0.1) - effect.value);
-                } else if (effect.type === 'taDown') {
-                    target.currentStats.taRate = Math.max(0, (target.currentStats.taRate || 0.03) - effect.value);
+                if (buffTypeToApply === 'daDown' && debuff) {
+                    target.currentStats.daRate = Math.max(0, (target.currentStats.daRate || 0.1) - debuff.value);
+                } else if (buffTypeToApply === 'taDown' && debuff) {
+                    target.currentStats.taRate = Math.max(0, (target.currentStats.taRate || 0.03) - debuff.value);
                 }
 
-                effects.push({
+                effectsAppliedDetails.push({
                     target: target.name,
-                    type: effect.type,
-                    name: debuff.name, // Add debuff name for logging
-                    value: effect.value,
-                    duration: effect.duration || template.duration
+                    type: buffTypeToApply,
+                    name: debuff ? debuff.name : buffTypeToApply,
+                    value: effectDetail.value,
+                    duration: effectDetail.duration || optionsForEffect.duration
                 });
             }
         }
 
-        // 生成消息
-        let message = `${character.name} 使用了【${template.name}】，`;
+        let message = `${character.name} 使用了【${optionsForEffect.name}】，`;
 
-        if (template.targetType === 'enemy') {
+        if (optionsForEffect.targetType === 'enemy') {
             message += `使 ${targets[0]?.name || '敌人'} `;
-        } else if (template.targetType === 'all_enemies') {
+        } else if (optionsForEffect.targetType === 'all_enemies') {
             message += `使敌方全体 `;
         }
 
-        // 添加效果描述
         const effectDescriptions = [];
-        for (const effect of template.effects) {
+        for (const effectDetail of optionsForEffect.effects) {
             let desc = '';
+            const buffTypeForDesc = optionsForEffect.buffType || effectDetail.type;
+            const buffDef = BuffSystem.getBuffDefinition(buffTypeForDesc);
+            const buffDisplayName = buffDef ? buffDef.name : (effectDetail.name || buffTypeForDesc);
 
-            switch (effect.type) {
+            switch (buffTypeForDesc) {
                 case 'attackDown':
-                    desc = `攻击力降低${effect.value * 100}%`;
-                    break;
-                case 'defenseDown':
-                    desc = `防御力降低${effect.value}%`;
-                    break;
+                case 'defenseDown': // Assuming value is percentage for defenseDown too in this context
                 case 'missRate':
-                    desc = `命中率降低${effect.value * 100}%`;
+                    desc = `${buffDisplayName}${typeof effectDetail.value === 'number' ? (buffDef && (buffDef.valueInteraction === 'add' || buffDef.valueInteraction === 'max') && !String(effectDetail.value).includes('%') && effectDetail.value < 2 && effectDetail.value > -2 ? (effectDetail.value * 100).toFixed(0) + '%' : effectDetail.value) : ''}`;
                     break;
                 case 'daDown':
-                    desc = `无法触发双重攻击`;
+                    desc = `无法触发双重攻击`; // Or use buffDisplayName
                     break;
                 case 'taDown':
-                    desc = `无法触发三重攻击`;
+                    desc = `无法触发三重攻击`; // Or use buffDisplayName
                     break;
                 case 'dot':
-                    desc = `陷入中毒状态（每回合受到${effect.value}点伤害）`;
+                    desc = `${buffDisplayName}（每回合受到${effectDetail.value}点伤害）`;
                     break;
                 case 'stun':
-                    desc = `陷入麻痹状态（无法行动）`;
+                case 'numbness': // Assuming numbness is a type in buffTypes
+                case 'silence':  // Assuming silence is a type in buffTypes
+                    desc = `${buffDisplayName}（无法行动）`; // Or more specific descriptions
                     break;
                 default:
-                    desc = effect.name || effect.type;
+                    desc = `${buffDisplayName}效果`;
             }
-
-            effectDescriptions.push(desc);
+            if (desc) {
+                 const durationText = (effectDetail.duration || optionsForEffect.duration) ? `(持续${effectDetail.duration || optionsForEffect.duration}回合)` : '';
+                effectDescriptions.push(`${desc}${durationText}`);
+            }
         }
 
         message += effectDescriptions.join('，');
 
-        if (template.duration > 0) {
-            message += `，持续${template.duration}回合！`;
-        } else {
+        if (optionsForEffect.duration > 0 && !effectDescriptions.some(d => d.includes('持续'))) { // Add overall duration if not in individual descriptions
+             message += `，持续${optionsForEffect.duration}回合！`;
+        } else if (effectDescriptions.length > 0) {
             message += `！`;
+        } else if (targets.length > 0) {
+             message += '但未产生具体效果。';
+        } else {
+            message += '但没有有效目标。';
         }
 
+
         return {
+            success: true, // Assuming debuff application is always successful if targets exist
             message,
             effects: {
                 type: 'debuff',
-                targets: template.targetType,
-                effects
+                targets: optionsForEffect.targetType,
+                effects: effectsAppliedDetails
             }
         };
     },

@@ -887,6 +887,18 @@ const BuffSystem = {
             this.recalculateStatsWithBuffs(target);
             Battle.logBattle(`${target.name} 的所有BUFF效果已被清除。`);
         }
+    },
+
+    /**
+     * 根据类型名称获取BUFF的完整定义
+     * @param {string} typeName - BUFF的类型名称 (例如 "defenseDown", "attackUp")
+     * @returns {object|null} BUFF的定义对象，如果未找到则返回null
+     */
+    getBuffDefinition(typeName) {
+        if (this.buffTypes.hasOwnProperty(typeName)) {
+            return this.buffTypes[typeName];
+        }
+        return null;
     }
 };
 

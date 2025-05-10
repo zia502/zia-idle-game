@@ -183,7 +183,7 @@
         "targetType": "all_allies"
       },
       {
-        "type": "damageElementConversion",
+        "type": "elementConversion",
         "convertToElementType": "wind",
         "duration": 3,
         "stackable": false,
@@ -308,7 +308,7 @@
             "value": 1000
           },
           {
-            "type": "allDamageTakenReduction",
+            "type": "damageReduction",
             "value": 0.2
           },
           {
@@ -647,7 +647,7 @@
     "targetType": "self",
     "effects": [
       {
-        "type": "statusImmunity",
+        "type": "debuffImmunity",
         "status": "silence",
         "passive": true,
         "targetType": "self"
@@ -771,7 +771,7 @@
     "targetType": "enemy",
     "effects": [
       {
-        "type": "multiHitDamage",
+        "type": "multi_attack",
         "count": 3,
         "multiplierPerHit": 16.0,
         "targetType": "enemy"
@@ -796,7 +796,7 @@
     "targetType": "self",
     "effects": [
       {
-        "type": "evasionAll",
+        "type": "evade",
         "duration": 1,
         "targetType": "self",
         "dispellable": true
@@ -853,7 +853,7 @@
     "targetType": "enemy",
     "effects": [
       {
-        "type": "multiHitDamage",
+        "type": "multi_attack",
         "count": 3,
         "multiplierPerHit": 2.0,
         "targetType": "enemy"
@@ -896,7 +896,7 @@
         "dispellable": true
       },
       {
-        "type": "damageElementConversion",
+        "type": "elementConversion",
         "convertToElementType": "fire",
         "duration": 5,
         "targetType": "all_allies",
@@ -1035,7 +1035,7 @@
     "targetType": "all_allies",
     "effects": [
       {
-        "type": "criticalRateUp",
+        "type": "critRateUp",
         "value": 0.5,
         "duration": 3,
         "targetType": "all_allies",
@@ -1179,7 +1179,7 @@
     "targetType": "self",
     "effects": [
       {
-        "type": "evasionAll",
+        "type": "evade",
         "duration": 2,
         "targetType": "self",
         "dispellable": true
@@ -1275,7 +1275,7 @@
             "value": 0.3
           },
           {
-            "type": "criticalRateUp",
+            "type": "critRateUp",
             "value": 1.0
           },
           {
@@ -1358,7 +1358,7 @@
             "value": 100
           },
           {
-            "type": "damageElementConversion",
+            "type": "elementConversion",
             "convertToElementType": "water"
           }
         ]
@@ -1609,7 +1609,7 @@
     "targetType": "all_allies",
     "effects": [
       {
-        "type": "allDamageTakenReduction",
+        "type": "damageReduction",
         "value": 0.7,
         "duration": 1,
         "targetType": "all_allies",
@@ -1701,7 +1701,7 @@
     "targetType": "all_allies",
     "effects": [
       {
-        "type": "evasionAll",
+        "type": "evade",
         "duration": 1,
         "targetType": "all_allies",
         "dispellable": true
@@ -1751,7 +1751,7 @@
         "dispellable": true
       },
       {
-        "type": "criticalRateUp",
+        "type": "critRateUp",
         "value": 0.5,
         "duration": 3,
         "targetType": "all_allies",
@@ -1785,7 +1785,7 @@
         "dispellable": true
       },
       {
-        "type": "evasionAll",
+        "type": "evade",
         "duration": 1,
         "targetType": "all_allies",
         "dispellable": true

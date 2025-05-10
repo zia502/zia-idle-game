@@ -226,3 +226,5 @@ This file tracks the project's current status, including recent changes, current
     *   技能循环现在会尝试所有可用技能。
     *   在技能循环后添加了普通攻击逻辑（如果角色和怪物存活且未执行过普攻）。
     *   将原有的普通攻击逻辑封装到了新的 `executeNormalAttack` 方法中。
+*   [2025-05-10 16:22:40] - 创建了新文档 [`docs/skill_effect_types_reference.md`](docs/skill_effect_types_reference.md) 并写入了技能子效果类型说明。
+*   [2025-05-10 17:04:57] - 完成了对技能JSON文件 ([`src/data/job-skills-templates.json`](src/data/job-skills-templates.json), [`src/data/sr_skills.json`](src/data/sr_skills.json), [`src/data/ssr_skill.json`](src/data/ssr_skill.json)) 和技能效果处理逻辑 ([`src/js/core/job-skills.js`](src/js/core/job-skills.js)) 的统一化修改。

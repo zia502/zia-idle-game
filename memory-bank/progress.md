@@ -156,3 +156,6 @@ This file tracks the project's progress using a task list format.
         *   原有的普通攻击详细逻辑被封装到一个新的辅助函数 `executeNormalAttack` 中，并在适当的时候调用。
     *   Memory Bank (`activeContext.md`, `progress.md`, `decisionLog.md`) 已更新。
 *   [2025-05-09 21:38:00] - **Completed Debugging Task:** 修复了 [`src/js/core/battle.js`](src/js/core/battle.js:1) 中 `processCharacterAction` 函数内普通攻击执行两次的bug。移除了在调用 `this.executeNormalAttack()` 之后残留的旧攻击逻辑。
+- 2025-05-10 16:06:41: 开始任务 - 创建技能子效果类型 Markdown 文档。
+*   [2025-05-10 16:22:32] - 完成任务 - 创建技能子效果类型 Markdown 文档 [`docs/skill_effect_types_reference.md`](docs/skill_effect_types_reference.md)。
+*   [2025-05-10 17:05:07] - 完成任务 - 根据统一化修改建议，对技能JSON文件和 `src/js/core/job-skills.js` 进行修改。

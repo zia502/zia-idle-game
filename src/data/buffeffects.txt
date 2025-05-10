@@ -1,0 +1,53 @@
+直接效果型:
+damage (伤害)
+heal (治疗)
+multi_attack / multiHitDamage (多次攻击/多段伤害)               统一成 multi_attack  代表多段技能伤害
+hpCostPercentageCurrent (消耗当前HP百分比)
+
+Buff/Debuff 型 (直接施加):
+5.  attackUp (攻击力提升)
+6.  defenseUp (防御力提升)
+7.  attackDown (攻击力降低)
+8.  defenseDown (防御力降低)
+9.  missRate (命中率降低)
+10. daBoost (双击概率提升)
+11. taBoost (三击概率提升)
+12. daDown (双击概率降低)
+13. taDown (三击概率降低)
+14. critRateUp / criticalRateUp (暴击率提升)                       统一成      critRateUp
+15. damageReduction / allDamageTakenReduction (伤害减免)          确保 damageReduction  时 有 属性类型的值
+16. dot (持续伤害 - 如中毒)
+17. evade / dodge / evasionAll (回避)                               evade / dodge  统一成evade
+18. invincible (无敌)
+19. stun (眩晕)
+20. staminaUp / enmityUp (浑身/背水类)
+21. regen / regeneration (持续治疗)                                 统一成      regen
+22. cover (援护)     
+23. damageCap (伤害上限)                                              
+24. damageCapUp (伤害上限提升)
+25. skillDamageCapUp (技能伤害上限提升)
+26. elementalDamageCap (属性伤害上限)
+27. shield (护盾)
+28. elementConversion / damageElementConversion (伤害属性转换)         统一成     elementConversion  
+29. elementalResistance (属性抗性/减伤)
+30. threatUp (提升仇恨/敌对心)
+31. threatDown (降低仇恨/敌对心)
+32. exAttackUp (EX攻击力提升)
+33. chase / echo (追击)                                                 统一成     echo  
+34. statusImmunity / debuffImmunity (状态免疫/弱体免疫)                  统一成     debuffImmunity 
+35. debuffResistOnce (弱体无效(次))
+36. extraAttackTurn (额外攻击回合/再攻击)
+37. directDamageValueUp (固定伤害值提升)
+38. guts (根性/锁血)
+
+功能型/逻辑型:
+39. dispel / cleanse / dispelAll (净化/驱散)                     净化cleanse    驱散dispel/ dispelAll  不是一个类型
+40. revive (复活)
+41. ignoreDebuff (无视特定Debuff)
+42. conditional_heal (条件治疗)
+43. castSkill (释放技能 - 通常在proc内)
+
+容器/触发型 (本身不直接产生效果，而是包含或触发其他效果):
+44. proc (概率触发效果)
+45. endOfTurn (回合结束触发效果)
+46. applyBuffPackage (应用Buff包)

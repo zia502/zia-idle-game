@@ -498,14 +498,15 @@
         "description": "限制受到的伤害"
       },
       {
-        "type": "counterAttack",
-        "multiplier": 1.0,
-        "target": "all_enemies",
-        "duration": 1,
-        "stackable": false,
-        "dispellable": false,
-        "name": "英勇之盾",
-        "description": "回合结束时反击"
+        "type": "endOfTurn",
+        "targetType": "self",
+        "effect": {
+          "type": "damage",
+          "multiplier": 1.0,
+          "targetType": "all_enemies",
+          "name": "Counter Attack Damage"
+        },
+        "name": "Oath Shielder Counter"
       }
     ]
   },

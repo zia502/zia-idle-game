@@ -159,3 +159,12 @@ This file tracks the project's progress using a task list format.
 - 2025-05-10 16:06:41: 开始任务 - 创建技能子效果类型 Markdown 文档。
 *   [2025-05-10 16:22:32] - 完成任务 - 创建技能子效果类型 Markdown 文档 [`docs/skill_effect_types_reference.md`](docs/skill_effect_types_reference.md)。
 *   [2025-05-10 17:05:07] - 完成任务 - 根据统一化修改建议，对技能JSON文件和 `src/js/core/job-skills.js` 进行修改。
+* [2025-05-10 17:21:34] - Debugging Task Status Update: Start investigating battle log HP rollback issue.
+* [2025-05-10 17:27:01] - Debugging Task Status Update: Inserted diagnostic logs in `battle.js`.
+* [2025-05-10 18:24:36] - Debugging Task Status Update: Added more diagnostic logs to `battle.js` at the end of `applyDamageToTarget`.
+* [2025-05-10 18:29:22] - Debugging Task Status Update: All three object reference tracing logs inserted correctly into `battle.js` and `job-skills.js`.
+* [2025-05-10 18:34:55] - Debugging Task Status Update: All `_debugRefId` tracing logs inserted.
+* [2025-05-10 18:42:14] - Debugging Task Status Update: Added diagnostic logs for proc healing in `battle.js`.
+* [2025-05-10 18:48:41] - Debugging Task Status Update: Added final diagnostic log in `battle.js` for pinpointing HP rollback.
+* [2025-05-10 18:54:10] - Debugging Task Status Update: Added final HP check log in `JobSkills.useSkill` exit.
+* [2025-05-10 19:02:54] - Debugging Task Status Update: Corrected log insertion in `JobSkills.useSkill`. Ready for new user logs.

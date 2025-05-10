@@ -959,6 +959,10 @@ this.resetProcCounts(); // 重置技能Proc触发计数
      * @param {object} battleStats - 战斗统计
      */
     processCharacterAction(character, monster, battleStats, currentTeamMembers) {
+monster._debugRefId = monster._debugRefId || Math.random().toString(36).slice(2, 11); // Assign a unique ID if it doesn't have one
+console.log(`[DEBUG PCA Entry] Monster: ${monster.name}, RefID: ${monster._debugRefId}, HP: ${monster.currentStats.hp}/${monster.currentStats.maxHp}`);
+        // monster._debugId = monster._debugId || Math.random().toString(36).substr(2, 9); 
+        // console.log(`[DEBUG PCA Entry] Monster Ref ID: ${monster._debugId}, HP: ${monster.currentStats.hp}`);
         if (character.currentStats.hp <= 0) return;
 
         // // DEBUG LOG: 函数入口
@@ -1009,6 +1013,8 @@ this.resetProcCounts(); // 重置技能Proc触发计数
                                 }
                                 if (typeof JobSkillsTemplate !== 'undefined' && !JobSkillsTemplate.templates[skillToUseId]) {
                                     JobSkillsTemplate.templates[skillToUseId] = skillData;
+console.log(`[DEBUG After JS.useSkill returns] Monster: ${monster.name}, RefID: ${monster._debugRefId || 'NO_REF_ID'}, HP: ${monster.currentStats.hp}/${monster.currentStats.maxHp}`);
+                                this.logBattle(`[调试][立刻] JobSkills返回后: ${monster.name} HP: ${monster.currentStats.hp}/${monster.currentStats.maxHp}`);
                                 }
 
                                 const targets = this.getEffectTargets(skillData.targetType, character, currentTeamMembers, monster);
@@ -1062,6 +1068,8 @@ this.resetProcCounts(); // 重置技能Proc触发计数
 
         // --- 普通攻击阶段 ---
         // 在所有技能尝试完毕后，如果角色和目标存活，且本回合未执行过普攻，则执行一次普通攻击
+console.log(`[DEBUG] Before Normal Attack: Monster HP is ${monster.currentStats.hp}/${monster.currentStats.maxHp}`);
+        this.logBattle(`[调试] 普通攻击前: ${monster.name} HP: ${monster.currentStats.hp}/${monster.currentStats.maxHp}`);
         if (character.currentStats.hp > 0 && monster.currentStats.hp > 0 && !performedNormalAttack) {
             if (!this.isBattleOver(currentTeamMembers, monster)) {
                 this.logBattle(`${character.name} 在技能使用后，执行普通攻击。`);
@@ -1547,7 +1555,12 @@ executeNormalAttack(character, monster, battleStats, currentTeamMembers) {
                 case 'heal':
                     let healAmount = 0;
                     if (effectDef.healType === 'percentageMaxHp') {
+const hpBeforeProcHeal = currentTarget.currentStats.hp;
+                        console.log(`[DEBUG PROC HEAL] Attempting heal on ${currentTarget.name} (HP: ${hpBeforeProcHeal}/${currentTarget.currentStats.maxHp}). Source: ${source.name}, Proc: ${procDefinition ? procDefinition.name || procDefinition.triggerCondition : 'Unknown'}, Planned Heal: ${healAmount}`);
+                        this.logBattle(`[DEBUG PROC HEAL] Attempting heal on ${currentTarget.name}. Source: ${source.name}, Proc: ${procDefinition ? procDefinition.name || procDefinition.triggerCondition : 'Unknown'}`);
                         healAmount = Math.floor(currentTarget.currentStats.maxHp * effectDef.value);
+console.log(`[DEBUG PROC HEAL] Applied heal on ${currentTarget.name}. Actual Heal: ${actualHeal}, HP After: ${currentTarget.currentStats.hp}/${currentTarget.currentStats.maxHp}`);
+                        this.logBattle(`[DEBUG PROC HEAL] Applied heal on ${currentTarget.name}. Actual Heal: ${actualHeal}, HP After: ${currentTarget.currentStats.hp}`);
                     } else { // 默认固定值
                         healAmount = effectDef.value || 0;
                     }
@@ -2131,6 +2144,8 @@ reviveCharacter(character, hpPercentToRestore, teamData) { // teamData is e.g. G
                  this.handleProcTrigger(actualTarget, 'onDamagedByEnemy', { attacker, damageTaken: actualDamageDealt, isCritical, isProc: options.isProc, battleStats, originalTarget: originalTarget });
              }
          }
+this.logBattle(`[DEBUG applyDamageToTarget EXIT] Target: ${actualTarget.name}, HP before return: ${actualTarget.currentStats.hp}/${actualTarget.currentStats.maxHp}`);
+        console.log(`[DEBUG applyDamageToTarget EXIT] Target: ${actualTarget.name}, HP before return: ${actualTarget.currentStats.hp}/${actualTarget.currentStats.maxHp}`);
          // If original target was different and didn't take damage due to cover, maybe trigger 'onTargetedButCovered' proc? (Future enhancement)
  
          return { damage: actualDamageDealt, isCritical, missed, isProc: options.isProc, actualTarget: actualTarget, originalTarget: originalTarget };

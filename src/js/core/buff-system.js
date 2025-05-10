@@ -461,6 +461,7 @@ const BuffSystem = {
             }
             this.recalculateStatsWithBuffs(target); 
             Battle.logBattle(`${target.name} 获得了BUFF [${buff.name}] (值: ${buff.value}, 持续时间: ${buff.duration}, 层数: ${buff.currentStacks})。`);
+            console.log(`hp`,target.currentStats.hp)
             return true;
         }
     },
@@ -641,19 +642,40 @@ const BuffSystem = {
     recalculateStatsWithBuffs(target) {
         if (!target || !target.baseStats) return;
 
+        // 保存当前的HP和MaxHP，以防被意外覆盖
+        const preservedHp = target.currentStats ? target.currentStats.hp : undefined;
+        const preservedMaxHp = target.currentStats ? target.currentStats.maxHp : undefined;
+
         // 重置为基础属性 (或战斗开始时的属性)
         target.currentStats = JSON.parse(JSON.stringify(target.originalStats || target.baseStats));
         if (!target.buffs) target.buffs = [];
 
-        // 应用所有BUFF效果
+        // 恢复之前保存的HP和MaxHP
+        // 确保 maxHp 优先使用 preservedMaxHp，如果不存在则尝试从 baseStats 获取，最后才是 currentStats (可能已被重置)
+        target.currentStats.maxHp = preservedMaxHp !== undefined ? preservedMaxHp :
+                                   (target.originalStats ? target.originalStats.maxHp : undefined) ||
+                                   target.baseStats.maxHp ||
+                                   target.currentStats.maxHp || 0;
+        // 确保 hp 不超过恢复后的 maxHp，并且不低于0
+        target.currentStats.hp = preservedHp !== undefined ? Math.max(0, Math.min(preservedHp, target.currentStats.maxHp)) :
+                                 Math.max(0, target.currentStats.maxHp || 0);
+
+
+        // 应用所有BUFF效果来修改其他属性
+        // applyBuffEffect 应该主要修改攻防等属性，不应直接修改HP（持续伤害/治疗由其他机制处理）
         target.buffs.forEach(buff => {
-            if (buff.duration > 0 || buff.duration === -1) { // -1 for permanent
+            if (buff.duration > 0 || buff.duration === -1) {
                 this.applyBuffEffect(target, buff);
             }
         });
-        // 确保HP不超上限
+
+        // 再次确保HP不超上限，因为applyBuffEffect可能会影响maxHp（例如通过某种buff）
         if (target.currentStats.hp > target.currentStats.maxHp) {
             target.currentStats.hp = target.currentStats.maxHp;
+        }
+        // 确保HP不为负 (虽然伤害计算时已处理，但多一层保险)
+        if (target.currentStats.hp < 0) {
+             target.currentStats.hp = 0;
         }
     },
 

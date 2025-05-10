@@ -19,6 +19,8 @@ const JobSkills = {
      */
     useSkill(characterId, skillId, teamMembers, monster) {
         // console.log(`[DEBUG] JobSkills.useSkill: CALLED - characterId: ${characterId}, skillId: ${skillId}, teamMembers: ${teamMembers.map(m => m.id + '(' + m.name + ')').join(', ')}, monster: ${monster.id}(${monster.name})`);
+        console.log(`[DEBUG JS.useSkill Entry] Monster: ${monster.name}, RefID: ${monster._debugRefId || 'NO_REF_ID'}, HP: ${monster.currentStats.hp}/${monster.currentStats.maxHp}`);
+        // console.log(`[DEBUG JS.useSkill Entry] Monster Ref ID: ${monster._debugId}, HP: ${monster.currentStats.hp}`);
         const character = Character.getCharacter(characterId);
         if (!character) return { success: false, message: '角色不存在' };
 
@@ -170,69 +172,143 @@ const JobSkills = {
                 let targetHpStrings = new Set(); // Use Set to avoid duplicate HP logs for same target
 
                 if (result.effects) {
-                    const resEffects = result.effects; // This is the object like { type: 'damage', totalDamage: X, effects: [...] }
+                    const resEffects = result.effects;
+                    // Check if resEffects is an array (from multi_effect) or a single effect object
+                    if (Array.isArray(resEffects)) {
+                        // Handle array of effects (typically from applySkillEffects for multi_effect)
+                        let damageTotal = 0;
+                        let healTotal = 0;
+                        let buffApplied = false;
+                        let debuffApplied = false;
+                        let dispelApplied = false;
+                        const effectDescriptions = [];
 
-                    if (resEffects.type === 'damage' && resEffects.totalDamage !== undefined) {
-                        mainEffectDescription = `造成 ${resEffects.totalDamage} 点 ${template.attribute || '物理'} 伤害。`;
-                        if (resEffects.effects && Array.isArray(resEffects.effects)) {
-                            resEffects.effects.forEach(de => { // de is { target: name, actualDamage: X }
-                                const tObj = getTargetObject(de.target, character, monster, teamMembers);
-                                if (tObj && tObj.currentStats && typeof tObj.currentStats.hp !== 'undefined' && typeof tObj.currentStats.maxHp !== 'undefined') {
+                        resEffects.forEach(atomicEffectResult => {
+                            if (atomicEffectResult.type === 'damage' && atomicEffectResult.totalDamage !== undefined) {
+                                damageTotal += atomicEffectResult.totalDamage;
+                                if (atomicEffectResult.details && Array.isArray(atomicEffectResult.details)) {
+                                    atomicEffectResult.details.forEach(de => {
+                                        const tObj = getTargetObject(de.target, character, monster, teamMembers);
+                                        if (tObj && tObj.currentStats) {
+                                            targetHpStrings.add(`${tObj.name} 剩余HP: ${Math.floor(tObj.currentStats.hp)}/${Math.floor(tObj.currentStats.maxHp)}。`);
+                                        }
+                                    });
+                                }
+                            } else if (atomicEffectResult.type === 'heal' && atomicEffectResult.totalHealing !== undefined) {
+                                healTotal += atomicEffectResult.totalHealing;
+                                if (atomicEffectResult.effects && Array.isArray(atomicEffectResult.effects)) {
+                                     atomicEffectResult.effects.forEach(de => {
+                                        const tObj = getTargetObject(de.target, character, monster, teamMembers);
+                                        if (tObj && tObj.currentStats) {
+                                            targetHpStrings.add(`${tObj.name} 剩余HP: ${Math.floor(tObj.currentStats.hp)}/${Math.floor(tObj.currentStats.maxHp)}。`);
+                                        }
+                                    });
+                                }
+                            } else if (atomicEffectResult.type === 'buff' && atomicEffectResult.effects && Array.isArray(atomicEffectResult.effects) && atomicEffectResult.effects.length > 0) {
+                                buffApplied = true;
+                                const firstBuff = atomicEffectResult.effects[0];
+                                effectDescriptions.push(`施加了 [${firstBuff.name || firstBuff.type}] 效果${firstBuff.duration ? `(持续${firstBuff.duration}回合)` : ''}`);
+                                atomicEffectResult.effects.forEach(eff => {
+                                     const tObj = getTargetObject(eff.target, character, monster, teamMembers);
+                                     if (tObj && tObj.currentStats) {
+                                        targetHpStrings.add(`${tObj.name} 剩余HP: ${Math.floor(tObj.currentStats.hp)}/${Math.floor(tObj.currentStats.maxHp)}。`);
+                                     }
+                                });
+                            } else if (atomicEffectResult.type === 'debuff' && atomicEffectResult.effects && Array.isArray(atomicEffectResult.effects) && atomicEffectResult.effects.length > 0) {
+                                debuffApplied = true;
+                                const firstDebuff = atomicEffectResult.effects[0];
+                                effectDescriptions.push(`施加了 [${firstDebuff.name || firstDebuff.type}] 效果${firstDebuff.duration ? `(持续${firstDebuff.duration}回合)` : ''}`);
+                                atomicEffectResult.effects.forEach(eff => {
+                                     const tObj = getTargetObject(eff.target, character, monster, teamMembers);
+                                     if (tObj && tObj.currentStats) {
+                                        targetHpStrings.add(`${tObj.name} 剩余HP: ${Math.floor(tObj.currentStats.hp)}/${Math.floor(tObj.currentStats.maxHp)}。`);
+                                     }
+                                });
+                            } else if (atomicEffectResult.type === 'dispel' && atomicEffectResult.effects && Array.isArray(atomicEffectResult.effects) && atomicEffectResult.effects.length > 0) {
+                                dispelApplied = true;
+                                const dispelledDetail = atomicEffectResult.effects[0];
+                                const dispelledTargetName = dispelledDetail.target || targetStringDisplay;
+                                const dispelType = dispelledDetail.dispelPositive ? "增益" : "负面";
+                                const count = dispelledDetail.count || atomicEffectResult.totalDispelCount;
+                                if (count > 0) {
+                                    effectDescriptions.push(`驱散了 ${dispelledTargetName} 的 ${count} 个[${dispelType}]效果`);
+                                }
+                                const tObj = getTargetObject(dispelledTargetName, character, monster, teamMembers);
+                                if (tObj && tObj.currentStats) {
                                     targetHpStrings.add(`${tObj.name} 剩余HP: ${Math.floor(tObj.currentStats.hp)}/${Math.floor(tObj.currentStats.maxHp)}。`);
                                 }
-                            });
+                            }
+                        });
+
+                        if (damageTotal > 0) {
+                            effectDescriptions.unshift(`造成 ${damageTotal} 点 ${template.attribute || '物理'} 伤害`);
                         }
-                    } else if (resEffects.type === 'heal' && resEffects.totalHealing !== undefined) {
-                        mainEffectDescription = `为 ${targetStringDisplay} 恢复了 ${resEffects.totalHealing} 点 HP。`;
-                         if (resEffects.effects && Array.isArray(resEffects.effects)) {
-                            resEffects.effects.forEach(de => { // de is { target: name, healAmount: X }
-                                const tObj = getTargetObject(de.target, character, monster, teamMembers);
-                                if (tObj && tObj.currentStats && typeof tObj.currentStats.hp !== 'undefined' && typeof tObj.currentStats.maxHp !== 'undefined') {
-                                     targetHpStrings.add(`${tObj.name} 剩余HP: ${Math.floor(tObj.currentStats.hp)}/${Math.floor(tObj.currentStats.maxHp)}。`);
+                        if (healTotal > 0) {
+                             effectDescriptions.unshift(`恢复了 ${healTotal} 点 HP`);
+                        }
+                        mainEffectDescription = effectDescriptions.join('，') + (effectDescriptions.length > 0 ? '。' : '');
+
+                    } else { // Original logic for single effect object
+                        if (resEffects.type === 'damage' && resEffects.totalDamage !== undefined) {
+                            mainEffectDescription = `造成 ${resEffects.totalDamage} 点 ${template.attribute || '物理'} 伤害。`;
+                            if (resEffects.effects && Array.isArray(resEffects.effects)) {
+                                resEffects.effects.forEach(de => {
+                                    const tObj = getTargetObject(de.target, character, monster, teamMembers);
+                                    if (tObj && tObj.currentStats) {
+                                        targetHpStrings.add(`${tObj.name} 剩余HP: ${Math.floor(tObj.currentStats.hp)}/${Math.floor(tObj.currentStats.maxHp)}。`);
+                                    }
+                                });
+                            }
+                        } else if (resEffects.type === 'heal' && resEffects.totalHealing !== undefined) {
+                            mainEffectDescription = `为 ${targetStringDisplay} 恢复了 ${resEffects.totalHealing} 点 HP。`;
+                            if (resEffects.effects && Array.isArray(resEffects.effects)) {
+                                resEffects.effects.forEach(de => {
+                                    const tObj = getTargetObject(de.target, character, monster, teamMembers);
+                                    if (tObj && tObj.currentStats) {
+                                         targetHpStrings.add(`${tObj.name} 剩余HP: ${Math.floor(tObj.currentStats.hp)}/${Math.floor(tObj.currentStats.maxHp)}。`);
+                                    }
+                                });
+                            }
+                        } else if (resEffects.type === 'buff' || resEffects.type === 'debuff') {
+                            if (resEffects.effects && Array.isArray(resEffects.effects) && resEffects.effects.length > 0) {
+                                const firstActualEffect = resEffects.effects[0];
+                                const effectName = firstActualEffect.name || template.effects.find(te => te.type === firstActualEffect.type)?.name || firstActualEffect.type;
+                                const duration = firstActualEffect.duration;
+                                mainEffectDescription = `施加了 [${effectName}] 效果${duration ? `(持续${duration}回合)` : ''}。`;
+                                resEffects.effects.forEach(eff => {
+                                    const tObj = getTargetObject(eff.target, character, monster, teamMembers);
+                                    if (tObj && tObj.currentStats) {
+                                        targetHpStrings.add(`${tObj.name} 剩余HP: ${Math.floor(tObj.currentStats.hp)}/${Math.floor(tObj.currentStats.maxHp)}。`);
+                                    }
+                                });
+                            }
+                        } else if (resEffects.type === 'dispel') {
+                            if (resEffects.effects && Array.isArray(resEffects.effects) && resEffects.effects.length > 0) {
+                                const dispelledDetail = resEffects.effects[0];
+                                const dispelledTargetName = dispelledDetail.target || targetStringDisplay;
+                                const dispelType = dispelledDetail.dispelPositive ? "增益" : "负面";
+                                const count = dispelledDetail.count || resEffects.totalDispelCount;
+                                if (count > 0) {
+                                    mainEffectDescription = `驱散了 ${dispelledTargetName} 的 ${count} 个[${dispelType}]效果。`;
+                                } else {
+                                    mainEffectDescription = `尝试驱散 ${dispelledTargetName} 的[${dispelType}]效果，但未成功。`;
                                 }
-                            });
-                        }
-                    } else if (resEffects.type === 'buff' || resEffects.type === 'debuff') {
-                        if (resEffects.effects && Array.isArray(resEffects.effects) && resEffects.effects.length > 0) {
-                            // For buff/debuff, log the first one as representative for the main description
-                            const firstActualEffect = resEffects.effects[0]; // { target: name, type: 'attackUp', name: '攻击提升', duration: X }
-                            const effectName = firstActualEffect.name || template.effects.find(te => te.type === firstActualEffect.type)?.name || firstActualEffect.type;
-                            const duration = firstActualEffect.duration;
-                            mainEffectDescription = `施加了 [${effectName}] 效果${duration ? `(持续${duration}回合)` : ''}。`;
-                            
-                            resEffects.effects.forEach(eff => {
-                                const tObj = getTargetObject(eff.target, character, monster, teamMembers);
-                                if (tObj && tObj.currentStats && typeof tObj.currentStats.hp !== 'undefined' && typeof tObj.currentStats.maxHp !== 'undefined') {
+                                const tObj = getTargetObject(dispelledTargetName, character, monster, teamMembers);
+                                if (tObj && tObj.currentStats) {
                                     targetHpStrings.add(`${tObj.name} 剩余HP: ${Math.floor(tObj.currentStats.hp)}/${Math.floor(tObj.currentStats.maxHp)}。`);
                                 }
-                            });
-                        }
-                    } else if (resEffects.type === 'dispel') {
-                        if (resEffects.effects && Array.isArray(resEffects.effects) && resEffects.effects.length > 0) {
-                            const dispelledDetail = resEffects.effects[0]; // { target: name, count: X, dispelPositive: bool }
-                            const dispelledTargetName = dispelledDetail.target || targetStringDisplay;
-                            const dispelType = dispelledDetail.dispelPositive ? "增益" : "负面";
-                            const count = dispelledDetail.count || resEffects.totalDispelCount;
-                            if (count > 0) {
-                                mainEffectDescription = `驱散了 ${dispelledTargetName} 的 ${count} 个[${dispelType}]效果。`; // Removed space before [
                             } else {
-                                mainEffectDescription = `尝试驱散 ${dispelledTargetName} 的[${dispelType}]效果，但未成功。`;
+                                 mainEffectDescription = `对 ${targetStringDisplay} 进行了驱散（无具体效果信息）。`;
                             }
-                            const tObj = getTargetObject(dispelledTargetName, character, monster, teamMembers);
-                            if (tObj && tObj.currentStats && typeof tObj.currentStats.hp !== 'undefined' && typeof tObj.currentStats.maxHp !== 'undefined') {
-                                targetHpStrings.add(`${tObj.name} 剩余HP: ${Math.floor(tObj.currentStats.hp)}/${Math.floor(tObj.currentStats.maxHp)}。`);
+                        } else if (result.message && !mainEffectDescription) {
+                            let simpleMsg = result.message.replace(`${character.name} 使用了【${skillDisplayName}】，`, '').trim();
+                            simpleMsg = simpleMsg.replace(/^为 |^对 /, '').trim();
+                            if (simpleMsg.startsWith(targetStringDisplay)) {
+                                 simpleMsg = simpleMsg.substring(targetStringDisplay.length).trim().replace(/^了 |^的 /, '').trim();
                             }
-                        } else {
-                             mainEffectDescription = `对 ${targetStringDisplay} 进行了驱散（无具体效果信息）。`;
+                            mainEffectDescription = simpleMsg.charAt(0).toUpperCase() + simpleMsg.slice(1);
+                             if (!mainEffectDescription.endsWith('.') && !mainEffectDescription.endsWith('！')) mainEffectDescription += '。';
                         }
-                    } else if (result.message && !mainEffectDescription) {
-                        let simpleMsg = result.message.replace(`${character.name} 使用了【${skillDisplayName}】，`, '').trim(); // Use skillDisplayName
-                        simpleMsg = simpleMsg.replace(/^为 |^对 /, '').trim(); // Remove "为 " or "对 "
-                        if (simpleMsg.startsWith(targetStringDisplay)) {
-                             simpleMsg = simpleMsg.substring(targetStringDisplay.length).trim().replace(/^了 |^的 /, '').trim(); // Remove target name and "了 " or "的 "
-                        }
-                        mainEffectDescription = simpleMsg.charAt(0).toUpperCase() + simpleMsg.slice(1);
-                         if (!mainEffectDescription.endsWith('.') && !mainEffectDescription.endsWith('！')) mainEffectDescription += '。';
                     }
                 }
                 
@@ -256,6 +332,10 @@ const JobSkills = {
             message: result ? result.message : "技能执行失败或无返回信息。",
             effects: result ? result.effects : {}
         };
+console.log(`[DEBUG JS.useSkill EXIT] Monster: ${monster.name}, RefID: ${monster._debugRefId || 'NO_REF_ID'}, HP: ${monster.currentStats.hp}/${monster.currentStats.maxHp}`);
+        if (typeof Battle !== 'undefined' && Battle.logBattle) {
+            Battle.logBattle(`[调试][JS.useSkill EXIT] ${monster.name} HP: ${monster.currentStats.hp}/${monster.currentStats.maxHp}`);
+        }
         // console.log(`[DEBUG] JobSkills.useSkill: RETURNING - success: ${finalReturnObject.success}, message: ${finalReturnObject.message}, effects:`, JSON.parse(JSON.stringify(finalReturnObject.effects)));
         return finalReturnObject;
     },
@@ -724,6 +804,7 @@ const JobSkills = {
             message += '但没有有效目标。';
         }
 
+        console.log(targets[0].currentStats.hp);
 
         return {
             success: true, // Assuming debuff application is always successful if targets exist
@@ -1193,7 +1274,11 @@ const JobSkills = {
                             ignoreDefense: effect.ignoreDefense || false,
                             hits: 1, // applyDamageToTarget is called per hit in the loop, so this is 1 for this call
                             skipCritical: template.skipCritical !== undefined ? template.skipCritical : (effect.skipCritical !== undefined ? effect.skipCritical : true)
+                        // console.log(`[DEBUG JS.applyDamageEffects Pre-Call B.aDTT] Target Ref ID: ${target._debugId}, HP: ${target.currentStats.hp}`);
                         };
+console.log(`[DEBUG JS.applyDamageEffects Pre-Call] Target: ${target.name}, RefID: ${target._debugRefId || 'NO_REF_ID'}, HP: ${target.currentStats.hp}/${target.currentStats.maxHp}`);
+console.log("[DEBUG JS.applyDamageEffects Pre-Call B.aDTT] Target Name:", target.name, "HP:", target.currentStats.hp, "MaxHP:", target.currentStats.maxHp);
+                        // console.log(`[DEBUG JS.applyDamageEffects Pre-Call B.aDTT] Target Ref ID: ${target._debugId}, HP: ${target.currentStats.hp}`);
                         // 直接调用 Battle.applyDamageToTarget ，处理HP结算
                         const actualDamageResult = Battle.applyDamageToTarget(character, target, rawDamage, damageOptions);
                         
@@ -1794,6 +1879,7 @@ const JobSkills = {
      */
     getTargets(character, targetType, teamMembers, monster) {
         console.log(`获取目标，目标类型: ${targetType}`);
+        console.log(`获取目标，目标:`, monster.currentStats.hp);
         let targets = [];
 
         switch (targetType) {

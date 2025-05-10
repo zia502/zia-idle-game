@@ -228,3 +228,13 @@ This file tracks the project's current status, including recent changes, current
     *   将原有的普通攻击逻辑封装到了新的 `executeNormalAttack` 方法中。
 *   [2025-05-10 16:22:40] - 创建了新文档 [`docs/skill_effect_types_reference.md`](docs/skill_effect_types_reference.md) 并写入了技能子效果类型说明。
 *   [2025-05-10 17:04:57] - 完成了对技能JSON文件 ([`src/data/job-skills-templates.json`](src/data/job-skills-templates.json), [`src/data/sr_skills.json`](src/data/sr_skills.json), [`src/data/ssr_skill.json`](src/data/ssr_skill.json)) 和技能效果处理逻辑 ([`src/js/core/job-skills.js`](src/js/core/job-skills.js)) 的统一化修改。
+* [2025-05-10 17:21:27] - Debug Status Update: Investigating battle log inconsistency - target HP rollback after skill attack.
+* [2025-05-10 17:26:52] - Debug Status Update: Inserted diagnostic logs into `battle.js` to trace HP rollback. Awaiting new logs from user.
+* [2025-05-10 17:28:14] - Debug Status Update: New logs confirm HP rollback occurs AFTER skill damage application but BEFORE normal attack logic within the same character's turn. Monster HP is reset to maxHP. Suspicion falls on `JobSkills.useSkill` or its sub-functions.
+* [2025-05-10 18:24:25] - Debug Status Update: Inserted second set of diagnostic logs into `Battle.applyDamageToTarget()` exit point in `battle.js` to further trace HP state. Awaiting new logs.
+* [2025-05-10 18:29:11] - Debug Status Update: Corrected syntax error and successfully inserted all three diagnostic logs for object reference tracing in `battle.js` and `job-skills.js`. Awaiting new logs.
+* [2025-05-10 18:34:44] - Debug Status Update: Inserted/Modified three diagnostic logs with `_debugRefId` in `battle.js` and `job-skills.js` to trace monster object reference. Awaiting new logs.
+* [2025-05-10 18:42:03] - Debug Status Update: Inserted detailed diagnostic logs into `Battle.executeTriggeredEffect` (heal case) to trace potential unwanted proc healing. Awaiting new logs.
+* [2025-05-10 18:48:29] - Debug Status Update: Inserted immediate HP check log in `Battle.processCharacterAction` after `JobSkills.useSkill` returns. Awaiting final diagnostic logs for HP rollback.
+* [2025-05-10 18:53:56] - Debug Status Update: Inserted final diagnostic log at the end of `JobSkills.useSkill` to pinpoint HP rollback. Awaiting new logs.
+* [2025-05-10 19:02:40] - Debug Status Update: Corrected insertion point for `JobSkills.useSkill` exit logs. All diagnostic logs are now believed to be correctly in place. Awaiting new logs from user for a scenario that reproduces the HP rollback.

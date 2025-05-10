@@ -2008,6 +2008,9 @@ reviveCharacter(character, hpPercentToRestore, teamData) { // teamData is e.g. G
                  }
              }
 
+             // 伤害在0.95~1.05浮动
+             finalDamage= Math.floor(finalDamage * (0.95 + Math.random() * 0.1));
+
              if (finalDamage > currentDamageCap) {
                  this.logBattle(`${attacker.name} 的 ${capAppliedBy} 触发，伤害从 ${Math.floor(finalDamage)} 限制到 ${Math.floor(currentDamageCap)}`);
                  finalDamage = Math.floor(currentDamageCap);

@@ -1956,21 +1956,9 @@ reviveCharacter(character, hpPercentToRestore, teamData) { // teamData is e.g. G
              // TODO: Implement other damage modifiers (buffs/debuffs on attacker/actualTarget)
 
              // --- New Defense Calculation ---
-             const targetEffectiveDefense = Math.max(0, (actualTarget.currentStats.def || 0) - (attacker.currentStats.ignoreDefense || 0));
-             // console.log(`Battle.js: Target Effective Defense: ${targetEffectiveDefense} (Target Def: ${actualTarget.currentStats.def}, Attacker Ignore Def: ${attacker.currentStats.ignoreDefense})`);
-             const defensePercent = targetEffectiveDefense / 100.0;
-             if (1 + defensePercent > 0) { // Avoid division by zero or negative if defensePercent is -1 or less
-               finalDamage = finalDamage / (1 + defensePercent);
-               // console.log(`Battle.js: Damage after new defense (${defensePercent*100}%): ${finalDamage}`);
-             } else {
-               // console.log(`Battle.js: Defense percent resulted in non-positive divisor (1 + ${defensePercent}). Skipping defense application.`);
-             }
-             // --- End New Defense Calculation ---
-
-             finalDamage = Math.max(1, Math.floor(finalDamage)); // Minimum 1 damage unless missed
 
              // --- Apply Attacker's Damage Cap Up (General and Skill-Specific) ---
-             let currentDamageCap = Battle.BASE_DAMAGE_CAP || 999999; // Default base cap
+             let currentDamageCap = Battle.BASE_DAMAGE_CAP || 199999; // Default base cap
              let capAppliedBy = "基础"; // For logging
 
              if (attacker && attacker.buffs && typeof BuffSystem !== 'undefined') {
@@ -1985,7 +1973,7 @@ reviveCharacter(character, hpPercentToRestore, teamData) { // teamData is e.g. G
                          });
                      }
                      if (totalSkillDamageCapUpBonus > 0) {
-                         const baseForSkillCap = Battle.BASE_SKILL_DAMAGE_CAP || Battle.BASE_DAMAGE_CAP || 999999;
+                         const baseForSkillCap = Battle.BASE_SKILL_DAMAGE_CAP || Battle.BASE_DAMAGE_CAP || 899999;
                          currentDamageCap = baseForSkillCap * (1 + totalSkillDamageCapUpBonus);
                          capAppliedBy = `技能伤害上限提升 (${totalSkillDamageCapUpBonus*100}%)`;
                      }
@@ -2027,6 +2015,11 @@ reviveCharacter(character, hpPercentToRestore, teamData) { // teamData is e.g. G
              finalDamage = Math.floor(finalDamage);
 
              // --- Apply actualTarget's Defensive Measures ---
+             const targetEffectiveDefense = Math.max(0, (actualTarget.currentStats.defense || 0) - (attacker.currentStats.ignoreDefense || 0));
+             finalDamage = finalDamage / (1 + targetEffectiveDefense/100);
+             // --- End New Defense Calculation ---
+
+             finalDamage = Math.max(1, Math.floor(finalDamage)); // Minimum 1 damage unless missed
 
              // 1. Invincibility
              if (actualTarget.buffs && actualTarget.buffs.some(b => b.type === 'invincible' && b.duration > 0)) {
@@ -2070,7 +2063,10 @@ reviveCharacter(character, hpPercentToRestore, teamData) { // teamData is e.g. G
                      if (buff.type === 'allDamageTakenReduction' && buff.duration > 0) {
                          damageReduction += buff.value; // Assuming buff.value is a percentage like 0.2 for 20%
                      }
-                     // TODO: Add elementalResistance check based on damage element for actualTarget
+                     //todo 根据elementalResistance 的 元素伤害类型来判断是否减伤
+                     else if (buff.type === 'elementalResistance' && buff.duration > 0) {
+                        damageReduction += buff.value; // Assuming buff.value is a percentage like 0.2 for 20%
+                    }
                  });
              }
              finalDamage *= Math.max(0, 1 - damageReduction);

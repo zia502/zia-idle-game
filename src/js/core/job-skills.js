@@ -767,296 +767,296 @@ const JobSkills = {
         };
     },
 
-    /**
-     * 应用伤害到目标
-     * @param {object} source - 伤害来源
-     * @param {object} target - 目标对象
-     * @param {number} rawDamage - 原始伤害值
-     * @param {object} options - 额外选项
-     * @returns {object} 包含伤害值和相关信息的对象
-     */
-    applyDamageToTarget(source, target, rawDamage, options = {}) {
-        if (!target) return { damage: 0, isCritical: false, attributeBonus: 0 };
+    // /**
+    //  * 应用伤害到目标
+    //  * @param {object} source - 伤害来源
+    //  * @param {object} target - 目标对象
+    //  * @param {number} rawDamage - 原始伤害值
+    //  * @param {object} options - 额外选项
+    //  * @returns {object} 包含伤害值和相关信息的对象
+    //  */
+    // applyDamageToTarget(source, target, rawDamage, options = {}) {
+    //     if (!target) return { damage: 0, isCritical: false, attributeBonus: 0 };
 
-        // 添加详细日志
-        console.log(`===== 伤害计算详情 =====`);
-        console.log(`攻击者: ${source.name}, 目标: ${target.name}`);
-        console.log(`原始伤害(rawDamage): ${rawDamage}`);
+    //     // 添加详细日志
+    //     console.log(`===== 伤害计算详情 =====`);
+    //     console.log(`攻击者: ${source.name}, 目标: ${target.name}`);
+    //     console.log(`原始伤害(rawDamage): ${rawDamage}`);
 
-        if (typeof window !== 'undefined' && window.log) {
-            window.log(`===== 伤害计算详情 =====`);
-            window.log(`攻击者: ${source.name || '未知'}, 目标: ${target.name || '未知'}`);
-            window.log(`攻击者攻击力: ${source.currentStats?.attack || '未知'}`);
-            window.log(`目标防御力: ${target.currentStats?.defense || '未知'} (${(target.currentStats?.defense * 100).toFixed(1)}%)`);
-            window.log(`原始伤害(rawDamage): ${rawDamage}`);
-        }
+    //     if (typeof window !== 'undefined' && window.log) {
+    //         window.log(`===== 伤害计算详情 =====`);
+    //         window.log(`攻击者: ${source.name || '未知'}, 目标: ${target.name || '未知'}`);
+    //         window.log(`攻击者攻击力: ${source.currentStats?.attack || '未知'}`);
+    //         window.log(`目标防御力: ${target.currentStats?.defense || '未知'} (${(target.currentStats?.defense * 100).toFixed(1)}%)`);
+    //         window.log(`原始伤害(rawDamage): ${rawDamage}`);
+    //     }
 
-        // 检查攻击者是否有命中率降低debuff
-        if (source.buffs && !options.ignoreHitRate) {
-            const missRateBuffs = source.buffs.filter(buff => buff.type === 'missRate');
-            let totalMissRate = 0;
+    //     // 检查攻击者是否有命中率降低debuff
+    //     if (source.buffs && !options.ignoreHitRate) {
+    //         const missRateBuffs = source.buffs.filter(buff => buff.type === 'missRate');
+    //         let totalMissRate = 0;
 
-            for (const buff of missRateBuffs) {
-                totalMissRate += buff.value;
-                console.log(`攻击者有命中率降低debuff: ${buff.name}, 降低值: ${(buff.value * 100).toFixed(1)}%`);
-                if (typeof window !== 'undefined' && window.log) {
-                    window.log(`攻击者有命中率降低debuff: ${buff.name}, 降低值: ${(buff.value * 100).toFixed(1)}%`);
-                }
-            }
+    //         for (const buff of missRateBuffs) {
+    //             totalMissRate += buff.value;
+    //             console.log(`攻击者有命中率降低debuff: ${buff.name}, 降低值: ${(buff.value * 100).toFixed(1)}%`);
+    //             if (typeof window !== 'undefined' && window.log) {
+    //                 window.log(`攻击者有命中率降低debuff: ${buff.name}, 降低值: ${(buff.value * 100).toFixed(1)}%`);
+    //             }
+    //         }
 
-            // 如果有命中率降低效果，进行命中判定
-            if (totalMissRate > 0) {
-                const hitRoll = Math.random();
-                console.log(`命中判定: 随机值 ${hitRoll.toFixed(4)} vs 未命中率 ${totalMissRate.toFixed(4)}`);
-                if (typeof window !== 'undefined' && window.log) {
-                    window.log(`命中判定: 随机值 ${hitRoll.toFixed(4)} vs 未命中率 ${totalMissRate.toFixed(4)}`);
-                }
+    //         // 如果有命中率降低效果，进行命中判定
+    //         if (totalMissRate > 0) {
+    //             const hitRoll = Math.random();
+    //             console.log(`命中判定: 随机值 ${hitRoll.toFixed(4)} vs 未命中率 ${totalMissRate.toFixed(4)}`);
+    //             if (typeof window !== 'undefined' && window.log) {
+    //                 window.log(`命中判定: 随机值 ${hitRoll.toFixed(4)} vs 未命中率 ${totalMissRate.toFixed(4)}`);
+    //             }
 
-                if (hitRoll < totalMissRate) {
-                    // 攻击未命中
-                    console.log(`攻击未命中！`);
-                    if (typeof window !== 'undefined' && window.log) {
-                        window.log(`攻击未命中！`);
-                        window.log(`===== 伤害计算结束 =====`);
-                    }
-                    return { damage: 0, isCritical: false, attributeBonus: 0, missed: true };
-                } else {
-                    console.log(`攻击命中！`);
-                    if (typeof window !== 'undefined' && window.log) {
-                        window.log(`攻击命中！`);
-                    }
-                }
-            }
-        }
+    //             if (hitRoll < totalMissRate) {
+    //                 // 攻击未命中
+    //                 console.log(`攻击未命中！`);
+    //                 if (typeof window !== 'undefined' && window.log) {
+    //                     window.log(`攻击未命中！`);
+    //                     window.log(`===== 伤害计算结束 =====`);
+    //                 }
+    //                 return { damage: 0, isCritical: false, attributeBonus: 0, missed: true };
+    //             } else {
+    //                 console.log(`攻击命中！`);
+    //                 if (typeof window !== 'undefined' && window.log) {
+    //                     window.log(`攻击命中！`);
+    //                 }
+    //             }
+    //         }
+    //     }
 
-        // 原始伤害是"造成伤害"
-        let finalDamage = rawDamage;
-        let isCritical = false;
-        let attributeBonus = 0;
-        const sourceOriginalAttribute = source.attribute; // 保存原始攻击属性
+    //     // 原始伤害是"造成伤害"
+    //     let finalDamage = rawDamage;
+    //     let isCritical = false;
+    //     let attributeBonus = 0;
+    //     const sourceOriginalAttribute = source.attribute; // 保存原始攻击属性
 
-        // 0. 如果攻击者有元素转换，先转换攻击属性 (这通常不常见，常见的是受到的伤害被转换)
-        // let effectiveAttackAttribute = sourceOriginalAttribute;
-        // const attackConversionBuff = source.buffs?.find(b => b.type === 'elementConversionAttack' && !b.isSubBuff);
-        // if (attackConversionBuff && attackConversionBuff.convertToElement) {
-        //     effectiveAttackAttribute = attackConversionBuff.convertToElement;
-        //     this.logBattle(`${source.name}的攻击属性临时转为 ${effectiveAttackAttribute}`);
-        // }
+    //     // 0. 如果攻击者有元素转换，先转换攻击属性 (这通常不常见，常见的是受到的伤害被转换)
+    //     // let effectiveAttackAttribute = sourceOriginalAttribute;
+    //     // const attackConversionBuff = source.buffs?.find(b => b.type === 'elementConversionAttack' && !b.isSubBuff);
+    //     // if (attackConversionBuff && attackConversionBuff.convertToElement) {
+    //     //     effectiveAttackAttribute = attackConversionBuff.convertToElement;
+    //     //     this.logBattle(`${source.name}的攻击属性临时转为 ${effectiveAttackAttribute}`);
+    //     // }
 
-        // 1. 应用 EX 攻击提升 (独立乘区)
-        let exAttackMultiplier = 1.0;
-        if (source.buffs) {
-            const exAttackBuffs = source.buffs.filter(b => b.type === 'exAttackUp' && !b.isSubBuff);
-            exAttackBuffs.forEach(buff => {
-                exAttackMultiplier *= (1 + buff.value); // buff.value是百分比, e.g., 0.1 for 10%
-            });
-        }
-        if (exAttackMultiplier > 1.0) {
-            finalDamage *= exAttackMultiplier;
-            Battle.logBattle(`${source.name} 的EX攻击提升 ${((exAttackMultiplier - 1) * 100).toFixed(0)}%, 伤害变为: ${finalDamage.toFixed(0)}`);
-        }
+    //     // 1. 应用 EX 攻击提升 (独立乘区)
+    //     let exAttackMultiplier = 1.0;
+    //     if (source.buffs) {
+    //         const exAttackBuffs = source.buffs.filter(b => b.type === 'exAttackUp' && !b.isSubBuff);
+    //         exAttackBuffs.forEach(buff => {
+    //             exAttackMultiplier *= (1 + buff.value); // buff.value是百分比, e.g., 0.1 for 10%
+    //         });
+    //     }
+    //     if (exAttackMultiplier > 1.0) {
+    //         finalDamage *= exAttackMultiplier;
+    //         Battle.logBattle(`${source.name} 的EX攻击提升 ${((exAttackMultiplier - 1) * 100).toFixed(0)}%, 伤害变为: ${finalDamage.toFixed(0)}`);
+    //     }
         
-        // 2. 应用 背水/浑身 (staminaUp) 效果
-        let staminaMultiplier = 1.0;
-        if (source.buffs) {
-            const staminaBuffs = source.buffs.filter(b => b.type === 'staminaUp' && !b.isSubBuff);
-            staminaBuffs.forEach(buff => {
-                const hpPercent = source.currentStats.hp / source.currentStats.maxHp;
-                // 假设buff.details包含 { type: 'enmity'/'stamina', minBonus: 0.1, maxBonus: 0.9, lowHpThreshold:0.25, highHpThreshold:0.75 }
-                // 或者 buff.value 是一个更简单的结构或直接是乘数（如果效果不依赖HP）
-                if (buff.details) {
-                    const { staminaType, maxBonus = 0, minBonus = 0, lowHpThreshold = 0.25, highHpThreshold = 0.75 } = buff.details;
-                    if (staminaType === 'enmity') { // 背水：HP越低，加成越高
-                        if (hpPercent <= lowHpThreshold) staminaMultiplier *= (1 + maxBonus);
-                        else if (hpPercent < 1) staminaMultiplier *= (1 + minBonus + (maxBonus - minBonus) * (1 - (hpPercent - lowHpThreshold) / (1 - lowHpThreshold)) );
-                        else staminaMultiplier *= (1 + minBonus); // 满血时最小加成
-                    } else if (staminaType === 'stamina') { // 浑身：HP越高，加成越高
-                        if (hpPercent >= highHpThreshold) staminaMultiplier *= (1 + maxBonus);
-                        else if (hpPercent > 0) staminaMultiplier *= (1 + minBonus + (maxBonus - minBonus) * (hpPercent / highHpThreshold) );
-                        else staminaMultiplier *= (1 + minBonus); // 空血时最小加成
-                    }
-                } else if (typeof buff.value === 'number') { // 兼容简单乘数
-                    staminaMultiplier *= (1 + buff.value);
-                }
-            });
-        }
-        if (staminaMultiplier > 1.001) { // 避免浮点数误差显示1.0的情况
-            finalDamage *= staminaMultiplier;
-            Battle.logBattle(`${source.name} 的背水/浑身效果 ${((staminaMultiplier - 1) * 100).toFixed(0)}%, 伤害变为: ${finalDamage.toFixed(0)}`);
-        }
+    //     // 2. 应用 背水/浑身 (staminaUp) 效果
+    //     let staminaMultiplier = 1.0;
+    //     if (source.buffs) {
+    //         const staminaBuffs = source.buffs.filter(b => b.type === 'staminaUp' && !b.isSubBuff);
+    //         staminaBuffs.forEach(buff => {
+    //             const hpPercent = source.currentStats.hp / source.currentStats.maxHp;
+    //             // 假设buff.details包含 { type: 'enmity'/'stamina', minBonus: 0.1, maxBonus: 0.9, lowHpThreshold:0.25, highHpThreshold:0.75 }
+    //             // 或者 buff.value 是一个更简单的结构或直接是乘数（如果效果不依赖HP）
+    //             if (buff.details) {
+    //                 const { staminaType, maxBonus = 0, minBonus = 0, lowHpThreshold = 0.25, highHpThreshold = 0.75 } = buff.details;
+    //                 if (staminaType === 'enmity') { // 背水：HP越低，加成越高
+    //                     if (hpPercent <= lowHpThreshold) staminaMultiplier *= (1 + maxBonus);
+    //                     else if (hpPercent < 1) staminaMultiplier *= (1 + minBonus + (maxBonus - minBonus) * (1 - (hpPercent - lowHpThreshold) / (1 - lowHpThreshold)) );
+    //                     else staminaMultiplier *= (1 + minBonus); // 满血时最小加成
+    //                 } else if (staminaType === 'stamina') { // 浑身：HP越高，加成越高
+    //                     if (hpPercent >= highHpThreshold) staminaMultiplier *= (1 + maxBonus);
+    //                     else if (hpPercent > 0) staminaMultiplier *= (1 + minBonus + (maxBonus - minBonus) * (hpPercent / highHpThreshold) );
+    //                     else staminaMultiplier *= (1 + minBonus); // 空血时最小加成
+    //                 }
+    //             } else if (typeof buff.value === 'number') { // 兼容简单乘数
+    //                 staminaMultiplier *= (1 + buff.value);
+    //             }
+    //         });
+    //     }
+    //     if (staminaMultiplier > 1.001) { // 避免浮点数误差显示1.0的情况
+    //         finalDamage *= staminaMultiplier;
+    //         Battle.logBattle(`${source.name} 的背水/浑身效果 ${((staminaMultiplier - 1) * 100).toFixed(0)}%, 伤害变为: ${finalDamage.toFixed(0)}`);
+    //     }
 
-        // 记录是否跳过暴击计算
-        if (options.skipCritical) {
-            // Battle.logBattle(`跳过暴击计算（技能伤害）`);
-        } else {
-            const critRate = source.currentStats?.critRate || 0.05;
-            const critDamageMultiplier = source.currentStats?.critDamage || 1.5;
-            if (Math.random() < critRate) {
-                isCritical = true;
-                finalDamage *= critDamageMultiplier;
-                Battle.logBattle(`${source.name} 触发暴击！伤害x${critDamageMultiplier.toFixed(2)}`);
-            }
-        }
+    //     // 记录是否跳过暴击计算
+    //     if (options.skipCritical) {
+    //         // Battle.logBattle(`跳过暴击计算（技能伤害）`);
+    //     } else {
+    //         const critRate = source.currentStats?.critRate || 0.05;
+    //         const critDamageMultiplier = source.currentStats?.critDamage || 1.5;
+    //         if (Math.random() < critRate) {
+    //             isCritical = true;
+    //             finalDamage *= critDamageMultiplier;
+    //             Battle.logBattle(`${source.name} 触发暴击！伤害x${critDamageMultiplier.toFixed(2)}`);
+    //         }
+    //     }
 
-        if (!options.randomApplied) {
-            const randomFactor = 0.95 + (Math.random() * 0.1);
-            finalDamage *= randomFactor;
-        }
+    //     if (!options.randomApplied) {
+    //         const randomFactor = 0.95 + (Math.random() * 0.1);
+    //         finalDamage *= randomFactor;
+    //     }
 
-        // 检查目标的debuff效果 (防御下降)
-        let targetEffectiveDefense = target.currentStats.defense || 0; // 这是防御值，不是减伤比例
-        if (target.buffs) {
-            const defenseDownBuffs = target.buffs.filter(buff => buff.type === 'defenseDown' && !buff.isSubBuff);
-            let totalDefenseReductionPercent = 0;
-            defenseDownBuffs.forEach(buff => {
-                totalDefenseReductionPercent += buff.value; // e.g., 0.2 for 20% defense down
-            });
-            totalDefenseReductionPercent = Math.min(totalDefenseReductionPercent, 0.5); // 防御下降上限50%
-            if (totalDefenseReductionPercent > 0) {
-                 Battle.logBattle(`${target.name} 防御力降低了 ${(totalDefenseReductionPercent * 100).toFixed(0)}%`);
-                targetEffectiveDefense *= (1 - totalDefenseReductionPercent);
-            }
-        }
+    //     // 检查目标的debuff效果 (防御下降)
+    //     let targetEffectiveDefense = target.currentStats.defense || 0; // 这是防御值，不是减伤比例
+    //     if (target.buffs) {
+    //         const defenseDownBuffs = target.buffs.filter(buff => buff.type === 'defenseDown' && !buff.isSubBuff);
+    //         let totalDefenseReductionPercent = 0;
+    //         defenseDownBuffs.forEach(buff => {
+    //             totalDefenseReductionPercent += buff.value; // e.g., 0.2 for 20% defense down
+    //         });
+    //         totalDefenseReductionPercent = Math.min(totalDefenseReductionPercent, 0.5); // 防御下降上限50%
+    //         if (totalDefenseReductionPercent > 0) {
+    //              Battle.logBattle(`${target.name} 防御力降低了 ${(totalDefenseReductionPercent * 100).toFixed(0)}%`);
+    //             targetEffectiveDefense *= (1 - totalDefenseReductionPercent);
+    //         }
+    //     }
         
-        // 元素伤害转换 (在属性克制计算前)
-        let actualDamageElement = sourceOriginalAttribute; // 伤害计算用的实际元素
-        let finalDamageDisplayElement = sourceOriginalAttribute; // 最终显示给用户的伤害元素
-        const conversionBuff = target.buffs?.find(b => b.type === 'elementConversion' && !b.isSubBuff);
-        if (conversionBuff && conversionBuff.convertToElement && options.originalDamageType) {
-            // options.originalDamageType 应该是攻击方原始的攻击属性
-            // 转换的是“受到伤害的属性”
-            // 这意味着，如果受到火属性攻击，但有转水buff，那么计算克制时，目标视为受到水属性攻击
-            // 但攻击方仍然是火属性攻击。
-            // 这里的逻辑需要调整：转换的是目标“受到”的伤害属性，而不是攻击方的攻击属性。
-            // 因此，属性克制判断时，source.attribute 仍是其原始属性，
-            // target "被视为" 受到 conversionBuff.convertToElement 属性的攻击。
-            // 为了简化，我们先假设转换会改变最终伤害的标签，实际克制计算仍用原始。
-            // 正确的实现是：属性克制判断时，用 conversionBuff.convertToElement 作为 target 的“临时被攻击属性”
-            finalDamageDisplayElement = conversionBuff.convertToElement;
-            Battle.logBattle(`${target.name} 受到的 ${options.originalDamageType || sourceOriginalAttribute} 伤害将被视为 ${finalDamageDisplayElement} 属性伤害。`);
-        }
+    //     // 元素伤害转换 (在属性克制计算前)
+    //     let actualDamageElement = sourceOriginalAttribute; // 伤害计算用的实际元素
+    //     let finalDamageDisplayElement = sourceOriginalAttribute; // 最终显示给用户的伤害元素
+    //     const conversionBuff = target.buffs?.find(b => b.type === 'elementConversion' && !b.isSubBuff);
+    //     if (conversionBuff && conversionBuff.convertToElement && options.originalDamageType) {
+    //         // options.originalDamageType 应该是攻击方原始的攻击属性
+    //         // 转换的是“受到伤害的属性”
+    //         // 这意味着，如果受到火属性攻击，但有转水buff，那么计算克制时，目标视为受到水属性攻击
+    //         // 但攻击方仍然是火属性攻击。
+    //         // 这里的逻辑需要调整：转换的是目标“受到”的伤害属性，而不是攻击方的攻击属性。
+    //         // 因此，属性克制判断时，source.attribute 仍是其原始属性，
+    //         // target "被视为" 受到 conversionBuff.convertToElement 属性的攻击。
+    //         // 为了简化，我们先假设转换会改变最终伤害的标签，实际克制计算仍用原始。
+    //         // 正确的实现是：属性克制判断时，用 conversionBuff.convertToElement 作为 target 的“临时被攻击属性”
+    //         finalDamageDisplayElement = conversionBuff.convertToElement;
+    //         Battle.logBattle(`${target.name} 受到的 ${options.originalDamageType || sourceOriginalAttribute} 伤害将被视为 ${finalDamageDisplayElement} 属性伤害。`);
+    //     }
 
 
-        // 应用属性克制
-        if (source.attribute && target.attribute) {
-            // 获取属性关系
-            const attributes = Character.attributes || {
-                fire: { strengths: ['wind'] },
-                water: { strengths: ['fire'] },
-                earth: { strengths: ['water'] },
-                wind: { strengths: ['earth'] },
-                light: { strengths: ['dark'] },
-                dark: { strengths: ['light'] }
-            };
+    //     // 应用属性克制
+    //     if (source.attribute && target.attribute) {
+    //         // 获取属性关系
+    //         const attributes = Character.attributes || {
+    //             fire: { strengths: ['wind'] },
+    //             water: { strengths: ['fire'] },
+    //             earth: { strengths: ['water'] },
+    //             wind: { strengths: ['earth'] },
+    //             light: { strengths: ['dark'] },
+    //             dark: { strengths: ['light'] }
+    //         };
 
-            if (attributes[source.attribute] && attributes[source.attribute].strengths &&
-                attributes[source.attribute].strengths.includes(target.attribute)) {
-                attributeBonus = 0.5; // 有利属性攻击: 造成约1.5倍的伤害
-                console.log(`属性克制: ${source.attribute} 对 ${target.attribute} 有优势 (+50%)`);
-                if (typeof window !== 'undefined' && window.log) {
-                    window.log(`属性克制: ${source.attribute} 对 ${target.attribute} 有优势 (+50%)`);
-                }
-            } else if (attributes[target.attribute] && attributes[target.attribute].strengths &&
-                      attributes[target.attribute].strengths.includes(source.attribute)) {
-                attributeBonus = -0.25; // 不利属性攻击: 造成约0.75倍（即减少25%）的伤害
-                console.log(`属性克制: ${source.attribute} 对 ${target.attribute} 有劣势 (-25%)`);
-                if (typeof window !== 'undefined' && window.log) {
-                    window.log(`属性克制: ${source.attribute} 对 ${target.attribute} 有劣势 (-25%)`);
-                }
-            } else {
-                console.log(`属性克制: 无属性克制关系`);
-                if (typeof window !== 'undefined' && window.log) {
-                    window.log(`属性克制: 无属性克制关系`);
-                }
-            }
+    //         if (attributes[source.attribute] && attributes[source.attribute].strengths &&
+    //             attributes[source.attribute].strengths.includes(target.attribute)) {
+    //             attributeBonus = 0.5; // 有利属性攻击: 造成约1.5倍的伤害
+    //             console.log(`属性克制: ${source.attribute} 对 ${target.attribute} 有优势 (+50%)`);
+    //             if (typeof window !== 'undefined' && window.log) {
+    //                 window.log(`属性克制: ${source.attribute} 对 ${target.attribute} 有优势 (+50%)`);
+    //             }
+    //         } else if (attributes[target.attribute] && attributes[target.attribute].strengths &&
+    //                   attributes[target.attribute].strengths.includes(source.attribute)) {
+    //             attributeBonus = -0.25; // 不利属性攻击: 造成约0.75倍（即减少25%）的伤害
+    //             console.log(`属性克制: ${source.attribute} 对 ${target.attribute} 有劣势 (-25%)`);
+    //             if (typeof window !== 'undefined' && window.log) {
+    //                 window.log(`属性克制: ${source.attribute} 对 ${target.attribute} 有劣势 (-25%)`);
+    //             }
+    //         } else {
+    //             console.log(`属性克制: 无属性克制关系`);
+    //             if (typeof window !== 'undefined' && window.log) {
+    //                 window.log(`属性克制: 无属性克制关系`);
+    //             }
+    //         }
 
-            const oldDamageWithAttrs = finalDamage;
-            // 属性克制判断：攻击方属性 vs (目标被转换后的受击属性 或 目标原始属性)
-            let targetElementForResistanceCheck = target.attribute;
-            if (conversionBuff && conversionBuff.convertToElement) {
-                targetElementForResistanceCheck = conversionBuff.convertToElement;
-            }
+    //         const oldDamageWithAttrs = finalDamage;
+    //         // 属性克制判断：攻击方属性 vs (目标被转换后的受击属性 或 目标原始属性)
+    //         let targetElementForResistanceCheck = target.attribute;
+    //         if (conversionBuff && conversionBuff.convertToElement) {
+    //             targetElementForResistanceCheck = conversionBuff.convertToElement;
+    //         }
 
-            if (attributes[sourceOriginalAttribute] && attributes[sourceOriginalAttribute].strengths &&
-                attributes[sourceOriginalAttribute].strengths.includes(targetElementForResistanceCheck)) {
-                attributeBonus = 0.5; // 有利属性
-            } else if (attributes[targetElementForResistanceCheck] && attributes[targetElementForResistanceCheck].strengths &&
-                       attributes[targetElementForResistanceCheck].strengths.includes(sourceOriginalAttribute)) {
-                attributeBonus = -0.25; // 不利属性
-            }
+    //         if (attributes[sourceOriginalAttribute] && attributes[sourceOriginalAttribute].strengths &&
+    //             attributes[sourceOriginalAttribute].strengths.includes(targetElementForResistanceCheck)) {
+    //             attributeBonus = 0.5; // 有利属性
+    //         } else if (attributes[targetElementForResistanceCheck] && attributes[targetElementForResistanceCheck].strengths &&
+    //                    attributes[targetElementForResistanceCheck].strengths.includes(sourceOriginalAttribute)) {
+    //             attributeBonus = -0.25; // 不利属性
+    //         }
 
-            if (attributeBonus !== 0) {
-                finalDamage *= (1 + attributeBonus);
-                Battle.logBattle(`属性克制 (${sourceOriginalAttribute} vs ${targetElementForResistanceCheck}): ${attributeBonus > 0 ? '+' : ''}${(attributeBonus * 100).toFixed(0)}%, 伤害变为: ${finalDamage.toFixed(0)}`);
-            }
-        }
+    //         if (attributeBonus !== 0) {
+    //             finalDamage *= (1 + attributeBonus);
+    //             Battle.logBattle(`属性克制 (${sourceOriginalAttribute} vs ${targetElementForResistanceCheck}): ${attributeBonus > 0 ? '+' : ''}${(attributeBonus * 100).toFixed(0)}%, 伤害变为: ${finalDamage.toFixed(0)}`);
+    //         }
+    //     }
         
-        // 应用目标防御减伤
-        // targetEffectiveDefense 已经考虑了 defenseDown buff 的影响
-        // 假设 targetEffectiveDefense 是一个防御“值” (例如 0 到 几百)
-        // 防御公式示例: DamageMultiplier = 1 / (1 + DefenseValue / ScalingFactor)
-        // ScalingFactor 可以根据游戏平衡调整，例如 200, 500, 1000
-        const defenseScalingFactor = 500; // 可调整的防御系数
-        const defenseDamageMultiplier = 1 / (1 + Math.max(0, targetEffectiveDefense) / defenseScalingFactor);
+    //     // 应用目标防御减伤
+    //     // targetEffectiveDefense 已经考虑了 defenseDown buff 的影响
+    //     // 假设 targetEffectiveDefense 是一个防御“值” (例如 0 到 几百)
+    //     // 防御公式示例: DamageMultiplier = 1 / (1 + DefenseValue / ScalingFactor)
+    //     // ScalingFactor 可以根据游戏平衡调整，例如 200, 500, 1000
+    //     const defenseScalingFactor = 500; // 可调整的防御系数
+    //     const defenseDamageMultiplier = 1 / (1 + Math.max(0, targetEffectiveDefense) / defenseScalingFactor);
         
-        if (defenseDamageMultiplier < 1.0) {
-            const oldDmg = finalDamage;
-            finalDamage *= defenseDamageMultiplier;
-            Battle.logBattle(`${target.name} 的防御效果 (乘数 ${defenseDamageMultiplier.toFixed(3)}), 伤害变为: ${finalDamage.toFixed(0)}`);
-        }
+    //     if (defenseDamageMultiplier < 1.0) {
+    //         const oldDmg = finalDamage;
+    //         finalDamage *= defenseDamageMultiplier;
+    //         Battle.logBattle(`${target.name} 的防御效果 (乘数 ${defenseDamageMultiplier.toFixed(3)}), 伤害变为: ${finalDamage.toFixed(0)}`);
+    //     }
 
-        // 考虑目标的伤害减免BUFF (damageReduction)
-        if (target.buffs) {
-            const damageReductionBuffs = target.buffs.filter(buff => buff.type === 'damageReduction' && !buff.isSubBuff);
-            let totalDamageReductionPercent = 0;
-            damageReductionBuffs.forEach(buff => {
-                totalDamageReductionPercent += buff.value; // buff.value是减伤百分比 (0.1 for 10%)
-            });
-            totalDamageReductionPercent = Math.min(totalDamageReductionPercent, 0.8); // 上限80%
+    //     // 考虑目标的伤害减免BUFF (damageReduction)
+    //     if (target.buffs) {
+    //         const damageReductionBuffs = target.buffs.filter(buff => buff.type === 'damageReduction' && !buff.isSubBuff);
+    //         let totalDamageReductionPercent = 0;
+    //         damageReductionBuffs.forEach(buff => {
+    //             totalDamageReductionPercent += buff.value; // buff.value是减伤百分比 (0.1 for 10%)
+    //         });
+    //         totalDamageReductionPercent = Math.min(totalDamageReductionPercent, 0.8); // 上限80%
 
-            if (totalDamageReductionPercent > 0) {
-                const oldDmg = finalDamage;
-                finalDamage *= (1 - totalDamageReductionPercent);
-                Battle.logBattle(`${target.name} 的伤害减免BUFF生效 (-${(totalDamageReductionPercent * 100).toFixed(0)}%), 伤害变为: ${finalDamage.toFixed(0)}`);
-            }
-        }
+    //         if (totalDamageReductionPercent > 0) {
+    //             const oldDmg = finalDamage;
+    //             finalDamage *= (1 - totalDamageReductionPercent);
+    //             Battle.logBattle(`${target.name} 的伤害减免BUFF生效 (-${(totalDamageReductionPercent * 100).toFixed(0)}%), 伤害变为: ${finalDamage.toFixed(0)}`);
+    //         }
+    //     }
         
-        // DoT易伤 (dot_vulnerability) - 如果当前伤害是DoT类型 (通过options传入)
-        if (options.isDoTDamage && target.buffs) {
-            const dotVulnerabilityBuffs = target.buffs.filter(b => b.type === 'dot_vulnerability' && !b.isSubBuff);
-            let totalVulnerabilityIncrease = 0;
-            dotVulnerabilityBuffs.forEach(buff => {
-                totalVulnerabilityIncrease += buff.value; // e.g., 0.2 for 20% more DoT damage
-            });
-            if (totalVulnerabilityIncrease > 0) {
-                const oldDmg = finalDamage;
-                finalDamage *= (1 + totalVulnerabilityIncrease);
-                Battle.logBattle(`${target.name} 受到DoT易伤效果 (+${(totalVulnerabilityIncrease*100).toFixed(0)}%), DoT伤害变为: ${finalDamage.toFixed(0)}`);
-            }
-        }
+    //     // DoT易伤 (dot_vulnerability) - 如果当前伤害是DoT类型 (通过options传入)
+    //     if (options.isDoTDamage && target.buffs) {
+    //         const dotVulnerabilityBuffs = target.buffs.filter(b => b.type === 'dot_vulnerability' && !b.isSubBuff);
+    //         let totalVulnerabilityIncrease = 0;
+    //         dotVulnerabilityBuffs.forEach(buff => {
+    //             totalVulnerabilityIncrease += buff.value; // e.g., 0.2 for 20% more DoT damage
+    //         });
+    //         if (totalVulnerabilityIncrease > 0) {
+    //             const oldDmg = finalDamage;
+    //             finalDamage *= (1 + totalVulnerabilityIncrease);
+    //             Battle.logBattle(`${target.name} 受到DoT易伤效果 (+${(totalVulnerabilityIncrease*100).toFixed(0)}%), DoT伤害变为: ${finalDamage.toFixed(0)}`);
+    //         }
+    //     }
 
-        // 最终伤害取整
-        finalDamage = Math.max(1, Math.floor(finalDamage));
+    //     // 最终伤害取整
+    //     finalDamage = Math.max(1, Math.floor(finalDamage));
 
-        // 更新目标HP
-        // target.currentStats.hp = Math.max(0, target.currentStats.hp - finalDamage); // HP扣减移至 applyDamageEffects
-        // Battle.logBattle(`${source.name} 对 ${target.name} 造成 ${finalDamage} 点 ${finalDamageDisplayElement} 伤害。 ${target.name} 剩余HP: ${target.currentStats.hp}/${target.currentStats.maxHp}`); // 日志移至 applyDamageEffects
+    //     // 更新目标HP
+    //     // target.currentStats.hp = Math.max(0, target.currentStats.hp - finalDamage); // HP扣减移至 applyDamageEffects
+    //     // Battle.logBattle(`${source.name} 对 ${target.name} 造成 ${finalDamage} 点 ${finalDamageDisplayElement} 伤害。 ${target.name} 剩余HP: ${target.currentStats.hp}/${target.currentStats.maxHp}`); // 日志移至 applyDamageEffects
 
-        // 更新伤害统计
-        if (source.stats) {
-            source.stats.totalDamage = (source.stats.totalDamage || 0) + finalDamage;
-        }
-        if (isCritical && source.stats) {
-            source.stats.critCount = (source.stats.critCount || 0) + 1;
-        }
+    //     // 更新伤害统计
+    //     if (source.stats) {
+    //         source.stats.totalDamage = (source.stats.totalDamage || 0) + finalDamage;
+    //     }
+    //     if (isCritical && source.stats) {
+    //         source.stats.critCount = (source.stats.critCount || 0) + 1;
+    //     }
 
-        return {
-            damage: finalDamage,
-            isCritical: isCritical,
-            attributeBonus: attributeBonus,
-            finalDamageElement: finalDamageDisplayElement // 返回最终伤害的元素类型
-        };
-    },
+    //     return {
+    //         damage: finalDamage,
+    //         isCritical: isCritical,
+    //         attributeBonus: attributeBonus,
+    //         finalDamageElement: finalDamageDisplayElement // 返回最终伤害的元素类型
+    //     };
+    // },
 
     /**
         }
@@ -1225,8 +1225,7 @@ const JobSkills = {
                             hits: 1, // applyDamageToTarget is called per hit in the loop, so this is 1 for this call
                             skipCritical: template.skipCritical !== undefined ? template.skipCritical : (effect.skipCritical !== undefined ? effect.skipCritical : true)
                         };
-                        // 直接调用 Battle.applyDamageToTarget (原始版本，假设 battle-system-integration.js 的修改后续处理)
-                        // 注意：Battle.applyDamageToTarget 只计算伤害，不直接扣血。扣血仍在此处处理。
+                        // 直接调用 Battle.applyDamageToTarget ，处理HP结算
                         const actualDamageResult = Battle.applyDamageToTarget(character, target, rawDamage, damageOptions);
                         
                         let damageToApply = 0;
@@ -1236,11 +1235,6 @@ const JobSkills = {
                             console.error("Battle.applyDamageToTarget did not return a valid damage result:", actualDamageResult);
                         }
 
-                        // 记录旧HP值
-                        const oldHp = target.currentStats.hp;
-
-                        // 实际应用伤害到目标HP
-                        target.currentStats.hp = Math.max(0, target.currentStats.hp - damageToApply);
 
                         // 检查 Guts (不死身) 效果
                         if (target.currentStats.hp <= 0) {

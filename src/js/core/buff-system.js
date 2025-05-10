@@ -461,7 +461,6 @@ const BuffSystem = {
             }
             this.recalculateStatsWithBuffs(target); 
             Battle.logBattle(`${target.name} 获得了BUFF [${buff.name}] (值: ${buff.value}, 持续时间: ${buff.duration}, 层数: ${buff.currentStacks})。`);
-            console.log(`hp`,target.currentStats.hp)
             return true;
         }
     },

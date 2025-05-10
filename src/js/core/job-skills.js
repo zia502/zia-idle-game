@@ -18,7 +18,7 @@ const JobSkills = {
      * @returns {object} 技能使用结果 { success: boolean, message?: string, effects?: object }
      */
     useSkill(characterId, skillId, teamMembers, monster) {
-        console.log(`[DEBUG JS.useSkill Entry] Monster: ${monster.name}, RefID: ${monster._debugRefId || 'NO_REF_ID'}, HP: ${monster.currentStats.hp}/${monster.currentStats.maxHp}`);
+        //console.log(`[DEBUG JS.useSkill Entry] Monster: ${monster.name}, RefID: ${monster._debugRefId || 'NO_REF_ID'}, HP: ${monster.currentStats.hp}/${monster.currentStats.maxHp}`);
         const character = Character.getCharacter(characterId);
         if (!character) return { success: false, message: '角色不存在' };
 
@@ -242,7 +242,7 @@ const JobSkills = {
             message: result ? result.message : "技能执行失败或无返回信息。",
             effects: result ? result.effects : {} 
         };
-        console.log(`[DEBUG JS.useSkill EXIT] Monster: ${monster.name}, RefID: ${monster._debugRefId || 'NO_REF_ID'}, HP: ${monster.currentStats.hp}/${monster.currentStats.maxHp}`);
+        //console.log(`[DEBUG JS.useSkill EXIT] Monster: ${monster.name}, RefID: ${monster._debugRefId || 'NO_REF_ID'}, HP: ${monster.currentStats.hp}/${monster.currentStats.maxHp}`);
         if (typeof Battle !== 'undefined' && Battle.logBattle) {
             Battle.logBattle(`[调试][JS.useSkill EXIT] ${monster.name} HP: ${monster.currentStats.hp}/${monster.currentStats.maxHp}`);
         }

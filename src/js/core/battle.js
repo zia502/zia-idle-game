@@ -115,7 +115,6 @@ this.resetProcCounts(); // 重置技能Proc触发计数
                     character.stats.taCount = 0;
                     character.stats.critCount = 0;
 
-                    console.log(`重置角色 ${character.name} 的战斗统计，从 ${oldStats} 变为 ${JSON.stringify(character.stats)}`);
                 }
 
                 // 重置战斗状态
@@ -216,7 +215,6 @@ this.resetProcCounts(); // 重置技能Proc触发计数
         }
 
 
-        console.log(`[DEBUG] startBattle: 怪物 ${monsterCharacter.name} (ID: ${monsterCharacter.id}) HP 初始化后: ${monsterCharacter.currentStats.hp}/${monsterCharacter.currentStats.maxHp}`);
         console.log(`怪物当前hp: ${monsterCharacter.currentStats.hp}, 怪物状态: `, monsterCharacter);
 
         // 触发战斗开始事件
@@ -1298,11 +1296,10 @@ this.resetProcCounts(); // 重置技能Proc触发计数
                     let healAmount = 0;
                     if (effectDef.healType === 'percentageMaxHp') {
 const hpBeforeProcHeal = currentTarget.currentStats.hp;
-                        console.log(`[DEBUG PROC HEAL] Attempting heal on ${currentTarget.name} (HP: ${hpBeforeProcHeal}/${currentTarget.currentStats.maxHp}). Source: ${source.name}, Proc: ${procDefinition ? procDefinition.name || procDefinition.triggerCondition : 'Unknown'}, Planned Heal: ${healAmount}`);
-                        this.logBattle(`[DEBUG PROC HEAL] Attempting heal on ${currentTarget.name}. Source: ${source.name}, Proc: ${procDefinition ? procDefinition.name || procDefinition.triggerCondition : 'Unknown'}`);
+                        //console.log(`[DEBUG PROC HEAL] Attempting heal on ${currentTarget.name} (HP: ${hpBeforeProcHeal}/${currentTarget.currentStats.maxHp}). Source: ${source.name}, Proc: ${procDefinition ? procDefinition.name || procDefinition.triggerCondition : 'Unknown'}, Planned Heal: ${healAmount}`);
+                        //this.logBattle(`[DEBUG PROC HEAL] Attempting heal on ${currentTarget.name}. Source: ${source.name}, Proc: ${procDefinition ? procDefinition.name || procDefinition.triggerCondition : 'Unknown'}`);
                         healAmount = Math.floor(currentTarget.currentStats.maxHp * effectDef.value);
-console.log(`[DEBUG PROC HEAL] Applied heal on ${currentTarget.name}. Actual Heal: ${actualHeal}, HP After: ${currentTarget.currentStats.hp}/${currentTarget.currentStats.maxHp}`);
-                        this.logBattle(`[DEBUG PROC HEAL] Applied heal on ${currentTarget.name}. Actual Heal: ${actualHeal}, HP After: ${currentTarget.currentStats.hp}`);
+                        //this.logBattle(`[DEBUG PROC HEAL] Applied heal on ${currentTarget.name}. Actual Heal: ${actualHeal}, HP After: ${currentTarget.currentStats.hp}`);
                     } else { // 默认固定值
                         healAmount = effectDef.value || 0;
                     }
@@ -1886,8 +1883,8 @@ reviveCharacter(character, hpPercentToRestore, teamData) { // teamData is e.g. G
                  this.handleProcTrigger(actualTarget, 'onDamagedByEnemy', { attacker, damageTaken: actualDamageDealt, isCritical, isProc: options.isProc, battleStats, originalTarget: originalTarget });
              }
          }
-this.logBattle(`[DEBUG applyDamageToTarget EXIT] Target: ${actualTarget.name}, HP before return: ${actualTarget.currentStats.hp}/${actualTarget.currentStats.maxHp}`);
-        console.log(`[DEBUG applyDamageToTarget EXIT] Target: ${actualTarget.name}, HP before return: ${actualTarget.currentStats.hp}/${actualTarget.currentStats.maxHp}`);
+//this.logBattle(`[DEBUG applyDamageToTarget EXIT] Target: ${actualTarget.name}, HP before return: ${actualTarget.currentStats.hp}/${actualTarget.currentStats.maxHp}`);
+        //console.log(`[DEBUG applyDamageToTarget EXIT] Target: ${actualTarget.name}, HP before return: ${actualTarget.currentStats.hp}/${actualTarget.currentStats.maxHp}`);
          // If original target was different and didn't take damage due to cover, maybe trigger 'onTargetedButCovered' proc? (Future enhancement)
  
          return { damage: actualDamageDealt, isCritical, missed, isProc: options.isProc, actualTarget: actualTarget, originalTarget: originalTarget };

@@ -248,11 +248,6 @@ const Character = {
      * @returns {object|null} 角色对象
      */
     getCharacter(characterId) {
-        console.log(`尝试获取角色: ${characterId}`);
-
-        if (typeof window !== 'undefined' && window.log) {
-            window.log(`尝试获取角色: ${characterId}`);
-        }
 
         const character = this.characters[characterId] || null;
 
@@ -262,10 +257,6 @@ const Character = {
                 window.log(`未找到角色: ${characterId}`);
             }
         } else {
-            console.log(`成功获取角色: ${character.name} (ID: ${characterId})`);
-            if (typeof window !== 'undefined' && window.log) {
-                window.log(`成功获取角色: ${character.name} (ID: ${characterId})`);
-            }
 
             // 检查角色是否在地下城中
             const inDungeon = typeof Dungeon !== 'undefined' &&

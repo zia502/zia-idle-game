@@ -251,3 +251,8 @@ This file tracks the project's current status, including recent changes, current
     *   修改了 [`src/js/core/buff-system.js`](src/js/core/buff-system.js:696) 和 [`src/js/core/buff-system.js:772`](src/js/core/buff-system.js:772) 中的引用。
     *   更新了 [`docs/skill_effect_types_reference.md`](docs/skill_effect_types_reference.md:65) 中的文档。
 * [2025-05-10 21:06:00] - Debug Status Update: Investigating runtime error `TypeError: Cannot read properties of undefined (reading 'currentStats')` in `job-skills.js:807` for skill `blazingStrike2`. Identified incorrect parameter passing to `JobSkills.useSkill` in `battle.js:580`.
+* [2025-05-10 22:33:00] - **技能系统返回值统一:**
+    *   修改了 [`src/js/core/job-skills.js`](src/js/core/job-skills.js:1) 中的 `applyDamageEffects`, `applyBuffEffects`, `applyDebuffEffects`, `applyHealEffects`, `applyDispelEffects`, `applyReviveEffects`, 和 `applySkillEffects` 函数，确保它们统一返回 `{ success: boolean, message?: string, effects?: object }` 结构。
+    *   更新了 `useSkill` 方法以正确处理新的返回值。
+    *   确认了 [`src/js/core/battle.js`](src/js/core/battle.js:1) 中的调用方已能正确处理此结构。
+    *   为修改的函数添加了JSDoc注释，包括测试场景说明。

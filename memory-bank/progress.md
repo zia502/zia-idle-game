@@ -182,3 +182,8 @@ This file tracks the project's progress using a task list format.
     *   在 [`src/js/core/job-skills.js`](src/js/core/job-skills.js:649), [`src/js/core/buff-system.js`](src/js/core/buff-system.js:696) 和 [`src/js/core/buff-system.js:772`](src/js/core/buff-system.js:772) 中将 `criticalRateUp` 替换为 `critRateUp`。
     *   更新了 [`docs/skill_effect_types_reference.md`](docs/skill_effect_types_reference.md:65) 中的文档。
 * [2025-05-10 21:07:00] - Debugging Task Status Update: Investigating `TypeError` in `job-skills.js:807`. Root cause identified as incorrect `teamMembers` argument passed to `JobSkills.useSkill` in `battle.js`. Preparing to apply fix.
+*   [2025-05-10 22:33:00] - **Completed Task:** 修复 [`src/js/core/job-skills.js`](src/js/core/job-skills.js:1) 中 `useSkill` 方法及相关效果函数返回值不统一的问题。
+    *   统一了 `apply*Effects` 系列函数和 `applySkillEffects` 的返回结构为 `{ success: boolean, message?: string, effects?: object }`。
+    *   更新了 `useSkill` 以适配新结构。
+    *   验证了 [`src/js/core/battle.js`](src/js/core/battle.js:1) 调用方的兼容性。
+    *   添加了相关JSDoc和测试说明。

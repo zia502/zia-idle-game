@@ -365,3 +365,23 @@ The error occurred in `JobSkills.applyDebuffEffects` at line 807 when trying to 
     *   Original: `JobSkills.useSkill(character.id, skillToUseId, targets, monster);`
     *   Fixed: `JobSkills.useSkill(character.id, skillToUseId, teamMembers, monster);`
 *   This ensures that `JobSkills` methods receive the complete list of team members, allowing internal target selection logic to function correctly.
+---
+### Decision (Code)
+[2025-05-10 22:33:00] - 统一 `JobSkills` 中各 `apply*Effects` 函数及 `applySkillEffects` 的返回值结构。
+
+**Rationale:**
+原始代码中，`JobSkills.useSkill` 调用的多个效果应用函数（如 `applyDamageEffects`, `applyBuffEffects`）没有统一的返回值，特别是缺少明确的 `success` 状态，导致 `useSkill` 方法难以准确判断技能是否成功施放。统一返回结构 `{ success: boolean, message?: string, effects?: object }` 可以提高代码的健壮性、可读性和可维护性，使得技能的成功与否有明确的判定依据。
+
+**Details:**
+*   修改了 [`src/js/core/job-skills.js`](src/js/core/job-skills.js:1) 中的以下函数，确保它们都返回 `{ success: boolean, message?: string, effects?: object }` 结构：
+    *   `applyDamageEffects`
+    *   `applyBuffEffects`
+    *   `applyDebuffEffects`
+    *   `applyHealEffects`
+    *   `applyDispelEffects`
+    *   `applyReviveEffects`
+    *   `applySkillEffects` (包括其对子效果成功状态的汇总逻辑)
+    *   `applyTriggerSkillEffect`
+*   `success` 的判定条件根据各函数具体逻辑确定（例如，造成伤害、成功施加buff/debuff、成功治疗/复活、成功驱散，或在没有有效目标/条件不满足时也可能视为“逻辑上的成功执行”）。
+*   `useSkill` 方法已更新，以正确处理和依赖这些函数返回的新结构中的 `success` 属性来判断技能的整体使用结果。
+*   调用方（如 [`src/js/core/battle.js`](src/js/core/battle.js:1) 中的 `processCharacterSkills`）经检查已能兼容此新结构。

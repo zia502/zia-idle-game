@@ -156,3 +156,50 @@ Skills with `effectType` like `buff`, `heal`, `dispel` are generally not conside
 ## Testing Patterns
 
 *
+---
+### [2025-05-10 22:33:00] - 统一效果函数返回值模式
+
+**Context:** 在技能系统 ([`src/js/core/job-skills.js`](src/js/core/job-skills.js:1)) 中，多个负责应用具体技能效果的函数（如 `applyDamageEffects`, `applyBuffEffects`, `applySkillEffects` 等）需要一种标准化的方式来报告其操作是否成功。
+
+**Pattern:**
+所有原子或复合效果应用函数应统一返回一个包含以下结构的对象：
+```javascript
+{
+  success: boolean, // 必需：表示操作是否成功。判定条件依据具体效果逻辑。
+  message?: string, // 可选：提供操作结果的描述信息，用于日志或用户反馈。
+  effects?: object  // 可选：包含效果应用具体细节的对象或数组，供日志记录或进一步处理。
+}
+```
+
+**Rationale:**
+*   **明确性:** `success` 标志提供了明确的操作结果状态。
+*   **健壮性:** 调用方（如 `JobSkills.useSkill`）可以可靠地判断子操作是否成功，并据此决定后续逻辑。
+*   **可维护性:** 标准化的返回接口使得添加新效果或修改现有效果时更容易遵循统一的错误处理和结果上报机制。
+*   **日志与调试:** `message` 和 `effects` 字段有助于生成更详细、更有用的日志，方便调试和问题追踪。
+
+**Implementation Example (Conceptual):**
+```javascript
+// 在 applyDamageEffects 函数中
+function applyDamageEffects(character, template, teamMembers, monster) {
+    // ... 伤害计算和应用逻辑 ...
+    let damageDealt = calculateAndApplyDamage(...);
+    
+    if (damageDealt > 0) {
+        return { 
+            success: true, 
+            message: `${character.name} 对 ${target.name} 造成了 ${damageDealt} 点伤害。`,
+            effects: { type: 'damage', totalDamage: damageDealt, /* ...其他细节 */ }
+        };
+    } else if (no_valid_targets) {
+         return { success: true, message: "没有有效的伤害目标。", effects: {type: 'damage', totalDamage: 0}}; // 逻辑上成功，因为没有目标可伤害
+    }
+    else {
+        return { 
+            success: false, 
+            message: `对 ${target.name} 的伤害尝试失败。`,
+            effects: { type: 'damage', totalDamage: 0 }
+        };
+    }
+}
+```
+此模式已应用于 [`src/js/core/job-skills.js`](src/js/core/job-skills.js:1) 中的所有 `apply*Effects` 系列函数。

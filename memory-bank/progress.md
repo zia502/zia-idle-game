@@ -108,37 +108,6 @@ This file tracks the project's progress using a task list format.
     *   修改了 [`src/js/core/dungeon-runner.js`](src/js/core/dungeon-runner.js:1) 的 `startDungeonRun` 函数，以在进入地下城时立即为队伍成员设置准确的 `dungeonOriginalStats`，并重置相关状态。
     *   确认了突破加成 (`multiBonusStats`) 仍基于角色当前的 `baseStats` 计算。
     *   更新了 [`memory-bank/decisionLog.md`](memory-bank/decisionLog.md:1) 和 [`memory-bank/activeContext.md`](memory-bank/activeContext.md:1)。
-## Current Tasks
-*   [2025-05-08 21:03:00] - 调试战斗中 TypeError (技能 warriorSlash 使用错误: TypeError: Cannot read properties of null (reading 'teamMembers') at battle.js:960).
-
-*   [2025-05-08 14:49:00] - 准备向用户呈现关于 [`test-battle-new.html`](test-battle-new.html) "ID 未找到" 错误的分析、架构建议以及记忆银行更新的总结。
-*   [2025-05-08 23:14:00] - **Investigating:** 怪物（月影狼王）HP在战斗开始UI显示时为1716/4000，但后端逻辑显示为4000/4000。
-    *   **Status:** 已添加诊断日志，分析了日志，应用了预防性修复到 `battle.js`。主要怀疑UI层面问题。等待用户确认UI层面的检查。
-*   [2025-05-08 22:42:00] - **Current Task:** Investigating skill selection logic in `processCharacterAction` ([`src/js/core/battle.js`](src/js/core/battle.js)).
-    *   Analyzed `processCharacterAction`: Confirmed it only attempts to use the first skill from the `availableSkills` list.
-    *   Assessed this as likely a simplified implementation.
-    *   Formulated recommendations for improvement (iteration, prioritization).
-    *   Updated [`memory-bank/activeContext.md`](memory-bank/activeContext.md) with findings.
-    *   Awaiting feedback/decision on implementing changes.
-
-## Next Steps
-
-*   创建 `memory-bank/decisionLog.md`。 (此条目可能已过时，因为该文件已存在)
-*   创建 `memory-bank/systemPatterns.md`。 (此条目可能已过时，因为该文件已存在)
-*   根据 `activeContext.md` 中的 "Open Questions/Issues" 进一步完善主角和职业系统。
-*   如果当前问题解决，将继续处理武器盘相关功能的实现或修复。
-*   [2025-05-08 16:53:42] - 完成 SSR 角色技能更新：根据 [`ssrskill.txt`](src/data/ssrskill.txt:1) 更新了 [`ssr.json`](src/data/ssr.json:1) 中的角色技能列表和 [`ssr_skill.json`](src/data/ssr_skill.json:1) 中的技能详情。部分技能因包含特殊机制或描述不明确，已整理完毕等待用户确认。
-*   [2025-05-08 16:53:42] - 当前任务：等待用户确认特定 SSR 技能的处理方式。
-*   [2025-05-08 16:59:25] - 根据用户确认，将所有先前待处理的 SSR 技能（包含特殊机制的技能）添加到了 [`ssr.json`](src/data/ssr.json:1) 和 [`ssr_skill.json`](src/data/ssr_skill.json:1) 中。技能ID使用建议的英文ID，描述按原样记录。
-*   [2025-05-08 16:59:25] - SSR 技能更新流程已全部完成。
-*   [2025-05-08 17:37:27] - 完成 [`src/data/ssr_skill.json`](src/data/ssr_skill.json:1) 文件中 SSR 角色技能效果的分析和补充：根据 [`src/data/ssrskill.txt`](src/data/ssrskill.txt:1) 的描述，全面更新了技能的 `type`, `cooldown`, `effectType`, `targetType` 和 `effects` 字段，确保了技能效果的清晰、具体和结构化。
-*   [2025-05-08 20:27:18] - **Completed Task:** 修改了 [`src/js/core/battle.js`](src/js/core/battle.js:1) 中的伤害计算函数，调整了防御力对伤害的减免方式。新的公式为 `finalDamage / (1 + defensePercent)`，并确保其在正确的计算步骤中应用。
-*   [2025-05-08 20:39:43] - **Completed Task:** 调整了 [`src/js/core/battle.js`](src/js/core/battle.js:1) 中的战斗伤害上限，普通攻击上限设置为 199999，技能伤害上限设置为 899999。
-*   [2025-05-08 20:53:00] - **Completed Task:** 标准化项目中的技能 `effectType`。修改了相关的数据文件 ([`src/data/ssr_skill.json`](src/data/ssr_skill.json), [`src/data/sr_skills.json`](src/data/sr_skills.json), [`src/data/r_skills.json`](src/data/r_skills.json)) 和逻辑文件 ([`src/js/core/job-skills.js`](src/js/core/job-skills.js))。
-*   [2025-05-08 21:17:00] - **Completed Task:** Implemented detailed skill usage logging in combat.
-    *   Modified [`src/js/core/job-skills.js`](src/js/core/job-skills.js) to add logging logic in `useSkill` and enhance returned data from `applyBuffEffects` and `applyDebuffEffects`.
-    *   Ensured logs capture turn, caster, skill, target, primary effect (damage, heal, buff/debuff application, dispel), and target HP status, following provided specifications.
-    *   No changes were needed in [`src/js/core/battle.js`](src/js/core/battle.js) regarding `applyDamageToTarget`'s internal logging, as its existing logs for special events (cover, shield, etc.) do not conflict with the new higher-level skill logs.
 * [2025-05-09 20:21:00] - **Completed Debugging Task:** Fixed JavaScript errors: `ReferenceError` in `job-skills.js` and `TypeError` in `battle.js`.
 *   [2025-05-09 20:52:00] - **Completed Debugging Task:** 调查并修复了战斗日志中指出的6个问题。
     *   问题1 (怪物HP初始化): 增强日志。
@@ -196,3 +165,37 @@ This file tracks the project's progress using a task list format.
 - [DONE] 2025-05-10 23:31:14 - Completed documenting BattleLogger system (docs/battle-logger-usage.md)
 * [2025-05-10 23:34:18] - **Completed Debugging Task:** Fixed `TypeError: Battle.logBattle is not a function` in `buff-system.js`. Replaced `Battle.logBattle` with `BattleLogger.log(BattleLogger.levels.BATTLE_LOG, ...)`.
 * [2025-05-10 23:37:00] - **Completed Debugging Task:** Resolved `ReferenceError: BattleLogger is not defined` in [`src/js/core/buff-system.js`](src/js/core/buff-system.js:909). Added `<script src="src/js/core/battle-logger.js"></script>` to [`index.html`](index.html) before [`src/js/core/buff-system.js`](src/js/core/buff-system.js).
+* [2025-05-11 10:15:27] - **Completed Task:** 修改了 [`src/js/components/character-tooltip.js`](src/js/components/character-tooltip.js:1) 中的 `findCharacterCardElement` 函数，以满足新的提示框显示逻辑：仅当鼠标悬停在 `<h4>` 标签上时才查找父元素的 `data-character-id`。
+
+## Current Tasks
+*   [2025-05-08 21:03:00] - 调试战斗中 TypeError (技能 warriorSlash 使用错误: TypeError: Cannot read properties of null (reading 'teamMembers') at battle.js:960).
+
+*   [2025-05-08 14:49:00] - 准备向用户呈现关于 [`test-battle-new.html`](test-battle-new.html) "ID 未找到" 错误的分析、架构建议以及记忆银行更新的总结。
+*   [2025-05-08 23:14:00] - **Investigating:** 怪物（月影狼王）HP在战斗开始UI显示时为1716/4000，但后端逻辑显示为4000/4000。
+    *   **Status:** 已添加诊断日志，分析了日志，应用了预防性修复到 `battle.js`。主要怀疑UI层面问题。等待用户确认UI层面的检查。
+*   [2025-05-08 22:42:00] - **Current Task:** Investigating skill selection logic in `processCharacterAction` ([`src/js/core/battle.js`](src/js/core/battle.js)).
+    *   Analyzed `processCharacterAction`: Confirmed it only attempts to use the first skill from the `availableSkills` list.
+    *   Assessed this as likely a simplified implementation.
+    *   Formulated recommendations for improvement (iteration, prioritization).
+    *   Updated [`memory-bank/activeContext.md`](memory-bank/activeContext.md) with findings.
+    *   Awaiting feedback/decision on implementing changes.
+
+## Next Steps
+
+*   创建 `memory-bank/decisionLog.md`。 (此条目可能已过时，因为该文件已存在)
+*   创建 `memory-bank/systemPatterns.md`。 (此条目可能已过时，因为该文件已存在)
+*   根据 `activeContext.md` 中的 "Open Questions/Issues" 进一步完善主角和职业系统。
+*   如果当前问题解决，将继续处理武器盘相关功能的实现或修复。
+*   [2025-05-08 16:53:42] - 完成 SSR 角色技能更新：根据 [`ssrskill.txt`](src/data/ssrskill.txt:1) 更新了 [`ssr.json`](src/data/ssr.json:1) 中的角色技能列表和 [`ssr_skill.json`](src/data/ssr_skill.json:1) 中的技能详情。部分技能因包含特殊机制或描述不明确，已整理完毕等待用户确认。
+*   [2025-05-08 16:53:42] - 当前任务：等待用户确认特定 SSR 技能的处理方式。
+*   [2025-05-08 16:59:25] - 根据用户确认，将所有先前待处理的 SSR 技能（包含特殊机制的技能）添加到了 [`ssr.json`](src/data/ssr.json:1) 和 [`ssr_skill.json`](src/data/ssr_skill.json:1) 中。技能ID使用建议的英文ID，描述按原样记录。
+*   [2025-05-08 16:59:25] - SSR 技能更新流程已全部完成。
+*   [2025-05-08 17:37:27] - 完成 [`src/data/ssr_skill.json`](src/data/ssr_skill.json:1) 文件中 SSR 角色技能效果的分析和补充：根据 [`src/data/ssrskill.txt`](src/data/ssrskill.txt:1) 的描述，全面更新了技能的 `type`, `cooldown`, `effectType`, `targetType` 和 `effects` 字段，确保了技能效果的清晰、具体和结构化。
+*   [2025-05-08 20:27:18] - **Completed Task:** 修改了 [`src/js/core/battle.js`](src/js/core/battle.js:1) 中的伤害计算函数，调整了防御力对伤害的减免方式。新的公式为 `finalDamage / (1 + defensePercent)`，并确保其在正确的计算步骤中应用。
+*   [2025-05-08 20:39:43] - **Completed Task:** 调整了 [`src/js/core/battle.js`](src/js/core/battle.js:1) 中的战斗伤害上限，普通攻击上限设置为 199999，技能伤害上限设置为 899999。
+*   [2025-05-08 20:53:00] - **Completed Task:** 标准化项目中的技能 `effectType`。修改了相关的数据文件 ([`src/data/ssr_skill.json`](src/data/ssr_skill.json), [`src/data/sr_skills.json`](src/data/sr_skills.json), [`src/data/r_skills.json`](src/data/r_skills.json)) 和逻辑文件 ([`src/js/core/job-skills.js`](src/js/core/job-skills.js))。
+*   [2025-05-08 21:17:00] - **Completed Task:** Implemented detailed skill usage logging in combat.
+    *   Modified [`src/js/core/job-skills.js`](src/js/core/job-skills.js) to add logging logic in `useSkill` and enhance returned data from `applyBuffEffects` and `applyDebuffEffects`.
+    *   Ensured logs capture turn, caster, skill, target, primary effect (damage, heal, buff/debuff application, dispel), and target HP status, following provided specifications.
+    *   No changes were needed in [`src/js/core/battle.js`](src/js/core/battle.js) regarding `applyDamageToTarget`'s internal logging, as its existing logs for special events (cover, shield, etc.) do not conflict with the new higher-level skill logs.
+* [2025-05-11 10:25:46] - **Completed Task:** 修改了 [`src/js/components/character-tooltip.js`](src/js/components/character-tooltip.js:1) 中的 `findCharacterCardElement` 函数，以支持在 `<h4>` 或具有 `member-name` 类的元素上触发提示框，并正确查找 `data-character-id`。

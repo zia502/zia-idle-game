@@ -72,17 +72,23 @@ const CharacterTooltip = {
      * @returns {HTMLElement|null} 角色卡片元素
      */
     findCharacterCardElement(element) {
-        // 向上查找具有 data-character-id 属性的元素
-        let currentElement = element;
+        // 检查鼠标悬停的元素是否是 H4 标签或具有 'member-name' 类
+        const isH4 = element.tagName === 'H4';
+        const hasMemberNameClass = element.classList.contains('member-name');
+
+        if (!isH4 && !hasMemberNameClass) {
+            return null; // 如果两者都不是，则不显示提示框
+        }
+
+        // 如果是 H4 或具有 'member-name' 类，则向上查找具有 data-character-id 属性的父元素
+        let currentElement = element.parentElement; // 从目标元素的父元素开始查找
         while (currentElement && currentElement !== document.body) {
             if (currentElement.dataset && currentElement.dataset.characterId) {
-                // 确保是角色卡片相关的元素，可以根据具体类名进一步判断
-                // 例如: currentElement.classList.contains('character-card')
-                return currentElement;
+                return currentElement; // 找到了包含角色数据的元素
             }
             currentElement = currentElement.parentElement;
         }
-        return null;
+        return null; // 没有找到符合条件的父元素
     },
 
     /**

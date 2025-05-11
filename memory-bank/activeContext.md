@@ -41,6 +41,7 @@ This file tracks the project's current status, including recent changes, current
     *   确认突破加成 (`multiBonusStats`) 维持基于角色当前最新 `baseStats` 的计算方式。
     *   最终地下城内属性计算流程为：`currentStats = (dungeonOriginalStats + 基于 dungeonOriginalStats 的武器盘加成) + 基于当前 baseStats 的突破加成`。
 *   [2025-05-10 19:26:00] - **架构设计:** 根据规范编写器提供的战斗顺序修改方案（我方技能 -> 我方普攻 -> 敌方行动），进行详细的架构设计。重点关注 Memory Bank 更新、关键文件/函数识别、新三阶段流程设计、角色状态处理。
+*   [2025-05-11 10:15:27] - 修改了 [`src/js/components/character-tooltip.js`](src/js/components/character-tooltip.js:1) 中的 `findCharacterCardElement` 函数，以满足新的提示框显示逻辑：仅当鼠标悬停在 `<h4>` 标签上时才查找父元素的 `data-character-id`。
 ## Recent Changes
 *   [2025-05-09 21:18:00] - **Debug Fixes Applied:** 针对战斗日志分析出的4个新问题进行了修复。
     *   问题1 (怪物HP初始化): 修改了 [`src/js/core/battle.js`](src/js/core/battle.js:1) 的HP初始化逻辑，增加从 `monster.baseStats` 获取 `maxHp` 的途径。
@@ -64,6 +65,7 @@ This file tracks the project's current status, including recent changes, current
 *   [2025-05-08 12:37:35] - 修改 `test-battle-new.html`：在 `loadGameData` 中为从JSON加载的角色数据动态添加 `rarity` 属性。在 `init` 和 `addEventListeners` 函数中添加了诊断日志。
 *   [2025-05-08 23:26:36] - 修改 [`src/js/core/battle.js`](src/js/core/battle.js) `startBattle` 函数，增强了怪物HP初始化的健壮性，优先使用JSON中的 `monster.hp` 作为 `maxHp`，并确保初始HP等于 `maxHp`。添加了诊断日志。
 *   [2025-05-09 14:37:00] - 修改了 [`src/data/ssr_skill.json`](src/data/ssr_skill.json:1) 文件，统一了所有技能 `description` 字段的格式，并移除了临时的 `descriptionForEffect` 字段。
+*   [2025-05-11 10:15:27] - 修改了 [`src/js/components/character-tooltip.js`](src/js/components/character-tooltip.js:1) 中的 `findCharacterCardElement` 函数，以满足新的提示框显示逻辑。
 
 ## Open Questions/Issues
 *   [2025-05-09 21:18:00] - **Issue Status Update:** 针对战斗日志分析出的4个新问题已应用修复：
@@ -271,3 +273,4 @@ This file tracks the project's current status, including recent changes, current
 * [2025-05-10 23:34:08] - Debug Fix: Corrected `Battle.logBattle` to `BattleLogger.log` in `buff-system.js:909` to resolve `TypeError: Battle.logBattle is not a function`.
 
 * [2025-05-10 23:37:00] - Debug Fix: Resolved `ReferenceError: BattleLogger is not defined` in `buff-system.js:909`. Caused by `battle-logger.js` not being loaded in `index.html`. Fixed by adding script tag for `battle-logger.js` before `buff-system.js` in `index.html`.
+* [2025-05-11 10:25:37] - 修改了 [`src/js/components/character-tooltip.js`](src/js/components/character-tooltip.js:1) 中的 `findCharacterCardElement` 函数，使其能够处理鼠标悬停在 `<h4>` 标签或具有 `member-name` 类的元素上的情况，并向上查找具有 `data-character-id` 属性的父元素。

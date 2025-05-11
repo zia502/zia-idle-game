@@ -274,3 +274,4 @@ This file tracks the project's current status, including recent changes, current
 
 * [2025-05-10 23:37:00] - Debug Fix: Resolved `ReferenceError: BattleLogger is not defined` in `buff-system.js:909`. Caused by `battle-logger.js` not being loaded in `index.html`. Fixed by adding script tag for `battle-logger.js` before `buff-system.js` in `index.html`.
 * [2025-05-11 10:25:37] - 修改了 [`src/js/components/character-tooltip.js`](src/js/components/character-tooltip.js:1) 中的 `findCharacterCardElement` 函数，使其能够处理鼠标悬停在 `<h4>` 标签或具有 `member-name` 类的元素上的情况，并向上查找具有 `data-character-id` 属性的父元素。
+* [2025-05-11 10:51:10] - 修改了 [`src/js/components/team-management.js`](src/js/components/team-management.js:1) 中的 `renderTeams` 函数，将 `multiCountDisplay` 添加到前排和后排队员的名字显示中，以确保突破次数徽章正确显示。

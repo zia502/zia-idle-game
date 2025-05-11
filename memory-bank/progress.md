@@ -199,3 +199,4 @@ This file tracks the project's progress using a task list format.
     *   Ensured logs capture turn, caster, skill, target, primary effect (damage, heal, buff/debuff application, dispel), and target HP status, following provided specifications.
     *   No changes were needed in [`src/js/core/battle.js`](src/js/core/battle.js) regarding `applyDamageToTarget`'s internal logging, as its existing logs for special events (cover, shield, etc.) do not conflict with the new higher-level skill logs.
 * [2025-05-11 10:25:46] - **Completed Task:** 修改了 [`src/js/components/character-tooltip.js`](src/js/components/character-tooltip.js:1) 中的 `findCharacterCardElement` 函数，以支持在 `<h4>` 或具有 `member-name` 类的元素上触发提示框，并正确查找 `data-character-id`。
+* [2025-05-11 10:51:18] - **Completed Task:** 修改 [`src/js/components/team-management.js`](src/js/components/team-management.js:1) 的 `renderTeams` 函数，以正确显示角色突破次数徽章。

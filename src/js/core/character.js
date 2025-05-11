@@ -1622,7 +1622,7 @@ const Character = {
             }
         }
 
-        attackPower += damageIncrease;
+        attackPower += Math.floor(damageIncrease);
 
         console.log(`计算后攻击力: ${attackPower}`);
         if (typeof window !== 'undefined' && window.log) {

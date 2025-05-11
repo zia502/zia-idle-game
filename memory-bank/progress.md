@@ -178,8 +178,19 @@ This file tracks the project's progress using a task list format.
 * [2025-05-11 12:36:58] - **Completed Task:** 修改 [`src/js/core/character.js`](src/js/core/character.js:1) 中的 `validateCharacterBaseStats` 函数，取消了成功验证日志的注释。
 * [2025-05-11 12:47:32] - **Completed Task:** 修改 [`src/js/core/character.js`](src/js/core/character.js:1) 中的 `loadSaveData` 函数，修复了角色模板异步加载问题。
 * [2025-05-11 12:58:48] - **Completed Task:** 修改 [`src/js/core/character.js`](src/js/core/character.js:1) 中的 `validateCharacterBaseStats` 函数，添加 `autoCorrect` 参数及相关逻辑，并更新 `loadSaveData` 函数以启用自动修正。
+* [2025-05-11 19:42:00] - **Completed Task:** 完成对战斗系统群体技能支持的架构设计。
 
+*   [2025-05-11 20:13:00] - **Debugging Task:** 调查怪物 AoE 技能只对单个我方单位生效的问题。
+    *   **Status:** 分析完成。根本原因已定位到 [`src/js/core/job-skills.js`](src/js/core/job-skills.js) 的 `getTargets` 函数在处理怪物施放的 `all_enemies` 技能时，由于参数传递问题，错误地将单个我方角色识别为唯一目标。
+*   [2025-05-11 20:17:00] - **Completed Task:** 修复怪物 AoE 技能未能正确作用于我方所有单位的问题。
+    *   修改了 [`src/js/core/job-skills.js`](src/js/core/job-skills.js) 中的 `useSkill` 和 `getTargets` 函数。
+    *   `useSkill` 现在判断施法者阵营 (`isCasterPlayer`) 并传递给效果应用函数及 `getTargets`。
+    *   `getTargets` 根据 `isCasterPlayer` 正确解析 `all_enemies` 和 `all_allies` 目标类型。
+    *   怪物施放 `all_enemies` 时，目标为我方全体；玩家施放 `all_enemies` 时，目标为敌方。
+    *   怪物施放 `all_allies` 时，目标为自身；玩家施放 `all_allies` 时，目标为我方全体。
 ## Current Tasks
+*   [2025-05-11 20:20:00] - **TDD Cycle Start:** 开始为怪物和玩家 AoE 技能修复编写单元/集成测试。目标文件：[`test-battle-logic.html`](test-battle-logic.html)。
+*   [2025-05-11 20:24:00] - **TDD Cycle End:** 完成为怪物和玩家 AoE 技能修复编写单元/集成测试。覆盖了怪物 AoE (all_enemies), 玩家 AoE (all_enemies), 玩家 AoE (all_allies), 以及双方的单体技能 (single_enemy, single_ally) 场景。测试添加在 [`test-battle-logic.html`](test-battle-logic.html)。
 *   [2025-05-08 21:03:00] - 调试战斗中 TypeError (技能 warriorSlash 使用错误: TypeError: Cannot read properties of null (reading 'teamMembers') at battle.js:960).
 
 *   [2025-05-08 14:49:00] - 准备向用户呈现关于 [`test-battle-new.html`](test-battle-new.html) "ID 未找到" 错误的分析、架构建议以及记忆银行更新的总结。
@@ -191,8 +202,9 @@ This file tracks the project's progress using a task list format.
     *   Formulated recommendations for improvement (iteration, prioritization).
     *   Updated [`memory-bank/activeContext.md`](memory-bank/activeContext.md) with findings.
     *   Awaiting feedback/decision on implementing changes.
-
-## Next Steps
+    *   [2025-05-11 19:42:00] - **Current Task:** 架构设计：战斗系统群体技能支持（包括 `all_enemies` 和 `all_allies`）。
+    
+    ## Next Steps
 
 *   创建 `memory-bank/decisionLog.md`。 (此条目可能已过时，因为该文件已存在)
 *   创建 `memory-bank/systemPatterns.md`。 (此条目可能已过时，因为该文件已存在)
@@ -222,3 +234,6 @@ This file tracks the project's progress using a task list format.
     *   确保逻辑在 `attacker` 和 `actualTarget` 及其属性有效时执行。
 * [2025-05-11 18:45:48] - **Completed Task:** 修改了 [`src/js/core/battle.js`](src/js/core/battle.js:1760) 中的战斗逻辑，以更稳健地检查 `attacker.isBoss` 属性。
     *   使用 `!!attacker.isBoss` 来确保布尔上下文，并相应更新了 `attackerIsPlayer` 和 `targetIsMonster` 的赋值。
+    *   [2025-05-11 19:42:00] - **Next Step:** 开始实施战斗系统对“敌方队伍” (`enemyParty`) 的支持。
+    *   [2025-05-11 19:42:00] - **Next Step:** 重构 [`JobSkills.getTargets()`](src/js/core/job-skills.js:1080) 以正确处理 `all_enemies` 和 `all_allies` 并返回目标数组。
+    *   [2025-05-11 19:42:00] - **Next Step:** 修改技能效果应用函数 (如 [`JobSkills.applyDamageEffects()`](src/js/core/job-skills.js:766)) 以迭代处理目标数组。

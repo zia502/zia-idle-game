@@ -44,6 +44,7 @@ This file tracks the project's current status, including recent changes, current
 *   [2025-05-11 10:15:27] - 修改了 [`src/js/components/character-tooltip.js`](src/js/components/character-tooltip.js:1) 中的 `findCharacterCardElement` 函数，以满足新的提示框显示逻辑：仅当鼠标悬停在 `<h4>` 标签上时才查找父元素的 `data-character-id`。
 *   [2025-05-11 12:36:58] - 修改了 [`src/js/core/character.js`](src/js/core/character.js:1) 中的 `validateCharacterBaseStats` 函数，取消了成功验证日志的注释。
 *   [2025-05-11 12:58:48] - 修改了 [`src/js/core/character.js`](src/js/core/character.js:1) 中的 `validateCharacterBaseStats` 函数，添加了 `autoCorrect` 参数及相关逻辑，并更新了 `loadSaveData` 函数以启用自动修正。
+*   [2025-05-11 19:42:00] - **架构设计:** 开始设计战斗系统对多目标技能（特别是 `all_enemies`）的支持方案，核心是引入“敌方队伍”概念并重构相关逻辑。
 ## Recent Changes
 *   [2025-05-09 21:18:00] - **Debug Fixes Applied:** 针对战斗日志分析出的4个新问题进行了修复。
     *   问题1 (怪物HP初始化): 修改了 [`src/js/core/battle.js`](src/js/core/battle.js:1) 的HP初始化逻辑，增加从 `monster.baseStats` 获取 `maxHp` 的途径。
@@ -70,6 +71,7 @@ This file tracks the project's current status, including recent changes, current
 *   [2025-05-11 10:15:27] - 修改了 [`src/js/components/character-tooltip.js`](src/js/components/character-tooltip.js:1) 中的 `findCharacterCardElement` 函数，以满足新的提示框显示逻辑。
 *   [2025-05-11 12:36:58] - 修改了 [`src/js/core/character.js`](src/js/core/character.js:1) 中的 `validateCharacterBaseStats` 函数，取消了成功验证日志的注释。
 *   [2025-05-11 12:58:48] - 修改了 [`src/js/core/character.js`](src/js/core/character.js:1) 中的 `validateCharacterBaseStats` 函数，添加了 `autoCorrect` 参数及相关逻辑，并更新了 `loadSaveData` 函数以启用自动修正。
+*   [2025-05-11 19:42:00] - 启动了针对“全体攻击”技能无法正确作用于所有敌人的架构调整任务。
 
 ## Open Questions/Issues
 *   [2025-05-09 21:18:00] - **Issue Status Update:** 针对战斗日志分析出的4个新问题已应用修复：
@@ -287,3 +289,48 @@ This file tracks the project's current status, including recent changes, current
 * [2025-05-11 16:54:54] - 修改了 `src/js/core/character.js` 中的 `calculateAttackPower` 函数，以区分处理可叠加和不可叠加的 `attackUp` Buff，并调整了其他乘算区间的应用顺序。
 * [2025-05-11 18:10:00] - 修改了 [`src/js/core/battle.js`](src/js/core/battle.js:1775) 中的 `applyDamageToTarget` 函数，加入了基于攻击方视角的属性克制伤害计算逻辑。包括对普通属性克制和光暗互克的处理，并将伤害变化记录到 `calculationSteps` 和 `BattleLogger`。
 * [2025-05-11 18:45:48] - 修改了 [`src/js/core/battle.js`](src/js/core/battle.js:1760) 中的战斗逻辑，以更稳健地检查 `attacker.isBoss` 属性，使用 `!!` 操作符确保布尔上下文。
+* [2025-05-11 19:25:00] - Debug Status Update: Investigating "自然之怒" skill issue.
+    * Skill "自然之怒" (`natureWrath`) is defined in [`src/data/boss-skills.json`](src/data/boss-skills.json:232) with `targetType: "all_enemies"`.
+    * Effects: Damage (multiplier 1.2) and AttackDown (value 0.2, duration 3).
+    * [`JobSkills.getTargets()`](src/js/core/job-skills.js:1080) for `all_enemies` currently only returns the single `monster` object if it's alive ([`src/js/core/job-skills.js:1116`](src/js/core/job-skills.js:1116)).
+    * Log indicates "火蜥蜴" was damaged and HP reduced to 0.
+    * Log also states "没有有效的目标施加DEBUFF."
+    * Hypothesis: Damage effect killed "火蜥蜴". When debuff effect was processed, `getTargets()` found no living monster, leading to the "no valid target for DEBUFF" message.
+    * This behavior is consistent with current code if only one enemy ("火蜥蜴") was present.
+    * If multiple enemies were present, the issue is a systemic limitation in handling `all_enemies` targeting.
+    * Next step: Ask user to clarify if multiple enemies were present in the battle.
+* [2025-05-11 19:40:00] - Debug Status Update: "自然之怒" skill issue - User confirmed multiple enemies were present.
+    * **Root Cause Identified:** The skill "自然之怒" (and likely all skills targeting `all_enemies`) does not work correctly when multiple enemies are present.
+    * The function [`JobSkills.getTargets()`](src/js/core/job-skills.js:1080) specifically its `all_enemies` case ([`src/js/core/job-skills.js:1116`](src/js/core/job-skills.js:1116)), is designed to target only a single `monster` object passed to the battle. It does not support a concept of an "enemy team" or multiple concurrent enemy entities.
+    * Therefore, even if multiple enemies exist in the game data or encounter setup, the skill will only affect the one `monster` instance that the battle system is aware of.
+    * The log message "对敌方全体造成了 ... 伤害！" is likely a generic description based on the skill's `targetType` and not an accurate reflection of multiple targets being hit.
+    * The "没有有效的目标施加DEBUFF" message occurred because the single targeted monster ("火蜥蜴") was killed by the damage component of the skill before the debuff component could be applied.
+    * **Conclusion:** This is a systemic limitation of the current battle system's targeting logic for `all_enemies`, not a bug specific to the "自然之怒" skill's definition.
+    * **Recommendation:** The battle system needs to be refactored to support an "enemy team" consisting of multiple enemy objects, and targeting logic for `all_enemies` needs to be updated to iterate through all living members of this enemy team. This is an architectural change.
+*   [2025-05-11 19:42:00] - **Current Task:** 详细评估调试器关于“全体攻击”技能问题的发现，并设计架构方案以支持正确的群体目标处理。
+*   [2025-05-11 20:13:00] - **Debug Task Started:** 调查怪物 AoE 技能只对单个我方单位生效的问题。
+    *   **Initial Analysis:** 根据 Memory Bank，这与已知的群体目标处理系统限制相关。
+    *   **File Review:**
+        *   [`src/js/core/job-skills.js`](src/js/core/job-skills.js): `getTargets()` 函数的 `all_enemies` 逻辑 ([`src/js/core/job-skills.js:1114`](src/js/core/job-skills.js:1114)) 设计为返回其第四个参数 `monster`。
+        *   [`src/js/core/battle.js`](src/js/core/battle.js): `processMonsterAction()` ([`src/js/core/battle.js:988`](src/js/core/battle.js:988)) 在调用 `JobSkills.useSkill()` 时，将单个选定的我方角色 (`targetForSkill`) 作为第四个参数（即 `JobSkills.useSkill` 中的 `monster` 参数）传递。
+    *   **Root Cause Confirmed:** 当怪物使用 `targetType: "all_enemies"` 的技能时，[`JobSkills.getTargets()`](src/js/core/job-skills.js:1080) 错误地将传入的单个我方角色 (`targetForSkill`) 作为唯一目标返回，而不是处理代表我方全体的 `teamMembers` 参数。这导致 AoE 效果仅应用于该单个我方角色。
+    *   **Fix Applied [2025-05-11 20:17:00]:** 修改了 [`src/js/core/job-skills.js`](src/js/core/job-skills.js)。
+        *   `useSkill` 函数现在会判断施法者是否为玩家 (`isCasterPlayer`)。
+        *   `isCasterPlayer` 被传递给所有 `apply*Effects` 函数，并最终传递给 `getTargets`。
+        *   `getTargets` 函数的签名修改为 `getTargets(character, targetType, teamMembers, monster, isCasterPlayer)`。
+        *   `getTargets` 内部逻辑更新，根据 `isCasterPlayer` 正确解析 `all_enemies` 和 `all_allies`：
+            *   玩家施法 `all_enemies` -> 目标为 `monster` (敌方)。
+            *   怪物施法 `all_enemies` -> 目标为 `teamMembers` (我方全体)。
+            *   玩家施法 `all_allies` -> 目标为 `teamMembers` (我方全体)。
+            *   怪物施法 `all_allies` -> 目标为 `character` (怪物自身，当前单怪物系统)。
+        *   确认 [`src/js/core/battle.js`](src/js/core/battle.js) 中的调用点与新逻辑兼容，无需修改。
+    *   **Next Step:** 更新 Memory Bank (progress, decisionLog)，然后 `attempt_completion`。
+*   [2025-05-11 20:24:00] - **TDD Cycle Completed:** 为 `job-skills.js` 中 `getTargets` 函数的 AoE 技能目标修复编写了单元/集成测试。
+    *   测试文件: [`test-battle-logic.html`](test-battle-logic.html)
+    *   覆盖场景:
+        *   怪物使用 `all_enemies` AoE 技能，验证目标为我方所有角色。
+        *   玩家使用 `all_enemies` AoE 技能，验证目标为敌方单位。
+        *   玩家使用 `all_allies` AoE 技能，验证目标为我方所有角色。
+        *   单体目标技能 (`single_enemy`, `single_ally`) 对玩家和怪物双方的正确性。
+    *   测试通过模拟 `MockJobSkills.useSkill` 内部的目标判定逻辑进行，并验证了 `determinedTargets` 的正确性。
+    *   Memory Bank (`progress.md`) 已更新。

@@ -22,6 +22,12 @@ const JobSkills = {
         const character = Character.getCharacter(characterId);
         if (!character) return { success: false, message: '角色不存在' };
 
+        // 确定施法者是否为玩家角色
+        // teamMembers 是调用时传入的玩家队伍。
+        // monster 在玩家施法时是敌方单位，在怪物施法时可能是单个玩家目标或怪物自身。
+        // 因此，通过 characterId 是否在 teamMembers 中来判断更可靠。
+        const isCasterPlayer = teamMembers.some(member => member.id === character.id);
+
         const template = SkillLoader.getSkillInfo(skillId);
 
         if (!template) {
@@ -58,31 +64,31 @@ const JobSkills = {
 
         switch (template.effectType) {
             case 'damage':
-                result = this.applyDamageEffects(character, template, teamMembers, monster);
+                result = this.applyDamageEffects(character, template, teamMembers, monster, isCasterPlayer);
                 break;
             case 'buff':
-                result = this.applyBuffEffects(character, template, teamMembers, monster);
+                result = this.applyBuffEffects(character, template, teamMembers, monster, isCasterPlayer);
                 break;
             case 'debuff':
-                result = this.applyDebuffEffects(character, template, teamMembers, monster);
+                result = this.applyDebuffEffects(character, template, teamMembers, monster, isCasterPlayer);
                 break;
             case 'heal':
-                result = this.applyHealEffects(character, template, teamMembers, monster);
+                result = this.applyHealEffects(character, template, teamMembers, monster, isCasterPlayer);
                 break;
             case 'dispel':
-                result = this.applyDispelEffects(character, template, teamMembers, monster);
+                result = this.applyDispelEffects(character, template, teamMembers, monster, isCasterPlayer);
                 break;
             case 'revive':
-                result = this.applyReviveEffects(character, template, teamMembers, monster);
+                result = this.applyReviveEffects(character, template, teamMembers, monster, isCasterPlayer);
                 break;
             case 'multi_effect':
             case 'trigger':
-                result = this.applySkillEffects(character, template, teamMembers, monster);
+                result = this.applySkillEffects(character, template, teamMembers, monster, isCasterPlayer);
                 break;
             default:
                 if (template.effects && Array.isArray(template.effects) && template.effects.length > 0) {
                     Battle.logBattle(`技能 ${template.name} 的 effectType "${template.effectType}" 不是标准主动类型，尝试通用效果处理。`);
-                    result = this.applySkillEffects(character, template, teamMembers, monster);
+                    result = this.applySkillEffects(character, template, teamMembers, monster, isCasterPlayer);
                 } else {
                     return { success: false, message: `未知的技能类型 (${template.effectType}) 或无效果定义。` };
                 }
@@ -257,7 +263,7 @@ const JobSkills = {
      * @param {object} monster - 怪物对象
      * @returns {object} 技能效果结果 { success: boolean, message?: string, effects?: object }
      */
-    applyTriggerSkillEffect(character, template, teamMembers, monster) {
+    applyTriggerSkillEffect(character, template, teamMembers, monster, isCasterPlayer) { // Added isCasterPlayer
         const triggeredSkillId = template.triggerSkillId;
         if (!triggeredSkillId) {
             return { success: false, message: `技能 ${template.name} 配置错误：缺少 triggerSkillId` };
@@ -270,11 +276,12 @@ const JobSkills = {
 
         Battle.logBattle(`${character.name} 的技能 ${template.name} 触发了职业技能 ${triggeredSkillTemplate.name}!`);
         triggeredSkillTemplate.isTriggeredSkill = true;
-        const triggerResult = this.applySkillEffects(character, triggeredSkillTemplate, teamMembers, monster);
+        // Pass isCasterPlayer to the recursive call
+        const triggerResult = this.applySkillEffects(character, triggeredSkillTemplate, teamMembers, monster, isCasterPlayer);
         return {
-            success: triggerResult.success, 
+            success: triggerResult.success,
             message: triggerResult.message || `${character.name} 触发了 ${triggeredSkillTemplate.name}。`,
-            effects: triggerResult.effects 
+            effects: triggerResult.effects
         };
     },
     
@@ -284,13 +291,14 @@ const JobSkills = {
      * @param {object} template - 技能模板
      * @param {array} teamMembers - 队伍成员
      * @param {object} monster - 怪物对象
+     * @param {boolean} isCasterPlayer - 施法者是否为玩家
      * @returns {object} 技能效果结果 { success: boolean, message?: string, effects?: object }
      * @test Test with a multi_effect skill that includes damage and buff. Expected: both effects applied, success: true.
      * @test Test with a multi_effect skill where one sub-effect targets an invalid/dead target. Expected: other valid sub-effects apply, success: true if at least one sub-effect succeeded.
      * @test Test with a multi_effect skill where a cost (hpCostPercentageCurrent) cannot be paid. Expected: success: false, no other effects applied.
      * @test Test with a trigger skill that casts another skill. Expected: triggered skill executes, overall success depends on triggered skill.
      */
-    applySkillEffects(character, template, teamMembers, monster) {
+    applySkillEffects(character, template, teamMembers, monster, isCasterPlayer) { // Added isCasterPlayer
         let combinedResults = { messages: [], effectsApplied: [], overallSuccess: false };
 
         if (!Array.isArray(template.effects)) {
@@ -370,9 +378,9 @@ const JobSkills = {
 
             if (buffDefinition) {
                 const optionsForEffect = { ...template, ...effectDetail, effects: [effectDetail], buffType: actualEffectType };
-                currentEffectResult = buffDefinition.isPositive 
-                    ? this.applyBuffEffects(character, optionsForEffect, teamMembers, monster) 
-                    : this.applyDebuffEffects(character, optionsForEffect, teamMembers, monster);
+                currentEffectResult = buffDefinition.isPositive
+                    ? this.applyBuffEffects(character, optionsForEffect, teamMembers, monster, isCasterPlayer)
+                    : this.applyDebuffEffects(character, optionsForEffect, teamMembers, monster, isCasterPlayer);
             } else {
                 switch (actualEffectType) {
                     case 'damage':
@@ -385,27 +393,27 @@ const JobSkills = {
                                 if (siblingEffect.type === 'directDamageBonus' && typeof siblingEffect.value === 'number') totalDirectDamageBonus += siblingEffect.value;
                             });
                         }
-                        currentEffectResult = this.applyDamageEffects(character, { ...template, ...effectDetail, effects: [effectDetail], type: actualEffectType }, teamMembers, monster, totalAdditionalFixedDamage, totalDirectDamageBonus);
+                        currentEffectResult = this.applyDamageEffects(character, { ...template, ...effectDetail, effects: [effectDetail], type: actualEffectType }, teamMembers, monster, isCasterPlayer, totalAdditionalFixedDamage, totalDirectDamageBonus);
                         break;
                     case 'heal':
-                        currentEffectResult = this.applyHealEffects(character, { ...template, ...effectDetail, effects: [effectDetail] }, teamMembers, monster);
+                        currentEffectResult = this.applyHealEffects(character, { ...template, ...effectDetail, effects: [effectDetail] }, teamMembers, monster, isCasterPlayer);
                         break;
                     case 'dispel':
-                        currentEffectResult = this.applyDispelEffects(character, { ...template, ...effectDetail, effects: [effectDetail] }, teamMembers, monster);
+                        currentEffectResult = this.applyDispelEffects(character, { ...template, ...effectDetail, effects: [effectDetail] }, teamMembers, monster, isCasterPlayer);
                         break;
                     case 'cleanse':
-                        currentEffectResult = this.applyDispelEffects(character, { ...template, ...effectDetail, dispelPositive: false, effects: [effectDetail] }, teamMembers, monster);
+                        currentEffectResult = this.applyDispelEffects(character, { ...template, ...effectDetail, dispelPositive: false, effects: [effectDetail] }, teamMembers, monster, isCasterPlayer);
                         break;
                     case 'revive':
-                        currentEffectResult = this.applyReviveEffects(character, { ...template, ...effectDetail, effects: [effectDetail] }, teamMembers, monster);
+                        currentEffectResult = this.applyReviveEffects(character, { ...template, ...effectDetail, effects: [effectDetail] }, teamMembers, monster, isCasterPlayer);
                         break;
                     case 'castSkill':
-                        currentEffectResult = effectDetail.skillId 
-                            ? this.applyTriggerSkillEffect(character, { ...template, ...effectDetail, triggerSkillId: effectDetail.skillId }, teamMembers, monster)
+                        currentEffectResult = effectDetail.skillId
+                            ? this.applyTriggerSkillEffect(character, { ...template, ...effectDetail, triggerSkillId: effectDetail.skillId }, teamMembers, monster, isCasterPlayer)
                             : { success: false, message: `技能 ${template.name} 的 castSkill 效果缺少 skillId` };
                         break;
                     case 'applyBuffPackage':
-                        const targetForBuffPkg = this.getTargets(character, effectDetail.targetType || template.targetType, teamMembers, monster)[0];
+                        const targetForBuffPkg = this.getTargets(character, effectDetail.targetType || template.targetType, teamMembers, monster, isCasterPlayer)[0];
                         if (targetForBuffPkg) {
                             const buffPackageApplied = BuffSystem.applyBuffPackage(targetForBuffPkg, effectDetail, character);
                             currentEffectResult = {
@@ -418,7 +426,7 @@ const JobSkills = {
                         }
                         break;
                     case 'echo':
-                        currentEffectResult = this.applyBuffEffects(character, { ...template, ...effectDetail, effects: [effectDetail], buffType: actualEffectType }, teamMembers, monster);
+                        currentEffectResult = this.applyBuffEffects(character, { ...template, ...effectDetail, effects: [effectDetail], buffType: actualEffectType }, teamMembers, monster, isCasterPlayer);
                         break;
                     case 'fieldEffect':
                         console.warn(`Unhandled atomic effect type: fieldEffect in skill ${template.name}`);
@@ -430,10 +438,10 @@ const JobSkills = {
                         if (effectDetail.additionalEffects && Array.isArray(effectDetail.additionalEffects)) {
                             for (const additionalEffect of effectDetail.additionalEffects) {
                                 const tempSubTemplate = { ...template, ...additionalEffect, effects: [additionalEffect], name: `${template.name} (附加效果)` };
-                                const subEffectResult = this.applySkillEffects(character, tempSubTemplate, teamMembers, monster); 
+                                const subEffectResult = this.applySkillEffects(character, tempSubTemplate, teamMembers, monster, isCasterPlayer);
                                 if (subEffectResult.message) combinedResults.messages.push(subEffectResult.message);
                                 if (subEffectResult.effects) combinedResults.effectsApplied.push(subEffectResult.effects);
-                                if (!subEffectResult.success) procSubEffectsSuccess = false; 
+                                if (!subEffectResult.success) procSubEffectsSuccess = false;
                             }
                         }
                         currentEffectResult = {
@@ -479,13 +487,14 @@ const JobSkills = {
      * @param {object} optionsForEffect - 包含技能模板和当前效果详情的选项对象
      * @param {array} teamMembers - 队伍成员
      * @param {object} monster - 怪物对象
+     * @param {boolean} isCasterPlayer - 施法者是否为玩家
      * @returns {object} 技能效果结果 { success: boolean, message?: string, effects?: object }
      * @test Test applying a single buff to self. Expected: success: true, buff applied.
      * @test Test applying buffs to all allies. Expected: success: true, buffs applied to all living allies.
      * @test Test applying buff to a dead target. Expected: success: true (as no valid target), no buff applied to dead target.
      */
-    applyBuffEffects(character, optionsForEffect, teamMembers, monster) {
-        const targets = this.getTargets(character, optionsForEffect.targetType, teamMembers, monster);
+    applyBuffEffects(character, optionsForEffect, teamMembers, monster, isCasterPlayer) { // Added isCasterPlayer
+        const targets = this.getTargets(character, optionsForEffect.targetType, teamMembers, monster, isCasterPlayer);
         const effectsAppliedDetails = [];
         let appliedAtLeastOneBuff = false;
 
@@ -618,12 +627,13 @@ const JobSkills = {
      * @param {object} optionsForEffect - 包含技能模板和当前效果详情的选项对象
      * @param {array} teamMembers - 队伍成员
      * @param {object} monster - 怪物对象
+     * @param {boolean} isCasterPlayer - 施法者是否为玩家
      * @returns {object} 技能效果结果 { success: boolean, message?: string, effects?: object }
      * @test Test applying a debuff to an enemy. Expected: success: true, debuff applied.
      * @test Test applying debuff to no valid targets. Expected: success: true, message indicates no target.
      */
-    applyDebuffEffects(character, optionsForEffect, teamMembers, monster) {
-        const targets = this.getTargets(character, optionsForEffect.targetType, teamMembers, monster);
+    applyDebuffEffects(character, optionsForEffect, teamMembers, monster, isCasterPlayer) { // Added isCasterPlayer
+        const targets = this.getTargets(character, optionsForEffect.targetType, teamMembers, monster, isCasterPlayer);
         const effectsAppliedDetails = [];
         let appliedAtLeastOneDebuff = false;
 
@@ -756,6 +766,7 @@ const JobSkills = {
      * @param {object} template - 技能模板 (应只包含 type: 'damage' 或 'enmity' 的 effects)
      * @param {array} teamMembers - 队伍成员
      * @param {object} monster - 怪物对象
+     * @param {boolean} isCasterPlayer - 施法者是否为玩家
      * @param {number} [additionalFixedDamage=0] - 额外的固定伤害值
      * @param {number} [directDamageBonus=0] - 直接伤害加成
      * @returns {object} 技能效果结果 { success: boolean, message?: string, effects?: object }
@@ -763,10 +774,10 @@ const JobSkills = {
      * @test Test AOE damage. Expected: success: true, damage dealt to all enemies.
      * @test Test damage with no valid targets. Expected: success: true, message indicates no target.
      */
-    applyDamageEffects(character, template, teamMembers, monster, additionalFixedDamage = 0, directDamageBonus = 0) {
-        const targets = this.getTargets(character, template.targetType, teamMembers, monster);
-        const effectsAppliedDetails = []; 
-        let totalDamageAppliedToAllTargets = 0; 
+    applyDamageEffects(character, template, teamMembers, monster, isCasterPlayer, additionalFixedDamage = 0, directDamageBonus = 0) { // Added isCasterPlayer
+        const targets = this.getTargets(character, template.targetType, teamMembers, monster, isCasterPlayer);
+        const effectsAppliedDetails = [];
+        let totalDamageAppliedToAllTargets = 0;
 
         if (targets.length === 0) {
             return {
@@ -886,14 +897,15 @@ const JobSkills = {
      * @param {object} template - 技能模板
      * @param {array} teamMembers - 队伍成员
      * @param {object} monster - 怪物对象
+     * @param {boolean} isCasterPlayer - 施法者是否为玩家
      * @returns {object} 技能效果结果 { success: boolean, message?: string, effects?: object }
      * @test Test healing a target with low HP. Expected: success: true, HP increased.
      * @test Test healing a full HP target. Expected: success: true, message indicates full HP.
      * @test Test healing with no valid targets. Expected: success: true, message indicates no target.
      */
-    applyHealEffects(character, template, teamMembers, monster) {
-        const targets = this.getTargets(character, template.targetType, teamMembers, monster);
-        const effectsAppliedDetails = []; 
+    applyHealEffects(character, template, teamMembers, monster, isCasterPlayer) { // Added isCasterPlayer
+        const targets = this.getTargets(character, template.targetType, teamMembers, monster, isCasterPlayer);
+        const effectsAppliedDetails = [];
         let totalHealing = 0;
         let needsHealingInitially = false;
 
@@ -982,13 +994,14 @@ const JobSkills = {
      * @param {object} template - 技能模板
      * @param {array} teamMembers - 队伍成员
      * @param {object} monster - 怪物对象
+     * @param {boolean} isCasterPlayer - 施法者是否为玩家
      * @returns {object} 技能效果结果 { success: boolean, message?: string, effects?: object }
      * @test Test dispelling a debuff from an enemy. Expected: success: true, debuff removed.
      * @test Test dispelling when no buffs/debuffs are present. Expected: success: true, message indicates no effects to dispel.
      */
-    applyDispelEffects(character, template, teamMembers, monster) {
-        const targets = this.getTargets(character, template.targetType, teamMembers, monster);
-        const effectsAppliedDetails = []; 
+    applyDispelEffects(character, template, teamMembers, monster, isCasterPlayer) { // Added isCasterPlayer
+        const targets = this.getTargets(character, template.targetType, teamMembers, monster, isCasterPlayer);
+        const effectsAppliedDetails = [];
         let totalDispelCount = 0;
         let hasBuffsToDispelInitially = false;
 
@@ -1073,15 +1086,19 @@ const JobSkills = {
          * 获取技能目标
          * @param {object} character - 角色对象
          * @param {string} targetType - 目标类型
-         * @param {array} teamMembers - 队伍成员
-         * @param {object} monster - 怪物对象
+         * @param {array} teamMembers - 队伍成员 (通常是玩家队伍)
+         * @param {object} monster - 怪物对象 (当前战斗的单个敌人)
+         * @param {boolean} isCasterPlayer - 施法者是否为玩家
          * @returns {array} 目标数组
          */
-    getTargets(character, targetType, teamMembers, monster) {
-        console.log(`获取目标，目标类型: ${targetType}`);
-        let targets = [];
-
-        switch (targetType) {
+        getTargets(character, targetType, teamMembers, monster, isCasterPlayer) { // Added isCasterPlayer
+            // character 是施法者
+            // teamMembers 是玩家队伍
+            // monster 是当前敌人单位
+            console.log(`获取目标，目标类型: ${targetType}, 施法者: ${character.name}, isCasterPlayer: ${isCasterPlayer}`);
+            let targets = [];
+    
+            switch (targetType) {
             case 'self':
                 targets = [character];
                 break;
@@ -1104,16 +1121,33 @@ const JobSkills = {
                 }
                 break;
             case 'all_allies':
-                targets = teamMembers.filter(member => member.currentStats.hp > 0);
+                if (isCasterPlayer) {
+                    targets = teamMembers.filter(member => member.currentStats.hp > 0);
+                } else { // 施法者是怪物
+                    // 怪物对其友方（其他怪物）施法。当前系统只有一个怪物，所以目标是它自己。
+                    // 未来如果支持多怪物队伍 (enemyParty)，这里应该是 enemyParty.filter(...)
+                    if (character && character.currentStats && character.currentStats.hp > 0) {
+                        targets = [character]; // 怪物对自己用群体友方技能
+                    }
+                }
                 break;
             case 'enemy':
+                // 无论谁施法，'enemy' 总是指向施法者的敌对目标。
+                // 如果玩家施法，目标是 monster。
+                // 如果怪物施法，目标是我方队伍中的某个角色 (通常由 selectMonsterTarget 决定，但 getTargets 只负责返回单个 monster)
+                // 这里假设 monster 参数总是代表“当前的主要敌人”
                 if (monster && monster.currentStats.hp > 0) {
                     targets = [monster];
                 }
                 break;
             case 'all_enemies':
-                if (monster && monster.currentStats.hp > 0) {
-                    targets = [monster]; // 当前只有一个怪物
+                if (isCasterPlayer) { // 玩家施法，目标是所有敌人
+                    if (monster && monster.currentStats.hp > 0) {
+                        targets = [monster]; // 当前只有一个怪物
+                        // 未来: targets = enemyParty.filter(enemy => enemy.currentStats.hp > 0);
+                    }
+                } else { // 施法者是怪物，目标是我方所有角色
+                    targets = teamMembers.filter(member => member.currentStats.hp > 0);
                 }
                 break;
             default:
@@ -1121,12 +1155,24 @@ const JobSkills = {
                 if (targetType && typeof targetType === 'string') {
                     if (targetType.startsWith('all_allies_')) {
                         const element = targetType.substring('all_allies_'.length);
-                        targets = teamMembers.filter(member => member.currentStats.hp > 0 && member.attribute === element);
-                        if (targets.length === 0) Battle.logBattle(`技能目标 ${targetType} 未找到符合条件的队友。`);
+                        if (isCasterPlayer) {
+                            targets = teamMembers.filter(member => member.currentStats.hp > 0 && member.attribute === element);
+                        } else { // 怪物施法，目标是同元素的其他怪物（或自身）
+                            if (character && character.currentStats.hp > 0 && character.attribute === element) {
+                                targets = [character];
+                                // Future: targets = enemyParty.filter(m => m.currentStats.hp > 0 && m.attribute === element);
+                            }
+                        }
+                        if (targets.length === 0) Battle.logBattle(`技能目标 ${targetType} 未找到符合条件的友方。`);
                     } else if (targetType.startsWith('all_enemies_')) {
                         const element = targetType.substring('all_enemies_'.length);
-                        if (monster && monster.currentStats.hp > 0 && monster.attribute === element) {
-                            targets = [monster];
+                        if (isCasterPlayer) {
+                            if (monster && monster.currentStats.hp > 0 && monster.attribute === element) {
+                                targets = [monster];
+                                // Future: targets = enemyParty.filter(m => m.currentStats.hp > 0 && m.attribute === element);
+                            }
+                        } else { // 怪物施法，目标是特定元素的我方角色
+                            targets = teamMembers.filter(member => member.currentStats.hp > 0 && member.attribute === element);
                         }
                         if (targets.length === 0) Battle.logBattle(`技能目标 ${targetType} 未找到符合条件的敌人。`);
                     } else {
@@ -1147,29 +1193,33 @@ const JobSkills = {
      * @param {object} template - 技能模板
      * @param {array} teamMembers - 队伍成员
      * @param {object} monster - 怪物对象
+     * @param {boolean} isCasterPlayer - 施法者是否为玩家
      * @returns {object} 技能效果结果 { success: boolean, message?: string, effects?: object }
      * @test Test reviving a dead ally. Expected: success: true, ally revived.
      * @test Test reviving when no allies are dead. Expected: success: true, message indicates no target.
      */
-    applyReviveEffects(character, template, teamMembers, monster) {
+    applyReviveEffects(character, template, teamMembers, monster, isCasterPlayer) { // Added isCasterPlayer
         let potentialTargets = [];
+        // 复活逻辑通常针对友方，所以 isCasterPlayer 很重要
+        const targetTeam = isCasterPlayer ? teamMembers : []; // 如果怪物要复活，需要 enemyParty
+
         switch (template.targetType) {
-            case 'ally': 
-                potentialTargets = teamMembers.filter(member => member.id !== character.id && member.currentStats.hp <= 0);
-                if (potentialTargets.length > 0) potentialTargets = [potentialTargets[0]]; 
+            case 'ally':
+                potentialTargets = targetTeam.filter(member => member.id !== character.id && member.currentStats.hp <= 0);
+                if (potentialTargets.length > 0) potentialTargets = [potentialTargets[0]];
                 break;
             case 'all_allies':
-                potentialTargets = teamMembers.filter(member => member.currentStats.hp <= 0);
+                potentialTargets = targetTeam.filter(member => member.currentStats.hp <= 0);
                 break;
-            case 'self': 
+            case 'self':
                 if (character.currentStats.hp <= 0) potentialTargets = [character];
                 break;
-            default: 
-                 potentialTargets = this.getTargets(character, template.targetType, teamMembers, monster)
-                                       .filter(t => t.currentStats.hp <=0); 
+            default:
+                 potentialTargets = this.getTargets(character, template.targetType, teamMembers, monster, isCasterPlayer)
+                                       .filter(t => t.currentStats.hp <=0);
         }
         
-        const effectsAppliedDetails = []; 
+        const effectsAppliedDetails = [];
         let revivedCount = 0;
         const hasDeadTargetsInitially = potentialTargets.length > 0;
 

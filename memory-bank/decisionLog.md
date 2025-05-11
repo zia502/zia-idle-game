@@ -578,3 +578,76 @@ The error `ReferenceError: BattleLogger is not defined` occurred in [`src/js/cor
         const targetIsMonster = isAttackerEffectivelyBoss;
         ```
 *   此更改确保了 `attackerIsPlayer` 和 `targetIsMonster` 的值总是基于 `attacker.isBoss` 的布尔真假性来设定。
+
+---
+### Decision (Architecture)
+[2025-05-11 19:42:00] - 采纳针对战斗系统中群体技能（如 `all_enemies`, `all_allies`）的核心架构调整方案。
+
+**Rationale:**
+当前战斗系统在处理群体目标技能时存在根本性缺陷。无论是玩家对全体敌人施放技能，还是怪物对我方全体施放技能，都仅作用于单个目标。这是因为：
+1.  对于玩家的 `all_enemies` 技能：战斗系统缺乏对“敌方队伍”的统一管理，仅处理单个 `monster` 实例。
+2.  对于怪物或玩家的 `all_allies` 技能：尽管我方队伍 (`playerTeam`) 是一个数组，但目标获取逻辑 ([`JobSkills.getTargets()`](src/js/core/job-skills.js:1080)) 或后续的效果应用函数未能正确迭代处理所有成员。
+
+此架构调整旨在解决这些问题，使群体技能能够正确作用于所有预期目标。
+
+**Implications/Details:**
+*   **引入“敌方队伍” (`enemyParty`) 概念:**
+    *   修改战斗初始化逻辑 ([`Battle.startBattle`](src/js/core/battle.js:0))，使其能够接收并管理一个由多个独立敌人对象组成的 `enemyParty` 数组。这将取代或补充当前单个 `monster` 的处理方式。
+    *   战斗遭遇的定义（例如在 `src/data/monsters.json` 或 `src/data/bosses.json`）可能需要调整，以支持配置包含多个怪物的队伍。
+*   **重构目标获取逻辑 ([`JobSkills.getTargets()`](src/js/core/job-skills.js:1080)):**
+    *   确保函数能够接收完整的 `playerTeam` 和新的 `enemyParty` 作为参数。
+    *   对于 `targetType: "all_enemies"`，函数应迭代 `enemyParty` 并返回所有存活的敌人对象数组。
+    *   对于 `targetType: "all_allies"`，函数应迭代 `playerTeam` (或从施法者角度看的友方队伍) 并返回所有存活的友方角色数组。
+    *   对于 `targetType: "all_characters"`，函数应合并并返回 `playerTeam` 和 `enemyParty` 中所有存活单位。
+    *   其他如 `random_enemy`, `lowest_hp_enemy` 等类型也需相应调整以从正确的队伍中选取。
+*   **调整技能效果应用函数 (如 [`JobSkills.applyDamageEffects()`](src/js/core/job-skills.js:766), [`JobSkills.applyDebuffEffects()`](src/js/core/job-skills.js:625) 等):**
+    *   这些函数必须能够接收一个目标对象数组（而不是单个目标）。
+    *   内部逻辑需要迭代此目标数组，并对每个目标独立应用效果、计算结果、记录日志。
+    *   返回值需要能汇总对多个目标的操作结果。
+*   **更新技能使用主逻辑 ([`JobSkills.useSkill`](src/js/core/job-skills.js:0), [`JobSkills.applySkillEffects`](src/js/core/job-skills.js:0)):**
+    *   确保从 `getTargets` 获取的目标数组能正确传递到效果应用函数。
+    *   `applySkillEffects` 在处理如 `multi_effect` 时，需要正确地将目标数组传递给其调用的原子效果处理函数。
+*   **UI 影响:**
+    *   战斗界面需要能渲染多个敌人。
+    *   如果玩家技能是单体目标，UI需支持从多个敌人中选择。
+    *   群体技能的日志和视觉反馈应清晰指示所有受影响目标。
+*   **影响范围:** 这是一项涉及战斗系统核心的重大变更，需要仔细规划和测试。
+---
+### Decision (Debug)
+[2025-05-11 20:13:00] - 确认怪物 AoE 技能仅影响单个我方单位的根本原因。
+
+**Rationale:**
+用户报告怪物使用的全体攻击技能错误地只对我方队伍中的一个单位造成效果。经调查，问题根源在于 [`src/js/core/job-skills.js`](src/js/core/job-skills.js) 中的 `getTargets` 函数在处理由怪物发起的、目标类型为 `all_enemies`（意指我方全体）的技能时存在逻辑缺陷。
+具体来说，当 [`src/js/core/battle.js`](src/js/core/battle.js) 中的 `processMonsterAction` 函数调用 `JobSkills.useSkill` 时，它将一个通过 `selectMonsterTarget` 选定的单个我方角色作为 `JobSkills.useSkill` 的第四个参数（即 `monster` 参数）传递。随后，在 `JobSkills.useSkill` 内部调用 `JobSkills.getTargets` 时，对于 `targetType: "all_enemies"` 的情况 ([`src/js/core/job-skills.js:1114`](src/js/core/job-skills.js:1114))，`JobSkills.getTargets` 错误地将其接收到的第四个参数（即那个单个的我方角色）视为唯一目标，而不是处理本应代表我方全体的第三个参数 (`teamMembers`)。
+
+**Implications/Details:**
+*   此问题是系统性的，影响所有由怪物施放且目标类型定义为 `all_enemies` (期望作用于我方全体) 的技能。
+*   修复此问题需要修改 [`src/js/core/job-skills.js`](src/js/core/job-skills.js) 中的 `getTargets` 函数，使其能够正确区分施法者身份（玩家或怪物），并相应地解析 `all_enemies` 和 `all_allies` 等目标类型。
+*   此修复方向与 Memory Bank 中已记录的关于“群体目标处理与敌方队伍管理模式” ([`memory-bank/systemPatterns.md:281`](memory-bank/systemPatterns.md:281)) 和相关架构决策 ([`memory-bank/decisionLog.md:583`](memory-bank/decisionLog.md:583)) 一致，即需要更鲁棒的目标选择逻辑。
+
+---
+### Decision (Code)
+[2025-05-11 20:17:00] - 修复怪物 AoE 技能的目标选择逻辑。
+
+**Rationale:**
+怪物使用的目标类型为 `all_enemies` (意指我方全体) 的技能，由于 `JobSkills.getTargets` 函数的逻辑缺陷，错误地只作用于单个我方单位。该函数未能正确区分施法者阵营来解析 `all_enemies` 和 `all_allies`。
+
+**Details:**
+*   修改了 [`src/js/core/job-skills.js`](src/js/core/job-skills.js):
+    *   **`useSkill` 函数:**
+        *   在函数开始时，通过比较 `characterId` 是否存在于传入的 `teamMembers` 数组中，来确定施法者是否为玩家角色 (`isCasterPlayer`)。
+        *   将 `isCasterPlayer` 标志传递给所有内部调用的效果应用函数 (如 `applyDamageEffects`, `applySkillEffects` 等)。
+    *   **效果应用函数 (如 `applyDamageEffects`, `applyBuffEffects`, `applySkillEffects` 等):**
+        *   修改了这些函数的签名，以接收 `isCasterPlayer` 参数。
+        *   将 `isCasterPlayer` 参数传递给它们内部对 `this.getTargets` 的调用。
+    *   **`getTargets` 函数:**
+        *   修改了函数签名，增加 `isCasterPlayer` 参数: `getTargets(character, targetType, teamMembers, monster, isCasterPlayer)`。
+        *   更新了 `case "all_enemies":` 和 `case "all_allies":` 的逻辑：
+            *   **`all_enemies`**:
+                *   如果 `isCasterPlayer` 为 `true` (玩家施法)，目标是 `monster` (当前系统的单个敌方单位)。
+                *   如果 `isCasterPlayer` 为 `false` (怪物施法)，目标是 `teamMembers` (我方全体角色)。
+            *   **`all_allies`**:
+                *   如果 `isCasterPlayer` 为 `true` (玩家施法)，目标是 `teamMembers` (我方全体角色)。
+                *   如果 `isCasterPlayer` 为 `false` (怪物施法)，目标是 `character` (即怪物施法者自身，适用于怪物对自己队伍施放的群体技能；在当前单怪物系统中，这意味着怪物对自己施法)。
+*   **兼容性检查:**
+    *   确认了 [`src/js/core/battle.js`](src/js/core/battle.js) 中对 `JobSkills.useSkill` 的调用点 (如 `processMonsterAction` 和 `processCharacterSkills`) 不需要修改，因为它们传递的参数与新的 `JobSkills` 内部逻辑兼容，`isCasterPlayer` 的判断能够正确进行。

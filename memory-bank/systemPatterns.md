@@ -276,3 +276,65 @@ BattleLogger.log(
     `${target.name} 获得了 ${buff.name} 效果。`
 );
 ```
+
+---
+### [2025-05-11 19:42:00] - 群体目标处理与敌方队伍管理模式
+
+**Context:** 解决战斗系统中群体技能（如 `all_enemies`, `all_allies`）无法正确作用于所有预期目标的问题。这需要引入对“敌方队伍”的明确管理，并重构目标选择和效果应用逻辑。
+
+**Pattern:**
+
+1.  **敌方队伍 (`enemyParty`) 管理 ([`src/js/core/battle.js`](src/js/core/battle.js:0)):**
+    *   **数据结构:** 在 `Battle` 实例中维护一个 `enemyParty` 数组，其中包含当前战斗中所有独立的敌人对象。
+    *   **初始化:** `Battle.startBattle` 负责根据遭遇配置（例如，怪物ID数组或更复杂的配置）创建并填充 `enemyParty`。每个敌人对象都拥有独立的状态（HP, buffs, etc.）。
+    *   **替代单一怪物:** `enemyParty` 取代或补充了之前战斗系统对单个 `monster` 实例的依赖。
+
+2.  **目标获取重构 ([`JobSkills.getTargets()`](src/js/core/job-skills.js:1080)):**
+    *   **参数:** 函数接收施法者、技能、玩家队伍 (`playerTeam`) 和敌方队伍 (`enemyParty`)。
+    *   **`targetType: "all_enemies"`:** 迭代 `enemyParty`，返回所有存活敌人对象的数组。
+    *   **`targetType: "all_allies"`:** 迭代施法者所属的队伍（`playerTeam` 或 `enemyParty`，取决于施法者身份），返回所有存活友方单位的数组。
+    *   **`targetType: "all_characters"`:** 合并 `playerTeam` 和 `enemyParty` 中所有存活单位并返回。
+    *   **其他目标类型:** 确保能从正确的队伍（`playerTeam` 或 `enemyParty`）中选择目标。
+    *   **返回值:** 始终返回一个目标对象数组（即使只有一个目标或没有目标）。
+
+3.  **技能效果应用调整 (e.g., [`JobSkills.applyDamageEffects()`](src/js/core/job-skills.js:766)):**
+    *   **参数:** 效果应用函数接收一个目标对象数组 (`targets`)。
+    *   **迭代处理:** 函数内部必须遍历 `targets` 数组，对每个 `currentTarget`独立应用技能效果、计算结果、记录日志。
+    *   **结果汇总:** 返回值应能反映对多个目标的操作结果（例如，一个包含每个目标效果详情的数组，以及一个总体成功状态）。参考“统一效果函数返回值模式”。
+
+4.  **技能使用流程 ([`JobSkills.useSkill()`](src/js/core/job-skills.js:0), [`JobSkills.applySkillEffects()`](src/js/core/job-skills.js:0)):**
+    *   `useSkill` 确保将从 `getTargets` 返回的目标数组正确传递给 `applySkillEffects`。
+    *   `applySkillEffects` 在分发到具体的原子效果处理函数（如 `applyDamageEffects`）时，传递完整的目标数组。
+
+**Rationale:**
+*   **准确性:** 确保群体技能按预期作用于所有相关目标。
+*   **灵活性:** 为更复杂的战斗遭遇（如多Boss战）和多样化的目标选择型技能（如随机X个敌人）奠定基础。
+*   **可维护性:** 清晰分离了队伍管理、目标选择和效果应用逻辑。
+
+**Example (Conceptual `getTargets` for `all_enemies`):**
+```javascript
+case "all_enemies":
+  if (enemyParty && enemyParty.length > 0) {
+    targets = enemyParty.filter(enemy => enemy && enemy.currentStats && enemy.currentStats.hp > 0);
+  }
+  break;
+```
+
+**Example (Conceptual `applyDamageEffects`):**
+```javascript
+function applyDamageEffects(caster, skillEffect, targets, /*...other params...*/) {
+  const results = [];
+  let overallSuccess = false;
+  if (!targets || targets.length === 0) {
+    return { success: true, message: "没有有效的伤害目标。", effects: [] }; // Or false depending on desired strictness
+  }
+  for (const currentTarget of targets) {
+    // ... calculate damage for currentTarget ...
+    // ... apply damage to currentTarget ...
+    // ... log for currentTarget ...
+    results.push({ targetId: currentTarget.id, damageDealt: calculatedDamage, hpAfter: currentTarget.currentStats.hp });
+    overallSuccess = true; // Mark success if at least one target was affected
+  }
+  return { success: overallSuccess, effects: results };
+}
+```

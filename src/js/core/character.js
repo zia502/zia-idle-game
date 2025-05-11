@@ -1630,7 +1630,7 @@ const Character = {
             window.log(`===== calculateAttackPower 结束 =====`);
         }
 
-        return attackPower;
+        return Math.floor(attackPower);
     },
 
 

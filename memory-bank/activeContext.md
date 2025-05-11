@@ -285,3 +285,5 @@ This file tracks the project's current status, including recent changes, current
 * [2025-05-11 12:47:21] - 修改了 [`src/js/core/character.js`](src/js/core/character.js:1) 中的 `loadSaveData` 函数，将其改为 `async` 函数并使用 `Promise.all()` 等待角色模板加载完成后再执行后续逻辑，以修复因模板未加载完成导致的验证错误。
 * [2025-05-11 12:58:48] - 修改了 [`src/js/core/character.js`](src/js/core/character.js:1) 中的 `validateCharacterBaseStats` 函数，为其添加了 `autoCorrect` 可选参数和相应的自动修正逻辑（包括更新 `maxHp`/`maxAttack` 和调用 `_updateCharacterEffectiveStats`）。同时，更新了 `loadSaveData` 函数中对 `validateCharacterBaseStats` 的调用，以启用自动修正。
 * [2025-05-11 16:54:54] - 修改了 `src/js/core/character.js` 中的 `calculateAttackPower` 函数，以区分处理可叠加和不可叠加的 `attackUp` Buff，并调整了其他乘算区间的应用顺序。
+* [2025-05-11 18:10:00] - 修改了 [`src/js/core/battle.js`](src/js/core/battle.js:1775) 中的 `applyDamageToTarget` 函数，加入了基于攻击方视角的属性克制伤害计算逻辑。包括对普通属性克制和光暗互克的处理，并将伤害变化记录到 `calculationSteps` 和 `BattleLogger`。
+* [2025-05-11 18:45:48] - 修改了 [`src/js/core/battle.js`](src/js/core/battle.js:1760) 中的战斗逻辑，以更稳健地检查 `attacker.isBoss` 属性，使用 `!!` 操作符确保布尔上下文。

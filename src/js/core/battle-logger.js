@@ -60,7 +60,7 @@ const BattleLogger = {
                     window.UI.addBattleLogMessage(message);
                 } else {
                     // Fallback if UI function is not available
-                    console.log(`[UI LOG (Fallback)] ${message}`);
+                    //console.log(`[UI LOG (Fallback)] ${message}`);
                 }
                 break;
             default:

@@ -1519,7 +1519,7 @@ const Dungeon = {
      * @returns {string} 随机元素属性
      */
     getRandomAttribute() {
-        const attributes = ['fire', 'water', 'earth', 'wind', 'light', 'dark', 'ice'];
+        const attributes = ['fire', 'water', 'earth', 'wind', 'light', 'dark'];
         return attributes[Math.floor(Math.random() * attributes.length)];
     },
 

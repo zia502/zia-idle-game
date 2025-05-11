@@ -216,3 +216,9 @@ This file tracks the project's progress using a task list format.
     *   不可叠加 `attackUp` 作为独立乘算区间 `(1 + buff.value)`。
     *   `attackDown` 逻辑保持不变。
     *   其他乘算区间（浑身、背水、EX攻击）和固定伤害上升的应用顺序已调整。
+* [2025-05-11 18:10:00] - **Completed Task:** 修改 [`src/js/core/battle.js`](src/js/core/battle.js:1775) 中的 `applyDamageToTarget` 函数，实现属性克制伤害计算逻辑。
+    *   根据攻击方和目标方的元素属性应用伤害修正（克制增伤1.5倍，被克制减伤0.75倍，光暗互克增伤1.5倍）。
+    *   伤害变化记录在 `calculationSteps` 和 `BattleLogger` 中。
+    *   确保逻辑在 `attacker` 和 `actualTarget` 及其属性有效时执行。
+* [2025-05-11 18:45:48] - **Completed Task:** 修改了 [`src/js/core/battle.js`](src/js/core/battle.js:1760) 中的战斗逻辑，以更稳健地检查 `attacker.isBoss` 属性。
+    *   使用 `!!attacker.isBoss` 来确保布尔上下文，并相应更新了 `attackerIsPlayer` 和 `targetIsMonster` 的赋值。

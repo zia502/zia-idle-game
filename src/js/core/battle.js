@@ -1739,49 +1739,82 @@ reviveCharacter(character, hpPercentToRestore, teamData) { // teamData is e.g. G
              // if (isCritical) calculationSteps.push(`暴击伤害调整: ${finalDamage}`);
              
              const initialDamageBeforeDefense = finalDamage;
-
-             // --- Apply Attacker's Damage Cap Up ---
-             let currentDamageCap = options.isSkillDamage ? (Battle.BASE_SKILL_DAMAGE_CAP || 899999) : (Battle.BASE_DAMAGE_CAP || 199999);
-             let capAppliedBy = options.isSkillDamage ? "技能基础上限" : "普攻基础上限";
-             calculationSteps.push(`初始上限: ${currentDamageCap} (类型: ${capAppliedBy})`);
-
-             if (attacker && attacker.buffs && typeof BuffSystem !== 'undefined') {
-                 if (options.isSkillDamage) {
-                     let totalSkillDamageCapUpBonus = 0;
-                     const skillCapBuffs = BuffSystem.getBuffsByType(attacker, 'skillDamageCapUp');
-                     if (skillCapBuffs) skillCapBuffs.forEach(b => { if (b.duration > 0 && b.value) totalSkillDamageCapUpBonus += b.value; });
-                     if (totalSkillDamageCapUpBonus > 0) {
-                         currentDamageCap = (Battle.BASE_SKILL_DAMAGE_CAP || 899999) * (1 + totalSkillDamageCapUpBonus);
-                         capAppliedBy = `技能伤害上限提升 (${totalSkillDamageCapUpBonus*100}%)`;
-                         calculationSteps.push(`攻击方技能上限提升后: ${currentDamageCap} (来自 ${capAppliedBy})`);
-                     }
-                 }
-                 // General damageCapUp can also apply or take precedence if higher
-                 let totalDamageCapUpBonus = 0;
-                 const damageCapBuffs = BuffSystem.getBuffsByType(attacker, 'damageCapUp');
-                 if (damageCapBuffs) damageCapBuffs.forEach(b => { if (b.duration > 0 && b.value) totalDamageCapUpBonus += b.value; });
-                 if (totalDamageCapUpBonus > 0) {
-                     const generalCalculatedCap = (options.isSkillDamage ? (Battle.BASE_SKILL_DAMAGE_CAP || 899999) : (Battle.BASE_DAMAGE_CAP || 199999)) * (1 + totalDamageCapUpBonus);
-                     if (generalCalculatedCap > currentDamageCap) { // Only apply if general cap is higher or if it's the only cap
-                        currentDamageCap = generalCalculatedCap;
-                        capAppliedBy = `通用伤害上限提升 (${totalDamageCapUpBonus*100}%)`;
-                        calculationSteps.push(`攻击方通用上限提升后: ${currentDamageCap} (来自 ${capAppliedBy})`);
-                     }
-                 }
-             }
              
              const damageBeforeFluctuation = finalDamage;
              finalDamage = Math.floor(finalDamage * (0.95 + Math.random() * 0.1));
              calculationSteps.push(`伤害浮动 (0.95-1.05): ${damageBeforeFluctuation} -> ${finalDamage}`);
 
-             if (finalDamage > currentDamageCap) {
-                 const capMsg = `${attackerNameForLog} 的 ${capAppliedBy} 触发，伤害从 ${Math.floor(finalDamage)} 限制到 ${Math.floor(currentDamageCap)}`;
-                 BattleLogger.log(BattleLogger.levels.CONSOLE_INFO, capMsg, null, this.currentTurn); // BATTLE_LOG might be too verbose for this
-                 calculationSteps.push(`攻击方上限应用: ${finalDamage} -> ${Math.floor(currentDamageCap)} (原因: ${capAppliedBy})`);
-                 finalDamage = Math.floor(currentDamageCap);
-             }
+           // --- 属性克制计算 (光暗优先) ---
+           if (attacker && attacker.attribute && actualTarget && actualTarget.attribute &&
+               typeof Character !== 'undefined' && Character.attributes) { // 确保 options.playerTeam 存在
+               
+               const attackerElement = attacker.attribute;
+               const targetElement = actualTarget.attribute;
+               const attackerAttrDef = Character.attributes[attackerElement];
+               
+               let elementalMultiplier = 1.0;
+               let elementalLog = "";
+               let 光暗规则已应用 = false;
+
+               const isAttackerEffectivelyBoss = !!attacker.isBoss;
+               const attackerIsPlayer = !isAttackerEffectivelyBoss;
+               const targetIsMonster = isAttackerEffectivelyBoss;
+
+               // 1. 光暗克制规则 (玩家有利，优先)
+               if (attackerIsPlayer && targetIsMonster) { // 玩家攻击怪物
+                   if (attackerElement === 'light' && targetElement === 'dark') {
+                       elementalMultiplier = 1.5;
+                       elementalLog = `光克暗 (玩家有利)! 伤害 x${elementalMultiplier.toFixed(1)}`;
+                       光暗规则已应用 = true;
+                   } else if (attackerElement === 'dark' && targetElement === 'light') {
+                       elementalMultiplier = 1.5;
+                       elementalLog = `暗克光 (玩家有利)! 伤害 x${elementalMultiplier.toFixed(1)}`;
+                       光暗规则已应用 = true;
+                   }
+               } else if (!attackerIsPlayer && targetIsMonster === false) { // 怪物攻击玩家 (targetIsMonster === false 表示目标是玩家)
+                   if (attackerElement === 'light' && targetElement === 'dark') {
+                       elementalMultiplier = 0.75;
+                       elementalLog = `光对暗 (玩家有利)! ${attacker.name || '怪物'}伤害 x${elementalMultiplier.toFixed(2)}`;
+                       光暗规则已应用 = true;
+                   } else if (attackerElement === 'dark' && targetElement === 'light') {
+                       elementalMultiplier = 0.75;
+                       elementalLog = `暗对光 (玩家有利)! ${attacker.name || '怪物'}伤害 x${elementalMultiplier.toFixed(2)}`;
+                       光暗规则已应用 = true;
+                   }
+               }
+
+               // 2. 常规属性克制 (如果光暗规则未应用)
+               if (!光暗规则已应用 && attackerAttrDef) {
+                   if (attackerAttrDef.strengths && attackerAttrDef.strengths.includes(targetElement)) {
+                       elementalMultiplier = 1.5;
+                       elementalLog = `属性有利 (${attackerElement} 克 ${targetElement})! 伤害 x${elementalMultiplier.toFixed(1)}`;
+                   }
+                   else if (attackerAttrDef.weaknesses && attackerAttrDef.weaknesses.includes(targetElement)) {
+                       elementalMultiplier = 0.75;
+                       elementalLog = `属性不利 (${attackerElement} 被 ${targetElement} 克制)! 伤害 x${elementalMultiplier.toFixed(2)}`;
+                   }
+               }
+
+               if (elementalMultiplier !== 1.0) {
+                   const damageBeforeElemental = finalDamage;
+                   finalDamage = Math.floor(finalDamage * elementalMultiplier);
+                   calculationSteps.push(`${elementalLog}: ${damageBeforeElemental} -> ${finalDamage}`);
+                   BattleLogger.log(BattleLogger.levels.CONSOLE_DETAIL,
+                       `${attackerNameForLog} ${elementalLog}`,
+                       { attacker: attackerNameForLog, target: actualTarget.name, multiplier: elementalMultiplier },
+                       this.currentTurn
+                   );
+                   BattleLogger.log(BattleLogger.levels.BATTLE_LOG,
+                       `${attackerNameForLog} ${elementalLog}`,
+                       null,
+                       this.currentTurn);
+               }else{
+                    calculationSteps.push(`属性无克制: 伤害不变`);
+               }
+           }
+           // --- 属性克制计算结束 ---
              
-             const damageBeforeTargetDefense = finalDamage;
+           const damageBeforeTargetDefense = finalDamage;
              const targetEffectiveDefense = Math.max(0, (actualTarget.currentStats.defense || 0) - (attacker?.currentStats?.ignoreDefense || 0));
              finalDamage = Math.floor(finalDamage / (1 + targetEffectiveDefense / 100));
              calculationSteps.push(`目标防御减免 (防御: ${targetEffectiveDefense}): ${damageBeforeTargetDefense} -> ${finalDamage}`);
@@ -1848,6 +1881,43 @@ reviveCharacter(character, hpPercentToRestore, teamData) { // teamData is e.g. G
             calculationSteps.push(`攻击未命中!`);
          }
 
+            // --- Apply Attacker's Damage Cap Up ---
+             let currentDamageCap = options.isSkillDamage ? (Battle.BASE_SKILL_DAMAGE_CAP || 899999) : (Battle.BASE_DAMAGE_CAP || 199999);
+             let capAppliedBy = options.isSkillDamage ? "技能基础上限" : "普攻基础上限";
+             calculationSteps.push(`初始上限: ${currentDamageCap} (类型: ${capAppliedBy})`);
+
+             if (attacker && attacker.buffs && typeof BuffSystem !== 'undefined') {
+                 if (options.isSkillDamage) {
+                     let totalSkillDamageCapUpBonus = 0;
+                     const skillCapBuffs = BuffSystem.getBuffsByType(attacker, 'skillDamageCapUp');
+                     if (skillCapBuffs) skillCapBuffs.forEach(b => { if (b.duration > 0 && b.value) totalSkillDamageCapUpBonus += b.value; });
+                     if (totalSkillDamageCapUpBonus > 0) {
+                         currentDamageCap = (Battle.BASE_SKILL_DAMAGE_CAP || 899999) * (1 + totalSkillDamageCapUpBonus);
+                         capAppliedBy = `技能伤害上限提升 (${totalSkillDamageCapUpBonus*100}%)`;
+                         calculationSteps.push(`攻击方技能上限提升后: ${currentDamageCap} (来自 ${capAppliedBy})`);
+                     }
+                 }
+                 // General damageCapUp can also apply or take precedence if higher
+                 let totalDamageCapUpBonus = 0;
+                 const damageCapBuffs = BuffSystem.getBuffsByType(attacker, 'damageCapUp');
+                 if (damageCapBuffs) damageCapBuffs.forEach(b => { if (b.duration > 0 && b.value) totalDamageCapUpBonus += b.value; });
+                 if (totalDamageCapUpBonus > 0) {
+                     const generalCalculatedCap = (options.isSkillDamage ? (Battle.BASE_SKILL_DAMAGE_CAP || 899999) : (Battle.BASE_DAMAGE_CAP || 199999)) * (1 + totalDamageCapUpBonus);
+                     if (generalCalculatedCap > currentDamageCap) { // Only apply if general cap is higher or if it's the only cap
+                        currentDamageCap = generalCalculatedCap;
+                        capAppliedBy = `通用伤害上限提升 (${totalDamageCapUpBonus*100}%)`;
+                        calculationSteps.push(`攻击方通用上限提升后: ${currentDamageCap} (来自 ${capAppliedBy})`);
+                     }
+                 }
+             }         
+
+        if (finalDamage > currentDamageCap) {
+                 const capMsg = `${attackerNameForLog} 的 ${capAppliedBy} 触发，伤害从 ${Math.floor(finalDamage)} 限制到 ${Math.floor(currentDamageCap)}`;
+                 BattleLogger.log(BattleLogger.levels.CONSOLE_INFO, capMsg, null, this.currentTurn); // BATTLE_LOG might be too verbose for this
+                 calculationSteps.push(`攻击方上限应用: ${finalDamage} -> ${Math.floor(currentDamageCap)} (原因: ${capAppliedBy})`);
+                 finalDamage = Math.floor(currentDamageCap);
+             }
+
          const previousHp = actualTarget.currentStats.hp;
          const actualDamageDealt = finalDamage;
          actualTarget.currentStats.hp = Math.max(0, previousHp - actualDamageDealt);
@@ -1856,10 +1926,6 @@ reviveCharacter(character, hpPercentToRestore, teamData) { // teamData is e.g. G
          BattleLogger.log(BattleLogger.levels.CONSOLE_DETAIL, `${attackerNameForLog} 对 ${actualTarget.name} 的伤害计算`, {
             calculation: `伤害计算: ${attackerNameForLog} -> ${actualTarget.name}`,
             steps: calculationSteps,
-            rawDamageInput: rawDamage,
-            finalDamageApplied: actualDamageDealt,
-            targetInitialHp: previousHp,
-            targetFinalHp: actualTarget.currentStats.hp,
             isCriticalHit: isCritical,
             wasMissed: missed
          }, this.currentTurn);

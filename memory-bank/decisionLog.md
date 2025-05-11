@@ -536,3 +536,45 @@ The error `ReferenceError: BattleLogger is not defined` occurred in [`src/js/cor
     3.  应用其他乘算区间（浑身、背水、EX攻击）。
     4.  最后加算固定伤害上升。
 *   日志记录 (`window.logBattle.log`) 已更新，以反映新的计算步骤和中间值。
+---
+### Decision (Code)
+[2025-05-11 18:10:00] - 在 `applyDamageToTarget` 函数中实现属性克制伤害计算逻辑。
+
+**Rationale:**
+根据用户需求，在伤害计算流程中加入元素属性克制机制，以增加战斗策略性。采用用户指定的基于攻击方视角的克制关系判断，并特殊处理光暗互克情况。
+
+**Details:**
+*   **文件修改:** [`src/js/core/battle.js`](src/js/core/battle.js:1775)
+*   **插入位置:** 在 `applyDamageToTarget` 函数内，伤害浮动计算之后，伤害上限判断之前。
+*   **克制逻辑:**
+    *   攻击方属性 (`attacker.attribute`) 对比目标属性 (`actualTarget.attribute`)。
+    *   属性克制关系定义在 `Character.attributes` (通过 `strengths` 和 `weaknesses` 数组)。
+    *   攻击方克制目标方 (攻击方 `strengths` 包含目标属性): 伤害 x1.5。
+    *   攻击方被目标方克制 (攻击方 `weaknesses` 包含目标属性): 伤害 x0.75。
+    *   光暗互克 (`light` vs `dark` 或 `dark` vs `light`): 伤害 x1.5，此逻辑优先于或补充普通克制。
+    *   无克制关系: 伤害 x1.0。
+*   **记录:**
+    *   伤害变化记录在 `calculationSteps` 数组中。
+    *   使用 `BattleLogger.log` (级别 `CONSOLE_DETAIL` 和 `BATTLE_LOG`) 记录属性克制相关的战斗信息。
+*   **条件检查:** 确保在 `attacker`, `actualTarget` 及其属性有效，并且 `Character.attributes` 可用时才执行此逻辑。
+---
+### Decision (Code)
+[2025-05-11 18:45:48] - 修改战斗逻辑中对 `attacker.isBoss` 的检查方式。
+
+**Rationale:**
+根据用户请求，为了更稳健地判断攻击者是否为Boss，采用 `!!` 操作符将 `attacker.isBoss` 强制转换为布尔值。这确保了即使 `attacker.isBoss` 的值为 `undefined` 或其他非布尔真值/假值时，逻辑也能正确处理。
+
+**Details:**
+*   在 [`src/js/core/battle.js`](src/js/core/battle.js:1760) 的 `applyDamageToTarget` 函数中，修改了以下代码行：
+    *   原代码:
+        ```javascript
+        const attackerIsPlayer = !attacker.isBoss;
+        const targetIsMonster = attacker.isBoss;
+        ```
+    *   修改后代码:
+        ```javascript
+        const isAttackerEffectivelyBoss = !!attacker.isBoss;
+        const attackerIsPlayer = !isAttackerEffectivelyBoss;
+        const targetIsMonster = isAttackerEffectivelyBoss;
+        ```
+*   此更改确保了 `attackerIsPlayer` 和 `targetIsMonster` 的值总是基于 `attacker.isBoss` 的布尔真假性来设定。

@@ -245,6 +245,12 @@
                                         }
                                         rarityBadge = `<span class="rarity-badge ${member.rarity}">${rarityDisplay}</span>`;
                                     }
+                                    // 设置卡片内容
+                                    // 添加多重抽取显示
+                                    let multiCountDisplay = '';
+                                    if (member.multiCount && member.multiCount > 1) {
+                                        multiCountDisplay = `<span class="multi-count-badge">+${member.multiCount - 1}</span>`;
+                                    }
 
                                     return `
                                         <div class="team-member ${member.rarity}" data-character-id="${member.id}" data-character-instance-id="${member.id}">
@@ -325,6 +331,13 @@
                                                 rarityDisplay = 'SSR';
                                             }
                                             rarityBadge = `<span class="rarity-badge ${member.rarity}">${rarityDisplay}</span>`;
+                                        }
+
+                                        // 设置卡片内容
+                                        // 添加多重抽取显示
+                                        let multiCountDisplay = '';
+                                        if (member.multiCount && member.multiCount > 1) {
+                                            multiCountDisplay = `<span class="multi-count-badge">+${member.multiCount - 1}</span>`;
                                         }
 
                                         return `
@@ -505,12 +518,7 @@
             // 添加多重抽取显示
             let multiCountDisplay = '';
             if (character.multiCount && character.multiCount > 1) {
-                // 检查是否达到多重上限
-                if (character.multiCount >= 20) {
-                    multiCountDisplay = `<span class="multi-count-badge">+${character.multiCount - 1}</span><span class="multi-count-max">(已达上限)</span>`;
-                } else {
-                    multiCountDisplay = `<span class="multi-count-badge">+${character.multiCount - 1}</span>`;
-                }
+                multiCountDisplay = `<span class="multi-count-badge">+${character.multiCount - 1}</span>`;
             }
 
             card.innerHTML = `

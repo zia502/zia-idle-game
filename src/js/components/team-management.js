@@ -253,11 +253,11 @@
                                                 <h4>${member.name}</h4>
                                                 ${rarityBadge}
                                                 <p>
-                                                    等级: ${member.isMainCharacter ? (member.job?.level || 1) : (member.level || 1)}
+                                                    LV: ${member.isMainCharacter ? (member.job?.level || 1) : (member.level || 1)}
                                                     <span class="info-separator">|</span>
-                                                    类型: ${typeDisplay}
+                                                    ${typeDisplay}
                                                     <span class="info-separator">|</span>
-                                                    属性: ${attributeDisplay} <span class="attribute-circle ${member.attribute}"></span>
+                                                    ${attributeDisplay} <span class="attribute-circle ${member.attribute}"></span>
                                                     ${member.isMainCharacter ? '<span class="main-character-tag">主角</span>' : ''}
                                                 </p>
                                             </div>
@@ -300,11 +300,11 @@
                                                     <h4>${member.name}</h4>
                                                     ${rarityBadge}
                                                     <p>
-                                                        等级: ${member.isMainCharacter ? (member.job?.level || 1) : (member.level || 1)}
+                                                        LV:${member.isMainCharacter ? (member.job?.level || 1) : (member.level || 1)}
                                                         <span class="info-separator">|</span>
-                                                        类型: ${typeDisplay}
+                                                        ${typeDisplay}
                                                         <span class="info-separator">|</span>
-                                                        属性: ${attributeDisplay} <span class="attribute-circle ${member.attribute}"></span>
+                                                        ${attributeDisplay} <span class="attribute-circle ${member.attribute}"></span>
                                                         ${member.isMainCharacter ? '<span class="main-character-tag">主角</span>' : ''}
                                                         ${member.skills && member.skills.length > 0 ?
                                                             `<span class="info-separator">|</span>

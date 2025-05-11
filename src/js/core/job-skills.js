@@ -243,9 +243,9 @@ const JobSkills = {
             effects: result ? result.effects : {} 
         };
         //console.log(`[DEBUG JS.useSkill EXIT] Monster: ${monster.name}, RefID: ${monster._debugRefId || 'NO_REF_ID'}, HP: ${monster.currentStats.hp}/${monster.currentStats.maxHp}`);
-        if (typeof Battle !== 'undefined' && Battle.logBattle) {
-            Battle.logBattle(`[调试][JS.useSkill EXIT] ${monster.name} HP: ${monster.currentStats.hp}/${monster.currentStats.maxHp}`);
-        }
+        // if (typeof Battle !== 'undefined' && Battle.logBattle) {
+        //     Battle.logBattle(`[调试][JS.useSkill EXIT] ${monster.name} HP: ${monster.currentStats.hp}/${monster.currentStats.maxHp}`);
+        // }
         return finalReturnObject;
     },
 
@@ -804,9 +804,9 @@ const JobSkills = {
                         rawDamage += directDamageBonus;
                         rawDamage += additionalFixedDamage;
 
-                        if (typeof Battle !== 'undefined' && Battle.logBattle) {
-                            Battle.logBattle(`[调试] 技能 [${template.name}] 对 ${target.name}: ${character.name} 攻击力 ${attackerEffectiveAttack}, 伤害倍率 ${damageMultiplier.toFixed(2)}, 额外固定伤害 ${additionalFixedDamage}, 直接伤害加成 ${directDamageBonus}, 计算原始伤害 ${rawDamage}`);
-                        }
+                        // if (typeof Battle !== 'undefined' && Battle.logBattle) {
+                        //     Battle.logBattle(`[调试] 技能 [${template.name}] 对 ${target.name}: ${character.name} 攻击力 ${attackerEffectiveAttack}, 伤害倍率 ${damageMultiplier.toFixed(2)}, 额外固定伤害 ${additionalFixedDamage}, 直接伤害加成 ${directDamageBonus}, 计算原始伤害 ${rawDamage}`);
+                        // }
 
                         const damageOptions = {
                             element: effect.element || template.attribute,

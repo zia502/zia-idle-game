@@ -1514,7 +1514,7 @@
         "value": 3.0,
         "duration": 1,
         "targetType": "self",
-        "stackable": true,
+        "stackable": false,
         "dispellable": true
       }
     ]

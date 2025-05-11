@@ -651,3 +651,40 @@ The error `ReferenceError: BattleLogger is not defined` occurred in [`src/js/cor
                 *   如果 `isCasterPlayer` 为 `false` (怪物施法)，目标是 `character` (即怪物施法者自身，适用于怪物对自己队伍施放的群体技能；在当前单怪物系统中，这意味着怪物对自己施法)。
 *   **兼容性检查:**
     *   确认了 [`src/js/core/battle.js`](src/js/core/battle.js) 中对 `JobSkills.useSkill` 的调用点 (如 `processMonsterAction` 和 `processCharacterSkills`) 不需要修改，因为它们传递的参数与新的 `JobSkills` 内部逻辑兼容，`isCasterPlayer` 的判断能够正确进行。
+---
+### Decision (Debug)
+[2025-05-11 20:44:15] - [Bug Fix Strategy: Ensure backline units are combat-ready]
+
+**Rationale:**
+The user reported that backline units were not joining combat after the frontline was defeated. The investigation revealed that while the substitution logic in `Battle.handleCharacterDefeat` appeared correct, the `Battle.isBattleOver` check might prematurely end the battle if the frontline units are defeated and the backline units, though present in `this.backLineMembers`, were not considered "active" or "alive" by `isBattleOver` in time, or if their HP wasn't full when they were initially assigned to the backline. The most direct fix is to ensure that when units are designated as backline members at the start of a battle, their HP is explicitly set to full. This guarantees that if they are called upon, they are in a ready state.
+
+**Details:**
+Modified [`src/js/core/battle.js`](src/js/core/battle.js) within the `startBattle` function. When characters are added to the `backLineMembers` list, their `currentStats.hp` is now explicitly set to `currentStats.maxHp`. This ensures that any prior combat damage doesn't carry over for backline units in a way that prevents them from being viable replacements.
+```diff
+<<<<<<< SEARCH
+:start_line:136
+-------
+                    backLineMembers.push(character);
+=======
+                    // Ensure backline members are at full HP when battle starts
+                    if (character.currentStats && typeof character.currentStats.maxHp === 'number') {
+                        character.currentStats.hp = character.currentStats.maxHp;
+                    }
+                    backLineMembers.push(character);
+>>>>>>> REPLACE
+```
+**Affected components/files:**
+*   [`src/js/core/battle.js`](src/js/core/battle.js)
+---
+### Decision (Code)
+[2025-05-11 21:47:31] - 标准化 `calculateAttackPower` 函数中的日志记录。
+
+**Rationale:**
+用户报告 `calculateAttackPower` 函数 ([`src/js/core/character.js`](src/js/core/character.js:1512)) 中的日志未按预期打印。经检查，该函数使用了旧的 `window.logBattle.log()` 和 `Battle.logBattle()` 方法进行日志记录。为了与项目中其他部分保持一致，并利用 `BattleLogger` 提供的多级日志功能，决定将此处的日志记录迁移到 `BattleLogger.log()`。
+
+**Details:**
+*   修改了 [`src/js/core/character.js`](src/js/core/character.js) 中的 `calculateAttackPower` 函数。
+*   所有 `window.logBattle.log()` 和 `Battle.logBattle()` 调用已替换为 `BattleLogger.log()`。
+*   详细的计算步骤日志使用了 `BattleLogger.levels.CONSOLE_DETAIL` 级别。
+*   函数开始和结束的概要日志使用了 `BattleLogger.levels.CONSOLE_INFO` 或 `CONSOLE_DETAIL` 级别。
+*   日志消息中添加了角色名和ID，以便更好地追踪。

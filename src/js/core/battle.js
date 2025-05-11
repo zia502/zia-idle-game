@@ -133,6 +133,10 @@ this.resetProcCounts(); // 重置技能Proc触发计数
                 if (i < FRONT_LINE_COUNT) {
                     frontLineMembers.push(character);
                 } else {
+                    // Ensure backline members are at full HP when battle starts
+                    if (character.currentStats && typeof character.currentStats.maxHp === 'number') {
+                        character.currentStats.hp = character.currentStats.maxHp;
+                    }
                     backLineMembers.push(character);
                 }
             }

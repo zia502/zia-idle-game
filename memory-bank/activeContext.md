@@ -45,6 +45,8 @@ This file tracks the project's current status, including recent changes, current
 *   [2025-05-11 12:36:58] - 修改了 [`src/js/core/character.js`](src/js/core/character.js:1) 中的 `validateCharacterBaseStats` 函数，取消了成功验证日志的注释。
 *   [2025-05-11 12:58:48] - 修改了 [`src/js/core/character.js`](src/js/core/character.js:1) 中的 `validateCharacterBaseStats` 函数，添加了 `autoCorrect` 参数及相关逻辑，并更新了 `loadSaveData` 函数以启用自动修正。
 *   [2025-05-11 19:42:00] - **架构设计:** 开始设计战斗系统对多目标技能（特别是 `all_enemies`）的支持方案，核心是引入“敌方队伍”概念并重构相关逻辑。
+*   [2025-05-11 21:47:31] - **Debug Task Started:** 用户报告在 `calculateAttackPower` 函数 ([`src/js/core/character.js`](src/js/core/character.js:1512)) 中日志没有打印。
+*   [2025-05-11 21:47:31] - **Debug Fix Applied:** 修改了 [`src/js/core/character.js`](src/js/core/character.js) 中的 `calculateAttackPower` 函数，将其日志记录从旧的 `window.logBattle.log()` 和 `Battle.logBattle()` 调用迁移到标准的 `BattleLogger.log()`，并使用了 `CONSOLE_DETAIL` 和 `CONSOLE_INFO` 日志级别。
 ## Recent Changes
 *   [2025-05-09 21:18:00] - **Debug Fixes Applied:** 针对战斗日志分析出的4个新问题进行了修复。
     *   问题1 (怪物HP初始化): 修改了 [`src/js/core/battle.js`](src/js/core/battle.js:1) 的HP初始化逻辑，增加从 `monster.baseStats` 获取 `maxHp` 的途径。
@@ -334,3 +336,4 @@ This file tracks the project's current status, including recent changes, current
         *   单体目标技能 (`single_enemy`, `single_ally`) 对玩家和怪物双方的正确性。
     *   测试通过模拟 `MockJobSkills.useSkill` 内部的目标判定逻辑进行，并验证了 `determinedTargets` 的正确性。
     *   Memory Bank (`progress.md`) 已更新。
+*   [2025-05-11 20:44:15] - [Debug Status Update: Issue: Backline units not joining combat after frontline defeated. Symptom: Battle ends prematurely. Fix Confirmation: Applied fix to [`src/js/core/battle.js`](src/js/core/battle.js) to ensure backline members have their HP reset to maxHP at the start of each battle when being assigned to the `backLineMembers` list. This should allow them to correctly join combat if a frontline member is defeated.]

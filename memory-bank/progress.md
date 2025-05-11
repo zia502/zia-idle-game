@@ -188,6 +188,9 @@ This file tracks the project's progress using a task list format.
     *   `getTargets` 根据 `isCasterPlayer` 正确解析 `all_enemies` 和 `all_allies` 目标类型。
     *   怪物施放 `all_enemies` 时，目标为我方全体；玩家施放 `all_enemies` 时，目标为敌方。
     *   怪物施放 `all_allies` 时，目标为自身；玩家施放 `all_allies` 时，目标为我方全体。
+*   [2025-05-11 21:47:31] - **Completed Debugging Task:** 修复 `calculateAttackPower` 函数 ([`src/js/core/character.js`](src/js/core/character.js:1512)) 中的日志记录问题。
+    *   将日志记录从 `window.logBattle.log()` / `Battle.logBattle()` 迁移到 `BattleLogger.log()`。
+    *   使用了 `CONSOLE_DETAIL` 和 `CONSOLE_INFO` 日志级别。
 ## Current Tasks
 *   [2025-05-11 20:20:00] - **TDD Cycle Start:** 开始为怪物和玩家 AoE 技能修复编写单元/集成测试。目标文件：[`test-battle-logic.html`](test-battle-logic.html)。
 *   [2025-05-11 20:24:00] - **TDD Cycle End:** 完成为怪物和玩家 AoE 技能修复编写单元/集成测试。覆盖了怪物 AoE (all_enemies), 玩家 AoE (all_enemies), 玩家 AoE (all_allies), 以及双方的单体技能 (single_enemy, single_ally) 场景。测试添加在 [`test-battle-logic.html`](test-battle-logic.html)。
@@ -237,3 +240,4 @@ This file tracks the project's progress using a task list format.
     *   [2025-05-11 19:42:00] - **Next Step:** 开始实施战斗系统对“敌方队伍” (`enemyParty`) 的支持。
     *   [2025-05-11 19:42:00] - **Next Step:** 重构 [`JobSkills.getTargets()`](src/js/core/job-skills.js:1080) 以正确处理 `all_enemies` 和 `all_allies` 并返回目标数组。
     *   [2025-05-11 19:42:00] - **Next Step:** 修改技能效果应用函数 (如 [`JobSkills.applyDamageEffects()`](src/js/core/job-skills.js:766)) 以迭代处理目标数组。
+*   [2025-05-11 20:44:15] - [Debugging Task Status Update: Completed] Investigated and fixed issue where backline units would not join combat. Ensured backline units have full HP at the start of battle by modifying [`src/js/core/battle.js`](src/js/core/battle.js).

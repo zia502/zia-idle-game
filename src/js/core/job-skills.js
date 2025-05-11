@@ -22,6 +22,10 @@ const JobSkills = {
         const character = Character.getCharacter(characterId);
         if (!character) return { success: false, message: '角色不存在' };
 
+        if (skillId === 'yiFaJiaShi') {
+            BattleLogger.log(BattleLogger.levels.CONSOLE_DETAIL, `[DEBUG_YIFA] Attempting to use skill yiFaJiaShi for character ${character.name} (ID: ${characterId}). Cooldown: ${character.skillCooldowns ? character.skillCooldowns[skillId] : 'N/A'}`);
+        }
+
         // 确定施法者是否为玩家角色
         // teamMembers 是调用时传入的玩家队伍。
         // monster 在玩家施法时是敌方单位，在怪物施法时可能是单个玩家目标或怪物自身。

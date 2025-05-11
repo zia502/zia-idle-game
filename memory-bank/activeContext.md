@@ -47,6 +47,11 @@ This file tracks the project's current status, including recent changes, current
 *   [2025-05-11 19:42:00] - **架构设计:** 开始设计战斗系统对多目标技能（特别是 `all_enemies`）的支持方案，核心是引入“敌方队伍”概念并重构相关逻辑。
 *   [2025-05-11 21:47:31] - **Debug Task Started:** 用户报告在 `calculateAttackPower` 函数 ([`src/js/core/character.js`](src/js/core/character.js:1512)) 中日志没有打印。
 *   [2025-05-11 21:47:31] - **Debug Fix Applied:** 修改了 [`src/js/core/character.js`](src/js/core/character.js) 中的 `calculateAttackPower` 函数，将其日志记录从旧的 `window.logBattle.log()` 和 `Battle.logBattle()` 调用迁移到标准的 `BattleLogger.log()`，并使用了 `CONSOLE_DETAIL` 和 `CONSOLE_INFO` 日志级别。
+*   [2025-05-11 21:59:00] - **Debug Task Started:** 用户反馈技能 "一伐架式" ([`src/data/ssr_skill.json`](src/data/ssr_skill.json)) 是一个独立的、不可叠加的buff，但日志显示攻击力倍率达到了 x4.65。要求调查并修改日志逻辑以追踪倍率构成。
+*   [2025-05-11 21:59:00] - **Debug Fix Applied:** 修改了 [`src/js/core/character.js`](src/js/core/character.js) 中的 `calculateAttackPower` 函数 ([`src/js/core/character.js:1512`](src/js/core/character.js:1512))，增强了其日志记录功能。现在会收集详细的计算步骤到 `calculationSteps` 数组，包括初始攻击力来源说明、各可叠加buff的贡献、各独立buff（包括来源）的乘算影响、其他乘算区间（EX、浑身、背水）以及最终的总倍率。所有步骤通过 `BattleLogger.log` 的 `details` 参数输出，级别为 `CONSOLE_DETAIL`。
+
+* [2025-05-11 22:20:00] - Debug Task: "一伐架式" 独立buff未在日志中体现，最终倍率异常。
+* [2025-05-11 22:20:00] - Debug Action: 在 `calculateAttackPower` ([`src/js/core/character.js`](src/js/core/character.js:1512)) 函数开头添加了详细日志，用于打印角色当前所有buff的完整信息，以便确认 "一伐架式" buff在计算时的状态。
 ## Recent Changes
 *   [2025-05-09 21:18:00] - **Debug Fixes Applied:** 针对战斗日志分析出的4个新问题进行了修复。
     *   问题1 (怪物HP初始化): 修改了 [`src/js/core/battle.js`](src/js/core/battle.js:1) 的HP初始化逻辑，增加从 `monster.baseStats` 获取 `maxHp` 的途径。
@@ -74,6 +79,7 @@ This file tracks the project's current status, including recent changes, current
 *   [2025-05-11 12:36:58] - 修改了 [`src/js/core/character.js`](src/js/core/character.js:1) 中的 `validateCharacterBaseStats` 函数，取消了成功验证日志的注释。
 *   [2025-05-11 12:58:48] - 修改了 [`src/js/core/character.js`](src/js/core/character.js:1) 中的 `validateCharacterBaseStats` 函数，添加了 `autoCorrect` 参数及相关逻辑，并更新了 `loadSaveData` 函数以启用自动修正。
 *   [2025-05-11 19:42:00] - 启动了针对“全体攻击”技能无法正确作用于所有敌人的架构调整任务。
+*   [2025-05-11 21:59:00] - 修改了 [`src/js/core/character.js`](src/js/core/character.js) 中的 `calculateAttackPower` 函数 ([`src/js/core/character.js:1512`](src/js/core/character.js:1512))，增强了其日志记录功能，以详细追踪攻击力倍率的构成。
 
 ## Open Questions/Issues
 *   [2025-05-09 21:18:00] - **Issue Status Update:** 针对战斗日志分析出的4个新问题已应用修复：
@@ -337,3 +343,5 @@ This file tracks the project's current status, including recent changes, current
     *   测试通过模拟 `MockJobSkills.useSkill` 内部的目标判定逻辑进行，并验证了 `determinedTargets` 的正确性。
     *   Memory Bank (`progress.md`) 已更新。
 *   [2025-05-11 20:44:15] - [Debug Status Update: Issue: Backline units not joining combat after frontline defeated. Symptom: Battle ends prematurely. Fix Confirmation: Applied fix to [`src/js/core/battle.js`](src/js/core/battle.js) to ensure backline members have their HP reset to maxHP at the start of each battle when being assigned to the `backLineMembers` list. This should allow them to correctly join combat if a frontline member is defeated.]
+* [2025-05-11 22:30:00] - Debug Task: "一伐架式" buff 未在 `calculateAttackPower` 时出现在角色buff列表。
+* [2025-05-11 22:30:00] - Debug Action: 在 [`src/js/core/job-skills.js`](src/js/core/job-skills.js) 和 [`src/js/core/buff-system.js`](src/js/core/buff-system.js) 中添加了针对 "一伐架式" 技能和buff的诊断日志，以追踪其使用、应用和移除流程。

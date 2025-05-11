@@ -1513,33 +1513,66 @@ const Character = {
 
         if (!character || !character.currentStats) {
             if (typeof BattleLogger !== 'undefined' && BattleLogger.log) {
-                BattleLogger.log(BattleLogger.levels.CONSOLE_DETAIL, `[ATTACK_CALC] 角色 ${character.name} 或 currentStats 未定义，返回0。`, { characterId: character?.id });
+                BattleLogger.log(BattleLogger.levels.CONSOLE_DETAIL, `[ATTACK_CALC] 角色 ${character?.name || '未知'} (ID: ${character?.id || '未知'}) 或 currentStats 未定义，返回0。`, { characterId: character?.id });
             }
             return 0;
         }
 
-        let attackPower = character.currentStats.attack;
-        if (typeof BattleLogger !== 'undefined' && BattleLogger.log) {
-            BattleLogger.log(BattleLogger.levels.CONSOLE_DETAIL, `[ATTACK_CALC] 角色 ${character.name} 初始攻击力 (currentStats.attack): ${attackPower}`, {  });
-        }
+        const initialAttackFromCurrentStats = character.currentStats.attack;
+        let attackPower = initialAttackFromCurrentStats;
+        const calculationSteps = [];
+
+        calculationSteps.push(`初始攻击力 (currentStats.attack): ${initialAttackFromCurrentStats.toFixed(2)} (由 baseStats, weaponBonusStats, multiBonusStats 构成)`);
 
         const buffs = character.buffs || [];
 
+        if (typeof BattleLogger !== 'undefined' && BattleLogger.log) {
+            const buffDetailsForLog = buffs.map(b => ({
+                name: b.name || '未命名Buff',
+                type: b.type,
+                value: b.value,
+                duration: b.duration,
+                stackable: b.stackable,
+                source: b.source || '未知来源',
+                dispellable: b.dispellable
+            }));
+            BattleLogger.log(
+                BattleLogger.levels.CONSOLE_DETAIL,
+                `[ATTACK_CALC_BUFF_SNAPSHOT] 角色 ${character.name} (ID: ${character.id}) 当前Buff列表:`,
+                { buffs: buffDetailsForLog }
+            );
+        }
+
         // 1. 处理可叠加的 attackUp 和 attackDown
         let cumulativeAttackUpPercentage = 0;
+        const contributingStackableAttackUpBuffs = [];
         buffs.filter(b => b.type === 'attackUp' && (b.stackable === undefined || b.stackable === true))
-             .forEach(b => cumulativeAttackUpPercentage += b.value);
+             .forEach(b => {
+                 cumulativeAttackUpPercentage += b.value;
+                 contributingStackableAttackUpBuffs.push(`'${b.name || '可叠加攻UP'}' (+${(b.value * 100).toFixed(1)}%)`);
+             });
 
+        if (contributingStackableAttackUpBuffs.length > 0) {
+            calculationSteps.push(`可叠加攻UP Buffs: ${contributingStackableAttackUpBuffs.join(', ')} -> 总计 +${(cumulativeAttackUpPercentage * 100).toFixed(1)}%`);
+        }
+        
         let cumulativeAttackDownPercentage = 0;
+        const contributingAttackDownBuffs = [];
         buffs.filter(b => b.type === 'attackDown') // 假设 attackDown 总是可叠加
-             .forEach(b => cumulativeAttackDownPercentage += b.value);
+             .forEach(b => {
+                cumulativeAttackDownPercentage += b.value;
+                contributingAttackDownBuffs.push(`'${b.name || '攻DOWN'}' (-${(b.value * 100).toFixed(1)}%)`);
+             });
         
         cumulativeAttackDownPercentage = Math.min(cumulativeAttackDownPercentage, 0.5); // 降低上限50%
+        if (contributingAttackDownBuffs.length > 0) {
+            calculationSteps.push(`攻DOWN Buffs: ${contributingAttackDownBuffs.join(', ')} -> 总计 -${(cumulativeAttackDownPercentage * 100).toFixed(1)}% (上限50%)`);
+        }
 
         const cumulativeModifier = (1 + cumulativeAttackUpPercentage - cumulativeAttackDownPercentage);
-        attackPower *= cumulativeModifier;
-        if (typeof BattleLogger !== 'undefined' && BattleLogger.log) {
-            BattleLogger.log(BattleLogger.levels.CONSOLE_DETAIL, `[ATTACK_CALC] 角色 ${character.name} 应用可叠加攻升/攻降 (x${cumulativeModifier.toFixed(3)}) 后: ${attackPower.toFixed(2)}`, { });
+        if (cumulativeModifier !== 1) {
+            attackPower *= cumulativeModifier;
+            calculationSteps.push(`应用可叠加攻升/攻降 (x${cumulativeModifier.toFixed(3)}) 后: ${attackPower.toFixed(2)}`);
         }
 
         // 2. 处理独立的 attackUp (stackable: false)
@@ -1547,57 +1580,69 @@ const Character = {
         independentAttackUpBuffs.forEach(buff => {
             const independentModifier = (1 + buff.value);
             attackPower *= independentModifier;
-            if (typeof BattleLogger !== 'undefined' && BattleLogger.log) {
-                BattleLogger.log(BattleLogger.levels.CONSOLE_DETAIL, `[ATTACK_CALC] 角色 ${character.name} 应用独立攻升BUFF '${buff.name || '独立类型'}' (x${independentModifier.toFixed(3)}, +${(buff.value * 100).toFixed(1)}%) 后: ${attackPower.toFixed(2)}`, { buffName: buff.name, attackAfterIndependent: attackPower });
-            }
+            calculationSteps.push(`应用独立攻升BUFF '${buff.name || '独立攻UP'}' (来源: ${buff.source || '未知'}, x${independentModifier.toFixed(3)}, +${(buff.value * 100).toFixed(1)}%) 后: ${attackPower.toFixed(2)}`);
         });
 
         // 3. 处理其他乘算区间 (浑身、背水、EX等)
         const hpPercentage = character.currentStats.maxHp > 0 ? (character.currentStats.hp / character.currentStats.maxHp) : 1;
 
         const hunshenBuffs = buffs.filter(b => b.type === 'hunshen'); // 浑身
-        hunshenBuffs.forEach(buff => { // 允许多个浑身buff独立生效或按特定规则叠加
-            const hunshenValue = buff.value || (0.05 + (hpPercentage * 0.45)); // 使用buff.value或默认计算
+        hunshenBuffs.forEach(buff => {
+            const hunshenValue = buff.value || (0.05 + (hpPercentage * 0.45));
             const hunshenModifier = (1 + hunshenValue);
             attackPower *= hunshenModifier;
-            if (typeof BattleLogger !== 'undefined' && BattleLogger.log) {
-                BattleLogger.log(BattleLogger.levels.CONSOLE_DETAIL, `[ATTACK_CALC] 角色 ${character.name} 应用浑身BUFF '${buff.name || '浑身'}' (x${hunshenModifier.toFixed(3)}, +${(hunshenValue * 100).toFixed(1)}%, HP: ${(hpPercentage * 100).toFixed(1)}%) 后: ${attackPower.toFixed(2)}`, {  buffName: buff.name, attackAfterHunshen: attackPower, hpPercentage });
-            }
+            calculationSteps.push(`应用浑身BUFF '${buff.name || '浑身'}' (来源: ${buff.source || '未知'}, x${hunshenModifier.toFixed(3)}, +${(hunshenValue * 100).toFixed(1)}%, HP: ${(hpPercentage * 100).toFixed(1)}%) 后: ${attackPower.toFixed(2)}`);
         });
         
         const beishuiBuffs = buffs.filter(b => b.type === 'beishui'); // 背水
-        beishuiBuffs.forEach(buff => { // 允许多个背水buff独立生效
-            const beishuiValue = buff.value || (0.5 - (hpPercentage * 0.45)); // 使用buff.value或默认计算
+        beishuiBuffs.forEach(buff => {
+            const beishuiValue = buff.value || (0.5 - (hpPercentage * 0.45));
             const beishuiModifier = (1 + beishuiValue);
             attackPower *= beishuiModifier;
-             if (typeof BattleLogger !== 'undefined' && BattleLogger.log) {
-                BattleLogger.log(BattleLogger.levels.CONSOLE_DETAIL, `[ATTACK_CALC] 角色 ${character.name} 应用背水BUFF '${buff.name || '背水'}' (x${beishuiModifier.toFixed(3)}, +${(beishuiValue * 100).toFixed(1)}%, HP: ${(hpPercentage * 100).toFixed(1)}%) 后: ${attackPower.toFixed(2)}`, {  buffName: buff.name, attackAfterBeishui: attackPower, hpPercentage });
-            }
+            calculationSteps.push(`应用背水BUFF '${buff.name || '背水'}' (来源: ${buff.source || '未知'}, x${beishuiModifier.toFixed(3)}, +${(beishuiValue * 100).toFixed(1)}%, HP: ${(hpPercentage * 100).toFixed(1)}%) 后: ${attackPower.toFixed(2)}`);
         });
         
-        // 应用EX攻击 (通常来自武器盘的EX词条，是独立乘区)
         let totalExAttackBonus = 0;
         if (character.currentStats && typeof character.currentStats.exAttack === 'number') {
-            totalExAttackBonus = character.currentStats.exAttack; // exAttack 是一个百分比，例如 0.1 表示 10%
+            totalExAttackBonus = character.currentStats.exAttack;
         }
         const exAttackModifier = (1 + totalExAttackBonus);
-        attackPower *= exAttackModifier;
-        if (totalExAttackBonus > 0 && typeof BattleLogger !== 'undefined' && BattleLogger.log) {
-            BattleLogger.log(BattleLogger.levels.CONSOLE_DETAIL, `[ATTACK_CALC] 角色 ${character.name} 应用EX攻击 (x${exAttackModifier.toFixed(3)}, +${(totalExAttackBonus * 100).toFixed(1)}%) 后: ${attackPower.toFixed(2)}`, { attackAfterEx: attackPower, totalExAttackBonus });
+        if (totalExAttackBonus > 0) {
+            attackPower *= exAttackModifier;
+            calculationSteps.push(`应用EX攻击 (来自武器盘等, x${exAttackModifier.toFixed(3)}, +${(totalExAttackBonus * 100).toFixed(1)}%) 后: ${attackPower.toFixed(2)}`);
         }
 
         // 4. 添加固定伤害上升 (最后加算)
         let flatDamageIncrease = 0;
-        // (未来可能从buff或其他来源获取 flatDamageIncrease)
-        // buffs.filter(b => b.type === 'flatAttackUp').forEach(b => flatDamageIncrease += b.value);
+        const flatAttackUpBuffs = buffs.filter(b => b.type === 'flatAttackUp');
+        flatAttackUpBuffs.forEach(b => {
+            flatDamageIncrease += b.value;
+            calculationSteps.push(`应用固定攻击力上升BUFF '${b.name || '固定攻UP'}' (来源: ${b.source || '未知'}, +${b.value})`);
+        });
         attackPower += flatDamageIncrease;
-        if (flatDamageIncrease > 0 && typeof BattleLogger !== 'undefined' && BattleLogger.log) {
-            BattleLogger.log(BattleLogger.levels.CONSOLE_DETAIL, `[ATTACK_CALC] 角色 ${character.name} 应用固定伤害上升 (+${flatDamageIncrease}) 后: ${attackPower.toFixed(2)}`, {  attackAfterFlatIncrease: attackPower, flatDamageIncrease });
+        if (flatDamageIncrease > 0) {
+             calculationSteps.push(`应用总固定攻击力上升 (+${flatDamageIncrease}) 后: ${attackPower.toFixed(2)}`);
         }
         
         const finalAttackPower = Math.max(0, Math.floor(attackPower));
+        calculationSteps.push(`最终计算攻击力 (取整且不小于0): ${finalAttackPower}`);
+        
+        const totalMultiplier = initialAttackFromCurrentStats > 0 ? (finalAttackPower / initialAttackFromCurrentStats) : (finalAttackPower > 0 ? Infinity : 1);
+        calculationSteps.push(`总攻击力倍率 (相对currentStats.attack): x${totalMultiplier.toFixed(3)}`);
+
         if (typeof BattleLogger !== 'undefined' && BattleLogger.log) {
-            BattleLogger.log(BattleLogger.levels.CONSOLE_DETAIL, `[ATTACK_CALC] 角色 ${character.name} 最终计算攻击力 (取整且不小于0): ${finalAttackPower}`, { finalAttackPower });
+            BattleLogger.log(
+                BattleLogger.levels.CONSOLE_DETAIL,
+                `[ATTACK_CALC] 角色 ${character.name} (ID: ${character.id}) 攻击力计算完成: ${finalAttackPower}`,
+                {
+                    characterId: character.id,
+                    characterName: character.name,
+                    initialAttack: initialAttackFromCurrentStats,
+                    finalAttack: finalAttackPower,
+                    totalMultiplier: totalMultiplier.toFixed(3),
+                    steps: calculationSteps
+                }
+            );
         }
         return finalAttackPower;
     },

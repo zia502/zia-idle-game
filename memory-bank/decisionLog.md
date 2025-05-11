@@ -688,3 +688,26 @@ Modified [`src/js/core/battle.js`](src/js/core/battle.js) within the `startBattl
 *   详细的计算步骤日志使用了 `BattleLogger.levels.CONSOLE_DETAIL` 级别。
 *   函数开始和结束的概要日志使用了 `BattleLogger.levels.CONSOLE_INFO` 或 `CONSOLE_DETAIL` 级别。
 *   日志消息中添加了角色名和ID，以便更好地追踪。
+---
+### Decision (Debug)
+[2025-05-11 21:59:00] - 增强 `calculateAttackPower` 函数的日志记录以追踪攻击力倍率。
+
+**Rationale:**
+用户反馈技能 "一伐架式" ([`src/data/ssr_skill.json`](src/data/ssr_skill.json))（一个独立的、不可叠加的buff）参与计算时，攻击力倍率异常。为了能够清晰地追踪所有参与计算的攻击力buff及其来源，从而理解最终倍率的构成，需要增强 [`src/js/core/character.js`](src/js/core/character.js) 中 `calculateAttackPower` 函数 ([`src/js/core/character.js:1512`](src/js/core/character.js:1512)) 的日志记录。
+
+**Details:**
+*   修改了 [`src/js/core/character.js`](src/js/core/character.js) 中的 `calculateAttackPower` 函数 ([`src/js/core/character.js:1512`](src/js/core/character.js:1512))。
+*   引入 `calculationSteps` 数组，用于收集每一步攻击力计算的详细描述。
+*   **初始攻击力日志增强：** 记录 `character.currentStats.attack` 的初始值，并注明其由 `baseStats`, `weaponBonusStats`, `multiBonusStats` 构成。
+*   **可叠加Buff日志增强：**
+    *   分别列出所有参与计算的可叠加 `attackUp` buff及其效果值。
+    *   分别列出所有参与计算的 `attackDown` buff及其效果值。
+    *   记录应用累积修正后的攻击力。
+*   **独立Buff日志增强：**
+    *   对于每个独立的 `attackUp` buff (如 "一伐架式")，记录其名称、来源（如果buff对象中有 `source` 属性）、乘算因子和应用后的攻击力。
+*   **其他乘区日志增强：** 保持对浑身、背水、EX攻击等乘区的日志记录，并尝试加入buff来源。
+*   **固定值Buff日志增强：** 如果存在固定攻击力上升的buff，记录其名称、来源和效果。
+*   **最终倍率日志：** 计算并记录最终攻击力相对于初始 `currentStats.attack` 的总倍率。
+*   **统一日志输出：** 所有 `calculationSteps` 通过 `BattleLogger.log` 的 `details` 参数在 `CONSOLE_DETAIL` 级别一次性输出，提供完整的计算链路。
+*   **Affected components/files:**
+    *   [`src/js/core/character.js`](src/js/core/character.js)

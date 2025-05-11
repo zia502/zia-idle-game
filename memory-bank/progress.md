@@ -191,6 +191,12 @@ This file tracks the project's progress using a task list format.
 *   [2025-05-11 21:47:31] - **Completed Debugging Task:** 修复 `calculateAttackPower` 函数 ([`src/js/core/character.js`](src/js/core/character.js:1512)) 中的日志记录问题。
     *   将日志记录从 `window.logBattle.log()` / `Battle.logBattle()` 迁移到 `BattleLogger.log()`。
     *   使用了 `CONSOLE_DETAIL` 和 `CONSOLE_INFO` 日志级别。
+*   [2025-05-11 21:59:00] - **Completed Debugging Task:** 增强 `calculateAttackPower` 函数 ([`src/js/core/character.js`](src/js/core/character.js:1512)) 的日志记录，以详细追踪攻击力倍率构成。
+    *   日志现在收集详细的计算步骤，包括初始攻击力来源、各可叠加buff贡献、各独立buff（含来源）的乘算影响、其他乘算区间及最终总倍率。
+    *   所有步骤通过 `BattleLogger.log` 的 `details` 参数在 `CONSOLE_DETAIL` 级别输出。
+
+* [2025-05-11 22:20:00] - Debugging Task Started: 调查 "一伐架式" 独立buff未在日志中正确显示且最终攻击倍率不符预期的问题。
+* [2025-05-11 22:20:00] - Debugging Action: 增强了 `calculateAttackPower` ([`src/js/core/character.js`](src/js/core/character.js:1512)) 的日志，以在函数入口处打印所有当前buff的详细信息。
 ## Current Tasks
 *   [2025-05-11 20:20:00] - **TDD Cycle Start:** 开始为怪物和玩家 AoE 技能修复编写单元/集成测试。目标文件：[`test-battle-logic.html`](test-battle-logic.html)。
 *   [2025-05-11 20:24:00] - **TDD Cycle End:** 完成为怪物和玩家 AoE 技能修复编写单元/集成测试。覆盖了怪物 AoE (all_enemies), 玩家 AoE (all_enemies), 玩家 AoE (all_allies), 以及双方的单体技能 (single_enemy, single_ally) 场景。测试添加在 [`test-battle-logic.html`](test-battle-logic.html)。
@@ -241,3 +247,4 @@ This file tracks the project's progress using a task list format.
     *   [2025-05-11 19:42:00] - **Next Step:** 重构 [`JobSkills.getTargets()`](src/js/core/job-skills.js:1080) 以正确处理 `all_enemies` 和 `all_allies` 并返回目标数组。
     *   [2025-05-11 19:42:00] - **Next Step:** 修改技能效果应用函数 (如 [`JobSkills.applyDamageEffects()`](src/js/core/job-skills.js:766)) 以迭代处理目标数组。
 *   [2025-05-11 20:44:15] - [Debugging Task Status Update: Completed] Investigated and fixed issue where backline units would not join combat. Ensured backline units have full HP at the start of battle by modifying [`src/js/core/battle.js`](src/js/core/battle.js).
+* [2025-05-11 22:30:00] - Debugging Task Status Update: Added diagnostic logs to trace "一伐架式" buff lifecycle. Files modified: [`src/js/core/job-skills.js`](src/js/core/job-skills.js), [`src/js/core/buff-system.js`](src/js/core/buff-system.js).

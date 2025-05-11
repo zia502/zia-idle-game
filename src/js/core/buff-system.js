@@ -456,10 +456,13 @@ const BuffSystem = {
             }
             
             target.buffs.push(buff);
-            if (buff.isBuffPackage && Array.isArray(buff.effects)) {
-                this.applySubBuffsFromPackage(target, buff, buff.source || source); 
+            if (buff.name === '一伐架式') {
+                BattleLogger.log(BattleLogger.levels.CONSOLE_DETAIL, `[DEBUG_YIFA] Buff '一伐架式' pushed to target ${target.name}. Duration: ${buff.duration}, Value: ${buff.value}, Stackable: ${buff.stackable}`);
             }
-            this.recalculateStatsWithBuffs(target); 
+            if (buff.isBuffPackage && Array.isArray(buff.effects)) {
+                this.applySubBuffsFromPackage(target, buff, buff.source || source);
+            }
+            this.recalculateStatsWithBuffs(target);
             Battle.logBattle(`${target.name} 获得了BUFF [${buff.name}] (值: ${buff.value}, 持续时间: ${buff.duration}, 层数: ${buff.currentStacks})。`);
             return true;
         }
@@ -722,6 +725,9 @@ const BuffSystem = {
         const index = target.buffs.findIndex(b => b.id === buffId);
         if (index > -1) {
             const removedBuff = target.buffs.splice(index, 1)[0];
+            if (removedBuff.name === '一伐架式') {
+                BattleLogger.log(BattleLogger.levels.CONSOLE_DETAIL, `[DEBUG_YIFA] Buff '一伐架式' removed from target ${target.name}. Reason: Duration ended or dispelled.`);
+            }
             if (removedBuff.isBuffPackage) { // 如果是包，移除其子buff
                 this.removeSubBuffsOf(target, removedBuff.id);
             }

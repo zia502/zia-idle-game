@@ -430,3 +430,86 @@ The error `ReferenceError: BattleLogger is not defined` occurred in [`src/js/cor
     *   [`index.html`](index.html) (Modified)
     *   [`src/js/core/buff-system.js`](src/js/core/buff-system.js) (Error source, now fixed)
     *   [`src/js/core/battle-logger.js`](src/js/core/battle-logger.js) (Verified)
+---
+### Decision (Code)
+[2025-05-11 11:33:09] - 增强 `Character.js` 中的 `loadSaveData` 和 `getCharacterFullStats` 函数。
+
+**Rationale:**
+为了提高角色属性在加载存档和计算过程中的一致性和健壮性。`loadSaveData` 需要确保所有角色的属性在加载后得到刷新，并进行必要的完整性检查。`getCharacterFullStats` 需要更稳健地处理武器属性计算中可能发生的错误，并确保 `weaponBonusStats` 始终得到更新。
+
+**Details:**
+*   **`loadSaveData` in [`src/js/core/character.js`](src/js/core/character.js:1780):**
+    *   在遍历已加载的角色时，确保 `baseStats`, `weaponBonusStats`, `currentStats` 存在，并对 `baseStats` 调用 `_ensureStatsIntegrity`。
+    *   在函数末尾添加了逻辑，遍历所有已加载的角色 (`this.characters`)，并为每个角色调用 `_updateCharacterEffectiveStats(characterId, teamId)` 以刷新其最终属性。
+*   **`getCharacterFullStats` in [`src/js/core/character.js`](src/js/core/character.js:1402):**
+    *   在调用 `this._calculateWeaponAugmentedStats(character, teamId)` 时使用了 `try...catch` 块。
+    *   如果捕获到错误，或者 `_calculateWeaponAugmentedStats` 返回 falsy 值，`statsAfterWeapon` 将安全回退到角色的 `baseStats` 的一个副本 (`{ ...character.baseStats }`)，并调用 `_ensureStatsIntegrity` 确保其完整性。
+    *   无论 `_calculateWeaponAugmentedStats` 的结果如何，`character.weaponBonusStats` 都会被更新为最终确定的 `statsAfterWeapon`（可能是回退值）。
+---
+### Decision (Code)
+[2025-05-11 12:03:41] - 修改 `completeDungeon` 函数以正确恢复角色副本外属性。
+
+**Rationale:**
+当前在 `completeDungeon` 函数中，当角色退出副本时，其 `currentStats` 被直接设置为 `dungeonOriginalStats`（即进入副本前的 `baseStats`），这忽略了角色在副本外的武器盘和多重获取加成。虽然之后有调用 `Character.updateTeamWeaponBonusStats`，但可能由于执行顺序或覆盖问题，导致最终 `currentStats` 不正确。修复方案要求在清除角色副本特定状态后，直接为每个参与副本的成员调用 `Character._updateCharacterEffectiveStats` 来正确地重新计算并设置其 `weaponBonusStats` 和 `currentStats`。
+
+**Details:**
+*   修改了 [`src/js/core/dungeon.js`](src/js/core/dungeon.js:1) 中的 `completeDungeon` 函数。
+*   在角色状态恢复循环内，清除了 `dungeonOriginalStats`, `dungeonAppliedPassives`, 和 `buffs`。
+*   然后，为每个成员调用 `Character._updateCharacterEffectiveStats(member.id, team.id)`。
+*   移除了函数末尾对 `Character.updateTeamWeaponBonusStats` 的调用。
+---
+### Decision (Code)
+[2025-05-11 12:19:27] - 实现新的角色 `baseStats` 计算和验证逻辑。
+
+**Rationale:**
+为了引入更精确和可验证的角色基础属性成长机制，替换了原有的基于 `growthRates` 的简单累加方式。新的逻辑基于角色模板中定义的1级和满级属性，通过线性插值计算任意等级的期望属性值。同时增加了验证机制，以确保角色在加载或进入副本时其 `baseStats` 符合预期。
+
+**Details:**
+*   **`src/js/core/character.js`**:
+    *   添加了 `_getCharacterTemplate(character)`: 根据角色实例（特别是其ID）查找并返回其原始模板对象。处理了角色ID可能包含实例后缀的情况。
+    *   添加了 `getExpectedBaseStatAtLevel(statName, templateBaseStats, currentLevel, characterMaxLevel)`: 根据模板1级属性、满级属性（如果存在）、当前等级和角色最大等级，通过线性插值计算期望的基础属性值。对非百分比属性结果向下取整。
+    *   修改了 `levelUpCharacter(characterId, levels = 1)`:
+        *   现在使用 `_getCharacterTemplate` 获取角色模板。
+        *   使用 `getExpectedBaseStatAtLevel` 来更新角色升级后的 `baseStats` (hp, attack, defense, critRate, critDamage, daRate, taRate)。
+        *   如果找不到模板，则跳过 `baseStats` 更新，但保留等级和经验逻辑。
+    *   添加了 `validateCharacterBaseStats(characterId)`:
+        *   获取角色及其模板。
+        *   对指定的 `baseStats` (hp, attack, defense, critRate, critDamage, daRate, taRate) 调用 `getExpectedBaseStatAtLevel` 计算期望值。
+        *   比较期望值与角色当前的 `baseStats` 中的实际值，对浮点数使用容差比较。
+        *   如果不匹配，则在控制台输出警告。
+    *   修改了 `loadSaveData(data)`:
+        *   在加载并刷新完所有角色属性后，遍历所有已加载角色并调用 `this.validateCharacterBaseStats(charId)` 进行验证。
+*   **`src/js/core/dungeon.js`**:
+    *   修改了 `initDungeonRun(dungeonId)`:
+        *   在获取到要进入副本的队伍成员后，遍历队伍成员并为每个成员调用 `Character.validateCharacterBaseStats(memberId)`。
+---
+### Decision (Code)
+[2025-05-11 12:47:42] - 修改 `loadSaveData` 函数以处理异步角色模板加载。
+
+**Rationale:**
+修复 `loadSaveData` 函数在调用 `validateCharacterBaseStats` 时，因依赖的异步角色模板数据（R, SR, SSR 角色列表）可能尚未完全加载完成，导致验证时找不到模板而出错的问题。
+
+**Details:**
+*   将 [`src/js/core/character.js`](src/js/core/character.js:1) 中的 `loadSaveData` 函数修改为 `async` 函数。
+*   使用 `Promise.all()` 等待所有 `this.loadCharacterData()`（用于加载R, SR, SSR角色模板）的异步操作完成后，再执行后续的角色属性刷新和 `baseStats` 验证逻辑。
+---
+### Decision (Code)
+[2025-05-11 12:58:48] - 增强 `validateCharacterBaseStats` 函数并更新其在 `loadSaveData` 中的调用。
+
+**Rationale:**
+为了在角色基础属性验证失败时提供自动修正能力，并确保在加载存档时应用此修正。这有助于维护数据一致性，特别是在属性计算逻辑或模板数据发生变化后。
+
+**Details:**
+*   **`validateCharacterBaseStats(characterId, autoCorrect = false)` in [`src/js/core/character.js`](src/js/core/character.js:1):**
+    *   添加了可选参数 `autoCorrect`，默认值为 `false`。
+    *   当检测到属性不匹配且 `autoCorrect` 为 `true` 时：
+        *   将角色对象 (`character.baseStats`) 中对应的属性值更新为计算出的 `expectedValue`。
+        *   如果修正的是 `hp`，则同步更新 `character.baseStats.maxHp` 为 `expectedValue`。
+        *   如果修正的是 `attack`，则同步更新 `character.baseStats.maxAttack` 为 `expectedValue`。
+        *   记录一条日志说明已进行自动修正。
+    *   如果进行了任何自动修正 (`CorrectionMade` 为 `true`)：
+        *   在函数末尾（但在打印“验证通过”或“已自动修正”日志之后）调用 `this._updateCharacterEffectiveStats(characterId, teamId)` 来刷新派生属性。
+        *   `teamId` 通过 `Team.findTeamByMember(characterId)?.id || null` 获取。
+*   **`loadSaveData(data)` in [`src/js/core/character.js`](src/js/core/character.js:1):**
+    *   在函数末尾，调用 `this.validateCharacterBaseStats(charId)` 时，将第二个参数（`autoCorrect`）设置为 `true`。
+    *   更新了相关的日志消息，以反映自动修正的启用。

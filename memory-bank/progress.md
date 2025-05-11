@@ -166,6 +166,18 @@ This file tracks the project's progress using a task list format.
 * [2025-05-10 23:34:18] - **Completed Debugging Task:** Fixed `TypeError: Battle.logBattle is not a function` in `buff-system.js`. Replaced `Battle.logBattle` with `BattleLogger.log(BattleLogger.levels.BATTLE_LOG, ...)`.
 * [2025-05-10 23:37:00] - **Completed Debugging Task:** Resolved `ReferenceError: BattleLogger is not defined` in [`src/js/core/buff-system.js`](src/js/core/buff-system.js:909). Added `<script src="src/js/core/battle-logger.js"></script>` to [`index.html`](index.html) before [`src/js/core/buff-system.js`](src/js/core/buff-system.js).
 * [2025-05-11 10:15:27] - **Completed Task:** 修改了 [`src/js/components/character-tooltip.js`](src/js/components/character-tooltip.js:1) 中的 `findCharacterCardElement` 函数，以满足新的提示框显示逻辑：仅当鼠标悬停在 `<h4>` 标签上时才查找父元素的 `data-character-id`。
+* [2025-05-11 10:25:46] - **Completed Task:** 修改了 [`src/js/components/character-tooltip.js`](src/js/components/character-tooltip.js:1) 中的 `findCharacterCardElement` 函数，以支持在 `<h4>` 或具有 `member-name` 类的元素上触发提示框，并正确查找 `data-character-id`。
+* [2025-05-11 10:51:18] - **Completed Task:** 修改 [`src/js/components/team-management.js`](src/js/components/team-management.js:1) 的 `renderTeams` 函数，以正确显示角色突破次数徽章。
+* [2025-05-11 11:33:01] - **Completed Task:** 修改了 [`src/js/core/character.js`](src/js/core/character.js:1) 中的 `loadSaveData` 和 `getCharacterFullStats` 函数。
+    *   `loadSaveData`: 增强了属性完整性检查，并在加载后刷新所有角色属性。
+    *   `getCharacterFullStats`: 增加了错误处理和回退机制，确保 `weaponBonusStats` 总是更新。
+* [2025-05-11 12:03:17] - **Completed Task:** 修改 [`src/js/core/dungeon.js`](src/js/core/dungeon.js:1) 中的 `completeDungeon` 函数，以正确恢复角色在副本外的属性。
+* [2025-05-11 12:19:12] - **Completed Task:** 实现新的 `baseStats` 计算和验证逻辑。
+    *   修改了 [`src/js/core/character.js`](src/js/core/character.js:1): 添加 `_getCharacterTemplate`, `getExpectedBaseStatAtLevel`, `validateCharacterBaseStats`；修改 `levelUpCharacter`, `loadSaveData`。
+    *   修改了 [`src/js/core/dungeon.js`](src/js/core/dungeon.js:1): 在 `initDungeonRun` 中调用 `validateCharacterBaseStats`。
+* [2025-05-11 12:36:58] - **Completed Task:** 修改 [`src/js/core/character.js`](src/js/core/character.js:1) 中的 `validateCharacterBaseStats` 函数，取消了成功验证日志的注释。
+* [2025-05-11 12:47:32] - **Completed Task:** 修改 [`src/js/core/character.js`](src/js/core/character.js:1) 中的 `loadSaveData` 函数，修复了角色模板异步加载问题。
+* [2025-05-11 12:58:48] - **Completed Task:** 修改 [`src/js/core/character.js`](src/js/core/character.js:1) 中的 `validateCharacterBaseStats` 函数，添加 `autoCorrect` 参数及相关逻辑，并更新 `loadSaveData` 函数以启用自动修正。
 
 ## Current Tasks
 *   [2025-05-08 21:03:00] - 调试战斗中 TypeError (技能 warriorSlash 使用错误: TypeError: Cannot read properties of null (reading 'teamMembers') at battle.js:960).
@@ -198,5 +210,3 @@ This file tracks the project's progress using a task list format.
     *   Modified [`src/js/core/job-skills.js`](src/js/core/job-skills.js) to add logging logic in `useSkill` and enhance returned data from `applyBuffEffects` and `applyDebuffEffects`.
     *   Ensured logs capture turn, caster, skill, target, primary effect (damage, heal, buff/debuff application, dispel), and target HP status, following provided specifications.
     *   No changes were needed in [`src/js/core/battle.js`](src/js/core/battle.js) regarding `applyDamageToTarget`'s internal logging, as its existing logs for special events (cover, shield, etc.) do not conflict with the new higher-level skill logs.
-* [2025-05-11 10:25:46] - **Completed Task:** 修改了 [`src/js/components/character-tooltip.js`](src/js/components/character-tooltip.js:1) 中的 `findCharacterCardElement` 函数，以支持在 `<h4>` 或具有 `member-name` 类的元素上触发提示框，并正确查找 `data-character-id`。
-* [2025-05-11 10:51:18] - **Completed Task:** 修改 [`src/js/components/team-management.js`](src/js/components/team-management.js:1) 的 `renderTeams` 函数，以正确显示角色突破次数徽章。

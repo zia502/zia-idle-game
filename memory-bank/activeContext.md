@@ -42,6 +42,8 @@ This file tracks the project's current status, including recent changes, current
     *   最终地下城内属性计算流程为：`currentStats = (dungeonOriginalStats + 基于 dungeonOriginalStats 的武器盘加成) + 基于当前 baseStats 的突破加成`。
 *   [2025-05-10 19:26:00] - **架构设计:** 根据规范编写器提供的战斗顺序修改方案（我方技能 -> 我方普攻 -> 敌方行动），进行详细的架构设计。重点关注 Memory Bank 更新、关键文件/函数识别、新三阶段流程设计、角色状态处理。
 *   [2025-05-11 10:15:27] - 修改了 [`src/js/components/character-tooltip.js`](src/js/components/character-tooltip.js:1) 中的 `findCharacterCardElement` 函数，以满足新的提示框显示逻辑：仅当鼠标悬停在 `<h4>` 标签上时才查找父元素的 `data-character-id`。
+*   [2025-05-11 12:36:58] - 修改了 [`src/js/core/character.js`](src/js/core/character.js:1) 中的 `validateCharacterBaseStats` 函数，取消了成功验证日志的注释。
+*   [2025-05-11 12:58:48] - 修改了 [`src/js/core/character.js`](src/js/core/character.js:1) 中的 `validateCharacterBaseStats` 函数，添加了 `autoCorrect` 参数及相关逻辑，并更新了 `loadSaveData` 函数以启用自动修正。
 ## Recent Changes
 *   [2025-05-09 21:18:00] - **Debug Fixes Applied:** 针对战斗日志分析出的4个新问题进行了修复。
     *   问题1 (怪物HP初始化): 修改了 [`src/js/core/battle.js`](src/js/core/battle.js:1) 的HP初始化逻辑，增加从 `monster.baseStats` 获取 `maxHp` 的途径。
@@ -66,6 +68,8 @@ This file tracks the project's current status, including recent changes, current
 *   [2025-05-08 23:26:36] - 修改 [`src/js/core/battle.js`](src/js/core/battle.js) `startBattle` 函数，增强了怪物HP初始化的健壮性，优先使用JSON中的 `monster.hp` 作为 `maxHp`，并确保初始HP等于 `maxHp`。添加了诊断日志。
 *   [2025-05-09 14:37:00] - 修改了 [`src/data/ssr_skill.json`](src/data/ssr_skill.json:1) 文件，统一了所有技能 `description` 字段的格式，并移除了临时的 `descriptionForEffect` 字段。
 *   [2025-05-11 10:15:27] - 修改了 [`src/js/components/character-tooltip.js`](src/js/components/character-tooltip.js:1) 中的 `findCharacterCardElement` 函数，以满足新的提示框显示逻辑。
+*   [2025-05-11 12:36:58] - 修改了 [`src/js/core/character.js`](src/js/core/character.js:1) 中的 `validateCharacterBaseStats` 函数，取消了成功验证日志的注释。
+*   [2025-05-11 12:58:48] - 修改了 [`src/js/core/character.js`](src/js/core/character.js:1) 中的 `validateCharacterBaseStats` 函数，添加了 `autoCorrect` 参数及相关逻辑，并更新了 `loadSaveData` 函数以启用自动修正。
 
 ## Open Questions/Issues
 *   [2025-05-09 21:18:00] - **Issue Status Update:** 针对战斗日志分析出的4个新问题已应用修复：
@@ -242,7 +246,7 @@ This file tracks the project's current status, including recent changes, current
 * [2025-05-10 18:53:56] - Debug Status Update: Inserted final diagnostic log at the end of `JobSkills.useSkill` to pinpoint HP rollback. Awaiting new logs.
 * [2025-05-10 19:02:40] - Debug Status Update: Corrected insertion point for `JobSkills.useSkill` exit logs. All diagnostic logs are now believed to be correctly in place. Awaiting new logs from user for a scenario that reproduces the HP rollback.
 *   [2025-05-10 19:33:00] - 重构了 [`src/js/core/battle.js`](src/js/core/battle.js:1) 以实现新的三阶段战斗流程（我方技能 -> 我方普攻 -> 敌方行动），遵循架构师的设计方案。主要改动包括：重构 `processBattle` ([`src/js/core/battle.js:400`](src/js/core/battle.js:400)) 函数；新增阶段处理函数 `executePlayerSkillPhase` ([`src/js/core/battle.js:519`](src/js/core/battle.js:519))、`executePlayerAttackPhase` ([`src/js/core/battle.js:533`](src/js/core/battle.js:533))、`executeEnemyPhase` ([`src/js/core/battle.js:552`](src/js/core/battle.js:552))；新增辅助函数 `processCharacterSkills` ([`src/js/core/battle.js:563`](src/js/core/battle.js:563)) 和 `processCharacterNormalAttack` ([`src/js/core/battle.js:609`](src/js/core/battle.js:609))。旧的 `processCharacterAction` ([`src/js/core/battle.js:839`](src/js/core/battle.js:839)) 函数已被新逻辑取代。`processEndOfTurnEffect` ([`src/js/core/battle.js:1933`](src/js/core/battle.js:1933)) 函数也已更新，并在新的 `processBattle` ([`src/js/core/battle.js:400`](src/js/core/battle.js:400)) 循环中调用。
-[2025-05-10 19:44:12] 当前TDD任务：为 `src/js/core/battle.js` 中实现的新三阶段战斗流程（我方技能 -> 我方普攻 -> 敌方行动）编写全面的测试用例。
+* [2025-05-10 19:44:12] 当前TDD任务：为 `src/js/core/battle.js` 中实现的新三阶段战斗流程（我方技能 -> 我方普攻 -> 敌方行动）编写全面的测试用例。
 主要测试文件：`test-battle-logic.html`。
 关键验证点包括：核心流程顺序、各阶段（我方技能、我方普攻、敌方行动）的正确性、状态处理（Buff/Debuff、回合效果）以及边缘情况。
 * [2025-05-10 20:44:32] - Debug Fix Applied: Resolved "未知的BUFF类型: critRateUp" error. Root cause was a case mismatch for the buff type 'critRateUp' in [`src/js/core/weapon-board-bonus-system.js`](src/js/core/weapon-board-bonus-system.js:322). Corrected to 'criticalRateUp' to match definition in [`src/js/core/buff-system.js`](src/js/core/buff-system.js:28).
@@ -275,3 +279,8 @@ This file tracks the project's current status, including recent changes, current
 * [2025-05-10 23:37:00] - Debug Fix: Resolved `ReferenceError: BattleLogger is not defined` in `buff-system.js:909`. Caused by `battle-logger.js` not being loaded in `index.html`. Fixed by adding script tag for `battle-logger.js` before `buff-system.js` in `index.html`.
 * [2025-05-11 10:25:37] - 修改了 [`src/js/components/character-tooltip.js`](src/js/components/character-tooltip.js:1) 中的 `findCharacterCardElement` 函数，使其能够处理鼠标悬停在 `<h4>` 标签或具有 `member-name` 类的元素上的情况，并向上查找具有 `data-character-id` 属性的父元素。
 * [2025-05-11 10:51:10] - 修改了 [`src/js/components/team-management.js`](src/js/components/team-management.js:1) 中的 `renderTeams` 函数，将 `multiCountDisplay` 添加到前排和后排队员的名字显示中，以确保突破次数徽章正确显示。
+* [2025-05-11 11:32:36] - 修改了 [`src/js/core/character.js`](src/js/core/character.js:1)：增强了 `loadSaveData` 函数，在加载后刷新所有角色属性，并确保了属性对象的完整性；增强了 `getCharacterFullStats` 函数的健壮性，通过 `try...catch` 处理武器属性计算并确保 `weaponBonusStats` 总是更新。
+* [2025-05-11 12:03:08] - 修改了 [`src/js/core/dungeon.js`](src/js/core/dungeon.js:1) 中的 `completeDungeon` 函数，以在角色退出副本时正确恢复其属性，确保其反映副本外的武器盘和多重获取加成。现在会为每个参与副本的成员调用 `Character._updateCharacterEffectiveStats`。
+* [2025-05-11 12:19:01] - 完成对 `src/js/core/character.js` 和 `src/js/core/dungeon.js` 的修改，实现了新的 `baseStats` 计算和验证逻辑。添加了 `_getCharacterTemplate`, `getExpectedBaseStatAtLevel`, `validateCharacterBaseStats` 函数，并修改了 `levelUpCharacter`, `loadSaveData` (在 `character.js` 中) 和 `initDungeonRun` (在 `dungeon.js` 中)。
+* [2025-05-11 12:47:21] - 修改了 [`src/js/core/character.js`](src/js/core/character.js:1) 中的 `loadSaveData` 函数，将其改为 `async` 函数并使用 `Promise.all()` 等待角色模板加载完成后再执行后续逻辑，以修复因模板未加载完成导致的验证错误。
+* [2025-05-11 12:58:48] - 修改了 [`src/js/core/character.js`](src/js/core/character.js:1) 中的 `validateCharacterBaseStats` 函数，为其添加了 `autoCorrect` 可选参数和相应的自动修正逻辑（包括更新 `maxHp`/`maxAttack` 和调用 `_updateCharacterEffectiveStats`）。同时，更新了 `loadSaveData` 函数中对 `validateCharacterBaseStats` 的调用，以启用自动修正。

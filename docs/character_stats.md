@@ -50,7 +50,7 @@
         "daRate": 0.06,                                    // 战斗中实时连击率
         "taRate": 0.03                                    // 战斗中实时三连击率
     },
-    "growthRates": {                                   // 角色的成长率，用于计算升级时的属性增长
+    "growthRates": {                                   // 取消成长率，每次升级提高的属性 用json数据里的 最大HP/ATTack 和等级进行计算
         "hp": 12,
         "attack": 2,
         "defense": 1,

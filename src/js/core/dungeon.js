@@ -908,12 +908,21 @@ const Dungeon = {
             DungeonRunner.clearLastDungeonRecord();
         }
 
-        // 保存地下城进度到Game.state
-        this.saveDungeonProgress();
-
-        return true;
-    },
-
+        
+                // 保存地下城进度到Game.state
+                this.saveDungeonProgress();
+        
+                // ... 在 Dungeon.initDungeonRun 中，获取到队伍成员后 ...
+                const activeTeam = Game.getActiveTeam(); // 或其他获取当前队伍的方式
+                if (activeTeam && activeTeam.members && typeof Character !== 'undefined' && Character.validateCharacterBaseStats) {
+                    console.log(`进入副本 ${dungeonId} 前，验证队伍成员的 baseStats...`);
+                    activeTeam.members.forEach(memberId => {
+                        Character.validateCharacterBaseStats(memberId);
+                    });
+                }
+        
+                return true;
+            },
     /**
      * 生成普通怪物
      * @param {object} dungeon - 地下城对象
@@ -1358,15 +1367,14 @@ const Dungeon = {
         if (!dungeon) return { success: false, message: '地下城不存在' };
 
         // 恢复队伍成员的地下城原始属性
-        const team = Game.getActiveTeam();
+        const team = Game.getActiveTeam(); // 假设 Game.getActiveTeam() 能正确获取当前队伍
         if (team && team.members) {
             const teamMembers = team.members.map(id => Character.getCharacter(id)).filter(char => char);
 
             for (const member of teamMembers) {
-                if (member.dungeonOriginalStats) {
-                    console.log(`完成地下城，恢复 ${member.name} 的地下城原始属性`);
-                    member.currentStats = JSON.parse(JSON.stringify(member.dungeonOriginalStats));
-
+                if (member.dungeonOriginalStats) { // 检查确保只处理参与了副本的角色
+                    console.log(`完成地下城，为 ${member.name} 清理副本状态并刷新属性`);
+                    
                     // 清除地下城原始属性
                     delete member.dungeonOriginalStats;
 
@@ -1377,10 +1385,28 @@ const Dungeon = {
                     }
 
                     // 清除所有BUFF
-                    if (typeof BuffSystem !== 'undefined') {
+                    if (typeof BuffSystem !== 'undefined' && BuffSystem.clearAllBuffs) {
                         BuffSystem.clearAllBuffs(member);
-                    } else {
+                    } else if (member.buffs) {
                         member.buffs = [];
+                    }
+
+                    // 直接调用 _updateCharacterEffectiveStats 来恢复和计算属性
+                    if (typeof Character !== 'undefined' && Character._updateCharacterEffectiveStats) {
+                        // 确保 team.id 是有效的，如果队伍信息可能不完整，需要更健壮的处理
+                        const currentTeamId = team.id || null;
+                        Character._updateCharacterEffectiveStats(member.id, currentTeamId);
+                        console.log(`已为 ${member.name} (队伍ID: ${currentTeamId}) 调用 _updateCharacterEffectiveStats`);
+                    } else {
+                        console.warn(`Character._updateCharacterEffectiveStats 未定义，无法为 ${member.name} 刷新属性。回退到baseStats。`);
+                        member.currentStats = JSON.parse(JSON.stringify(member.baseStats));
+                        if (typeof Character !== 'undefined' && Character._ensureStatsIntegrity) {
+                           Character._ensureStatsIntegrity(member.currentStats, member.baseStats);
+                        }
+                        member.weaponBonusStats = JSON.parse(JSON.stringify(member.baseStats));
+                         if (typeof Character !== 'undefined' && Character._ensureStatsIntegrity) {
+                           Character._ensureStatsIntegrity(member.weaponBonusStats, member.baseStats);
+                        }
                     }
                 }
             }
@@ -1389,22 +1415,14 @@ const Dungeon = {
         // 清除保存的地下城进度
         if (typeof Game !== 'undefined' && Game.state) {
             delete Game.state.currentDungeon;
-
-            // 保存游戏状态
             if (typeof Game.saveGame === 'function') {
                 Game.saveGame();
                 console.log('已清除保存的地下城进度');
             }
         }
 
-        // 更新所有角色的weaponBonusStats
-        if (typeof Character !== 'undefined' && typeof Character.updateTeamWeaponBonusStats === 'function') {
-            console.log('地下城完成，更新所有角色的weaponBonusStats');
-            const teamId = team.id;
-            if (teamId) {
-                Character.updateTeamWeaponBonusStats(teamId);
-            }
-        }
+        // 原先的 Character.updateTeamWeaponBonusStats 调用可以移除，
+        // 因为属性已在上面的循环中为每个成员单独更新。
 
         // 检查是否击败了大boss
         const finalBossDefeated = this.currentRun.finalBoss && this.currentRun.finalBossAppeared;

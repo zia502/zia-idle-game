@@ -479,6 +479,22 @@ const Character = {
         const character = this.getCharacter(characterId);
         if (!character) return;
 
+        const template = this._getCharacterTemplate(character);
+        if (!template) {
+            console.error(`levelUpCharacter: 无法找到角色 ${character.name} (ID: ${characterId}) 的模板，无法按新规则更新基础属性。将跳过baseStats更新。`);
+            // 保留旧的经验和等级逻辑，但跳过属性更新或使用旧方法作为回退
+            for (let i = 0; i < levels; i++) {
+                if (character.level >= character.maxLevel) break;
+                character.level++;
+                character.exp = 0; // 假设升级后经验清零或根据需要调整
+                character.nextLevelExp = this.calculateNextLevelExp(character.level);
+            }
+            if (character.isMainCharacter) Game.state.playerLevel = character.level;
+            // 即使模板找不到，也应该尝试更新weaponBonusStats和currentStats，因为等级变了
+            // this._updateCharacterEffectiveStats(characterId, Team.findTeamByMember(characterId)?.id || null);
+            return;
+        }
+
         let statsChanged = false;
         for (let i = 0; i < levels; i++) {
             if (character.level >= character.maxLevel) {
@@ -490,52 +506,32 @@ const Character = {
 
             character.level++;
             statsChanged = true;
-            // console.log("升级前纯粹 baseStats:", JSON.parse(JSON.stringify(character.baseStats)));
-
-            // 等级提升直接修改纯粹的 baseStats
-            if (character.isMainCharacter && character.job && typeof JobSystem !== 'undefined') {
-                const jobId = character.job.current;
-                const job = JobSystem.getJob(jobId);
-                if (job && job.baseStats && job.maxStats) {
-                    const jobLevel = character.job.level || 1; // 假设职业等级与角色等级同步或有自己的逻辑
-                    const levelRatio = Math.min(1, Math.max(0, (jobLevel - 1) / 19));
-                    for (const stat in job.baseStats) {
-                        if (job.maxStats[stat] && character.baseStats.hasOwnProperty(stat)) {
-                            const baseValue = job.baseStats[stat];
-                            const maxValue = job.maxStats[stat];
-                            character.baseStats[stat] = Math.floor(baseValue + (maxValue - baseValue) * levelRatio);
-                        }
-                    }
-                } else { // 回退到成长率
-                    character.baseStats.hp = (character.baseStats.hp || 0) + (character.growthRates.hp || 0);
-                    character.baseStats.attack = (character.baseStats.attack || 0) + (character.growthRates.attack || 0);
-                    // 其他属性...
-                }
-            } else {
-                character.baseStats.hp = (character.baseStats.hp || 0) + (character.growthRates.hp || 0);
-                character.baseStats.attack = (character.baseStats.attack || 0) + (character.growthRates.attack || 0);
-                // 其他属性...
-            }
             
-            // 确保 maxHp 和 maxAttack 更新
-            if (character.baseStats.hasOwnProperty('hp')) character.baseStats.maxHp = character.baseStats.hp;
-            if (character.baseStats.hasOwnProperty('attack')) character.baseStats.maxAttack = character.baseStats.attack;
+            // 定义需要按新规则计算的基础属性列表
+            const statsToUpdate = ['hp', 'attack', 'defense', 'critRate', 'critDamage', 'daRate', 'taRate'];
+            
+            statsToUpdate.forEach(statKey => {
+                const expectedValue = this.getExpectedBaseStatAtLevel(statKey, template.baseStats, character.level, character.maxLevel);
+                if (expectedValue !== undefined) {
+                    character.baseStats[statKey] = expectedValue;
+                    // 确保 hp/maxHp 和 attack/maxAttack 在角色实例的 baseStats 中保持一致
+                    if (statKey === 'hp') character.baseStats.maxHp = expectedValue;
+                    if (statKey === 'attack') character.baseStats.maxAttack = expectedValue;
+                }
+            });
 
-
+            character.exp = 0; // 假设升级后经验清零，或者根据需要调整为 character.exp -= character.nextLevelExp;
             character.nextLevelExp = this.calculateNextLevelExp(character.level);
-            // console.log(`${character.name} 升级到 ${character.level} 级, 更新后纯粹 baseStats:`, JSON.parse(JSON.stringify(character.baseStats)));
+            console.log(`${character.name} 升级到 ${character.level} 级, 更新后 baseStats:`, JSON.parse(JSON.stringify(character.baseStats)));
         }
 
         if (statsChanged) {
-            // 确定角色当前所属的队伍ID，如果角色不在任何队伍中，teamId 可以是 null
             let teamId = null;
             if (typeof Team !== 'undefined' && Team.findTeamByMember) {
                 const team = Team.findTeamByMember(characterId);
-                if (team) {
-                    teamId = team.id;
-                }
+                if (team) teamId = team.id;
             }
-            this._updateCharacterEffectiveStats(characterId, teamId);
+            this._updateCharacterEffectiveStats(characterId, teamId); // 重新计算 weaponBonusStats 和 currentStats
         }
 
         if (character.isMainCharacter) {
@@ -1400,22 +1396,33 @@ const Character = {
      * @returns {object | null} 角色最终属性对象，或在角色不存在时返回null
      */
     getCharacterFullStats(characterId, teamId) {
-        const character = this.characters[characterId]; // 直接从集合中获取角色
+        const character = this.characters[characterId];
         if (!character) {
             console.error(`[getCharacterFullStats] 无法通过ID直接从 this.characters 获取角色: ${characterId}`);
             return null;
         }
 
-        // 1. 计算 (纯粹 baseStats + 武器盘加成)
-        const statsAfterWeapon = this._calculateWeaponAugmentedStats(character, teamId);
-        if (!statsAfterWeapon) return { ...character.baseStats }; // 回退
+        let statsAfterWeapon;
+        try {
+            statsAfterWeapon = this._calculateWeaponAugmentedStats(character, teamId);
+        } catch (e) {
+            console.error(`[getCharacterFullStats] 调用 _calculateWeaponAugmentedStats 时出错 (角色ID: ${characterId}, 队伍ID: ${teamId}). 回退到基础属性作为武器加成后属性。`, e);
+            statsAfterWeapon = { ...character.baseStats }; // 回退
+            this._ensureStatsIntegrity(statsAfterWeapon, character.baseStats); // 确保回退值的完整性
+        }
 
-        // 2. 更新角色对象上的 weaponBonusStats
+        // 如果 try-catch 后 statsAfterWeapon 仍然是 falsy (例如 _calculateWeaponAugmentedStats 明确返回 null 且未抛错)
+        if (!statsAfterWeapon) {
+            console.warn(`[getCharacterFullStats] _calculateWeaponAugmentedStats 返回了 falsy 值 (角色ID: ${characterId}). 使用基础属性作为武器加成后属性。`);
+            statsAfterWeapon = { ...character.baseStats }; // 再次确保回退
+            this._ensureStatsIntegrity(statsAfterWeapon, character.baseStats);
+        }
+
+        // 更新角色对象上的 weaponBonusStats。现在 statsAfterWeapon 保证是一个有效的对象。
         character.weaponBonusStats = { ...statsAfterWeapon };
-        this._ensureStatsIntegrity(character.weaponBonusStats, character.baseStats);
+        this._ensureStatsIntegrity(character.weaponBonusStats, character.baseStats); // 确保拷贝后的完整性
 
-
-        // 3. 在 statsAfterWeapon 的基础上应用 multiBonusStats (纯粹增量)
+        // 在 statsAfterWeapon (已包含武器盘加成) 的基础上应用 multiBonusStats (纯粹增量)
         let finalStats = { ...statsAfterWeapon };
         if (character.multiBonusStats) {
             for (const stat in character.multiBonusStats) {
@@ -1425,8 +1432,8 @@ const Character = {
             }
         }
 
-        // 4. 确保最终属性的完整性 (如 maxHp) 并取整
-        this._ensureStatsIntegrity(finalStats, character.baseStats); // finalStats.hp 更新后，maxHp 也应更新
+        // 确保最终属性的完整性 (如 maxHp) 并取整
+        this._ensureStatsIntegrity(finalStats, character.baseStats);
         for (const stat in finalStats) {
             if (typeof finalStats[stat] === 'number' && !['critRate', 'daRate', 'taRate', 'exAttack'].includes(stat)) {
                 finalStats[stat] = Math.max(0, Math.floor(finalStats[stat]));
@@ -1435,7 +1442,6 @@ const Character = {
             }
         }
         
-        // console.log(`角色 ${character.name} 的最终属性:`, finalStats);
         return finalStats;
     },
 
@@ -1777,7 +1783,7 @@ const Character = {
      * 加载角色系统保存数据
      * @param {object} data - 保存的数据对象
      */
-    loadSaveData(data) {
+    async loadSaveData(data) { // 将函数标记为 async
         console.log('加载角色系统数据');
 
         if (!data) return;
@@ -1786,37 +1792,214 @@ const Character = {
             this.characters = data.characters;
             console.log(`加载了 ${Object.keys(this.characters).length} 个角色`);
 
-            // 清理旧存档数据并调试输出
             Object.values(this.characters).forEach(character => {
                 if (character.hasOwnProperty('bonusMultiplier')) {
                     delete character.bonusMultiplier;
                 }
-                // 确保 delete character.originalBaseStats; 能够有效移除旧存档中的此字段
                 if (character.hasOwnProperty('originalBaseStats')) {
                     delete character.originalBaseStats;
                 }
-                // 确保 multiBonusStats 存在且结构正确
                 character.multiBonusStats = character.multiBonusStats || { hp: 0, attack: 0, defense: 0 };
-
-                console.log(`加载角色 ${character.name} (ID: ${character.id}) - 招募状态: ${character.isRecruited}, 主角: ${character.isMainCharacter}`);
+                character.baseStats = character.baseStats || {};
+                character.weaponBonusStats = character.weaponBonusStats || {};
+                character.currentStats = character.currentStats || {};
+                this._ensureStatsIntegrity(character.baseStats, null);
             });
         }
 
-        // if (data.legendaryCharacters) { // 已移除 bonusMultiplier，不再需要单独加载
-        //     this.legendaryCharacters = data.legendaryCharacters;
-        // }
-
-        // 确保R、SR和SSR角色数据已加载
+        const templateLoadPromises = [];
         if (!this.rCharacters || this.rCharacters.length === 0) {
-            this.loadCharacterData('r', 'src/data/r.json');
+            templateLoadPromises.push(this.loadCharacterData('r', 'src/data/r.json'));
         }
-
         if (!this.srCharacters || this.srCharacters.length === 0) {
-            this.loadCharacterData('sr', 'src/data/sr.json');
+            templateLoadPromises.push(this.loadCharacterData('sr', 'src/data/sr.json'));
+        }
+        if (!this.ssrCharacters || this.ssrCharacters.length === 0) {
+            templateLoadPromises.push(this.loadCharacterData('ssr', 'src/data/ssr.json'));
         }
 
-        if (!this.ssrCharacters || this.ssrCharacters.length === 0) {
-            this.loadCharacterData('ssr', 'src/data/ssr.json');
+        try {
+            await Promise.all(templateLoadPromises); // 等待所有模板加载完成
+            console.log('所有角色模板数据已加载/确认。');
+
+            // 现在模板数据已准备好，可以安全地刷新属性和执行验证
+            console.log('加载角色数据后，开始刷新所有角色的有效属性...');
+            if (typeof Team !== 'undefined' && Team.findTeamByMember && typeof Weapon !== 'undefined') {
+                Object.keys(this.characters).forEach(characterId => {
+                    const character = this.characters[characterId];
+                    if (character) {
+                        let teamId = null;
+                        const team = Team.findTeamByMember(characterId);
+                        if (team) {
+                            teamId = team.id;
+                        }
+                        this._updateCharacterEffectiveStats(characterId, teamId);
+                    }
+                });
+                console.log('所有角色的有效属性刷新完成。');
+            } else {
+                console.warn('Team 或 Weapon 模块未完全加载，暂时无法在加载角色数据后立即刷新所有角色属性。');
+            }
+
+            console.log('对所有已加载角色执行 baseStats 验证 (并自动修正)...'); // 更新日志消息
+            Object.keys(this.characters).forEach(charId => {
+                this.validateCharacterBaseStats(charId, true); // 启用自动修正
+            });
+
+        } catch (error) {
+            console.error('加载角色模板数据时发生错误:', error);
+        }
+    },
+
+    _getCharacterTemplate(character) {
+        if (!character || !character.id) {
+            console.warn(`_getCharacterTemplate: 无效的 character 对象或 character.id`);
+            return null;
+        }
+        // 假设角色ID的格式是 templateId_instanceSuffix (例如 "ssr_heroName_12345")
+        // 或者对于直接从模板创建的第一个实例，ID可能就是templateId
+        const idParts = character.id.split('_');
+        let templateIdToSearch = character.id; // 默认尝试完整ID
+
+        if (idParts.length > 1) {
+            // 尝试移除最后一个部分（通常是时间戳或唯一后缀）来获取原始模板ID
+            // 例如: "ssr_somechar_123456" -> "ssr_somechar"
+            // 如果原始模板ID本身包含下划线，例如 "r_goblin_archer", 实例ID可能是 "r_goblin_archer_ts"
+            // 这个逻辑需要根据实际ID命名约定调整，目前假设最后一个下划线后的部分是实例特有后缀
+            let potentialTemplateId = idParts.slice(0, -1).join('_');
+            // 检查这个 potentialTemplateId 是否真的存在于模板列表中
+            const allPossibleTemplates = [
+                ...(this.rCharacters || []),
+                ...(this.srCharacters || []),
+                ...(this.ssrCharacters || [])
+            ];
+            if (allPossibleTemplates.some(t => t.id === potentialTemplateId)) {
+                templateIdToSearch = potentialTemplateId;
+            } else if (!allPossibleTemplates.some(t => t.id === character.id)) {
+                 // 如果完整ID和去掉后缀的ID都找不到模板，则可能无法定位
+                 // console.warn(`_getCharacterTemplate: 无法从角色ID ${character.id} 准确推断模板ID。`);
+                 // 尝试使用角色名和稀有度作为最后的查找手段（如果模板ID不可靠）
+                 const foundByNameAndRarity = allPossibleTemplates.find(t => t.name === character.name && t.rarity === character.rarity);
+                 if (foundByNameAndRarity) return foundByNameAndRarity;
+                 return null;
+            }
+        }
+
+
+        const allTemplates = [
+            ...(this.rCharacters || []),
+            ...(this.srCharacters || []),
+            ...(this.ssrCharacters || [])
+        ];
+
+        const foundTemplate = allTemplates.find(t => t.id === templateIdToSearch);
+        if (!foundTemplate) {
+            // console.warn(`_getCharacterTemplate: 未找到ID为 "${templateIdToSearch}" 的模板 (源自角色ID: ${character.id})`);
+        }
+        return foundTemplate || null;
+    },
+
+    getExpectedBaseStatAtLevel(statName, templateBaseStats, currentLevel, characterMaxLevel) {
+        const level1Value = templateBaseStats[statName];
+        // 构建可能的满级属性键名，例如 'hp' -> 'maxHp', 'attack' -> 'maxAttack'
+        const maxStatKey = 'max' + statName.charAt(0).toUpperCase() + statName.slice(1);
+        const maxLevelValue = templateBaseStats[maxStatKey];
+
+        if (level1Value === undefined) {
+            // console.warn(`模板中属性 "${statName}" 的1级值未定义。`);
+            return undefined;
+        }
+
+        // 如果没有定义满级值 (maxLevelValue is undefined) 或者1级值等于满级值，则该属性为固定值
+        if (maxLevelValue === undefined || level1Value === maxLevelValue) {
+            return level1Value;
+        }
+
+        // 确保等级在有效范围内
+        currentLevel = Math.max(1, Math.min(currentLevel, characterMaxLevel));
+        
+        if (characterMaxLevel <= 1) { // 对于最大等级为1的角色，属性总是1级时的值
+            return level1Value;
+        }
+
+        // 线性插值
+        const expectedValue = level1Value + (maxLevelValue - level1Value) * (currentLevel - 1) / (characterMaxLevel - 1);
+        
+        // 对于非百分比的数值属性，通常向下取整
+        if (!['critRate', 'critDamage', 'daRate', 'taRate'].includes(statName)) {
+            return Math.floor(expectedValue);
+        }
+        return expectedValue; // 百分比属性保留小数精度
+    },
+
+    validateCharacterBaseStats(characterId, autoCorrect = false) {
+        const character = this.getCharacter(characterId);
+        if (!character) {
+            console.warn(`validateCharacterBaseStats: 角色 ${characterId} 未找到。`);
+            return;
+        }
+
+        const template = this._getCharacterTemplate(character);
+        if (!template || !template.baseStats) {
+            console.warn(`validateCharacterBaseStats: 角色 ${character.name} (ID: ${characterId}) 的模板或模板baseStats未找到。`);
+            return;
+        }
+
+        // console.log(`正在验证角色 ${character.name} (Lvl ${character.level}) 的 baseStats...`); // 移动到后面
+        const statsToValidate = ['hp', 'attack', 'defense', 'critRate', 'critDamage', 'daRate', 'taRate'];
+        let MismatchFound = false;
+        let CorrectionMade = false;
+
+        statsToValidate.forEach(statKey => {
+            const expectedValue = this.getExpectedBaseStatAtLevel(statKey, template.baseStats, character.level, character.maxLevel);
+            const actualValue = character.baseStats[statKey];
+            const tolerance = 0.0001;
+            let isDifferent = false;
+            
+            if (expectedValue === undefined && actualValue !== undefined) {
+                isDifferent = true;
+            } else if (expectedValue !== undefined && actualValue === undefined) {
+                 isDifferent = true;
+            } else if (typeof expectedValue === 'number' && typeof actualValue === 'number') {
+                if (['critRate', 'critDamage', 'daRate', 'taRate'].includes(statKey)) {
+                    if (Math.abs(expectedValue - actualValue) > tolerance) isDifferent = true;
+                } else {
+                    if (Math.floor(expectedValue) !== Math.floor(actualValue)) isDifferent = true;
+                }
+            } else if (expectedValue !== actualValue) {
+                 isDifferent = true;
+            }
+
+            if (isDifferent) {
+                MismatchFound = true;
+                console.warn(`角色 ${character.name} (ID: ${characterId}, Lvl: ${character.level}) 的 baseStats.${statKey} 不匹配! ` +
+                             `期望值: ${expectedValue === undefined ? 'N/A' : expectedValue}, ` +
+                             `实际值: ${actualValue === undefined ? 'N/A' : actualValue}`);
+                
+                if (autoCorrect && expectedValue !== undefined) {
+                    console.log(`   自动修正 baseStats.${statKey} 从 ${actualValue} 为 ${expectedValue}`);
+                    character.baseStats[statKey] = expectedValue;
+                    if (statKey === 'hp') character.baseStats.maxHp = expectedValue;
+                    if (statKey === 'attack') character.baseStats.maxAttack = expectedValue;
+                    CorrectionMade = true;
+                }
+            }
+        });
+
+        if (CorrectionMade) { // 如果进行了任何修正
+            console.log(`角色 ${character.name} 的 baseStats 已自动修正。正在重新计算生效属性...`);
+            let teamId = null;
+            if (typeof Team !== 'undefined' && Team.findTeamByMember) {
+                const team = Team.findTeamByMember(characterId);
+                if (team) teamId = team.id;
+            }
+            this._updateCharacterEffectiveStats(characterId, teamId);
+            console.log(`角色 ${character.name} 的生效属性已重新计算。`);
+        } else if (MismatchFound) {
+             // 只有不匹配但未修正时，才特别说明
+             console.log(`角色 ${character.name} 的 baseStats 验证发现不匹配项，但未进行自动修正。`);
+        } else {
+            console.log(`角色 ${character.name} (Lvl ${character.level}) 的 baseStats 验证通过。`);
         }
     }
 };

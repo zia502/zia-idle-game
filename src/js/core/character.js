@@ -1510,127 +1510,100 @@ const Character = {
      * @returns {number} 计算后的攻击力
      */
     calculateAttackPower(character) {
-        console.log(`===== calculateAttackPower 开始 =====`);
-        console.log(`角色: ${character ? character.name : '未知'}`);
-
-        if (typeof window !== 'undefined' && window.log) {
-            window.log(`===== calculateAttackPower 开始 =====`);
-            window.log(`角色: ${character ? character.name : '未知'}`);
+        if (typeof window !== 'undefined' && window.logBattle) {
+            window.logBattle.log(`===== calculateAttackPower 开始 (${character ? character.name : '未知角色'}) =====`);
         }
 
-        if (!character) {
-            console.log(`提前返回0攻击力: 角色不存在`);
-            if (typeof window !== 'undefined' && window.log) {
-                window.log(`提前返回0攻击力: 角色不存在`);
+        if (!character || !character.currentStats) {
+            if (typeof window !== 'undefined' && window.logBattle) {
+                window.logBattle.log(`[ATTACK_CALC] 角色或currentStats未定义，返回0。`);
             }
             return 0;
         }
 
-        if (!character.currentStats) {
-            console.log(`提前返回0攻击力: 角色当前状态不存在`);
-            if (typeof window !== 'undefined' && window.log) {
-                window.log(`提前返回0攻击力: 角色当前状态不存在`);
-            }
-            return 0;
-        }
-
-        // 基础攻击力
         let attackPower = character.currentStats.attack;
-        console.log(`初始攻击力: ${attackPower}`);
-        if (typeof window !== 'undefined' && window.log) {
-            window.log(`初始攻击力: ${attackPower}`);
+        if (typeof window !== 'undefined' && window.logBattle) {
+            window.logBattle.log(`[ATTACK_CALC] 初始攻击力 (currentStats.attack): ${attackPower}`);
         }
 
-        // 获取角色的BUFF效果
         const buffs = character.buffs || [];
 
-        // 应用攻击力增加BUFF
-        const attackBuffs = buffs.filter(buff => buff.type === 'attackUp');
-        let attackBuffPercentage = 0;
+        // 1. 处理可叠加的 attackUp 和 attackDown
+        let cumulativeAttackUpPercentage = 0;
+        buffs.filter(b => b.type === 'attackUp' && (b.stackable === undefined || b.stackable === true))
+             .forEach(b => cumulativeAttackUpPercentage += b.value);
 
-        for (const buff of attackBuffs) {
-            attackBuffPercentage += buff.value;
+        let cumulativeAttackDownPercentage = 0;
+        buffs.filter(b => b.type === 'attackDown') // 假设 attackDown 总是可叠加
+             .forEach(b => cumulativeAttackDownPercentage += b.value);
+        
+        cumulativeAttackDownPercentage = Math.min(cumulativeAttackDownPercentage, 0.5); // 降低上限50%
+
+        const cumulativeModifier = (1 + cumulativeAttackUpPercentage - cumulativeAttackDownPercentage);
+        attackPower *= cumulativeModifier;
+        if (typeof window !== 'undefined' && window.logBattle) {
+            window.logBattle.log(`[ATTACK_CALC] 应用可叠加攻升/攻降 (x${cumulativeModifier.toFixed(3)}) 后: ${attackPower.toFixed(2)} (可叠加攻升: +${(cumulativeAttackUpPercentage * 100).toFixed(1)}%, 攻降: -${(cumulativeAttackDownPercentage * 100).toFixed(1)}%)`);
         }
 
-        // 应用攻击力降低BUFF
-        const attackDownBuffs = buffs.filter(buff => buff.type === 'attackDown');
-        let attackDownPercentage = 0;
-
-        for (const buff of attackDownBuffs) {
-            attackDownPercentage += buff.value;
-        }
-
-        // 限制总攻击力降低不超过50%
-        attackDownPercentage = Math.min(attackDownPercentage, 0.5);
-
-        // 根据README中的公式计算攻击力
-        // 攻击力=角色自身攻击力*（1+攻击力%提升值）*（1-攻击力%降低值）*（1+浑身BUFF）*（1+背水BUFF）*（1+攻击力EX%提升值）+ 伤害上升总合
-
-        // 应用攻击力%提升值和降低值
-        attackPower *= (1 + attackBuffPercentage - attackDownPercentage);
-
-        // 获取角色的血量百分比
-        const hpPercentage = character.currentStats.hp / character.currentStats.maxHp;
-
-        // 检查是否有浑身BUFF
-        const hunshenBuffs = buffs.filter(buff => buff.type === 'hunshen');
-        if (hunshenBuffs.length > 0) {
-            // 浑身效果：100%血攻击力上升50%，1%血上升5%
-            const hunshenBuff = 0.05 + (hpPercentage * 0.45); // 血量越高加成越大
-            attackPower *= (1 + hunshenBuff);
-
-            console.log(`应用浑身BUFF: +${(hunshenBuff * 100).toFixed(1)}% (血量: ${(hpPercentage * 100).toFixed(1)}%)`);
-            if (typeof window !== 'undefined' && window.log) {
-                window.log(`应用浑身BUFF: +${(hunshenBuff * 100).toFixed(1)}% (血量: ${(hpPercentage * 100).toFixed(1)}%)`);
+        // 2. 处理独立的 attackUp (stackable: false)
+        const independentAttackUpBuffs = buffs.filter(b => b.type === 'attackUp' && b.stackable === false);
+        independentAttackUpBuffs.forEach(buff => {
+            const independentModifier = (1 + buff.value);
+            attackPower *= independentModifier;
+            if (typeof window !== 'undefined' && window.logBattle) {
+                window.logBattle.log(`[ATTACK_CALC] 应用独立攻升BUFF '${buff.name || '独立类型'}' (x${independentModifier.toFixed(3)}, +${(buff.value * 100).toFixed(1)}%) 后: ${attackPower.toFixed(2)}`);
             }
-        }
+        });
 
-        // 检查是否有背水BUFF
-        const beishuiBuffs = buffs.filter(buff => buff.type === 'beishui');
-        if (beishuiBuffs.length > 0) {
-            // 背水效果：1%血攻击力上升50%，100%血上升5%
-            const beishuiBuff = 0.5 - (hpPercentage * 0.45); // 血量越低加成越大
-            attackPower *= (1 + beishuiBuff);
+        // 3. 处理其他乘算区间 (浑身、背水、EX等)
+        const hpPercentage = character.currentStats.maxHp > 0 ? (character.currentStats.hp / character.currentStats.maxHp) : 1;
 
-            console.log(`应用背水BUFF: +${(beishuiBuff * 100).toFixed(1)}% (血量: ${(hpPercentage * 100).toFixed(1)}%)`);
-            if (typeof window !== 'undefined' && window.log) {
-                window.log(`应用背水BUFF: +${(beishuiBuff * 100).toFixed(1)}% (血量: ${(hpPercentage * 100).toFixed(1)}%)`);
+        const hunshenBuffs = buffs.filter(b => b.type === 'hunshen'); // 浑身
+        hunshenBuffs.forEach(buff => { // 允许多个浑身buff独立生效或按特定规则叠加
+            const hunshenValue = buff.value || (0.05 + (hpPercentage * 0.45)); // 使用buff.value或默认计算
+            const hunshenModifier = (1 + hunshenValue);
+            attackPower *= hunshenModifier;
+            if (typeof window !== 'undefined' && window.logBattle) {
+                window.logBattle.log(`[ATTACK_CALC] 应用浑身BUFF '${buff.name || '浑身'}' (x${hunshenModifier.toFixed(3)}, +${(hunshenValue * 100).toFixed(1)}%, HP: ${(hpPercentage * 100).toFixed(1)}%) 后: ${attackPower.toFixed(2)}`);
             }
-        }
-
-        // 应用攻击力EX加成 (来自武器等)
-        let attackExBonus = 0;
-
-        // 从武器中获取攻击力EX加成
-        if (character.equipment && character.equipment.weapon) {
-            const weapon = character.equipment.weapon;
-            if (weapon.attackExBonus) {
-                attackExBonus += weapon.attackExBonus;
+        });
+        
+        const beishuiBuffs = buffs.filter(b => b.type === 'beishui'); // 背水
+        beishuiBuffs.forEach(buff => { // 允许多个背水buff独立生效
+            const beishuiValue = buff.value || (0.5 - (hpPercentage * 0.45)); // 使用buff.value或默认计算
+            const beishuiModifier = (1 + beishuiValue);
+            attackPower *= beishuiModifier;
+             if (typeof window !== 'undefined' && window.logBattle) {
+                window.logBattle.log(`[ATTACK_CALC] 应用背水BUFF '${buff.name || '背水'}' (x${beishuiModifier.toFixed(3)}, +${(beishuiValue * 100).toFixed(1)}%, HP: ${(hpPercentage * 100).toFixed(1)}%) 后: ${attackPower.toFixed(2)}`);
             }
+        });
+        
+        // 应用EX攻击 (通常来自武器盘的EX词条，是独立乘区)
+        let totalExAttackBonus = 0;
+        if (character.currentStats && typeof character.currentStats.exAttack === 'number') {
+            totalExAttackBonus = character.currentStats.exAttack; // exAttack 是一个百分比，例如 0.1 表示 10%
+        }
+        const exAttackModifier = (1 + totalExAttackBonus);
+        attackPower *= exAttackModifier;
+        if (totalExAttackBonus > 0 && typeof window !== 'undefined' && window.logBattle) {
+            window.logBattle.log(`[ATTACK_CALC] 应用EX攻击 (x${exAttackModifier.toFixed(3)}, +${(totalExAttackBonus * 100).toFixed(1)}%) 后: ${attackPower.toFixed(2)}`);
         }
 
-        attackPower *= (1 + attackExBonus);
-
-        // 添加伤害上升总合
-        let damageIncrease = 0;
-
-        // 从武器中获取伤害上升总合
-        if (character.equipment && character.equipment.weapon) {
-            const weapon = character.equipment.weapon;
-            if (weapon.damageIncrease) {
-                damageIncrease += weapon.damageIncrease;
-            }
+        // 4. 添加固定伤害上升 (最后加算)
+        let flatDamageIncrease = 0;
+        // (未来可能从buff或其他来源获取 flatDamageIncrease)
+        // buffs.filter(b => b.type === 'flatAttackUp').forEach(b => flatDamageIncrease += b.value);
+        attackPower += flatDamageIncrease;
+        if (flatDamageIncrease > 0 && typeof window !== 'undefined' && window.logBattle) {
+            window.logBattle.log(`[ATTACK_CALC] 应用固定伤害上升 (+${flatDamageIncrease}) 后: ${attackPower.toFixed(2)}`);
         }
-
-        attackPower += Math.floor(damageIncrease);
-
-        console.log(`计算后攻击力: ${attackPower}`);
-        if (typeof window !== 'undefined' && window.log) {
-            window.log(`计算后攻击力: ${attackPower}`);
-            window.log(`===== calculateAttackPower 结束 =====`);
+        
+        const finalAttackPower = Math.max(0, Math.floor(attackPower));
+        if (typeof window !== 'undefined' && window.logBattle) {
+            window.logBattle.log(`[ATTACK_CALC] 最终计算攻击力 (取整且不小于0): ${finalAttackPower}`);
+            window.logBattle.log(`===== calculateAttackPower 结束 (${character.name}) =====`);
         }
-
-        return Math.floor(attackPower);
+        return finalAttackPower;
     },
 
 

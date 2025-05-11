@@ -210,3 +210,9 @@ This file tracks the project's progress using a task list format.
     *   Modified [`src/js/core/job-skills.js`](src/js/core/job-skills.js) to add logging logic in `useSkill` and enhance returned data from `applyBuffEffects` and `applyDebuffEffects`.
     *   Ensured logs capture turn, caster, skill, target, primary effect (damage, heal, buff/debuff application, dispel), and target HP status, following provided specifications.
     *   No changes were needed in [`src/js/core/battle.js`](src/js/core/battle.js) regarding `applyDamageToTarget`'s internal logging, as its existing logs for special events (cover, shield, etc.) do not conflict with the new higher-level skill logs.
+* [2025-05-11 16:55:04] - **Completed Task:** 修改 `src/js/core/character.js` 中的 `calculateAttackPower` 函数以实现新的攻击力计算逻辑。
+    *   区分处理可叠加 (`stackable: true` 或未定义) 和不可叠加 (`stackable: false`) 的 `attackUp` Buff。
+    *   可叠加 `attackUp` 的 `value` 进行加法累积。
+    *   不可叠加 `attackUp` 作为独立乘算区间 `(1 + buff.value)`。
+    *   `attackDown` 逻辑保持不变。
+    *   其他乘算区间（浑身、背水、EX攻击）和固定伤害上升的应用顺序已调整。

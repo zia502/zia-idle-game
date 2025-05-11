@@ -513,3 +513,26 @@ The error `ReferenceError: BattleLogger is not defined` occurred in [`src/js/cor
 *   **`loadSaveData(data)` in [`src/js/core/character.js`](src/js/core/character.js:1):**
     *   在函数末尾，调用 `this.validateCharacterBaseStats(charId)` 时，将第二个参数（`autoCorrect`）设置为 `true`。
     *   更新了相关的日志消息，以反映自动修正的启用。
+---
+### Decision (Code)
+[2025-05-11 16:55:15] - 更新 `calculateAttackPower` 函数以区分可叠加与不可叠加的攻击Buff。
+
+**Rationale:**
+根据新的需求，攻击力计算需要更精细地处理不同类型的 `attackUp` Buff。可叠加的Buff应累加其效果值，而不可叠加的Buff则各自形成独立的乘算区间。这能提供更灵活和策略性的Buff设计。
+
+**Details:**
+*   修改了 [`src/js/core/character.js`](src/js/core/character.js:1512) 中的 `calculateAttackPower` 函数。
+*   **可叠加 `attackUp` Buff:**
+    *   筛选 `buffs` 数组中 `type === 'attackUp'` 且 `stackable === true` (或 `stackable` 未定义) 的Buff。
+    *   将其 `value` 累加到 `cumulativeAttackUpPercentage`。
+*   **不可叠加 `attackUp` Buff:**
+    *   筛选 `buffs` 数组中 `type === 'attackUp'` 且 `stackable === false` 的Buff。
+    *   对每个此类Buff，将其 `(1 + buff.value)` 作为一个独立的乘数乘到 `attackPower` 上。
+*   **`attackDown` Buff:**
+    *   逻辑保持不变，假设其总是可叠加，并累加到 `cumulativeAttackDownPercentage`，上限为50%。
+*   **乘算顺序:**
+    1.  应用累积的攻升/攻降 (`cumulativeModifier`)。
+    2.  依次应用每个独立的不可叠加攻升Buff。
+    3.  应用其他乘算区间（浑身、背水、EX攻击）。
+    4.  最后加算固定伤害上升。
+*   日志记录 (`window.logBattle.log`) 已更新，以反映新的计算步骤和中间值。

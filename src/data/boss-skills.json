@@ -239,7 +239,7 @@
       "effects": [
         {
           "type": "damage",
-          "multiplier": 1.2
+          "multiplier": 0.5
         },
         {
           "type": "attackDown",

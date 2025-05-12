@@ -48,8 +48,8 @@
         "forestGuardian": {
             "name": "森林守护者",
             "attribute": "earth",
-            "hp": 800000,
-            "atk": 3500,
+            "hp": 300000,
+            "atk": 2500,
             "def": 35,
             "skills": ["natureWrath", "rootBind", "healingBloom"],
             "xpReward": 25000

@@ -376,3 +376,11 @@ This file tracks the project's current status, including recent changes, current
 * [2025-05-11 22:30:00] - Debug Task: "一伐架式" buff 未在 `calculateAttackPower` 时出现在角色buff列表。
 * [2025-05-11 22:30:00] - Debug Action: 在 [`src/js/core/job-skills.js`](src/js/core/job-skills.js) 和 [`src/js/core/buff-system.js`](src/js/core/buff-system.js) 中添加了针对 "一伐架式" 技能和buff的诊断日志，以追踪其使用、应用和移除流程。
 * [2025-05-12 09:49:23] - 创建/更新了 `.gitignore` 文件，内容为 `node_modules/`。
+* [2025-05-12 12:14:11] - **Code Change:** 优化了 [`src/js/core/dungeon.js`](src/js/core/dungeon.js) 文件。
+    *   删除了函数定义 `copyTemplatesToDungeons()`。
+    *   移除了在 `getAvailableDungeons()` 和 `canEnterDungeon()` 中对 `copyTemplatesToDungeons()` 的调用。
+    *   删除了函数定义 `loadTemplatesFallback()`。
+    *   修改了 `loadTemplates()` 函数：
+        *   移除了对 `this.loadTemplatesFallback()` 的调用。
+        *   为 `fetch('/src/data/monsters.json')` 和 `fetch('/src/data/bosses.json')` 的 `.then()` 回调添加了更健壮的数据处理和错误处理逻辑，确保在数据格式不正确或加载失败时，`this.monsterTemplates` 和 `this.bossTemplates` 会被设置为空对象 `{}`。
+        *   移除了 `this.dungeons = this.dungeons || {};`，因为 `this.dungeons` 现在在文件顶部直接硬编码初始化。

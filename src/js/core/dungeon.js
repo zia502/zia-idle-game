@@ -2,117 +2,10 @@
  * 地下城管理系统 - 负责游戏中地下城的管理
  */
 const Dungeon = {
-    // 地下城数据
-    dungeons: {
-        forest_cave: {
-            id: 'forest_cave',
-            name: '森林洞穴',
-            description: '一个位于森林中的神秘洞穴，有许多低级怪物盘踞。',
-            level: 1,
-            entrance: 'forest_entrance',
-            nextDungeon: 'mountain_path',
-            type: 'normal',
-            miniBossCount: 2,
-            possibleMonsters: ['slime', 'goblin', 'wolf'],
-            possibleMiniBosses: ['goblinChief', 'skeletonKing'],
-            possibleFinalBosses: ['forestGuardian'],
-            rewards: {
-                gold: 5000,
-                exp: 2000
-            },
-            chestDrops: {
-                silver: [
-                    { id: 'wood', type: 'material', rate: 0.4 },
-                    { id: 'stone', type: 'material', rate: 0.3 },
-                    { id: 'herbs', type: 'material', rate: 0.2 },
-                    { id: 'animalHide', type: 'material', rate: 0.1 }
-                ],
-                gold: [
-                    { id: 'forestSword', type: 'weapon', rate: 0.35 },
-                    { id: 'hunterAxe', type: 'weapon', rate: 0.3 },
-                    { id: 'guardianSpear', type: 'weapon', rate: 0.2 },
-                    { id: 'rangerBow', type: 'weapon', rate: 0.15 },
-                    { id: 'magicHerbs', type: 'material', rate: 0.4 },
-                    { id: 'crystal', type: 'material', rate: 0.3 },
-                    { id: 'beastFang', type: 'material', rate: 0.2 },
-                    { id: 'forestEssence', type: 'material', rate: 0.1 }
-                ]
-            }
-        },
-        mountain_path: {
-            id: 'mountain_path',
-            name: '山间小径',
-            description: '通往山脉深处的危险小径，盘踞着更强大的怪物。',
-            level: 2,
-            entrance: 'mountain_entrance',
-            nextDungeon: 'ancient_ruins',
-            type: 'normal',
-            miniBossCount: 2,
-            possibleMonsters: ['mountainGoblin', 'rockGolem', 'iceWolf'],
-            possibleMiniBosses: ['mountainKing', 'iceElemental'],
-            possibleFinalBosses: ['mountainTitan'],
-            rewards: {
-                gold: 10000,
-                exp: 5000
-            },
-            chestDrops: {
-                silver: [
-                    { id: 'ironOre', type: 'material', rate: 0.4 },
-                    { id: 'crystal', type: 'material', rate: 0.3 },
-                    { id: 'iceCrystal', type: 'material', rate: 0.2 },
-                    { id: 'mountainHerbs', type: 'material', rate: 0.1 }
-                ],
-                gold: [
-                    { id: 'mountainSword', type: 'weapon', rate: 0.35 },
-                    { id: 'iceAxe', type: 'weapon', rate: 0.3 },
-                    { id: 'rockSpear', type: 'weapon', rate: 0.2 },
-                    { id: 'windBow', type: 'weapon', rate: 0.15 },
-                    { id: 'mountainCrystal', type: 'material', rate: 0.4 },
-                    { id: 'iceEssence', type: 'material', rate: 0.3 },
-                    { id: 'rockCore', type: 'material', rate: 0.2 },
-                    { id: 'windEssence', type: 'material', rate: 0.1 }
-                ]
-            }
-        },
-        ancient_ruins: {
-            id: 'ancient_ruins',
-            name: '古代遗迹',
-            description: '一座被遗忘的古代遗迹，隐藏着强大的魔法和危险的守护者。',
-            level: 3,
-            entrance: 'ruins_entrance',
-            nextDungeon: null,
-            type: 'normal',
-            miniBossCount: 2,
-            possibleMonsters: ['ancientGuardian', 'ruinWalker', 'magicConstruct'],
-            possibleMiniBosses: ['ruinKeeper', 'magicMaster'],
-            possibleFinalBosses: ['ancientDragon'],
-            rewards: {
-                gold: 20000,
-                exp: 10000
-            },
-            chestDrops: {
-                silver: [
-                    { id: 'ancientStone', type: 'material', rate: 0.4 },
-                    { id: 'magicCrystal', type: 'material', rate: 0.3 },
-                    { id: 'ruinFragment', type: 'material', rate: 0.2 },
-                    { id: 'ancientHerbs', type: 'material', rate: 0.1 }
-                ],
-                gold: [
-                    { id: 'ancientSword', type: 'weapon', rate: 0.35 },
-                    { id: 'magicStaff', type: 'weapon', rate: 0.3 },
-                    { id: 'ruinSpear', type: 'weapon', rate: 0.2 },
-                    { id: 'dragonBow', type: 'weapon', rate: 0.15 },
-                    { id: 'ancientCrystal', type: 'material', rate: 0.4 },
-                    { id: 'magicEssence', type: 'material', rate: 0.3 },
-                    { id: 'dragonScale', type: 'material', rate: 0.2 },
-                    { id: 'ancientEssence', type: 'material', rate: 0.1 }
-                ]
-            }
-        }
-    },
+
 
     // 地下城模板
-    templates: {
+    dungeons: {
         forest_cave: {
             id: 'forest_cave',
             name: '森林洞穴',
@@ -320,160 +213,49 @@ const Dungeon = {
         console.log('开始加载地下城模板数据...');
 
         // 使用本地定义的地下城模板
-        this.templates = this.templates || {};
+        // this.dungeons = this.dungeons || {}; // 这行可以移除，因为 this.dungeons 在文件顶部已硬编码初始化
 
-        console.log('地下城模板加载完成:', this.templates);
-
-        // 先设置默认的怪物和Boss模板，以防异步加载失败
-        this.loadTemplatesFallback('monsters');
-        this.loadTemplatesFallback('bosses');
+        console.log('地下城模板加载完成:', this.dungeons);
 
         // 加载怪物模板
         const monstersPath = '/src/data/monsters.json';
         fetch(monstersPath)
-            .then(response => {
-                console.log('怪物服务器响应状态:', response.status);
-                if (!response.ok) {
-                    throw new Error(`HTTP错误! 状态: ${response.status}`);
-                }
-                return response.json();
-            })
+            .then(response => response.json())
             .then(data => {
-                console.log('成功加载怪物模板数据:', data);
-                // 检查数据结构，如果有monsters键，则使用其中的数据
-                if (data.monsters) {
-                    console.log('检测到嵌套的monsters数据结构，使用monsters中的数据');
-                    this.monsterTemplates = data.monsters;
-                } else {
-                    this.monsterTemplates = data;
-                }
-                console.log('处理后的怪物模板数据:', this.monsterTemplates);
+              if (data && typeof data.monsters === 'object' && data.monsters !== null) {
+                this.monsterTemplates = data.monsters;
+              } else if (data && typeof data === 'object' && data !== null && !data.monsters) { // 处理直接是模板对象的情况
+                this.monsterTemplates = data;
+              } else {
+                console.error("错误：从 monsters.json 加载的怪物模板数据格式不正确或不存在。将使用空模板。", data);
+                this.monsterTemplates = {};
+              }
+              // console.log("处理后的怪物模板数据:", this.monsterTemplates);
             })
             .catch(error => {
-                console.error('从服务器加载怪物模板数据失败:', error);
-                // 已经在前面设置了默认模板，这里不需要再调用
+              console.error("从服务器加载怪物模板数据失败:", error);
+              this.monsterTemplates = {}; // 确保在失败时设置为空对象
             });
 
         // 加载Boss模板
         const bossesPath = '/src/data/bosses.json';
         fetch(bossesPath)
-            .then(response => {
-                console.log('Boss服务器响应状态:', response.status);
-                if (!response.ok) {
-                    throw new Error(`HTTP错误! 状态: ${response.status}`);
-                }
-                return response.json();
-            })
+            .then(response => response.json())
             .then(data => {
-                console.log('成功加载Boss模板数据:', data);
-                // 检查数据结构，如果有bosses键，则使用其中的数据
-                if (data.bosses) {
-                    console.log('检测到嵌套的bosses数据结构，使用bosses中的数据');
-                    this.bossTemplates = data.bosses;
-                } else {
-                    this.bossTemplates = data;
-                }
-                console.log('处理后的Boss模板数据:', this.bossTemplates);
+              if (data && typeof data.bosses === 'object' && data.bosses !== null) {
+                this.bossTemplates = data.bosses;
+              } else if (data && typeof data === 'object' && data !== null && !data.bosses) { // 处理直接是模板对象的情况
+                this.bossTemplates = data;
+              } else {
+                console.error("错误：从 bosses.json 加载的Boss模板数据格式不正确或不存在。将使用空模板。", data);
+                this.bossTemplates = {};
+              }
+              // console.log("处理后的Boss模板数据:", this.bossTemplates);
             })
             .catch(error => {
-                console.error('从服务器加载Boss模板数据失败:', error);
-                // 已经在前面设置了默认模板，这里不需要再调用
+              console.error("从服务器加载Boss模板数据失败:", error);
+              this.bossTemplates = {}; // 确保在失败时设置为空对象
             });
-    },
-
-    /**
-     * 加载模板数据失败时的备用方案
-     * @param {string} type - 模板类型 ('monsters' 或 'bosses')
-     */
-    loadTemplatesFallback(type) {
-        console.log(`尝试使用备用方案加载${type}模板数据...`);
-
-        // 确保模板中的每个对象都有id属性和属性
-        if (type === 'monsters' && this.monsterTemplates) {
-            for (const [id, monster] of Object.entries(this.monsterTemplates)) {
-                if (!monster.id) {
-                    monster.id = id;
-                }
-                if (!monster.attribute) {
-                    // 随机分配一个元素属性
-                    monster.attribute = this.getRandomAttribute();
-                    console.log(`为怪物 ${monster.name || id} 随机分配属性: ${monster.attribute}`);
-                }
-            }
-        } else if (type === 'bosses' && this.bossTemplates) {
-            for (const [id, boss] of Object.entries(this.bossTemplates)) {
-                if (!boss.id) {
-                    boss.id = id;
-                }
-                if (!boss.attribute) {
-                    // 随机分配一个元素属性
-                    boss.attribute = this.getRandomAttribute();
-                    console.log(`为Boss ${boss.name || id} 随机分配属性: ${boss.attribute}`);
-                }
-                if (!boss.skills) {
-                    boss.skills = [];
-                }
-            }
-        }
-    },
-
-    /**
-     * 加载地下城模板数据失败时的备用方案
-     */
-    loadDungeonsFallback() {
-        console.log('尝试使用备用方案加载地下城数据...');
-
-        // 初始化地下城数据
-        this.unlockedDungeons = ['forest_cave'];
-        this.completedDungeons = [];
-
-        // 确保模板已初始化
-        if (!this.templates || Object.keys(this.templates).length === 0) {
-            console.warn('模板未初始化，使用默认模板');
-
-            // 使用默认模板
-            this.templates = {
-                forest_cave: {
-                    id: 'forest_cave',
-                    name: '森林洞穴',
-                    description: '一个位于森林中的神秘洞穴，有许多低级怪物盘踞。',
-                    level: 1,
-                    entrance: 'forest_entrance',
-                    nextDungeon: 'mountain_path',
-                    type: 'normal',
-                    miniBossCount: 2,
-                    possibleMonsters: ['slime', 'goblin', 'wolf'],
-                    possibleMiniBosses: ['goblinChief', 'skeletonKing'],
-                    possibleFinalBosses: ['forestGuardian'],
-                    rewards: {
-                        gold: 5000,
-                        exp: 2000
-                    }
-                }
-            };
-        }
-
-        // 确保dungeons对象已初始化
-        this.dungeons = this.dungeons || {};
-
-        // 将模板数据复制到dungeons对象中
-        for (const [id, template] of Object.entries(this.templates)) {
-            this.dungeons[id] = {
-                ...template,
-                isCompleted: false,
-                isUnlocked: id === 'forest_cave' // 第一个地下城默认解锁
-            };
-        }
-
-        console.log('地下城模板数据加载完成:', this.templates);
-        console.log('地下城数据初始化完成:', this.dungeons);
-
-        // 更新UI显示
-        if (typeof UI !== 'undefined' && typeof UI.updateDungeonList === 'function') {
-            UI.updateDungeonList();
-        } else {
-            console.warn('UI.updateDungeonList 函数未定义');
-        }
     },
 
     /**
@@ -498,9 +280,6 @@ const Dungeon = {
 
         // 加载模板
         this.loadTemplates();
-
-        // 将模板数据复制到dungeons对象中
-        this.copyTemplatesToDungeons();
 
         // 加载地下城数据
         this.loadDungeons();
@@ -542,28 +321,6 @@ const Dungeon = {
     },
 
     /**
-     * 将模板数据复制到dungeons对象中
-     */
-    copyTemplatesToDungeons() {
-        console.log('将模板数据复制到dungeons对象中...');
-
-        // 确保dungeons对象已初始化
-        this.dungeons = this.dungeons || {};
-
-        // 遍历所有模板
-        for (const [dungeonId, template] of Object.entries(this.templates)) {
-            // 将模板添加到dungeons中
-            this.dungeons[dungeonId] = {
-                ...template,
-                isCompleted: this.completedDungeons.includes(dungeonId),
-                isUnlocked: this.unlockedDungeons.includes(dungeonId)
-            };
-        }
-
-        console.log(`已将 ${Object.keys(this.templates).length} 个模板复制到dungeons对象中`);
-    },
-
-    /**
      * 加载地下城数据
      */
     loadDungeons() {
@@ -588,7 +345,7 @@ const Dungeon = {
             }
         } catch (error) {
             console.error('加载地下城数据失败:', error);
-            this.loadDungeonsFallback();
+            //this.loadDungeonsFallback();
         }
     },
 
@@ -608,14 +365,9 @@ const Dungeon = {
      * @returns {Array} 可探索的地下城列表
      */
     getAvailableDungeons() {
-        // 确保dungeons对象已初始化
-        if (!this.dungeons || Object.keys(this.dungeons).length === 0) {
-            this.copyTemplatesToDungeons();
-        }
-
         return this.unlockedDungeons.map(dungeonId => {
             // 优先从dungeons对象中获取地下城数据
-            const dungeon = this.dungeons[dungeonId] || this.templates[dungeonId];
+            const dungeon = this.dungeons[dungeonId];
 
             if (!dungeon) {
                 console.warn(`找不到地下城: ${dungeonId}`);
@@ -644,13 +396,8 @@ const Dungeon = {
             return false;
         }
 
-        // 确保dungeons对象已初始化
-        if (!this.dungeons || Object.keys(this.dungeons).length === 0) {
-            this.copyTemplatesToDungeons();
-        }
-
         // 优先从dungeons对象中获取地下城数据
-        const dungeon = this.dungeons[dungeonId] || this.templates[dungeonId];
+        const dungeon = this.dungeons[dungeonId];
         if (!dungeon) return false;
 
         // 检查是否已解锁
@@ -668,10 +415,10 @@ const Dungeon = {
             this.completedDungeons.push(dungeonId);
 
             // 解锁下一个地下城
-            const template = this.templates[dungeonId];
+            const template = this.dungeons[dungeonId];
             if (template.nextDungeon && !this.unlockedDungeons.includes(template.nextDungeon)) {
                 this.unlockedDungeons.push(template.nextDungeon);
-                UI.showMessage(`已解锁新的地下城：${this.templates[template.nextDungeon].name}`);
+                UI.showMessage(`已解锁新的地下城：${this.dungeons[template.nextDungeon].name}`);
             }
 
             this.saveDungeons();
@@ -693,7 +440,7 @@ const Dungeon = {
      * @returns {Object} 地下城模板
      */
     getTemplate(dungeonId) {
-        return this.templates[dungeonId];
+        return this.dungeons[dungeonId];
     },
 
     /**
@@ -704,17 +451,6 @@ const Dungeon = {
     getDungeon(dungeonId) {
         // 首先尝试从dungeons获取
         if (this.dungeons[dungeonId]) {
-            return this.dungeons[dungeonId];
-        }
-
-        // 如果在dungeons中找不到，尝试从templates中获取
-        if (this.templates[dungeonId]) {
-            // 将模板添加到dungeons中
-            this.dungeons[dungeonId] = {
-                ...this.templates[dungeonId],
-                isCompleted: false,
-                isUnlocked: true
-            };
             return this.dungeons[dungeonId];
         }
 

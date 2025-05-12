@@ -4,29 +4,16 @@
 const Item = {
     // 物品类型定义
     types: {
-        weapon: { name: '武器', icon: '⚔️', stackable: false },
-        armor: { name: '防具', icon: '🛡️', stackable: false },
         potion: { name: '药水', icon: '🧪', stackable: true },
         material: { name: '材料', icon: '📦', stackable: true },
         special: { name: '特殊', icon: '✨', stackable: true }
     },
     
-    // 物品稀有度
-    rarities: {
-        common: { name: '普通', color: '#aaaaaa', multiplier: 1.0 },
-        uncommon: { name: '优秀', color: '#1eff00', multiplier: 1.5 },
-        rare: { name: '精良', color: '#0070dd', multiplier: 2.0 },
-        epic: { name: '史诗', color: '#a335ee', multiplier: 3.0 },
-        legendary: { name: '传说', color: '#ff8000', multiplier: 5.0 }
-    },
-    
     // 物品效果类型
     effectTypes: {
         heal: { name: '治疗', description: '恢复生命值' },
-        mana: { name: '法力', description: '恢复法力值' },
         energy: { name: '能量', description: '恢复能量值' },
         buff: { name: '增益', description: '提供属性增益效果' },
-        damage: { name: '伤害', description: '造成额外伤害' },
         special: { name: '特殊', description: '特殊效果' }
     },
     

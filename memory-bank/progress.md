@@ -254,3 +254,7 @@ This file tracks the project's progress using a task list format.
 *   [2025-05-11 20:44:15] - [Debugging Task Status Update: Completed] Investigated and fixed issue where backline units would not join combat. Ensured backline units have full HP at the start of battle by modifying [`src/js/core/battle.js`](src/js/core/battle.js).
 * [2025-05-11 22:30:00] - Debugging Task Status Update: Added diagnostic logs to trace "一伐架式" buff lifecycle. Files modified: [`src/js/core/job-skills.js`](src/js/core/job-skills.js), [`src/js/core/buff-system.js`](src/js/core/buff-system.js).
 * [2025-05-12 09:49:34] - **Completed Task:** 创建/更新了 `.gitignore` 文件，内容为 `node_modules/`。
+* [2025-05-12 12:14:24] - **Completed Task:** 优化 [`src/js/core/dungeon.js`](src/js/core/dungeon.js) 文件。
+    *   删除了 `copyTemplatesToDungeons()` 和 `loadTemplatesFallback()` 函数。
+    *   移除了对 `copyTemplatesToDungeons()` 的调用。
+    *   修改了 `loadTemplates()` 以增强模板加载的健壮性。

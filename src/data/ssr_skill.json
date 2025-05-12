@@ -26,7 +26,7 @@
   },
   "rhapsody": {
     "name": "狂想曲",
-    "description": "自身获得以下强化:攻击力+250%，持续一回合 (CD: 6回合)。",
+    "description": "自身获得以下强化:攻击力[独立]+50%，持续一回合 (CD: 6回合)。",
     "type": "buff",
     "fixed": false,
     "cooldown": 6,
@@ -35,9 +35,9 @@
     "effects": [
       {
         "type": "attackUp",
-        "value": 2.5,
+        "value": 0.5,
         "duration": 1,
-        "stackable": true,
+        "stackable": false,
         "dispellable": true,
         "targetType": "self"
       }
@@ -384,7 +384,7 @@
         "triggeredEffects": [
           {
             "type": "applyBuffPackage",
-            "buffName": "尊神崇拜层",
+            "buffName": "尊神崇拜",
             "duration": 99,
             "stackable": true,
             "maxStacks": 10,
@@ -472,6 +472,7 @@
       {
         "type": "attackUp",
         "value": 0.5,
+        "stackable": true,
         "passive": true,
         "targetType": "self"
       },
@@ -1448,7 +1449,7 @@
         "triggeredEffects": [
           {
             "type": "applyBuffPackage",
-            "buffName": "神域守护层",
+            "buffName": "神域守护",
             "duration": 99,
             "stackable": true,
             "maxStacks": 10,
@@ -1502,7 +1503,7 @@
   },
   "yiFaJiaShi": {
     "name": "一伐架式",
-    "description": "自身获得以下强化，持续1回合：攻击力+300% (CD: 6回合)。",
+    "description": "自身获得以下强化，持续1回合：攻击力[独立]+70% (CD: 6回合)。",
     "type": "buff",
     "fixed": false,
     "cooldown": 6,
@@ -1511,7 +1512,7 @@
     "effects": [
       {
         "type": "attackUp",
-        "value": 3.0,
+        "value": 0.7,
         "duration": 1,
         "targetType": "self",
         "stackable": false,

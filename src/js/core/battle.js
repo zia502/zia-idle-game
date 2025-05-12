@@ -9,6 +9,8 @@ const Battle = {
     currentBattle: null, // 保存当前战斗信息
     dungeonTurn: 0, // 地下城回合数
     bossSkillCooldowns: {}, // 存储Boss技能的当前冷却时间
+    frontLineSlots: [null, null, null, null], // 前排战斗位置
+    backLineMembers: [], // 后排成员，由 startBattle 初始化
 
     // 战斗常量
     BASE_DAMAGE_CAP: 199999,
@@ -32,10 +34,8 @@ const Battle = {
         this.currentBattle = null;
         this.dungeonTurn = 0;
 
-        // 清除备用队员信息
-        if (this.backLineMembers) {
-            this.backLineMembers = [];
-        }
+        this.frontLineSlots = [null, null, null, null];
+        this.backLineMembers = [];
 
         console.log('战斗系统已重置');
     },
@@ -85,71 +85,50 @@ this.resetProcCounts(); // 重置技能Proc触发计数
             };
         }
 
-        // 获取队伍成员（前4名为前排，后2名为后排备用）
-        const frontLineMembers = [];
-        const backLineMembers = [];
-        const FRONT_LINE_COUNT = 4; // 前排成员数量
+        // 初始化前排和后排
+        this.frontLineSlots = [null, null, null, null];
+        this.backLineMembers = [];
+        const FRONT_LINE_MAX_COUNT = 4;
 
-        // 处理所有队伍成员
         for (let i = 0; i < team.members.length; i++) {
             const memberId = team.members[i];
             const character = Character.getCharacter(memberId);
             if (character) {
-                // 重置战斗统计
+                // 重置战斗统计 (与之前逻辑保持一致)
                 if (!character.stats) {
-                    character.stats = {
-                        totalDamage: 0,
-                        totalHealing: 0,
-                        daCount: 0,
-                        taCount: 0,
-                        critCount: 0
-                    };
+                    character.stats = { totalDamage: 0, totalHealing: 0, daCount: 0, taCount: 0, critCount: 0 };
                 } else {
-                    // 保存之前的统计数据用于调试
-                    const oldStats = JSON.stringify(character.stats);
-
-                    // 重置统计数据
                     character.stats.totalDamage = 0;
                     character.stats.totalHealing = 0;
                     character.stats.daCount = 0;
                     character.stats.taCount = 0;
                     character.stats.critCount = 0;
-
                 }
-
-                // 重置战斗状态
                 character.hasAttacked = false;
+                if (!character.currentStats.daRate) character.currentStats.daRate = 0.1;
+                if (!character.currentStats.taRate) character.currentStats.taRate = 0.05;
 
-                // 初始化DA和TA概率
-                if (!character.currentStats.daRate) {
-                    character.currentStats.daRate = 0.1; // 默认10%双重攻击率
+                // 确保角色HP为满
+                if (character.currentStats && typeof character.currentStats.maxHp === 'number') {
+                    character.currentStats.hp = character.currentStats.maxHp;
                 }
 
-                if (!character.currentStats.taRate) {
-                    character.currentStats.taRate = 0.05; // 默认5%三重攻击率
-                }
 
-                // 区分前排和后排
-                if (i < FRONT_LINE_COUNT) {
-                    frontLineMembers.push(character);
+                if (i < FRONT_LINE_MAX_COUNT) {
+                    this.frontLineSlots[i] = character;
                 } else {
-                    // Ensure backline members are at full HP when battle starts
-                    if (character.currentStats && typeof character.currentStats.maxHp === 'number') {
-                        character.currentStats.hp = character.currentStats.maxHp;
-                    }
-                    backLineMembers.push(character);
+                    this.backLineMembers.push(character);
                 }
             }
         }
+        
+        // teamMembers 现在主要用于初始日志和一些遗留逻辑，核心战斗依赖 this.frontLineSlots
+        const teamMembers = this.frontLineSlots.filter(member => member !== null);
+        BattleLogger.log(BattleLogger.levels.CONSOLE_INFO, `前排成员初始化: ${this.frontLineSlots.map(m => m ? m.name : '空').join(', ')}`, null, this.currentTurn);
+        BattleLogger.log(BattleLogger.levels.CONSOLE_INFO, `后排成员初始化: ${this.backLineMembers.map(m => m.name).join(', ')}`, null, this.currentTurn);
 
-        // 合并前排和后排，前排成员先上场
-        const teamMembers = [...frontLineMembers];
-        console.log('前排成员:', frontLineMembers.map(member => member.name).join(', '));
 
-        // 记录备用队员信息，供后续使用
-        this.backLineMembers = backLineMembers;
-
-        if (teamMembers.length === 0) {
+        if (teamMembers.length === 0 && this.backLineMembers.length === 0) { // 如果前后排都无人
             return { success: false, message: '队伍中没有角色' };
         }
 
@@ -296,11 +275,18 @@ this.resetProcCounts(); // 重置技能Proc触发计数
         console.log('使用角色的weaponBonusStats属性，不再单独应用武器盘加成');
 
         // 战斗循环
-        let battleResult = this.processBattle(teamMembers, monsterCharacter);
+        // 注意：processBattle 现在应该主要依赖 this.frontLineSlots 和 this.backLineMembers
+        let battleResult = this.processBattle(this.frontLineSlots.filter(m => m), monsterCharacter); // 传递当前有效的前排成员
 
         // 战斗失败时恢复队伍成员为weaponBonusStats
         if (!battleResult.victory) {
-            for (const member of teamMembers) {
+            // 恢复所有参与过战斗的角色（包括可能从后排上过场的）
+            const allInvolvedMembers = [...this.frontLineSlots.filter(m => m), ...this.backLineMembers];
+            const uniqueInvolvedMemberIds = [...new Set(allInvolvedMembers.map(m => m.id))];
+
+            for (const memberId of uniqueInvolvedMemberIds) {
+                const member = Character.getCharacter(memberId);
+                if (!member) continue;
                 if (member.weaponBonusStats) {
                     console.log(`战斗失败，恢复 ${member.name} 为weaponBonusStats`);
                     member.currentStats = JSON.parse(JSON.stringify(member.weaponBonusStats));
@@ -380,7 +366,9 @@ this.resetProcCounts(); // 重置技能Proc触发计数
             turns: this.currentTurn,
             mvp: mvp,
             monster: monsterCharacter,
-            teamMembers: teamMembers, // 添加队伍成员信息
+            // teamMembers: teamMembers, // 调整为使用 frontLineSlots
+            frontLineSlots: this.frontLineSlots,
+            backLineMembers: this.backLineMembers,
             gold: battleResult.gold || 0,
             exp: battleResult.exp || 0,
             battleStats: battleResult.battleStats || {}
@@ -422,13 +410,16 @@ this.resetProcCounts(); // 重置技能Proc触发计数
             monsterStats: { totalDamage: 0, totalHealing: 0 }
         };
 
-        for (const member of teamMembers) {
-            battleStats.characterStats[member.id] = {
-                totalDamage: 0, totalHealing: 0, daCount: 0, taCount: 0, critCount: 0, buffsApplied: 0, debuffsApplied: 0
-            };
-            if (!member.buffs) member.buffs = [];
-            this.processBattleStartTraits(member, teamMembers);
-        }
+        // 使用 this.frontLineSlots 初始化战斗统计
+        this.frontLineSlots.forEach(member => {
+            if (member) {
+                battleStats.characterStats[member.id] = {
+                    totalDamage: 0, totalHealing: 0, daCount: 0, taCount: 0, critCount: 0, buffsApplied: 0, debuffsApplied: 0
+                };
+                if (!member.buffs) member.buffs = [];
+                this.processBattleStartTraits(member, this.frontLineSlots.filter(m => m));
+            }
+        });
         if (!monster.buffs) monster.buffs = [];
 
         while (this.currentTurn < MAX_TURNS) {
@@ -436,51 +427,62 @@ this.resetProcCounts(); // 重置技能Proc触发计数
             BattleLogger.log(BattleLogger.levels.BATTLE_LOG, `\n===== 回合 ${this.currentTurn} 开始 =====`, null, this.currentTurn);
             BattleLogger.log(BattleLogger.levels.CONSOLE_INFO, `回合 ${this.currentTurn} 开始`, null, this.currentTurn);
             if (typeof Dungeon !== 'undefined' && Dungeon.currentRun) this.dungeonTurn++;
+            
+            const currentFrontliners = this.frontLineSlots.filter(m => m); // 获取当前有效的前排成员
 
-            this.processTurnStartBuffs(teamMembers, monster);
-            if (this.isBattleOver(teamMembers, monster)) break;
+            this.processTurnStartBuffs(currentFrontliners, monster);
+            this.checkAndProcessBacklineReinforcement(); // 回合开始时检查增援
+            if (this.isBattleOver(null, monster)) break; // isBattleOver 现在不依赖 teamMembers
 
             // --- 我方技能阶段 ---
             BattleLogger.log(BattleLogger.levels.BATTLE_LOG, "--- 我方技能阶段 ---", null, this.currentTurn);
             BattleLogger.log(BattleLogger.levels.CONSOLE_INFO, "我方技能阶段开始", null, this.currentTurn);
-            this.executePlayerSkillPhase(teamMembers, monster, battleStats);
-            if (this.isBattleOver(teamMembers, monster)) break;
+            this.executePlayerSkillPhase(this.frontLineSlots.filter(m => m), monster, battleStats);
+            this.checkAndProcessBacklineReinforcement(); // 技能阶段后检查增援
+            if (this.isBattleOver(null, monster)) break;
 
             // --- 我方普攻阶段 ---
             BattleLogger.log(BattleLogger.levels.BATTLE_LOG, "--- 我方普攻阶段 ---", null, this.currentTurn);
             BattleLogger.log(BattleLogger.levels.CONSOLE_INFO, "我方普攻阶段开始", null, this.currentTurn);
-            this.executePlayerAttackPhase(teamMembers, monster, battleStats);
-            if (this.isBattleOver(teamMembers, monster)) break;
+            this.executePlayerAttackPhase(this.frontLineSlots.filter(m => m), monster, battleStats);
+            this.checkAndProcessBacklineReinforcement(); // 普攻阶段后检查增援
+            if (this.isBattleOver(null, monster)) break;
 
             // --- 敌方行动阶段 ---
             BattleLogger.log(BattleLogger.levels.BATTLE_LOG, "--- 敌方行动阶段 ---", null, this.currentTurn);
             BattleLogger.log(BattleLogger.levels.CONSOLE_INFO, "敌方行动阶段开始", null, this.currentTurn);
-            this.executeEnemyPhase(monster, teamMembers, battleStats);
-            if (this.isBattleOver(teamMembers, monster)) break;
+            this.executeEnemyPhase(monster, this.frontLineSlots.filter(m => m), battleStats);
+            this.checkAndProcessBacklineReinforcement(); // 敌方行动后检查增援
+            if (this.isBattleOver(null, monster)) break;
 
             // --- 回合结束处理 ---
             BattleLogger.log(BattleLogger.levels.BATTLE_LOG, "--- 回合结束处理 ---", null, this.currentTurn);
             BattleLogger.log(BattleLogger.levels.CONSOLE_INFO, "回合结束处理开始", null, this.currentTurn);
-            this.updateBuffDurations(teamMembers, monster); // 更新Buff持续时间
+            this.updateBuffDurations(this.frontLineSlots.filter(m => m), monster); // 更新Buff持续时间
 
             // 处理所有实体的回合结束效果
-            for (const entity of [...teamMembers, monster]) {
-                if (entity.currentStats.hp > 0) {
-                    this.processEndOfTurnEffect(entity, null, teamMembers, monster); // 调整调用方式
+            for (const entity of [...this.frontLineSlots.filter(m => m), monster]) {
+                if (entity && entity.currentStats.hp > 0) { // 确保 entity 存在
+                    this.processEndOfTurnEffect(entity, null, this.frontLineSlots.filter(m => m), monster);
                 }
             }
+            this.checkAndProcessBacklineReinforcement(); // 回合结束效果后检查增援
+            if (this.isBattleOver(null, monster)) break;
             
             const monsterHpPercent = monster.currentStats.maxHp > 0 ? Math.floor((monster.currentStats.hp / monster.currentStats.maxHp) * 100) : 0;
             BattleLogger.log(BattleLogger.levels.BATTLE_LOG, `${monster.name} HP: ${Math.floor(monster.currentStats.hp)}/${monster.currentStats.maxHp} (${monsterHpPercent}%)`, null, this.currentTurn);
             BattleLogger.log(BattleLogger.levels.CONSOLE_INFO, `${monster.name} HP: ${Math.floor(monster.currentStats.hp)}/${monster.currentStats.maxHp} (${monsterHpPercent}%)`, { summary: `${monster.name} HP`}, this.currentTurn);
-            teamMembers.forEach(member => {
-                if (member.currentStats.hp > 0) {
-                    const memberHpPercent = member.currentStats.maxHp > 0 ? Math.floor((member.currentStats.hp / member.currentStats.maxHp) * 100) : 0;
-                    BattleLogger.log(BattleLogger.levels.BATTLE_LOG, `${member.name} HP: ${Math.floor(member.currentStats.hp)}/${member.currentStats.maxHp} (${memberHpPercent}%)`, null, this.currentTurn);
-                    BattleLogger.log(BattleLogger.levels.CONSOLE_INFO, `${member.name} HP: ${Math.floor(member.currentStats.hp)}/${member.currentStats.maxHp} (${memberHpPercent}%)`, { summary: `${member.name} HP`}, this.currentTurn);
-                } else {
-                    BattleLogger.log(BattleLogger.levels.BATTLE_LOG, `${member.name} 已阵亡`, null, this.currentTurn);
-                    BattleLogger.log(BattleLogger.levels.CONSOLE_INFO, `${member.name} 已阵亡`, null, this.currentTurn);
+            
+            this.frontLineSlots.forEach(member => {
+                if (member) { // 确保 member 存在
+                    if (member.currentStats.hp > 0) {
+                        const memberHpPercent = member.currentStats.maxHp > 0 ? Math.floor((member.currentStats.hp / member.currentStats.maxHp) * 100) : 0;
+                        BattleLogger.log(BattleLogger.levels.BATTLE_LOG, `${member.name} HP: ${Math.floor(member.currentStats.hp)}/${member.currentStats.maxHp} (${memberHpPercent}%)`, null, this.currentTurn);
+                        BattleLogger.log(BattleLogger.levels.CONSOLE_INFO, `${member.name} HP: ${Math.floor(member.currentStats.hp)}/${member.currentStats.maxHp} (${memberHpPercent}%)`, { summary: `${member.name} HP`}, this.currentTurn);
+                    } else {
+                        BattleLogger.log(BattleLogger.levels.BATTLE_LOG, `${member.name} 已阵亡`, null, this.currentTurn);
+                        BattleLogger.log(BattleLogger.levels.CONSOLE_INFO, `${member.name} 已阵亡`, null, this.currentTurn);
+                    }
                 }
             });
 
@@ -491,32 +493,43 @@ this.resetProcCounts(); // 重置技能Proc触发计数
             if (this.currentTurn === 1) this.isFirstTurn = false;
         }
 
-        const teamAlive = teamMembers.some(member => member.currentStats.hp > 0);
+        const teamAlive = this.frontLineSlots.some(member => member && member.currentStats.hp > 0) || this.backLineMembers.some(member => member && member.currentStats.hp > 0);
         const monsterAlive = monster.currentStats.hp > 0;
         let gold = 0;
         let exp = 0;
 
-        if (teamAlive && !monsterAlive) {
-            this.logBattle(`===== 战斗胜利！回合数: ${this.currentTurn} =====`);
+        if (teamAlive && !monsterAlive) { // 战斗胜利
+            BattleLogger.log(BattleLogger.levels.BATTLE_LOG, `===== 战斗胜利！回合数: ${this.currentTurn} =====`, null, this.currentTurn);
             if (monster.xpReward) exp = monster.xpReward;
-            // 地下城中不清除BUFF
             if (!(typeof Dungeon !== 'undefined' && Dungeon.currentRun)) {
-                teamMembers.forEach(member => BuffSystem.clearAllBuffs(member));
+                this.frontLineSlots.forEach(member => { if (member) BuffSystem.clearAllBuffs(member); });
+                this.backLineMembers.forEach(member => { if (member) BuffSystem.clearAllBuffs(member); });
             }
             return { victory: true, gold, exp, battleStats, turns: this.currentTurn, battleLog: this.battleLog };
-        } else {
-            this.logBattle(`===== 战斗失败！回合数: ${this.currentTurn} =====`);
+        } else { // 战斗失败或达到最大回合数
+            BattleLogger.log(BattleLogger.levels.BATTLE_LOG, `===== 战斗失败！回合数: ${this.currentTurn} =====`, null, this.currentTurn);
             if (!(typeof Dungeon !== 'undefined' && Dungeon.currentRun)) {
-                teamMembers.forEach(member => BuffSystem.clearAllBuffs(member));
+                this.frontLineSlots.forEach(member => { if (member) BuffSystem.clearAllBuffs(member); });
+                this.backLineMembers.forEach(member => { if (member) BuffSystem.clearAllBuffs(member); });
             } else {
                 if (typeof DungeonRunner !== 'undefined' && typeof DungeonRunner.exitDungeon === 'function') {
                     DungeonRunner.exitDungeon();
                 }
             }
-            teamMembers.forEach(member => {
-                if (!member.stats) member.stats = { totalDamage: 0, totalHealing: 0, daCount: 0, taCount: 0, critCount: 0 };
-                if (battleStats.characterStats && !battleStats.characterStats[member.id]) {
-                    battleStats.characterStats[member.id] = { ...member.stats };
+            this.frontLineSlots.forEach(member => {
+                if (member) {
+                    if (!member.stats) member.stats = { totalDamage: 0, totalHealing: 0, daCount: 0, taCount: 0, critCount: 0 };
+                    if (battleStats.characterStats && !battleStats.characterStats[member.id]) {
+                        battleStats.characterStats[member.id] = { ...member.stats };
+                    }
+                }
+            });
+            this.backLineMembers.forEach(member => { // 也为后排成员记录统计（如果他们参与过）
+                 if (member) {
+                    if (!member.stats) member.stats = { totalDamage: 0, totalHealing: 0, daCount: 0, taCount: 0, critCount: 0 };
+                    if (battleStats.characterStats && !battleStats.characterStats[member.id]) {
+                        battleStats.characterStats[member.id] = { ...member.stats };
+                    }
                 }
             });
             return { victory: false, battleStats, turns: this.currentTurn, battleLog: this.battleLog };
@@ -1196,15 +1209,72 @@ this.resetProcCounts(); // 重置技能Proc触发计数
      * @param {object} monster - 怪物对象
      * @returns {boolean} 战斗是否结束
      */
-    isBattleOver(teamMembers, monster) {
+    isBattleOver(_teamMembers_unused, monster) { // teamMembers 参数不再直接使用
         // 检查怪物是否被击败
         if (monster.currentStats.hp <= 0) {
+            BattleLogger.log(BattleLogger.levels.CONSOLE_INFO, "战斗结束：怪物已被击败。", null, this.currentTurn);
             return true;
         }
 
-        // 检查队伍是否全灭
-        const allDefeated = teamMembers.every(member => member.currentStats.hp <= 0);
-        return allDefeated;
+        // 检查我方是否全灭 (包括前排和后排)
+        const aliveFrontliners = this.frontLineSlots.filter(char => char && char.currentStats.hp > 0);
+        const aliveBackliners = this.backLineMembers.filter(char => char && char.currentStats.hp > 0);
+
+        if (aliveFrontliners.length === 0 && aliveBackliners.length === 0) {
+            BattleLogger.log(BattleLogger.levels.CONSOLE_INFO, "战斗结束：我方全体阵亡。", null, this.currentTurn);
+            return true;
+        }
+        return false;
+    },
+
+    /**
+     * 检查并处理后排增援
+     */
+    checkAndProcessBacklineReinforcement() {
+        let reinforcementOccurred = false;
+        for (let i = 0; i < this.frontLineSlots.length; i++) {
+            const currentSlotMember = this.frontLineSlots[i];
+            if (!currentSlotMember || currentSlotMember.currentStats.hp <= 0) { // 找到空位或阵亡角色
+                if (this.backLineMembers.length > 0) {
+                    let reinforced = false;
+                    for (let j = 0; j < this.backLineMembers.length; j++) {
+                        const backliner = this.backLineMembers[j];
+                        if (backliner && backliner.currentStats.hp > 0) { // 找到后排存活角色
+                            this.frontLineSlots[i] = backliner;
+                            this.backLineMembers.splice(j, 1); // 从后排移除
+
+                            const reinforceMsg = `${backliner.name} 从后排移动到前排位置 ${i + 1}！`;
+                            BattleLogger.log(BattleLogger.levels.BATTLE_LOG, reinforceMsg, null, this.currentTurn);
+                            BattleLogger.log(BattleLogger.levels.CONSOLE_INFO, reinforceMsg, { character: backliner.name, position: i + 1 }, this.currentTurn);
+                            
+                            // 触发UI更新事件
+                            if (typeof Events !== 'undefined' && Events.emit) {
+                                Events.emit('battle:frontlineChanged', { frontLineSlots: this.frontLineSlots });
+                            }
+                            
+                            // 如果角色有进入战场的特性，在这里触发
+                            this.processBattleStartTraits(backliner, this.frontLineSlots.filter(m => m));
+
+
+                            reinforcementOccurred = true;
+                            reinforced = true;
+                            break; // 一个空位只增援一次
+                        }
+                    }
+                    if (!reinforced) {
+                         BattleLogger.log(BattleLogger.levels.CONSOLE_INFO, `前排位置 ${i + 1} 为空，但后排没有存活角色可增援。`, null, this.currentTurn);
+                    }
+                } else {
+                    BattleLogger.log(BattleLogger.levels.CONSOLE_INFO, `前排位置 ${i + 1} 为空，但后排已无成员。`, null, this.currentTurn);
+                }
+            }
+        }
+        if (reinforcementOccurred) {
+            // 如果发生了增援，可能需要重新评估战斗状态或触发某些事件
+            // 例如，如果UI依赖teamMembers数组，可能需要更新它
+            // 但核心逻辑现在应依赖 this.frontLineSlots
+        }
+        return reinforcementOccurred;
     },
 
     // Removed old processAttackProcEffects and executeSingleProcEffect
@@ -1978,21 +2048,27 @@ reviveCharacter(character, hpPercentToRestore, teamData) { // teamData is e.g. G
      },
 
      // --- Helper Method for Character Defeat ---
-     handleCharacterDefeat(defeatedCharacter, teamMembers) {
-         if (this.backLineMembers && this.backLineMembers.length > 0) {
-             const backup = this.backLineMembers.shift();
-             const targetIndex = teamMembers.findIndex(member => member.id === defeatedCharacter.id);
-             if (targetIndex !== -1) {
-                 teamMembers[targetIndex] = backup;
-                 const backupMsg = `${backup.name} 从后排上场替换阵亡的 ${defeatedCharacter.name}！`;
-                 BattleLogger.log(BattleLogger.levels.BATTLE_LOG, backupMsg, null, this.currentTurn);
-                 BattleLogger.log(BattleLogger.levels.CONSOLE_INFO, backupMsg, null, this.currentTurn);
-                 this.processBattleStartTraits(backup, teamMembers);
-             } else {
-                  console.error(`无法在队伍中找到阵亡角色 ${defeatedCharacter.name} 的位置`);
-                  this.backLineMembers.unshift(backup);
-             }
+     handleCharacterDefeat(defeatedCharacter, _teamMembers_unused) {
+         // 标记角色已阵亡的逻辑应该在调用此函数之前完成，例如在 applyDamageToTarget 中
+         // defeatedCharacter.currentStats.hp = 0; // 确保HP为0
+         // defeatedCharacter.isAlive = false; // 如果有isAlive标志
+ 
+         const defeatMsg = `${defeatedCharacter.name} 已被击败！`;
+         BattleLogger.log(BattleLogger.levels.BATTLE_LOG, defeatMsg, null, this.currentTurn);
+         BattleLogger.log(BattleLogger.levels.CONSOLE_INFO, defeatMsg, { character: defeatedCharacter.name }, this.currentTurn);
+ 
+         // 将前排阵亡角色标记为null，以便增援逻辑识别
+         const frontLineIndex = this.frontLineSlots.findIndex(member => member && member.id === defeatedCharacter.id);
+         if (frontLineIndex !== -1) {
+             this.frontLineSlots[frontLineIndex] = null; // 标记为空位
+             BattleLogger.log(BattleLogger.levels.CONSOLE_INFO, `角色 ${defeatedCharacter.name} 从前排位置 ${frontLineIndex + 1} 移除。`, null, this.currentTurn);
+         } else {
+             // 如果角色不在前排（例如，可能是某种特殊召唤物或已被替换），则记录
+             BattleLogger.log(BattleLogger.levels.CONSOLE_INFO, `阵亡角色 ${defeatedCharacter.name} 未在前排找到。`, null, this.currentTurn);
          }
+         
+         // 调用新的增援检查逻辑
+         this.checkAndProcessBacklineReinforcement();
      },
 
      // --- Proc Activation Count Tracking ---

@@ -198,6 +198,8 @@ This file tracks the project's progress using a task list format.
 * [2025-05-11 22:20:00] - Debugging Task Started: 调查 "一伐架式" 独立buff未在日志中正确显示且最终攻击倍率不符预期的问题。
 * [2025-05-11 22:20:00] - Debugging Action: 增强了 `calculateAttackPower` ([`src/js/core/character.js`](src/js/core/character.js:1512)) 的日志，以在函数入口处打印所有当前buff的详细信息。
 ## Current Tasks
+*   [2025-05-12 09:46:00] - **TDD Cycle Start:** 开始为战斗系统“后排角色自动增援前排”功能编写单元/集成测试。目标文件：[`test/battle-reinforcement.test.js`](test/battle-reinforcement.test.js:0)。
+*   [2025-05-12 09:46:00] - **TDD Cycle End:** 完成为战斗系统“后排角色自动增援前排”功能编写的7个单元/集成测试，并通过 Vitest 在 JSDOM 环境下成功运行。测试覆盖了多种增援场景，包括空位、多空位、后排不足、后排无人、前排全灭以及回合效果导致阵亡等情况。测试文件：[`test/battle-reinforcement.test.js`](test/battle-reinforcement.test.js:0)。Memory Bank 已更新。
 *   [2025-05-11 20:20:00] - **TDD Cycle Start:** 开始为怪物和玩家 AoE 技能修复编写单元/集成测试。目标文件：[`test-battle-logic.html`](test-battle-logic.html)。
 *   [2025-05-11 20:24:00] - **TDD Cycle End:** 完成为怪物和玩家 AoE 技能修复编写单元/集成测试。覆盖了怪物 AoE (all_enemies), 玩家 AoE (all_enemies), 玩家 AoE (all_allies), 以及双方的单体技能 (single_enemy, single_ally) 场景。测试添加在 [`test-battle-logic.html`](test-battle-logic.html)。
 *   [2025-05-08 21:03:00] - 调试战斗中 TypeError (技能 warriorSlash 使用错误: TypeError: Cannot read properties of null (reading 'teamMembers') at battle.js:960).
@@ -248,3 +250,4 @@ This file tracks the project's progress using a task list format.
     *   [2025-05-11 19:42:00] - **Next Step:** 修改技能效果应用函数 (如 [`JobSkills.applyDamageEffects()`](src/js/core/job-skills.js:766)) 以迭代处理目标数组。
 *   [2025-05-11 20:44:15] - [Debugging Task Status Update: Completed] Investigated and fixed issue where backline units would not join combat. Ensured backline units have full HP at the start of battle by modifying [`src/js/core/battle.js`](src/js/core/battle.js).
 * [2025-05-11 22:30:00] - Debugging Task Status Update: Added diagnostic logs to trace "一伐架式" buff lifecycle. Files modified: [`src/js/core/job-skills.js`](src/js/core/job-skills.js), [`src/js/core/buff-system.js`](src/js/core/buff-system.js).
+* [2025-05-12 09:49:34] - **Completed Task:** 创建/更新了 `.gitignore` 文件，内容为 `node_modules/`。

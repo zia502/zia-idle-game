@@ -52,7 +52,28 @@ This file tracks the project's current status, including recent changes, current
 
 * [2025-05-11 22:20:00] - Debug Task: "一伐架式" 独立buff未在日志中体现，最终倍率异常。
 * [2025-05-11 22:20:00] - Debug Action: 在 `calculateAttackPower` ([`src/js/core/character.js`](src/js/core/character.js:1512)) 函数开头添加了详细日志，用于打印角色当前所有buff的完整信息，以便确认 "一伐架式" buff在计算时的状态。
+* [2025-05-12 09:24:14] - **Spec Design:** Designing pseudocode for backline reinforcement in combat.
+    *   **Goal:** Allow backline characters to move to the frontline if frontline members are defeated, preventing premature battle end.
+    *   **Key Logic Points:**
+        1.  Detect if all frontline characters are defeated or if empty slots exist.
+        2.  If frontline has vacancies and living backline characters exist, move them to fill empty frontline slots.
+        3.  Ensure battle continues if viable characters remain after reinforcement.
+    *   **Affected Files ( अनुमानित ):** [`src/js/core/battle.js`](src/js/core/battle.js:0), potentially [`src/js/core/team.js`](src/js/core/team.js:0).
+    *   **Related User Task:** "前排4名角色全部阵亡，战斗会直接结束，而不是让后排2名角色移动到前排继续战斗。"
 ## Recent Changes
+*   [2025-05-12 09:46:00] - **TDD Cycle Completed for Backline Reinforcement:**
+    *   Successfully wrote and passed 7 unit/integration tests for the "backline reinforcement" feature in [`src/js/core/battle.js`](src/js/core/battle.js:0).
+    *   Tests were executed using Vitest in a JSDOM environment, configured via `vitest.config.js` and `test/setup.js`.
+    *   Covered scenarios:
+        *   Single empty frontline slot, backline reinforces.
+        *   Multiple empty frontline slots, multiple backline characters reinforce.
+        *   Empty frontline slots, fewer backline characters than slots.
+        *   Empty frontline slots, no living backline characters.
+        *   All frontline defeated, backline reinforces, battle continues.
+        *   All frontline defeated, no living backline, battle ends (player loss).
+        *   Frontline defeat due to turn-start effects (e.g., DoT) triggers reinforcement.
+    *   Test file: [`test/battle-reinforcement.test.js`](test/battle-reinforcement.test.js:0).
+    *   This confirms the core logic of `checkAndProcessBacklineReinforcement()`, `handleCharacterDefeat()` integration, and `isBattleOver()` for player defeat conditions related to reinforcements.
 *   [2025-05-09 21:18:00] - **Debug Fixes Applied:** 针对战斗日志分析出的4个新问题进行了修复。
     *   问题1 (怪物HP初始化): 修改了 [`src/js/core/battle.js`](src/js/core/battle.js:1) 的HP初始化逻辑，增加从 `monster.baseStats` 获取 `maxHp` 的途径。
     *   问题2 (“护甲破坏”两次伤害) & 问题3 (“护甲破坏”0伤害日志矛盾): 修改了 [`src/js/core/job-skills.js`](src/js/core/job-skills.js:1)，移除了冗余的HP扣减和伤害日志，统一了伤害日志到 `applyDamageEffects` 并使用 `Battle.logBattle`。
@@ -345,3 +366,4 @@ This file tracks the project's current status, including recent changes, current
 *   [2025-05-11 20:44:15] - [Debug Status Update: Issue: Backline units not joining combat after frontline defeated. Symptom: Battle ends prematurely. Fix Confirmation: Applied fix to [`src/js/core/battle.js`](src/js/core/battle.js) to ensure backline members have their HP reset to maxHP at the start of each battle when being assigned to the `backLineMembers` list. This should allow them to correctly join combat if a frontline member is defeated.]
 * [2025-05-11 22:30:00] - Debug Task: "一伐架式" buff 未在 `calculateAttackPower` 时出现在角色buff列表。
 * [2025-05-11 22:30:00] - Debug Action: 在 [`src/js/core/job-skills.js`](src/js/core/job-skills.js) 和 [`src/js/core/buff-system.js`](src/js/core/buff-system.js) 中添加了针对 "一伐架式" 技能和buff的诊断日志，以追踪其使用、应用和移除流程。
+* [2025-05-12 09:49:23] - 创建/更新了 `.gitignore` 文件，内容为 `node_modules/`。

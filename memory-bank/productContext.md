@@ -20,6 +20,7 @@ This file provides a high-level overview of the project and the expected product
 * 装备突破与技能升级
 * 数据持久化保存
 * 主角专属的职业系统
+* 战斗中后排角色自动增援前排机制
 
 ## Overall Architecture
 
@@ -32,3 +33,4 @@ This file provides a high-level overview of the project and the expected product
 
 [2025-05-08 11:44:40] - 更新关键特性，明确职业系统为主角专属。
 [2025-05-10 23:31:28] - 添加 BattleLogger 系统文档链接。
+[2025-05-12 09:24:14] - 添加“战斗中后排角色自动增援前排机制”到关键特性。

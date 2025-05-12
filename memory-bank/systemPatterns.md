@@ -338,3 +338,147 @@ function applyDamageEffects(caster, skillEffect, targets, /*...other params...*/
   return { success: overallSuccess, effects: results };
 }
 ```
+---
+### [2025-05-12 13:30:35] - 物品定义与加载模式
+
+**Context:** 为了支持新的物品系统，需要一个标准化的物品定义结构和加载机制。
+
+**Pattern:**
+
+1.  **物品定义 (`src/data/items_definitions.json`):**
+    *   一个JSON对象，键为物品的唯一ID (`itemId`)。
+    *   每个物品ID对应一个物品定义对象，包含以下标准属性：
+        *   `id` (string): 物品的唯一标识符 (与键相同)。
+        *   `name` (string): 物品的显示名称。
+        *   `type` (string): 物品的分类，例如 `ingredient`, `experience_material`, `ascension_material`, `special_item`。
+        *   `description` (string, optional): 物品的描述文本。
+        *   `icon` (string, optional): 物品图标的路径或标识符。
+        *   `stackable` (boolean): 物品是否可堆叠 (默认为 `true`)。
+        *   `value` (number, optional): 物品的某种价值，如售价 (如果未来重新引入商店或用于其他目的)。
+    *   特定类型的物品可以有额外属性：
+        *   `experience_material`:
+            *   `exp` (number): 该经验材料提供的经验值。
+        *   其他类型可根据需要扩展。
+
+    **示例 (`src/data/items_definitions.json`):**
+    ```json
+    {
+      "exp_small": {
+        "id": "exp_small",
+        "name": "经验上升(小)",
+        "type": "experience_material",
+        "description": "少量提升角色经验。",
+        "icon": "path/to/exp_small_icon.png",
+        "stackable": true,
+        "exp": 10000
+      },
+      "iron_ore": {
+        "id": "iron_ore",
+        "name": "铁矿石",
+        "type": "ingredient",
+        "description": "基础的锻造材料。",
+        "icon": "path/to/iron_ore_icon.png",
+        "stackable": true
+      }
+      // ...更多物品定义
+    }
+    ```
+
+2.  **物品加载 (`Item.loadItemDefinitions` in `src/js/core/item.js`):**
+    *   一个静态方法，在游戏初始化时或首次需要物品数据时调用。
+    *   负责通过 `fetch` 或类似机制异步加载 [`src/data/items_definitions.json`](src/data/items_definitions.json)。
+    *   加载成功后，将解析的JSON对象存储在 `Item` 类的一个静态属性中，例如 `Item.definitions`。
+    *   应包含错误处理逻辑，以应对文件加载失败或JSON格式错误的情况。
+
+3.  **物品创建 (`Item.createItem` in `src/js/core/item.js`):**
+    *   接收 `itemId` 和可选的 `quantity` 作为参数。
+    *   从 `Item.definitions[itemId]` 获取物品模板。
+    *   如果找不到模板，则返回 `null` 或抛出错误。
+    *   基于模板创建一个新的物品实例，复制所有属性。
+    *   如果提供了 `quantity`，则设置物品实例的 `quantity` 属性。
+    *   返回创建的物品实例。
+
+---
+### [2025-05-12 13:30:35] - 怪物掉落物定义模式
+
+**Context:** 为怪物和Boss定义其可能掉落的物品及其概率和数量。
+
+**Pattern:**
+
+1.  **怪物数据结构 (e.g., in `src/data/monsters.json`, `src/data/bosses.json`):**
+    *   每个怪物/Boss对象中增加一个 `drops` 数组。
+    *   `drops` 数组可以为空（表示不掉落任何特定物品）或包含一个或多个掉落项对象。
+
+2.  **掉落项对象结构:**
+    *   `itemId` (string): 掉落物品的ID，必须与 [`src/data/items_definitions.json`](src/data/items_definitions.json) 中定义的物品ID对应。
+    *   `chance` (number): 物品的掉落概率，范围 0 到 1 (例如, 0.75 表示 75% 的概率)。
+    *   `quantityMin` (number): 如果掉落，物品数量的最小值（至少为1）。
+    *   `quantityMax` (number): 如果掉落，物品数量的最大值。如果 `quantityMin` 等于 `quantityMax`，则数量固定。
+
+    **示例 (在怪物定义中):**
+    ```json
+    {
+      "id": "goblin_warrior",
+      "name": "哥布林战士",
+      // ...其他怪物属性...
+      "drops": [
+        { "itemId": "gold_coin", "chance": 0.8, "quantityMin": 5, "quantityMax": 15 },
+        { "itemId": "broken_sword_hilt", "chance": 0.25, "quantityMin": 1, "quantityMax": 1 },
+        { "itemId": "exp_small", "chance": 0.1, "quantityMin": 1, "quantityMax": 2 }
+      ]
+    }
+    ```
+
+3.  **掉落处理逻辑 (e.g., `Dungeon.processRewards` in `src/js/core/dungeon.js`):**
+    *   当一个怪物被击败时，遍历其 `drops` 数组。
+    *   对于每个掉落项：
+        *   生成一个 0 到 1 之间的随机数。
+        *   如果随机数小于或等于 `itemDrop.chance`，则该物品掉落。
+        *   如果掉落，则在 `itemDrop.quantityMin` 和 `itemDrop.quantityMax` (包含两者) 之间随机确定一个整数作为掉落数量。
+        *   使用 `Inventory.addItem(itemDrop.itemId, determinedQuantity)` 将掉落的物品添加到玩家库存。
+
+**重要备注 (针对新设计的物品，如经验材料):**
+[2025-05-12 16:14:00] - 上述“怪物掉落物定义模式”描述的是一种通用的怪物直接掉落物品的机制。然而，根据最新设计决策，**新设计的物品，特别是经验材料 (`exp_small`, `exp_medium`, `exp_large`) 以及其他新分类的占位符物品，将不会使用此直接掉落机制。** 这些新物品将**仅通过**地下城宝箱的 `chestDrops` 机制获得。因此，在为这些新物品配置掉落时，应修改位于 [`src/js/core/dungeon.js`](src/js/core/dungeon.js) 中各个 `Dungeon.dungeons.<dungeon_id>.chestDrops` 对象的定义，而不是怪物的 `drops` 数组。
+---
+### [2025-05-12 16:17:00] - 地下城宝箱掉落物定义模式 (chestDrops)
+
+**Context:** 定义地下城中宝箱开启时可能掉落的物品及其概率。这是新设计的物品（如经验材料 `exp_small`, `exp_medium`, `exp_large`）的主要获取途径。
+
+**Pattern:**
+
+1.  **位置:** 定义在 [`src/js/core/dungeon.js`](src/js/core/dungeon.js) 文件中，作为各个地下城对象 `Dungeon.dungeons.<dungeon_id>` 的一个属性，名为 `chestDrops`。
+
+2.  **`chestDrops` 结构:**
+    *   是一个对象，其键是物品的唯一ID (`itemId`)，这些ID必须与 [`src/data/items_definitions.json`](src/data/items_definitions.json) 中定义的物品ID对应。
+    *   每个 `itemId` 键对应的值是一个数字，代表该物品从宝箱中掉落的概率（通常是一个0到1之间的值，但具体实现可能依赖于总概率的归一化）。
+
+    **示例 (在地下城定义中):**
+    ```javascript
+    // In src/js/core/dungeon.js
+    // Dungeon.dungeons.beginner_dungeon = {
+    //   id: "beginner_dungeon",
+    //   name: "初心者の洞窟",
+    //   // ... other dungeon properties ...
+    //   chestDrops: {
+    //     "exp_small": 0.5, // 50% 概率掉落小型经验材料
+    //     "potion_minor_heal": 0.3, // 30% 概率掉落小型治疗药水
+    //     "gold_pouch_small": 0.2, // 20% 概率掉落小钱袋
+    //     "exp_medium": 0.1 // 10% 概率掉落中型经验材料
+    //   },
+    //   // ...
+    // };
+    ```
+
+3.  **掉落处理逻辑 (推测):**
+    *   当玩家在地下城中开启宝箱时（通常在战斗胜利后，根据怪物掉落宝箱的数量决定开启次数）。
+    *   系统会根据对应地下城的 `chestDrops` 定义来抽取物品。
+    *   具体的抽取逻辑可能涉及：
+        *   遍历 `chestDrops` 中的所有物品。
+        *   为每个物品生成随机数，并与物品的 `rate` (概率) 比较，以决定是否掉落该物品。
+        *   或者，所有物品的概率相加，然后生成一个随机数落入某个区间来决定掉落哪个物品（类似权重抽奖）。
+        *   掉落数量通常为1，除非 `chestDrops` 的结构支持定义数量（当前示例仅为概率）。
+    *   **注意:** 此任务不涉及修改此处理逻辑，仅涉及更新 `chestDrops` 的内容。
+
+**适用性:**
+*   此模式是新设计的物品（如 `exp_small`, `exp_medium`, `exp_large` 和其他来自 [`src/data/items_definitions.json`](src/data/items_definitions.json) 的新分类占位符物品）的**唯一指定获取途径**。
+*   `code` 模式在实现这些新物品的掉落时，应**仅修改**各个地下城的 `chestDrops` 对象。

@@ -7,6 +7,7 @@ This file tracks the project's current status, including recent changes, current
 
 ## Current Focus
 
+*   [2025-05-12 16:17:00] - **物品系统重构：** 修正为通过宝箱掉落新物品，并更新 `chestDrops`。核心需求已根据用户最新反馈澄清，当前任务为架构设计与内存银行更新，并为 `code` 模式提供明确的实现指导。
 *   [2025-05-12 11:16:48] - **Code Change:** 修改了 [`src/js/core/character.js`](src/js/core/character.js) 中的 `Character.calculateNextLevelExp(level)` 函数，以实现新的角色升级经验计算方法。
     *   **新逻辑:**
         1.  定义了关键等级的经验数据点 (1, 45, 80, 90, 99级)。
@@ -384,3 +385,11 @@ This file tracks the project's current status, including recent changes, current
         *   移除了对 `this.loadTemplatesFallback()` 的调用。
         *   为 `fetch('/src/data/monsters.json')` 和 `fetch('/src/data/bosses.json')` 的 `.then()` 回调添加了更健壮的数据处理和错误处理逻辑，确保在数据格式不正确或加载失败时，`this.monsterTemplates` 和 `this.bossTemplates` 会被设置为空对象 `{}`。
         *   移除了 `this.dungeons = this.dungeons || {};`，因为 `this.dungeons` 现在在文件顶部直接硬编码初始化。
+*   [2025-05-12 13:36:31] - **物品系统重构完成：**
+    *   创建了新的物品定义文件 [`src/data/items_definitions.json`](src/data/items_definitions.json)，包含经验材料和其他占位符物品。
+    *   修改了 [`src/js/core/item.js`](src/js/core/item.js)：更新了 `Item.types`，添加了 `Item.itemDefinitions`，实现了 `Item.loadItemDefinitions()`，修改了 `Item.createItem()` 和 `Item.getItemData()`，并移除了对旧 `Shop` 的引用。
+    *   修改了怪物/Boss定义文件 ([`src/data/monsters.json`](src/data/monsters.json), [`src/data/bosses.json`](src/data/bosses.json))，为怪物添加了 `drops` 数组属性并为示例怪物添加了掉落。
+    *   修改了 [`src/js/core/dungeon.js`](src/js/core/dungeon.js) 中的 `Dungeon.processRewards()`，以处理新的怪物直接物品掉落逻辑。
+    *   修改了 [`src/js/core/inventory.js`](src/js/core/inventory.js)，确保 `addItem` 正确处理堆叠并从 `Item.getItemData()` 获取数据，移除了对旧 `Shop` 的引用。
+    *   （用户需手动删除 [`src/js/core/shop.js`](src/js/core/shop.js) 文件）
+    *   修改了 [`src/js/components/UI.js`](src/js/components/UI.js)，移除了 `renderShop()` 函数及相关调用和事件监听器。

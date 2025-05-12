@@ -18,6 +18,25 @@ This file records architectural and implementation decisions using a list format
 *
 ---
 ### Decision (Architecture)
+[2025-05-12 16:14:00] - **修正：新设计物品（经验材料等）的掉落机制**
+
+**Rationale:**
+根据用户最新澄清，新设计的物品（如经验材料 `exp_small`, `exp_medium`, `exp_large` 以及其他新分类的占位符物品）应通过怪物掉落的**宝箱**获得，而不是通过怪物直接掉落。这修正了先前可能在 `code` 模式中实现的直接掉落逻辑。核心机制将依赖现有的 `chestDrops` 定义。
+
+**Implications/Details:**
+
+*   **物品获取途径:** 新设计的物品（特别是 `exp_small`, `exp_medium`, `exp_large` 和其他来自 [`src/data/items_definitions.json`](src/data/items_definitions.json) 的新分类占位符物品）将**仅通过**修改现有地下城定义中的 `chestDrops` ([`src/js/core/dungeon.js`](src/js/core/dungeon.js) 中 `Dungeon.dungeons.<dungeon_id>.chestDrops`) 来实现掉落。
+*   **代码修改范围 (指导 `code` 模式):**
+    *   **主要修改:** `code` 模式应专注于向 [`src/js/core/dungeon.js`](src/js/core/dungeon.js) 中各个地下城的 `chestDrops` 对象添加新的经验材料和占位符物品条目，并为其分配合理的掉落率 (`rate`)。
+    *   **关键修正/回退:**
+        *   **移除/忽略直接掉落:** `code` 模式需要**忽略或回退**任何先前为这些新物品实现的直接怪物掉落逻辑。这包括：
+            *   在怪物/Boss定义文件 ([`src/data/monsters.json`](src/data/monsters.json), [`src/data/bosses.json`](src/data/bosses.json)) 中为新物品添加的 `drops` 数组条目。
+            *   在 [`src/js/core/dungeon.js`](src/js/core/dungeon.js) 的 `Dungeon.processRewards()` 函数中，任何专门用于处理这些新物品直接掉落的逻辑。
+        *   **保留通用直接掉落 (如果存在):** 如果项目中已存在用于其他旧物品的通用直接掉落机制，该机制本身可以保留，但**不能**用于掉落这些新的、指定通过宝箱获取的物品。
+*   **现有宝箱逻辑:** 确认现有的“怪物掉落宝箱数量”的逻辑（用户指出在 `Dungeon.processRewards` 中）和（推测存在的）“开启宝箱并根据 `chestDrops` 抽取物品”的逻辑不需要为本次任务修改。本次任务仅更新宝箱的“内容物清单” (`chestDrops`)。
+*   **先前决策的修正:** 此决策修正了 [2025-05-12 13:30:04] 关于“物品系统重构 - 核心架构决策”中关于“怪物掉落机制”的部分。原先设想的为新物品在怪物定义中添加 `drops` 数组并修改 `Dungeon.processRewards` 处理直接掉落的方案，现已明确**不适用于这些新设计的物品**。这些新物品将完全依赖 `chestDrops`。
+---
+### Decision (Architecture)
 [2025-05-10 19:26:00] - 采纳新的三阶段战斗顺序：我方技能 -> 我方普攻 -> 敌方行动。
 
 **Rationale:**
@@ -711,3 +730,39 @@ Modified [`src/js/core/battle.js`](src/js/core/battle.js) within the `startBattl
 *   **统一日志输出：** 所有 `calculationSteps` 通过 `BattleLogger.log` 的 `details` 参数在 `CONSOLE_DETAIL` 级别一次性输出，提供完整的计算链路。
 *   **Affected components/files:**
     *   [`src/js/core/character.js`](src/js/core/character.js)
+---
+### Decision (Architecture)
+[2025-05-12 13:30:04] - 物品系统重构 - 核心架构决策 (部分内容已由 [2025-05-12 16:14:00] 的决策修正)
+
+**Rationale:**
+为了实现更灵活和可扩展的物品系统，满足新的游戏机制需求（如新的物品分类、经验材料等），并移除不再需要的商店功能。
+
+**Implications/Details:**
+
+*   **新物品分类与属性:**
+    *   **分类:** 在 [`src/js/core/item.js`](src/js/core/item.js) 中，`Item.types` 将更新为包含 `ingredient`, `experience_material`, `ascension_material`, `special_item`。
+    *   **默认属性:** 所有物品将默认拥有 `stackable: true` 属性。
+    *   **新属性:** 为所有物品添加 `type` 属性，其值对应新的分类。
+
+*   **物品定义存储与加载:**
+    *   **存储:** 所有物品的定义（包括ID, 名称, 类型, 特定属性如 `exp`，以及 `stackable` 等）将存储在一个新的JSON文件 [`src/data/items_definitions.json`](src/data/items_definitions.json) 中。
+    *   **加载:** 在 [`src/js/core/item.js`](src/js/core/item.js) 中实现一个新的静态方法 `Item.loadItemDefinitions()`，负责从 [`src/data/items_definitions.json`](src/data/items_definitions.json) 加载物品定义数据，并可能将其存储在 `Item` 类的静态属性中（例如 `Item.definitions`）供全局访问。
+    *   **创建逻辑:** [`src/js/core/item.js`](src/js/core/item.js) 中的 `Item.createItem(itemId, quantity)` 方法将调整，以从 `Item.definitions` (或类似的数据源) 中查找物品模板，并根据模板创建物品实例，正确设置所有属性。
+
+*   **怪物掉落机制 (已由 [2025-05-12 16:14:00] 的决策修正):**
+    *   ~~**数据结构:** 怪物定义文件 (如 [`src/data/monsters.json`](src/data/monsters.json), [`src/data/bosses.json`](src/data/bosses.json)) 将为每个怪物/Boss添加一个 `drops` 数组。~~ (此方案不适用于新设计的物品)
+    *   ~~**掉落项结构:** `drops` 数组中的每个元素是一个对象，包含：~~
+        *   ~~`itemId` (string): 掉落物品的ID，对应 [`src/data/items_definitions.json`](src/data/items_definitions.json) 中的ID。~~
+        *   ~~`chance` (number, 0-1): 物品的掉落概率。~~
+        *   ~~`quantityMin` (number): 掉落数量的最小值。~~
+        *   ~~`quantityMax` (number): 掉落数量的最大值。~~
+    *   ~~**处理逻辑:** [`src/js/core/dungeon.js`](src/js/core/dungeon.js) 中的 `Dungeon.processRewards()` ([`src/js/core/dungeon.js:933`](src/js/core/dungeon.js:933)) 函数将修改，以遍历被击败怪物的 `drops` 数组。对每个掉落项，根据 `chance` 判定是否掉落，若掉落则在 `quantityMin` 和 `quantityMax` 之间随机生成数量，并通过 `Inventory.addItem()` 添加到玩家库存。~~ (此逻辑不适用于新设计的物品的直接掉落)
+    *   **修正:** 新设计的物品将通过 `chestDrops` 机制掉落，详见 [2025-05-12 16:14:00] 的决策。
+
+*   **商店功能移除:**
+    *   **文件删除:** 删除 [`src/js/core/shop.js`](src/js/core/shop.js) 文件。
+    *   **UI清理:** 从 [`src/js/components/UI.js`](src/js/components/UI.js) 中移除 `renderShop()` ([`src/js/components/UI.js:697`](src/js/components/UI.js:697)) 函数、相关的UI元素（如商店按钮）和所有相关的事件监听器。
+    *   **代码引用清理:** 检查并移除项目中所有对 `Shop` 对象或 [`src/js/core/shop.js`](src/js/core/shop.js) 的引用，特别是在 [`src/js/core/item.js`](src/js/core/item.js) 和 [`src/js/core/inventory.js`](src/js/core/inventory.js) 中，确保物品数据的获取和管理不再依赖于已移除的商店系统。
+
+*   **物品堆叠确认:**
+    *   确认 [`src/js/core/inventory.js`](src/js/core/inventory.js) 中的 `addItem` 等相关方法能够正确处理基于物品 `stackable` 属性的堆叠逻辑。

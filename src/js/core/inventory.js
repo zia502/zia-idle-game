@@ -47,31 +47,43 @@ const Inventory = {
      */
     addItem(itemId, count = 1) {
         if (!itemId || count <= 0) return false;
-        
-        if (!this.items[itemId]) {
+
+        const itemData = Item.getItemData(itemId); // 从 Item 模块获取物品定义
+
+        if (!itemData) {
+            console.error(`添加物品失败: 未找到物品定义 ${itemId}`);
+            return false;
+        }
+
+        if (this.items[itemId]) { // 如果物品已存在
+            if (itemData.stackable) {
+                this.items[itemId].count += count;
+            } else {
+                // 不可堆叠物品，可以考虑创建新条目或报错/忽略
+                // 为简单起见，这里假设不可堆叠物品如果已存在则不增加（或每个都是独立实例，这需要更复杂的库存结构）
+                // 当前逻辑：如果不可堆叠且已存在，则不增加数量，但仍返回true表示操作尝试过
+                console.warn(`尝试向库存添加已存在的不可堆叠物品 ${itemId}。数量未增加。`);
+            }
+        } else { // 如果物品不存在，创建新条目
             this.items[itemId] = {
                 id: itemId,
-                count: 0
+                name: itemData.name, // 从物品定义获取
+                type: itemData.type, // 从物品定义获取
+                icon: itemData.icon, // 从物品定义获取
+                stackable: itemData.stackable, // 从物品定义获取
+                description: itemData.description, // 从物品定义获取
+                // 根据需要添加其他从 itemData 获取的属性
+                count: count
             };
         }
         
-        this.items[itemId].count += count;
-        console.log(`添加物品 ${itemId} x${count}`);
+        console.log(`添加物品 ${this.items[itemId].name || itemId} x${count}`);
         
         // 如果存在事件系统，触发物品添加事件
         if (typeof Events !== 'undefined' && typeof Events.emit === 'function') {
-            // 尝试从Shop获取物品信息
-            let itemName = itemId;
-            if (typeof Shop !== 'undefined' && typeof Shop.getItem === 'function') {
-                const itemData = Shop.getItem(itemId);
-                if (itemData) {
-                    itemName = itemData.name;
-                }
-            }
-            
             Events.emit('inventory:itemAdded', {
                 itemId,
-                itemName,
+                itemName: this.items[itemId].name || itemId,
                 quantity: count
             });
         }
@@ -90,28 +102,20 @@ const Inventory = {
         if (!item || item.count < count) return false;
         
         item.count -= count;
+        const itemName = item.name || itemId; // 获取物品名称用于日志
         
         // 如果数量为0，删除该物品
         if (item.count <= 0) {
             delete this.items[itemId];
         }
         
-        console.log(`移除物品 ${itemId} x${count}`);
+        console.log(`移除物品 ${itemName} x${count}`);
         
         // 如果存在事件系统，触发物品移除事件
         if (typeof Events !== 'undefined' && typeof Events.emit === 'function') {
-            // 尝试从Shop获取物品信息
-            let itemName = itemId;
-            if (typeof Shop !== 'undefined' && typeof Shop.getItem === 'function') {
-                const itemData = Shop.getItem(itemId);
-                if (itemData) {
-                    itemName = itemData.name;
-                }
-            }
-            
             Events.emit('inventory:itemRemoved', {
                 itemId,
-                itemName,
+                itemName: itemName,
                 quantity: count
             });
         }
@@ -131,41 +135,40 @@ const Inventory = {
     
     /**
      * 获取特定分类的物品
-     * @param {string} category - 物品分类
+     * @param {string} type - 物品类型 (来自 Item.types)
      * @returns {object} 分类物品列表
      */
-    getItemsByCategory(category) {
-        if (!category || typeof Shop === 'undefined' || typeof Shop.getItem !== 'function') {
+    getItemsByType(type) {
+        if (!type) {
             return {};
         }
         
-        const categoryItems = {};
-        
+        const typeItems = {};
         for (const itemId in this.items) {
-            const itemData = Shop.getItem(itemId);
-            if (itemData && itemData.category === category) {
-                categoryItems[itemId] = this.items[itemId];
+            // 物品实例中应包含 type 信息
+            if (this.items[itemId].type === type) {
+                typeItems[itemId] = this.items[itemId];
             }
         }
-        
-        return categoryItems;
+        return typeItems;
     },
     
     /**
-     * 使用物品
+     * 使用物品 (此方法现在应直接调用 Item.useItem)
      * @param {string} itemId - 物品ID
-     * @param {string} targetId - 目标ID（通常是角色ID）
+     * @param {object} target - 目标对象
      * @returns {boolean} 是否成功使用
      */
-    useItem(itemId, targetId) {
-        // 确保Shop模块存在并有useItem函数
-        if (typeof Shop === 'undefined' || typeof Shop.useItem !== 'function') {
-            console.error('商店模块未加载或不支持使用物品功能');
+    useItem(itemId, target) {
+        // 确保 Item 模块存在并有 useItem 函数
+        if (typeof Item === 'undefined' || typeof Item.useItem !== 'function') {
+            console.error('物品模块未加载或不支持使用物品功能');
             return false;
         }
         
-        // 调用Shop模块的useItem方法
-        return Shop.useItem(itemId, targetId);
+        // 调用 Item 模块的 useItem 方法
+        // Item.useItem 内部会处理从库存中消耗物品的逻辑
+        return Item.useItem(itemId, target);
     },
     
     /**

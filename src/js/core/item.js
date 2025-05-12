@@ -4,11 +4,15 @@
 const Item = {
     // 物品类型定义
     types: {
-        potion: { name: '药水', icon: '🧪', stackable: true },
-        material: { name: '材料', icon: '📦', stackable: true },
-        special: { name: '特殊', icon: '✨', stackable: true }
+      INGREDIENT: 'ingredient',
+      EXPERIENCE_MATERIAL: 'experience_material',
+      ASCENSION_MATERIAL: 'ascension_material',
+      SPECIAL_ITEM: 'special_item',
+      EQUIPMENT: 'equipment', // 保留现有类型或按需调整
+      CONSUMABLE: 'consumable'  // 保留现有类型或按需调整
     },
-    
+    itemDefinitions: {}, // 存储从JSON加载的物品定义
+
     // 物品效果类型
     effectTypes: {
         heal: { name: '治疗', description: '恢复生命值' },
@@ -20,55 +24,77 @@ const Item = {
     /**
      * 初始化物品系统
      */
-    init() {
+    async init() {
         console.log('物品系统初始化');
+        await this.loadItemDefinitions(); // 确保在游戏初始化时调用
         
         // 如果有事件系统，注册相关事件
         if (typeof Events !== 'undefined' && typeof Events.on === 'function') {
             Events.on('item:use', this.handleItemUse.bind(this));
         }
     },
+
+    /**
+     * 从JSON文件加载物品定义
+     */
+    async loadItemDefinitions() {
+        try {
+            const response = await fetch('src/data/items_definitions.json');
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            this.itemDefinitions = await response.json();
+            console.log('物品定义加载成功:', this.itemDefinitions);
+        } catch (error) {
+            console.error('加载物品定义失败:', error);
+            this.itemDefinitions = {}; // 加载失败则置为空对象
+        }
+    },
     
     /**
-     * 创建一个新物品
-     * @param {object} itemData - 物品数据
-     * @returns {object} 新物品对象
+     * 创建一个新物品实例
+     * @param {string} itemId - 物品ID
+     * @param {number} quantity - 物品数量，默认为1
+     * @returns {object|null} 新物品对象或null（如果未找到定义）
      */
-    createItem(itemData) {
-        if (!itemData || !itemData.id || !itemData.name || !itemData.type) {
-            console.error('创建物品失败: 缺少必要数据');
+    createItem(itemId, quantity = 1) {
+        const definition = this.itemDefinitions[itemId];
+        if (!definition) {
+            console.error(`创建物品失败: 未在 Item.itemDefinitions 中找到物品ID ${itemId}`);
+            // 可选: 尝试从旧系统查找或返回错误
             return null;
         }
-        
-        // 确保物品类型有效
-        if (!this.types[itemData.type]) {
-            console.error(`创建物品失败: 未知物品类型 ${itemData.type}`);
-            return null;
-        }
-        
-        // 创建物品基本结构
+
+        // 基于定义创建物品实例
         const item = {
-            id: itemData.id,
-            name: itemData.name,
-            description: itemData.description || '',
-            type: itemData.type,
-            rarity: itemData.rarity || 'common',
-            price: itemData.price || 0,
-            stackable: itemData.hasOwnProperty('stackable') ? 
-                itemData.stackable : this.types[itemData.type].stackable,
-            imgSrc: itemData.imgSrc || 'default_item.png',
-            
-            // 可选属性
-            stats: itemData.stats || {},
-            effects: itemData.effects || [],
-            useInBattle: !!itemData.useInBattle,
-            requirements: itemData.requirements || {},
-            requiredLevel: itemData.requiredLevel || 1
+            ...definition, // 复制定义中的所有属性
+            quantity: quantity
         };
         
+        // 确保类型和可堆叠性正确
+        if (!item.type || !this.types[item.type.toUpperCase().replace(/ /g, '_')]) {
+             // 如果类型在 itemDefinitions 中但不在 Item.types 中，则记录警告或使用默认值
+            console.warn(`物品 ${itemId} 的类型 "${item.type}" 在 Item.types 中未定义。`);
+        }
+        // stackable 属性应直接来自 definition
+
         return item;
     },
     
+    /**
+     * 获取物品数据（优先从 itemDefinitions 获取）
+     * @param {string} itemId - 物品ID
+     * @returns {object|null} 物品定义数据或null
+     */
+    getItemData(itemId) {
+        if (this.itemDefinitions[itemId]) {
+            return { ...this.itemDefinitions[itemId] }; // 返回副本以防意外修改
+        }
+        // 可选: 尝试从旧系统查找
+        console.warn(`在 Item.itemDefinitions 中未找到物品数据: ${itemId}`);
+        return null;
+    },
+
     /**
      * 使用物品
      * @param {string} itemId - 物品ID
@@ -76,19 +102,14 @@ const Item = {
      * @returns {boolean} 是否成功使用
      */
     useItem(itemId, target) {
-        // 从物品库存中获取物品
-        let item = null;
-        if (typeof Shop !== 'undefined' && typeof Shop.getItem === 'function') {
-            item = Shop.getItem(itemId);
-        } else if (typeof Inventory !== 'undefined' && typeof Inventory.getItem === 'function') {
-            const invItem = Inventory.getItem(itemId);
-            if (invItem && invItem.count > 0) {
-                item = invItem;
-            }
+        // 从物品库存中获取物品实例（包含数量等信息）
+        let inventoryItemInstance = null;
+        if (typeof Inventory !== 'undefined' && typeof Inventory.getItem === 'function') {
+            inventoryItemInstance = Inventory.getItem(itemId); // 假设 Inventory.getItem 返回的是包含数量的实例
         }
         
-        if (!item) {
-            console.error(`使用物品失败: 未找到物品 ${itemId}`);
+        if (!inventoryItemInstance || inventoryItemInstance.quantity <= 0) {
+            console.error(`使用物品失败: 库存中未找到物品 ${itemId} 或数量不足`);
             return false;
         }
         
@@ -231,11 +252,14 @@ const Item = {
     getItemDisplayText(item) {
         if (!item) return '';
         
-        const rarity = this.rarities[item.rarity] || this.rarities.common;
-        const type = this.types[item.type] || { name: '未知', icon: '?' };
-        
-        let text = `<span style="color:${rarity.color}">${item.name}</span> ${type.icon}\n`;
-        text += `${rarity.name}的${type.name}\n`;
+        const rarity = item.rarity || 'common'; // 假设物品定义中有rarity
+        const itemDefinition = this.getItemData(item.id); // 从 itemDefinitions 获取基础定义
+        const typeName = itemDefinition ? itemDefinition.type : '未知';
+        const typeIcon = itemDefinition ? (this.types[typeName.toUpperCase().replace(/ /g, '_')] ? this.types[typeName.toUpperCase().replace(/ /g, '_')].icon || '?' : '?') : '?';
+
+
+        let text = `<span style="color:${rarity === 'common' ? 'grey' : 'blue'}">${item.name}</span> ${typeIcon}\n`; // 简化颜色逻辑
+        text += `${rarity}的${typeName}\n`;
         
         if (item.description) {
             text += `${item.description}\n`;
@@ -258,8 +282,17 @@ const Item = {
             text += `需要等级: ${item.requiredLevel}\n`;
         }
         
-        text += `价值: ${item.price} 金币`;
+        if (item.price) { // 检查 price 是否存在
+             text += `价值: ${item.price} 金币`;
+        }
         
         return text;
     }
-}; 
+};
+// 确保在Game.init或类似的地方调用 Item.init()
+// 例如:
+// Game.init() {
+//   ...
+//   await Item.init();
+//   ...
+// }

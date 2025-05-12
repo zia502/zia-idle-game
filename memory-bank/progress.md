@@ -7,6 +7,14 @@ This file tracks the project's progress using a task list format.
 
 ## Completed Tasks
 
+*   [2025-05-12 13:36:54] - **Completed Task: 物品系统重构**
+    *   创建了新的物品定义文件 [`src/data/items_definitions.json`](src/data/items_definitions.json)。
+    *   修改了 [`src/js/core/item.js`](src/js/core/item.js) 以支持新的物品定义和加载机制。
+    *   修改了怪物/Boss定义文件 ([`src/data/monsters.json`](src/data/monsters.json), [`src/data/bosses.json`](src/data/bosses.json)) 以添加物品掉落。
+    *   修改了 [`src/js/core/dungeon.js`](src/js/core/dungeon.js) 以处理新的掉落逻辑。
+    *   修改了 [`src/js/core/inventory.js`](src/js/core/inventory.js) 以正确处理物品堆叠和数据获取，并移除了对旧商店的引用。
+    *   （用户需手动删除 [`src/js/core/shop.js`](src/js/core/shop.js) 文件）
+    *   修改了 [`src/js/components/UI.js`](src/js/components/UI.js) 以移除商店相关UI和逻辑。
 *   [2025-05-12 11:17:01] - **Completed Task:** 修改 [`src/js/core/character.js`](src/js/core/character.js) 中的 `Character.calculateNextLevelExp(level)` 函数以实现新的经验计算逻辑。
     *   实现了基于数据点、边界处理、直接匹配、线性插值和超出范围处理的新算法。
 *   [2025-05-09 21:18:00] - **Completed Debugging Task:** 调查并修复了战斗日志中指出的4个新问题。

@@ -284,6 +284,11 @@ const UI = {
             button.addEventListener('click', (e) => {
                 const targetScreen = e.target.getAttribute('data-screen');
                 if (targetScreen) {
+                    if (targetScreen === 'shop-screen') { // 检查是否是商店屏幕
+                        console.warn('商店功能已移除，无法切换到 shop-screen。');
+                        this.showNotification('商店功能已移除。', 'warning');
+                        return;
+                    }
                     this.switchScreen(targetScreen);
                     console.log(`切换到屏幕: ${targetScreen}`);
                 }
@@ -690,87 +695,7 @@ const UI = {
         }
     },
 
-    /**
-     * 渲染商店界面
-     * @param {string} shopId - 商店ID
-     */
-    renderShop(shopId) {
-        const shopContainer = document.getElementById('shop-container');
-        if (!shopContainer) return;
-
-        // 清空现有内容
-        shopContainer.innerHTML = '';
-
-        // 获取商店数据
-        const shop = Shop.getShop(shopId);
-        if (!shop) {
-            shopContainer.innerHTML = '<div class="error-message">商店不存在</div>';
-            return;
-        }
-
-        // 创建商店标题
-        const shopHeader = document.createElement('div');
-        shopHeader.className = 'shop-header';
-        shopHeader.innerHTML = `
-            <h2>${shop.name}</h2>
-            <p>${shop.description}</p>
-        `;
-        shopContainer.appendChild(shopHeader);
-
-        // 创建商品列表
-        const itemsGrid = document.createElement('div');
-        itemsGrid.className = 'shop-items-grid';
-
-        // 遍历商品
-        Object.entries(shop.items).forEach(([itemId, shopItem]) => {
-            const item = Shop.getItem(itemId);
-            if (!item) return;
-
-            const itemElement = document.createElement('div');
-            itemElement.className = 'shop-item';
-
-            const canAfford = Game.hasEnoughGold(shopItem.price);
-            if (!canAfford) {
-                itemElement.classList.add('cannot-afford');
-            }
-
-            if (shopItem.stock <= 0) {
-                itemElement.classList.add('out-of-stock');
-            }
-
-            itemElement.innerHTML = `
-                <div class="item-image">
-                    <img src="${item.imgSrc || 'assets/images/items/default.png'}" alt="${item.name}">
-                </div>
-                <div class="item-info">
-                    <h3>${item.name}</h3>
-                    <p class="item-description">${item.description}</p>
-                    <div class="item-details">
-                        <span class="item-price">${shopItem.price} 金币</span>
-                        <span class="item-stock">库存: ${shopItem.stock}</span>
-                    </div>
-                </div>
-                <button class="buy-button" data-item-id="${itemId}" ${(!canAfford || shopItem.stock <= 0) ? 'disabled' : ''}>
-                    购买
-                </button>
-            `;
-
-            itemsGrid.appendChild(itemElement);
-        });
-
-        shopContainer.appendChild(itemsGrid);
-
-        // 添加购买事件监听
-        itemsGrid.querySelectorAll('.buy-button').forEach(button => {
-            button.addEventListener('click', function() {
-                const itemId = this.getAttribute('data-item-id');
-                if (itemId) {
-                    Shop.buyItem(shopId, itemId);
-                    UI.renderShop(shopId); // 刷新商店显示
-                }
-            });
-        });
-    },
+    // renderShop 函数已根据规范移除
 
     /**
      * 渲染物品栏
@@ -800,9 +725,10 @@ const UI = {
         itemsGrid.className = 'inventory-items-grid';
 
         // 遍历物品
-        Object.entries(inventory).forEach(([itemId, quantity]) => {
-            const item = Shop.getItem(itemId);
-            if (!item || quantity <= 0) return;
+        Object.entries(inventory).forEach(([itemId, itemInstance]) => { // inventory 现在直接存储物品实例
+            // const item = Shop.getItem(itemId); // 从 Shop 获取物品定义已移除
+            // itemInstance 自身包含了如 name, description, icon 等信息
+            if (!itemInstance || itemInstance.count <= 0) return;
 
             const itemElement = document.createElement('div');
             itemElement.className = 'inventory-item';
@@ -810,14 +736,15 @@ const UI = {
 
             itemElement.innerHTML = `
                 <div class="item-image">
-                    <img src="${item.imgSrc || 'assets/images/items/default.png'}" alt="${item.name}">
-                    <span class="item-quantity">${quantity}</span>
+                    <img src="${itemInstance.icon || 'assets/items/default.png'}" alt="${itemInstance.name}">
+                    <span class="item-quantity">${itemInstance.count}</span>
                 </div>
                 <div class="item-info">
-                    <h3>${item.name}</h3>
-                    <p class="item-description">${item.description}</p>
+                    <h3>${itemInstance.name}</h3>
+                    <p class="item-description">${itemInstance.description || ''}</p>
                 </div>
-                ${item.useInBattle ? '<button class="use-button">使用</button>' : ''}
+                ${(Item.getItemData(itemId) && Item.getItemData(itemId).effects && Item.getItemData(itemId).effects.length > 0) ? '<button class="use-button">使用</button>' : ''}
+                // 假设物品定义中有 effects 数组表示可使用
             `;
 
             itemsGrid.appendChild(itemElement);
@@ -832,8 +759,16 @@ const UI = {
                 const itemId = itemElement.getAttribute('data-item-id');
 
                 if (itemId) {
-                    // 显示角色选择对话框
-                    UI.showCharacterSelection(itemId);
+                    // 显示角色选择对话框 (如果物品需要目标)
+                    // 简化：直接调用 Inventory.useItem，它内部会调用 Item.useItem
+                    // Item.useItem 应该处理目标选择（如果需要）或直接使用
+                    const itemData = Item.getItemData(itemId);
+                    if (itemData && itemData.effects && itemData.effects.some(eff => eff.targetNeeded)) { // 假设 effect 有 targetNeeded 属性
+                         UI.showCharacterSelection(itemId);
+                    } else {
+                        Inventory.useItem(itemId, Character.getMainCharacter().id); // 假设默认目标是主角
+                        UI.renderInventory(); // 刷新物品栏
+                    }
                 }
             });
         });
@@ -850,11 +785,11 @@ const UI = {
 
         // 创建标题
         const title = document.createElement('h3');
-        title.textContent = '选择角色';
+        title.textContent = '选择目标角色';
         dialog.appendChild(title);
 
         // 获取队伍成员
-        const team = Team.getTeamMembers();
+        const team = Team.getTeamMembers(); // 假设 Team.getTeamMembers() 返回角色ID数组
 
         // 创建角色列表
         const characterList = document.createElement('div');
@@ -877,7 +812,7 @@ const UI = {
                     <h4>${character.name}</h4>
                     <div class="stats-bar">
                         <div class="hp-display">HP: ${character.currentStats.hp}/${character.baseStats.hp}</div>
-                        <div class="energy-display">能量: ${character.currentStats.energy}/${character.baseStats.energy}</div>
+                        <div class="energy-display">能量: ${character.currentStats.energy || 0}/${character.baseStats.energy || 0}</div>
                     </div>
                 </div>
             `;
@@ -905,9 +840,13 @@ const UI = {
         characterList.querySelectorAll('.character-select-item').forEach(item => {
             item.addEventListener('click', function() {
                 const characterId = this.getAttribute('data-character-id');
+                const targetCharacter = Character.getCharacter(characterId);
 
-                // 使用物品
-                Shop.useItem(itemId, characterId);
+                if (targetCharacter) {
+                    // 使用物品
+                    Inventory.useItem(itemId, targetCharacter); // Inventory.useItem 会调用 Item.useItem
+                }
+
 
                 // 关闭对话框
                 document.body.removeChild(dialog);
@@ -2270,15 +2209,16 @@ const UI = {
         // 确认升级事件
         confirmBtn.onclick = () => {
             if (selectedMaterial) {
-                const item = Shop.getItem(selectedMaterial);
-                if (item && item.effect && item.effect.type === 'weapon_exp') {
+                const itemData = Item.getItemData(selectedMaterial); // 使用 Item.getItemData
+                if (itemData && itemData.effects && itemData.effects.find(eff => eff.type === 'weapon_exp')) {
+                    const expEffect = itemData.effects.find(eff => eff.type === 'weapon_exp');
                     // 使用材料
                     if (Inventory.removeItem(selectedMaterial)) {
                         // 升级武器
-                        Weapon.upgradeWeapon(weaponId, item.effect.value);
+                        Weapon.upgradeWeapon(weaponId, expEffect.value);
                         this.showWeaponDetails(weaponId); // 刷新详情显示
                         this.renderWeaponInventory(); // 刷新武器列表显示
-                        this.showNotification(`成功使用 ${item.name}，获得 ${item.effect.value} 点经验值`, 'success');
+                        this.showNotification(`成功使用 ${itemData.name}，获得 ${expEffect.value} 点经验值`, 'success');
                     } else {
                         this.showNotification('材料数量不足', 'error');
                     }

@@ -1,0 +1,8 @@
+{
+  "exp_small": { "id": "exp_small", "name": "经验上升(小)", "type": "experience_material", "description": "提供少量角色经验。", "exp": 10000, "stackable": true, "icon": "assets/items/exp_small.png" },
+  "exp_medium": { "id": "exp_medium", "name": "经验上升(中)", "type": "experience_material", "description": "提供中量角色经验。", "exp": 50000, "stackable": true, "icon": "assets/items/exp_medium.png" },
+  "exp_large": { "id": "exp_large", "name": "经验上升(大)", "type": "experience_material", "description": "提供大量角色经验。", "exp": 100000, "stackable": true, "icon": "assets/items/exp_large.png" },
+  "placeholder_ingredient": { "id": "placeholder_ingredient", "name": "占位符成分", "type": "ingredient", "description": "这是一个占位符成分物品。", "stackable": true, "icon": "assets/items/placeholder_ingredient.png" },
+  "placeholder_ascension_material": { "id": "placeholder_ascension_material", "name": "占位符突破材料", "type": "ascension_material", "description": "这是一个占位符突破材料。", "stackable": true, "icon": "assets/items/placeholder_ascension_material.png" },
+  "placeholder_special_item": { "id": "placeholder_special_item", "name": "占位符特殊物品", "type": "special_item", "description": "这是一个占位符特殊物品。", "stackable": true, "icon": "assets/items/placeholder_special_item.png" }
+}

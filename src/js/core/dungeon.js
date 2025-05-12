@@ -3,7 +3,6 @@
  */
 const Dungeon = {
 
-
     // 地下城模板
     dungeons: {
         forest_cave: {
@@ -30,10 +29,6 @@ const Dungeon = {
                     { id: 'animalHide', type: 'material', rate: 0.1 }
                 ],
                 gold: [
-                    { id: 'forestSword', type: 'weapon', rate: 0.35 },
-                    { id: 'hunterAxe', type: 'weapon', rate: 0.3 },
-                    { id: 'guardianSpear', type: 'weapon', rate: 0.2 },
-                    { id: 'rangerBow', type: 'weapon', rate: 0.15 },
                     { id: 'magicHerbs', type: 'material', rate: 0.4 },
                     { id: 'crystal', type: 'material', rate: 0.3 },
                     { id: 'beastFang', type: 'material', rate: 0.2 },
@@ -65,10 +60,6 @@ const Dungeon = {
                     { id: 'mountainHerbs', type: 'material', rate: 0.1 }
                 ],
                 gold: [
-                    { id: 'mountainSword', type: 'weapon', rate: 0.35 },
-                    { id: 'iceAxe', type: 'weapon', rate: 0.3 },
-                    { id: 'rockSpear', type: 'weapon', rate: 0.2 },
-                    { id: 'windBow', type: 'weapon', rate: 0.15 },
                     { id: 'mountainCrystal', type: 'material', rate: 0.4 },
                     { id: 'iceEssence', type: 'material', rate: 0.3 },
                     { id: 'rockCore', type: 'material', rate: 0.2 },
@@ -100,10 +91,6 @@ const Dungeon = {
                     { id: 'ancientHerbs', type: 'material', rate: 0.1 }
                 ],
                 gold: [
-                    { id: 'ancientSword', type: 'weapon', rate: 0.35 },
-                    { id: 'magicStaff', type: 'weapon', rate: 0.3 },
-                    { id: 'ruinSpear', type: 'weapon', rate: 0.2 },
-                    { id: 'dragonBow', type: 'weapon', rate: 0.15 },
                     { id: 'ancientCrystal', type: 'material', rate: 0.4 },
                     { id: 'magicEssence', type: 'material', rate: 0.3 },
                     { id: 'dragonScale', type: 'material', rate: 0.2 },
@@ -968,127 +955,49 @@ const Dungeon = {
             });
         }
 
-        // 处理物品掉落
+        // 处理宝箱掉落 (保留原有逻辑或按需调整)
         if (monster.isBoss) {
             if (monster.isMiniBoss) {
-                // 小boss掉落
                 const silverCount = Math.floor(Math.random() * 3) + 1;
                 const goldCount = Math.floor(Math.random() * 3) + 1;
-
-                // 掉落银宝箱并立即添加到物品栏
                 for (let i = 0; i < silverCount; i++) {
-                    if (typeof Inventory !== 'undefined' && typeof Inventory.addItem === 'function') {
-                        Inventory.addItem('silver_chest', 1);
-                        rewardInfo.items.push({ type: 'chest', id: 'silver_chest', count: 1 });
-                        console.log('获得银宝箱 x1');
-                    }
+                    if (typeof Inventory !== 'undefined' && Inventory.addItem) Inventory.addItem('silver_chest', 1);
+                    rewardInfo.items.push({ type: 'chest', id: 'silver_chest', count: 1 });
                 }
-
-                // 掉落金宝箱并立即添加到物品栏
                 for (let i = 0; i < goldCount; i++) {
-                    if (typeof Inventory !== 'undefined' && typeof Inventory.addItem === 'function') {
-                        Inventory.addItem('gold_chest', 1);
-                        rewardInfo.items.push({ type: 'chest', id: 'gold_chest', count: 1 });
-                        console.log('获得金宝箱 x1');
-                    }
+                    if (typeof Inventory !== 'undefined' && Inventory.addItem) Inventory.addItem('gold_chest', 1);
+                    rewardInfo.items.push({ type: 'chest', id: 'gold_chest', count: 1 });
                 }
-
-                // 0.05%概率掉落彩虹宝箱
                 if (Math.random() < 0.0005) {
-                    if (typeof Inventory !== 'undefined' && typeof Inventory.addItem === 'function') {
-                        Inventory.addItem('rainbow_chest', 1);
-                        rewardInfo.items.push({ type: 'chest', id: 'rainbow_chest', count: 1 });
-                        console.log('获得彩虹宝箱 x1');
-                    }
+                    if (typeof Inventory !== 'undefined' && Inventory.addItem) Inventory.addItem('rainbow_chest', 1);
+                    rewardInfo.items.push({ type: 'chest', id: 'rainbow_chest', count: 1 });
                 }
             } else if (monster.isFinalBoss) {
-                // 最终boss掉落
                 const goldCount = Math.floor(Math.random() * 3) + 1;
                 const redCount = Math.floor(Math.random() * 3) + 1;
-
-                // 掉落金宝箱并立即添加到物品栏
                 for (let i = 0; i < goldCount; i++) {
-                    if (typeof Inventory !== 'undefined' && typeof Inventory.addItem === 'function') {
-                        Inventory.addItem('gold_chest', 1);
-                        rewardInfo.items.push({ type: 'chest', id: 'gold_chest', count: 1 });
-                        console.log('获得金宝箱 x1');
-                    }
+                    if (typeof Inventory !== 'undefined' && Inventory.addItem) Inventory.addItem('gold_chest', 1);
+                    rewardInfo.items.push({ type: 'chest', id: 'gold_chest', count: 1 });
                 }
-
-                // 掉落红宝箱并立即添加到物品栏
                 for (let i = 0; i < redCount; i++) {
-                    if (typeof Inventory !== 'undefined' && typeof Inventory.addItem === 'function') {
-                        Inventory.addItem('red_chest', 1);
-                        rewardInfo.items.push({ type: 'chest', id: 'red_chest', count: 1 });
-                        console.log('获得红宝箱 x1');
-                    }
+                    if (typeof Inventory !== 'undefined' && Inventory.addItem) Inventory.addItem('red_chest', 1);
+                    rewardInfo.items.push({ type: 'chest', id: 'red_chest', count: 1 });
                 }
-
-                // 2%概率掉落彩虹宝箱
                 if (Math.random() < 0.02) {
-                    if (typeof Inventory !== 'undefined' && typeof Inventory.addItem === 'function') {
-                        Inventory.addItem('rainbow_chest', 1);
-                        rewardInfo.items.push({ type: 'chest', id: 'rainbow_chest', count: 1 });
-                        console.log('获得彩虹宝箱 x1');
-                    }
+                    if (typeof Inventory !== 'undefined' && Inventory.addItem) Inventory.addItem('rainbow_chest', 1);
+                    rewardInfo.items.push({ type: 'chest', id: 'rainbow_chest', count: 1 });
                 }
             }
         } else {
-            // 普通怪物掉落一个银宝箱并立即添加到物品栏
-            if (typeof Inventory !== 'undefined' && typeof Inventory.addItem === 'function') {
-                Inventory.addItem('silver_chest', 1);
-                rewardInfo.items.push({ type: 'chest', id: 'silver_chest', count: 1 });
-                console.log('获得银宝箱 x1');
-            }
+            if (typeof Inventory !== 'undefined' && Inventory.addItem) Inventory.addItem('silver_chest', 1);
+            rewardInfo.items.push({ type: 'chest', id: 'silver_chest', count: 1 });
         }
 
-        // 同时也保存到currentRun.rewards中，以便在地下城完成时显示总奖励
-        if (monster.isBoss) {
-            if (monster.isMiniBoss) {
-                // 小boss掉落
-                const silverCount = Math.floor(Math.random() * 3) + 1;
-                const goldCount = Math.floor(Math.random() * 3) + 1;
+        // 怪物直接物品掉落逻辑已根据游戏设计移除
+        // 新物品主要通过 chestDrops 获取
 
-                // 掉落银宝箱
-                for (let i = 0; i < silverCount; i++) {
-                    this.currentRun.rewards.push({ type: 'chest', id: 'silver' });
-                }
 
-                // 掉落金宝箱
-                for (let i = 0; i < goldCount; i++) {
-                    this.currentRun.rewards.push({ type: 'chest', id: 'gold' });
-                }
-
-                // 0.05%概率掉落彩虹宝箱
-                if (Math.random() < 0.0005) {
-                    this.currentRun.rewards.push({ type: 'chest', id: 'rainbow' });
-                }
-            } else if (monster.isFinalBoss) {
-                // 最终boss掉落
-                const goldCount = Math.floor(Math.random() * 3) + 1;
-                const redCount = Math.floor(Math.random() * 3) + 1;
-
-                // 掉落金宝箱
-                for (let i = 0; i < goldCount; i++) {
-                    this.currentRun.rewards.push({ type: 'chest', id: 'gold' });
-                }
-
-                // 掉落红宝箱
-                for (let i = 0; i < redCount; i++) {
-                    this.currentRun.rewards.push({ type: 'chest', id: 'red' });
-                }
-
-                // 2%概率掉落彩虹宝箱
-                if (Math.random() < 0.02) {
-                    this.currentRun.rewards.push({ type: 'chest', id: 'rainbow' });
-                }
-            }
-        } else {
-            // 普通怪物掉落一个银宝箱
-            this.currentRun.rewards.push({ type: 'chest', id: 'silver' });
-        }
-
-        console.log(`处理怪物奖励: 经验 ${monster.xpReward}, 物品 ${rewardInfo.items.length}个`);
+        console.log(`处理怪物奖励: 经验 ${monster.xpReward}, 物品/宝箱 ${rewardInfo.items.length}个`);
         return rewardInfo;
     },
 

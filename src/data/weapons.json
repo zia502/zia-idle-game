@@ -1,7 +1,7 @@
 {
     "endStar_dark":{
         "id": "endStar_dark",
-        "name": "终焉之星",
+        "name": "终焉之星·暗影",
         "type": "sword",
         "element": "dark",
         "rarity": 5,
@@ -9,9 +9,9 @@
             "attack": 355,
             "hp": 70,
             "100Attack": 2750,
-            "100Hp": 531,
+            "100Hp": 931,
             "150Attack": 3145,
-            "150Hp": 640
+            "150Hp": 1640
         },
         "specialEffects": [
             {
@@ -31,7 +31,7 @@
     },
     "endStar_fire":{
         "id": "endStar_fire",
-        "name": "终焉之星",
+        "name": "终焉之星·末日",
         "type": "sword",
         "element": "fire",
         "rarity": 5,
@@ -39,9 +39,9 @@
             "attack": 355,
             "hp": 70,
             "100Attack": 2750,
-            "100Hp": 531,
+            "100Hp": 931,
             "150Attack": 3145,
-            "150Hp": 640
+            "150Hp": 1640
         },
         "specialEffects": [
             {
@@ -61,7 +61,7 @@
     },
     "endStar_water":{
         "id": "endStar_water",
-        "name": "终焉之星",
+        "name": "终焉之星·洪水",
         "type": "sword",
         "element": "water",
         "rarity": 5,
@@ -69,9 +69,9 @@
             "attack": 355,
             "hp": 70,
             "100Attack": 2750,
-            "100Hp": 531,
+            "100Hp": 931,
             "150Attack": 3145,
-            "150Hp": 640
+            "150Hp": 1640
         },
         "specialEffects": [
             {
@@ -91,7 +91,7 @@
     },
     "endStar_wind":{
         "id": "endStar_wind",
-        "name": "终焉之星",
+        "name": "终焉之星·风暴",
         "type": "sword",
         "element": "wind",
         "rarity": 5,
@@ -99,9 +99,9 @@
             "attack": 355,
             "hp": 70,
             "100Attack": 2750,
-            "100Hp": 531,
+            "100Hp": 931,
             "150Attack": 3145,
-            "150Hp": 640
+            "150Hp": 1640
         },
         "specialEffects": [
             {
@@ -121,7 +121,7 @@
     },
     "endStar_earth":{
         "id": "endStar_earth",
-        "name": "终焉之星",
+        "name": "终焉之星·大地",
         "type": "sword",
         "element": "earth",
         "rarity": 5,
@@ -129,9 +129,9 @@
             "attack": 355,
             "hp": 70,
             "100Attack": 2750,
-            "100Hp": 531,
+            "100Hp": 931,
             "150Attack": 3145,
-            "150Hp": 640
+            "150Hp": 1640
         },
         "specialEffects": [
             {
@@ -151,7 +151,7 @@
     },
     "endStar_light":{
         "id": "endStar_light",
-        "name": "终焉之星",
+        "name": "终焉之星·闪光",
         "type": "sword",
         "element": "light",
         "rarity": 5,
@@ -159,9 +159,9 @@
             "attack": 355,
             "hp": 70,
             "100Attack": 2750,
-            "100Hp": 531,
+            "100Hp": 931,
             "150Attack": 3145,
-            "150Hp": 640
+            "150Hp": 1640
         },
         "specialEffects": [
             {

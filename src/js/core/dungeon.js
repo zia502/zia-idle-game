@@ -97,6 +97,22 @@ const Dungeon = {
                     { id: 'ancientEssence', type: 'material', rate: 0.1 }
                 ]
             }
+        },
+        end_of_star:{
+            id: 'end_of_star',
+            name: '终焉之星',
+            description: '传说中的终焉之星，隐藏着强大的魔法和危险的守护者。',
+            level: 10,
+            entrance: 'end_of_star_entrance',
+            nextDungeon: null,
+            type: 'normal',
+            miniBossCount: 2,
+            possibleFinalBosses: ['ancientDragon'],
+            rewards: {
+                gold: 100000,
+                exp: 300000
+            },
+
         }
     },
 

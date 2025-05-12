@@ -1,6 +1,20 @@
 /**
  * 技能加载器 - 负责加载R和SR角色技能
  */
+let fs, path;
+// More reliable check for Node.js environment
+const isNodeEnvironment = typeof process !== 'undefined' && process.versions && process.versions.node;
+
+if (isNodeEnvironment) {
+    try {
+        fs = require('fs');
+        path = require('path');
+    } catch (e) {
+        console.error("SkillLoader: Failed to require 'fs' or 'path' in Node.js environment.", e);
+        // fs and path will remain undefined, subsequent checks will handle this.
+    }
+}
+
 const SkillLoader = {
     /**
      * 初始化技能加载器
@@ -17,86 +31,174 @@ const SkillLoader = {
      * 加载R角色技能
      */
     loadRSkills() {
-        fetch('src/data/r_skills.json')
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error(`HTTP error! Status: ${response.status}`);
-                }
-                return response.json();
-            })
-            .then(data => {
-                console.log('R角色技能加载成功:', Object.keys(data).length);
-                window.r_skills = data;
-            })
-            .catch(error => {
-                console.error('加载R角色技能失败:', error);
-            });
+        const filePath = 'src/data/r_skills.json';
+        const skillKey = 'r_skills';
+        const targetGlobal = typeof window !== 'undefined' ? window : global;
+
+        if (isNodeEnvironment && fs && path) { // Node.js environment
+            try {
+                const absolutePath = path.resolve(filePath);
+                const fileContent = fs.readFileSync(absolutePath, 'utf-8');
+                const data = JSON.parse(fileContent);
+                console.log(`R角色技能加载成功 (Node ${filePath}):`, Object.keys(data).length);
+                targetGlobal[skillKey] = data;
+            } catch (error) {
+                console.error(`加载R角色技能失败 (Node ${filePath}):`, error);
+                targetGlobal[skillKey] = {}; // Initialize to prevent errors
+            }
+        } else if (!isNodeEnvironment && typeof fetch === 'function') { // Browser environment with fetch
+            fetch(filePath)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! Status: ${response.status} for ${filePath}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log(`R角色技能加载成功 (fetch ${filePath}):`, Object.keys(data).length);
+                    targetGlobal[skillKey] = data;
+                })
+                .catch(error => {
+                    console.error(`加载R角色技能失败 (fetch ${filePath}):`, error);
+                    targetGlobal[skillKey] = {}; // Initialize to prevent errors
+                });
+        } else {
+            console.error(`SkillLoader: Cannot load ${filePath}. Environment not supported or fs/path/fetch missing.`);
+            targetGlobal[skillKey] = {}; // Initialize to prevent errors
+        }
     },
 
     /**
      * 加载SR角色技能
      */
     loadSRSkills() {
-        fetch('src/data/sr_skills.json')
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error(`HTTP error! Status: ${response.status}`);
-                }
-                return response.json();
-            })
-            .then(data => {
-                console.log('SR角色技能加载成功:', Object.keys(data).length);
-                window.sr_skills = data;
-            })
-            .catch(error => {
-                console.error('加载SR角色技能失败:', error);
-            });
+        const filePath = 'src/data/sr_skills.json';
+        const skillKey = 'sr_skills';
+        const targetGlobal = typeof window !== 'undefined' ? window : global;
+
+        if (isNodeEnvironment && fs && path) { // Node.js environment
+            try {
+                const absolutePath = path.resolve(filePath);
+                const fileContent = fs.readFileSync(absolutePath, 'utf-8');
+                const data = JSON.parse(fileContent);
+                console.log(`SR角色技能加载成功 (Node ${filePath}):`, Object.keys(data).length);
+                targetGlobal[skillKey] = data;
+            } catch (error) {
+                console.error(`加载SR角色技能失败 (Node ${filePath}):`, error);
+                targetGlobal[skillKey] = {}; // Initialize to prevent errors
+            }
+        } else if (!isNodeEnvironment && typeof fetch === 'function') { // Browser environment with fetch
+            fetch(filePath)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! Status: ${response.status} for ${filePath}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log(`SR角色技能加载成功 (fetch ${filePath}):`, Object.keys(data).length);
+                    targetGlobal[skillKey] = data;
+                })
+                .catch(error => {
+                    console.error(`加载SR角色技能失败 (fetch ${filePath}):`, error);
+                    targetGlobal[skillKey] = {}; // Initialize to prevent errors
+                });
+        } else {
+            console.error(`SkillLoader: Cannot load ${filePath}. Environment not supported or fs/path/fetch missing.`);
+            targetGlobal[skillKey] = {}; // Initialize to prevent errors
+        }
     },
 
     /**
      * 加载SSR角色技能
      */
     loadSSRSkills() {
-        fetch('src/data/ssr_skill.json') // 注意文件名可能是 ssr_skills.json 或 ssr_skill.json
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error(`HTTP error! Status: ${response.status} for ssr_skill.json`);
-                }
-                return response.json();
-            })
-            .then(data => {
-                console.log('SSR角色技能加载成功:', Object.keys(data).length);
-                window.ssr_skills = data; // 存储到 window.ssr_skills
-            })
-            .catch(error => {
-                console.error('加载SSR角色技能失败:', error);
-            });
+        const filePath = 'src/data/ssr_skill.json'; // 注意文件名可能是 ssr_skills.json 或 ssr_skill.json
+        const skillKey = 'ssr_skills';
+        const targetGlobal = typeof window !== 'undefined' ? window : global;
+
+        if (isNodeEnvironment && fs && path) { // Node.js environment
+            try {
+                const absolutePath = path.resolve(filePath);
+                const fileContent = fs.readFileSync(absolutePath, 'utf-8');
+                const data = JSON.parse(fileContent);
+                console.log(`SSR角色技能加载成功 (Node ${filePath}):`, Object.keys(data).length);
+                targetGlobal[skillKey] = data; // 存储到 global.ssr_skills 或 window.ssr_skills
+            } catch (error) {
+                console.error(`加载SSR角色技能失败 (Node ${filePath}):`, error);
+                targetGlobal[skillKey] = {}; // Initialize to prevent errors
+            }
+        } else if (!isNodeEnvironment && typeof fetch === 'function') { // Browser environment with fetch
+            fetch(filePath)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! Status: ${response.status} for ${filePath}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log(`SSR角色技能加载成功 (fetch ${filePath}):`, Object.keys(data).length);
+                    targetGlobal[skillKey] = data; // 存储到 window.ssr_skills
+                })
+                .catch(error => {
+                    console.error(`加载SSR角色技能失败 (fetch ${filePath}):`, error);
+                    targetGlobal[skillKey] = {}; // Initialize to prevent errors
+                });
+        } else {
+            console.error(`SkillLoader: Cannot load ${filePath}. Environment not supported or fs/path/fetch missing.`);
+            targetGlobal[skillKey] = {}; // Initialize to prevent errors
+        }
     },
 
     /**
      * 加载Boss技能
      */
     loadBossSkills() {
-        fetch('src/data/boss-skills.json')
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error(`HTTP error! Status: ${response.status} for boss-skills.json`);
-                }
-                return response.json();
-            })
-            .then(data => {
+        const filePath = 'src/data/boss-skills.json';
+        const skillKey = 'bossSkills';
+        const targetGlobal = typeof window !== 'undefined' ? window : global;
+
+        if (isNodeEnvironment && fs && path) { // Node.js environment
+            try {
+                const absolutePath = path.resolve(filePath);
+                const fileContent = fs.readFileSync(absolutePath, 'utf-8');
+                const data = JSON.parse(fileContent);
                 if (data && data.bossSkills) {
-                    console.log('Boss技能加载成功:', Object.keys(data.bossSkills).length);
-                    window.bossSkills = data.bossSkills; // 存储到 window.bossSkills
+                    console.log(`Boss技能加载成功 (Node ${filePath}):`, Object.keys(data.bossSkills).length);
+                    targetGlobal[skillKey] = data.bossSkills;
                 } else {
-                    console.error('加载Boss技能失败: boss-skills.json 格式不正确，缺少 bossSkills 顶层对象。');
-                    window.bossSkills = {}; // 初始化为空对象以避免后续错误
+                    console.error(`加载Boss技能失败 (Node ${filePath}): ${filePath} 格式不正确，缺少 bossSkills 顶层对象。`);
+                    targetGlobal[skillKey] = {};
                 }
-            })
-            .catch(error => {
-                console.error('加载Boss技能失败:', error);
-                window.bossSkills = {}; // 初始化为空对象以避免后续错误
-            });
+            } catch (error) {
+                console.error(`加载Boss技能失败 (Node ${filePath}):`, error);
+                targetGlobal[skillKey] = {};
+            }
+        } else if (!isNodeEnvironment && typeof fetch === 'function') { // Browser environment with fetch
+            fetch(filePath)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! Status: ${response.status} for ${filePath}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data && data.bossSkills) {
+                        console.log(`Boss技能加载成功 (fetch ${filePath}):`, Object.keys(data.bossSkills).length);
+                        targetGlobal[skillKey] = data.bossSkills;
+                    } else {
+                        console.error(`加载Boss技能失败 (fetch ${filePath}): ${filePath} 格式不正确，缺少 bossSkills 顶层对象。`);
+                        targetGlobal[skillKey] = {};
+                    }
+                })
+                .catch(error => {
+                    console.error(`加载Boss技能失败 (fetch ${filePath}):`, error);
+                    targetGlobal[skillKey] = {};
+                });
+        } else {
+            console.error(`SkillLoader: Cannot load ${filePath}. Environment not supported or fs/path/fetch missing.`);
+            targetGlobal[skillKey] = {}; // Initialize to prevent errors
+        }
     },
 
     /**

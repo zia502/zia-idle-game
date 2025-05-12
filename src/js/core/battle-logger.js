@@ -91,3 +91,5 @@ BattleLogger.log(BattleLogger.levels.CONSOLE_DETAIL, "伤害扣除HP细节", {
     finalHp: 380
 },1);
 */
+
+export default BattleLogger;

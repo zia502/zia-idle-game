@@ -1518,11 +1518,15 @@ const Character = {
             return 0;
         }
 
-        const initialAttackFromCurrentStats = character.currentStats.attack;
-        let attackPower = initialAttackFromCurrentStats;
+        const initialAttackFromCurrentStats = character.currentStats.attack; // Keep for logging original currentStats if needed
+        const baseAttackForCalculation = character.baseStats.attack; // Use baseStats.attack for calculation base
+        let attackPower = baseAttackForCalculation;
         const calculationSteps = [];
 
-        calculationSteps.push(`初始攻击力 (currentStats.attack): ${initialAttackFromCurrentStats.toFixed(2)} (由 baseStats, weaponBonusStats, multiBonusStats 构成)`);
+        calculationSteps.push(`计算起始攻击力 (baseStats.attack): ${baseAttackForCalculation.toFixed(2)}`);
+        if (initialAttackFromCurrentStats !== baseAttackForCalculation) {
+            calculationSteps.push(`(调用时 currentStats.attack 为: ${initialAttackFromCurrentStats.toFixed(2)})`);
+        }
 
         const buffs = character.buffs || [];
 
@@ -1627,8 +1631,8 @@ const Character = {
         const finalAttackPower = Math.max(0, Math.floor(attackPower));
         calculationSteps.push(`最终计算攻击力 (取整且不小于0): ${finalAttackPower}`);
         
-        const totalMultiplier = initialAttackFromCurrentStats > 0 ? (finalAttackPower / initialAttackFromCurrentStats) : (finalAttackPower > 0 ? Infinity : 1);
-        calculationSteps.push(`总攻击力倍率 (相对currentStats.attack): x${totalMultiplier.toFixed(3)}`);
+        const totalMultiplier = baseAttackForCalculation > 0 ? (finalAttackPower / baseAttackForCalculation) : (finalAttackPower > 0 ? Infinity : 1);
+        calculationSteps.push(`总攻击力倍率 (相对计算起始攻击力): x${totalMultiplier.toFixed(3)}`);
 
         if (typeof BattleLogger !== 'undefined' && BattleLogger.log) {
             BattleLogger.log(
@@ -1637,7 +1641,8 @@ const Character = {
                 {
                     characterId: character.id,
                     characterName: character.name,
-                    initialAttack: initialAttackFromCurrentStats,
+                    initialAttack: baseAttackForCalculation, // Reflects the base used for this calculation run
+                    currentStatsAttackAtCallTime: initialAttackFromCurrentStats, // For context
                     finalAttack: finalAttackPower,
                     totalMultiplier: totalMultiplier.toFixed(3),
                     steps: calculationSteps
@@ -2017,3 +2022,5 @@ const Character = {
         }
     }
 };
+
+export default Character;

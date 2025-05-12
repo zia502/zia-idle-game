@@ -933,3 +933,5 @@ const BuffSystem = {
 if (typeof window !== 'undefined') {
     window.BuffSystem = BuffSystem;
 }
+
+export default BuffSystem;

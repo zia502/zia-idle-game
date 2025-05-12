@@ -198,6 +198,7 @@ This file tracks the project's progress using a task list format.
 * [2025-05-11 22:20:00] - Debugging Task Started: 调查 "一伐架式" 独立buff未在日志中正确显示且最终攻击倍率不符预期的问题。
 * [2025-05-11 22:20:00] - Debugging Action: 增强了 `calculateAttackPower` ([`src/js/core/character.js`](src/js/core/character.js:1512)) 的日志，以在函数入口处打印所有当前buff的详细信息。
 ## Current Tasks
+*   [2025-05-12 10:06:00] - **TDD Cycle End:** 设计并编写了针对 `stackable: true` 和 `stackable: false` 攻击buff同时生效时计算逻辑的测试用例。特别关注角色 '聂查瓦尔皮利' 的2格技能 "一伐架式"。测试用例设计文档位于 [`memory-bank/test-cases/buff-stacking-nezahualpilli.md`](memory-bank/test-cases/buff-stacking-nezahualpilli.md)，相应的Vitest测试代码已写入 [`test/buff-stacking.test.js`](test/buff-stacking.test.js)。
 *   [2025-05-12 09:46:00] - **TDD Cycle Start:** 开始为战斗系统“后排角色自动增援前排”功能编写单元/集成测试。目标文件：[`test/battle-reinforcement.test.js`](test/battle-reinforcement.test.js:0)。
 *   [2025-05-12 09:46:00] - **TDD Cycle End:** 完成为战斗系统“后排角色自动增援前排”功能编写的7个单元/集成测试，并通过 Vitest 在 JSDOM 环境下成功运行。测试覆盖了多种增援场景，包括空位、多空位、后排不足、后排无人、前排全灭以及回合效果导致阵亡等情况。测试文件：[`test/battle-reinforcement.test.js`](test/battle-reinforcement.test.js:0)。Memory Bank 已更新。
 *   [2025-05-11 20:20:00] - **TDD Cycle Start:** 开始为怪物和玩家 AoE 技能修复编写单元/集成测试。目标文件：[`test-battle-logic.html`](test-battle-logic.html)。

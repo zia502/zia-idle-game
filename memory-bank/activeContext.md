@@ -7,6 +7,7 @@ This file tracks the project's current status, including recent changes, current
 
 ## Current Focus
 
+*   [2025-05-12 10:07:00] - **TDD Task Completed:** 完成了针对 `stackable: true` 和 `stackable: false` 攻击buff同时生效时计算逻辑的测试用例设计与编码。特别关注角色 '聂查瓦尔皮利' 的2格技能 "一伐架式"。测试用例设计文档位于 [`memory-bank/test-cases/buff-stacking-nezahualpilli.md`](memory-bank/test-cases/buff-stacking-nezahualpilli.md)，相应的Vitest测试代码已实现于 [`test/buff-stacking.test.js`](test/buff-stacking.test.js)。
 *   初始化 Memory Bank。
 *   [2025-05-08 11:44:17] - 为 `test-battle-new.html` 调整角色和职业选择逻辑的任务已进入架构阶段。
 *   [2025-05-08 11:48:58] - 完成 `test-battle-new.html` 中角色和职业选择逻辑的修改。合并了选择下拉框，实现了主角专属职业逻辑和无角色提示。

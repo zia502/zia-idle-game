@@ -75,21 +75,21 @@ const Character = {
             name: '稀有',
             color: '#2196f3',
             statMultiplier: 1.5,
-            maxLevel: 60,
+            maxLevel: 40,
             maxTraits: 1 // 稀有角色最多1个特性
         },
         epic: {
             name: '史诗',
             color: '#9c27b0',
             statMultiplier: 1.8,
-            maxLevel: 80,
+            maxLevel: 60,
             maxTraits: 2 // 史诗角色最多2个特性
         },
         legendary: {
             name: '传说',
             color: '#ff9800',
             statMultiplier: 2.2,
-            maxLevel: 100,
+            maxLevel: 80,
             maxTraits: 3 // 传说角色最多3个特性
         }
     },
@@ -467,7 +467,76 @@ const Character = {
      * @returns {number} 下一级所需经验值
      */
     calculateNextLevelExp(level) {
-        return Math.floor(100 * Math.pow(1.1, level - 1));
+        const expDataPoints = [
+            { level: 1, exp: 30 },
+            { level: 45, exp: 4000 },
+            { level: 80, exp: 50000 },
+            { level: 90, exp: 150000 },
+            { level: 99, exp: 1000000 } // Exp to reach level 100
+        ];
+
+        // 1. 处理边界情况
+        if (typeof level !== 'number' || isNaN(level) || level < 1) {
+            return 0; // 或 Infinity，根据错误处理策略
+        }
+
+        const maxLevel = this.maxLevel || (this.rarities && this.rarities[this.rarity || 'rare'] ? this.rarities[this.rarity || 'rare'].maxLevel : 100);
+        if (level >= maxLevel) {
+            return 0; // 已达到或超过最大等级
+        }
+
+        // 2. 直接匹配
+        const directMatch = expDataPoints.find(point => point.level === level);
+        if (directMatch) {
+            return directMatch.exp;
+        }
+
+        // 3. 线性插值
+        // 找到当前等级所处的区间
+        let lowerBound = null;
+        let upperBound = null;
+
+        for (let i = 0; i < expDataPoints.length; i++) {
+            if (expDataPoints[i].level < level) {
+                lowerBound = expDataPoints[i];
+            }
+            if (expDataPoints[i].level > level && !upperBound) {
+                upperBound = expDataPoints[i];
+                break;
+            }
+        }
+        
+        // 如果等级在已定义数据点之间
+        if (lowerBound && upperBound) {
+            const x = level;
+            const x1 = lowerBound.level;
+            const y1 = lowerBound.exp;
+            const x2 = upperBound.level;
+            const y2 = upperBound.exp;
+
+            const interpolatedExp = y1 + (x - x1) * (y2 - y1) / (x2 - x1);
+            return Math.round(interpolatedExp);
+        }
+
+        // 4. 处理超出最高定义点但未达最大等级的情况
+        // 如果 level 大于最后一个数据点 (99级) 但小于 maxLevel
+        const lastDataPoint = expDataPoints[expDataPoints.length - 1];
+        if (level > lastDataPoint.level && level < maxLevel) {
+            // 对于99级升100级的经验，直接使用定义值
+            if (level === 99) return lastDataPoint.exp;
+            // 对于99级以上到最大等级前一级，也使用1,000,000经验 (或根据未来需求调整)
+            // 此处简化为，如果等级大于最后一个数据点，且小于最大等级，则返回最后一个数据点的经验值
+            // 这覆盖了99级升100级的情况，以及如果未来最大等级超过100，99级以上到最大等级前一级的情况
+            return lastDataPoint.exp;
+        }
+        
+        // 如果 level 正好是最后一个数据点的 level (例如99)，并且上面直接匹配未处理（理论上不应发生）
+        // 或者其他未覆盖的边缘情况，返回0或一个错误指示值
+        if (level === lastDataPoint.level) {
+            return lastDataPoint.exp;
+        }
+
+        return 0; // 默认或错误情况
     },
 
     /**

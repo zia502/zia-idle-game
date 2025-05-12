@@ -7,6 +7,8 @@ This file tracks the project's progress using a task list format.
 
 ## Completed Tasks
 
+*   [2025-05-12 11:17:01] - **Completed Task:** 修改 [`src/js/core/character.js`](src/js/core/character.js) 中的 `Character.calculateNextLevelExp(level)` 函数以实现新的经验计算逻辑。
+    *   实现了基于数据点、边界处理、直接匹配、线性插值和超出范围处理的新算法。
 *   [2025-05-09 21:18:00] - **Completed Debugging Task:** 调查并修复了战斗日志中指出的4个新问题。
     *   问题1 (怪物 `maxHp` 初始化): 修改了 [`src/js/core/battle.js`](src/js/core/battle.js:1) 的HP初始化逻辑。
     *   问题2 (“护甲破坏”两次伤害) & 问题3 (“护甲破坏”0伤害日志矛盾): 修改了 [`src/js/core/job-skills.js`](src/js/core/job-skills.js:1) 以统一伤害应用和日志。

@@ -7,6 +7,14 @@ This file tracks the project's current status, including recent changes, current
 
 ## Current Focus
 
+*   [2025-05-12 11:16:48] - **Code Change:** 修改了 [`src/js/core/character.js`](src/js/core/character.js) 中的 `Character.calculateNextLevelExp(level)` 函数，以实现新的角色升级经验计算方法。
+    *   **新逻辑:**
+        1.  定义了关键等级的经验数据点 (1, 45, 80, 90, 99级)。
+        2.  处理了边界情况 (无效等级, 达到或超过最大等级)。
+        3.  实现了对数据点的直接匹配。
+        4.  对数据点之间的等级使用线性插值计算经验。
+        5.  处理了超出最高定义数据点但未达到最大等级的情况 (99级以上统一使用99级升100级的经验值)。
+    *   **相关文件:** [`src/js/core/character.js`](src/js/core/character.js)
 *   [2025-05-12 10:07:00] - **TDD Task Completed:** 完成了针对 `stackable: true` 和 `stackable: false` 攻击buff同时生效时计算逻辑的测试用例设计与编码。特别关注角色 '聂查瓦尔皮利' 的2格技能 "一伐架式"。测试用例设计文档位于 [`memory-bank/test-cases/buff-stacking-nezahualpilli.md`](memory-bank/test-cases/buff-stacking-nezahualpilli.md)，相应的Vitest测试代码已实现于 [`test/buff-stacking.test.js`](test/buff-stacking.test.js)。
 *   初始化 Memory Bank。
 *   [2025-05-08 11:44:17] - 为 `test-battle-new.html` 调整角色和职业选择逻辑的任务已进入架构阶段。

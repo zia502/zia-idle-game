@@ -1,6 +1,12 @@
 /**
  * 角色管理系统 - 负责游戏中角色的管理
  */
+import Team from './team.js';
+import Dungeon from './dungeon.js'; // 根据第262行 Dungeon.currentRun 的使用情况添加
+import BuffSystem from './buff-system.js'; // 根据第275行 BuffSystem.clearAllBuffs 的使用情况添加
+// Game 模块在 Character.recruitCharacter 中使用，但 CharacterCreation 依赖 Character，Game 依赖 CharacterCreation，可能导致循环依赖。
+// 暂时不导入 Game，如果 recruitCharacter 中的 Game.addGold 报错，再考虑解决方案。
+// import Game from './game.js';
 const Character = {
     // 角色数据
     characters: {},

@@ -1,3 +1,5 @@
+import UI from '../components/UI.js';
+
 /**
  * 地下城管理系统 - 负责游戏中地下城的管理
  */
@@ -1316,3 +1318,4 @@ const Dungeon = {
         this.init();
     }
 };
+export default Dungeon;

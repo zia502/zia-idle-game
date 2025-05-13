@@ -6,7 +6,11 @@ This file tracks the project's current status, including recent changes, current
 *
 
 ## Current Focus
-
+*   [2025-05-13 15:59:00] - **Debug Task:** 修复 JavaScript 模块导入错误。
+    *   错误1: `Uncaught SyntaxError: Unexpected token 'export'` (涉及 `storage.js`, `character-creation.js`)。
+    *   错误2: `Uncaught SyntaxError: The requested module './dungeon-runner.js' does not provide an export named 'default'` (涉及 `game.js`, `dungeon-runner.js`)。
+*   [2025-05-13 10:49:54] - **Debug Task:** 修复 JavaScript 模块加载和依赖错误 (ReferenceError: Character is not defined, UI module not loaded, Events module not found)。
+*   [2025-05-13 10:27:00] - **Debug Task:** 修复 JavaScript 加载错误 (Unexpected token 'export', ReferenceError, Identifier already declared) 和 404 文件未找到错误。
 *   [2025-05-13 09:16:00] - **Code Change:** 修改了 [`src/data/items_definitions.json`](src/data/items_definitions.json)，确保所有物品的顶层 key 与其内部 `id` 属性一致。
 *   [2025-05-12 16:17:00] - **物品系统重构：** 修正为通过宝箱掉落新物品，并更新 `chestDrops`。核心需求已根据用户最新反馈澄清，当前任务为架构设计与内存银行更新，并为 `code` 模式提供明确的实现指导。
 *   [2025-05-12 11:16:48] - **Code Change:** 修改了 [`src/js/core/character.js`](src/js/core/character.js) 中的 `Character.calculateNextLevelExp(level)` 函数，以实现新的角色升级经验计算方法。
@@ -72,6 +76,23 @@ This file tracks the project's current status, including recent changes, current
     *   **Affected Files ( अनुमानित ):** [`src/js/core/battle.js`](src/js/core/battle.js:0), potentially [`src/js/core/team.js`](src/js/core/team.js:0).
     *   **Related User Task:** "前排4名角色全部阵亡，战斗会直接结束，而不是让后排2名角色移动到前排继续战斗。"
 ## Recent Changes
+*   [2025-05-13 16:45:00] - **Code Change:** 为 [`src/js/core/dungeon-runner.js`](src/js/core/dungeon-runner.js) 添加了 `export default DungeonRunner;` 以解决模块导出问题。
+*   [2025-05-13 14:32:57] - **Code Change:** Corrected import paths for `events.js` in [`src/js/core/game.js`](src/js/core/game.js) (to `../components/events.js`) and [`src/js/components/character-creation.js`](src/js/components/character-creation.js) (to `./events.js`) to resolve 404 error for `src/js/core/events.js`.
+*   [2025-05-13 14:21:59] - **Code Change:** Uncommented the import for `CharacterCreation` in [`src/js/core/game.js`](src/js/core/game.js) to potentially fix issues with character creation dialog not appearing after game reset.
+*   [2025-05-13 13:21:10] - **Code Change:** Modified [`src/js/components/character-creation.js`](src/js/components/character-creation.js). Added import for `Character` and other modules. Changed `Character.createMainCharacter(characterData)` to `Character.addCharacter(characterData)` to fix "method does not exist" error.
+*   [2025-05-13 13:18:40] - **Code Change:** Removed internal `Inventory` object declaration in [`src/js/core/game.js`](src/js/core/game.js) to resolve `SyntaxError: Identifier 'Inventory' has already been declared`. The game will now use the imported `Inventory` module from [`src/js/core/inventory.js`](src/js/core/inventory.js).
+*   [2025-05-13 12:21:41] - **Code Change:** Added imports for `Character`, `Team`, `DungeonRunner`, and other potentially missing modules to [`src/js/core/game.js`](src/js/core/game.js) to fix multiple `ReferenceError` issues.
+*   [2025-05-13 12:17:44] - **Code Change:** Added `import Dungeon from '../core/dungeon.js';` to [`src/js/components/UI.js`](src/js/components/UI.js) to fix `ReferenceError: Dungeon is not defined`.
+*   [2025-05-13 12:15:59] - **Code Change:** Added `import UI from '../components/UI.js';` to [`src/js/core/dungeon.js`](src/js/core/dungeon.js) to fix `ReferenceError: UI is not defined`.
+*   [2025-05-13 11:49:40] - **Code Change:** Added `export default Weapon;` to [`src/js/core/weapon.js`](src/js/core/weapon.js) to fix missing default export.
+*   [2025-05-13 10:49:54] - **Code Change:** 修复了 JavaScript 模块加载和依赖问题。
+    *   修改了 [`index.html`](index.html)，为 [`main.js`](src/js/main.js:462) 添加 `type="module"` 并移除 [`shop.js`](src/js/core/shop.js:433)。
+    *   为 [`src/js/core/character-main.js`](src/js/core/character-main.js) 添加了 `Character` 模块的导入。
+    *   为 [`src/js/components/UI.js`](src/js/components/UI.js) 添加了 `export default UI;`。
+    *   为 [`src/js/components/ui-main-character.js`](src/js/components/ui-main-character.js), [`src/js/components/job-selection.js`](src/js/components/job-selection.js), [`src/js/components/tavern.js`](src/js/components/tavern.js), [`src/js/components/team-management.js`](src/js/components/team-management.js) 添加了 `UI` 模块的导入。
+*   [2025-05-13 10:27:00] - **Code Change:** 修改了 [`index.html`](index.html) 以修复 JavaScript 加载问题。
+    *   为 `src/js/core/` 和 `src/js/components/` 下的脚本添加了 `type="module"`。
+    *   移除了对不存在文件 (`quest.js`, `ui_init.js`, `character-creator.js`, `helpers.js`) 的引用。
 *   [2025-05-12 09:46:00] - **TDD Cycle Completed for Backline Reinforcement:**
     *   Successfully wrote and passed 7 unit/integration tests for the "backline reinforcement" feature in [`src/js/core/battle.js`](src/js/core/battle.js:0).
     *   Tests were executed using Vitest in a JSDOM environment, configured via `vitest.config.js` and `test/setup.js`.
@@ -107,13 +128,25 @@ This file tracks the project's current status, including recent changes, current
 *   [2025-05-08 12:37:35] - 修改 `test-battle-new.html`：在 `loadGameData` 中为从JSON加载的角色数据动态添加 `rarity` 属性。在 `init` 和 `addEventListeners` 函数中添加了诊断日志。
 *   [2025-05-08 23:26:36] - 修改 [`src/js/core/battle.js`](src/js/core/battle.js) `startBattle` 函数，增强了怪物HP初始化的健壮性，优先使用JSON中的 `monster.hp` 作为 `maxHp`，并确保初始HP等于 `maxHp`。添加了诊断日志。
 *   [2025-05-09 14:37:00] - 修改了 [`src/data/ssr_skill.json`](src/data/ssr_skill.json:1) 文件，统一了所有技能 `description` 字段的格式，并移除了临时的 `descriptionForEffect` 字段。
+*   [2025-05-13 14:31:20] - **Debugging Step:** Added `console.log` to `Game.init()` before `Events.emit('game:loaded')` and inside the `Events.on('game:loaded', ...)` callback in `character-creation.js` to trace event flow. User to check console.
+*   [2025-05-13 14:29:56] - **Debugging Step:** Added `console.log` to the beginning of `CharacterCreation.init()` in [`src/js/components/character-creation.js`](src/js/components/character-creation.js) to check if this method is being called. User to check console. (Previous log for `showCharacterCreationDialog` was not hit).
+*   [2025-05-13 14:27:04] - **Debugging Step:** Added `console.log` to the beginning of `CharacterCreation.showCharacterCreationDialog()` in [`src/js/components/character-creation.js`](src/js/components/character-creation.js) to check if the method is being called. User to check console.
+*   [2025-05-13 14:21:59] - **Issue Status Update:** Applied fix for character creation dialog not appearing after game reset by uncommenting the import for `CharacterCreation` in [`src/js/core/game.js`](src/js/core/game.js). Waiting for user confirmation.
 *   [2025-05-11 10:15:27] - 修改了 [`src/js/components/character-tooltip.js`](src/js/components/character-tooltip.js:1) 中的 `findCharacterCardElement` 函数，以满足新的提示框显示逻辑。
+*   [2025-05-13 13:21:10] - **Issue Status Update:** Applied fix for `Character.createMainCharacter方法不存在` in [`src/js/components/character-creation.js`](src/js/components/character-creation.js) by adding imports and changing the method call to `Character.addCharacter()`. Waiting for user confirmation.
 *   [2025-05-11 12:36:58] - 修改了 [`src/js/core/character.js`](src/js/core/character.js:1) 中的 `validateCharacterBaseStats` 函数，取消了成功验证日志的注释。
+*   [2025-05-13 13:18:40] - **Issue Status Update:** Applied fix for `SyntaxError: Identifier 'Inventory' has already been declared` in [`src/js/core/game.js`](src/js/core/game.js) by removing the internal `Inventory` object declaration. Waiting for user confirmation.
 *   [2025-05-11 12:58:48] - 修改了 [`src/js/core/character.js`](src/js/core/character.js:1) 中的 `validateCharacterBaseStats` 函数，添加了 `autoCorrect` 参数及相关逻辑，并更新了 `loadSaveData` 函数以启用自动修正。
+*   [2025-05-13 12:21:41] - **Issue Status Update:** Applied fix for multiple `ReferenceError` issues (Character, Team, DungeonRunner) in [`src/js/core/game.js`](src/js/core/game.js) by adding necessary import statements. Waiting for user confirmation.
 *   [2025-05-11 19:42:00] - 启动了针对“全体攻击”技能无法正确作用于所有敌人的架构调整任务。
+*   [2025-05-13 12:17:44] - **Issue Status Update:** Applied fix for `ReferenceError: Dungeon is not defined` in [`src/js/components/UI.js`](src/js/components/UI.js) by adding `import Dungeon from '../core/dungeon.js';`. Waiting for user confirmation.
 *   [2025-05-11 21:59:00] - 修改了 [`src/js/core/character.js`](src/js/core/character.js) 中的 `calculateAttackPower` 函数 ([`src/js/core/character.js:1512`](src/js/core/character.js:1512))，增强了其日志记录功能，以详细追踪攻击力倍率的构成。
+*   [2025-05-13 12:15:59] - **Issue Status Update:** Applied fix for `ReferenceError: UI is not defined` in [`src/js/core/dungeon.js`](src/js/core/dungeon.js) by adding `import UI from '../components/UI.js';`. Waiting for user confirmation.
 
+*   [2025-05-13 11:49:40] - **Issue Status Update:** Applied fix for `SyntaxError: The requested module './core/weapon.js' does not provide an export named 'default'` by adding `export default Weapon;` to [`src/js/core/weapon.js`](src/js/core/weapon.js). Waiting for user confirmation.
 ## Open Questions/Issues
+*   [2025-05-13 10:49:54] - **Issue Status Update:** 已应用修复方案解决 JavaScript 模块加载和依赖错误 (ReferenceError: Character is not defined, UI module not loaded, Events module not found)。等待测试验证修复效果。
+*   [2025-05-13 10:27:00] - **Issue Status Update:** 已修改 [`index.html`](index.html) 以解决 JavaScript 加载错误 (Unexpected token 'export', ReferenceError, Identifier already declared) 和 404 文件未找到错误。等待测试验证修复效果。
 *   [2025-05-09 21:18:00] - **Issue Status Update:** 针对战斗日志分析出的4个新问题已应用修复：
     *   怪物 `maxHp` 初始化问题 ([`src/js/core/battle.js`](src/js/core/battle.js:1))。
     *   技能“护甲破坏”造成两次伤害及日志矛盾问题 ([`src/js/core/job-skills.js`](src/js/core/job-skills.js:1))。
@@ -374,7 +407,7 @@ This file tracks the project's current status, including recent changes, current
         *   单体目标技能 (`single_enemy`, `single_ally`) 对玩家和怪物双方的正确性。
     *   测试通过模拟 `MockJobSkills.useSkill` 内部的目标判定逻辑进行，并验证了 `determinedTargets` 的正确性。
     *   Memory Bank (`progress.md`) 已更新。
-*   [2025-05-11 20:44:15] - [Debug Status Update: Issue: Backline units not joining combat after frontline defeated. Symptom: Battle ends prematurely. Fix Confirmation: Applied fix to [`src/js/core/battle.js`](src/js/core/battle.js) to ensure backline members have their HP reset to maxHP at the start of each battle when being assigned to the `backLineMembers` list. This should allow them to correctly join combat if a frontline member is defeated.]
+* [2025-05-11 20:44:15] - [Debug Status Update: Issue: Backline units not joining combat after frontline defeated. Symptom: Battle ends prematurely. Fix Confirmation: Applied fix to [`src/js/core/battle.js`](src/js/core/battle.js) to ensure backline members have their HP reset to maxHP at the start of each battle when being assigned to the `backLineMembers` list. This should allow them to correctly join combat if a frontline member is defeated.]
 * [2025-05-11 22:30:00] - Debug Task: "一伐架式" buff 未在 `calculateAttackPower` 时出现在角色buff列表。
 * [2025-05-11 22:30:00] - Debug Action: 在 [`src/js/core/job-skills.js`](src/js/core/job-skills.js) 和 [`src/js/core/buff-system.js`](src/js/core/buff-system.js) 中添加了针对 "一伐架式" 技能和buff的诊断日志，以追踪其使用、应用和移除流程。
 * [2025-05-12 09:49:23] - 创建/更新了 `.gitignore` 文件，内容为 `node_modules/`。
@@ -394,3 +427,33 @@ This file tracks the project's current status, including recent changes, current
     *   修改了 [`src/js/core/inventory.js`](src/js/core/inventory.js)，确保 `addItem` 正确处理堆叠并从 `Item.getItemData()` 获取数据，移除了对旧 `Shop` 的引用。
     *   （用户需手动删除 [`src/js/core/shop.js`](src/js/core/shop.js) 文件）
     *   修改了 [`src/js/components/UI.js`](src/js/components/UI.js)，移除了 `renderShop()` 函数及相关调用和事件监听器。
+*   [2025-05-13 11:02:40] - **Code Change:** Fixed `Error: 找不到Game模块` in [`src/js/main.js`](src/js/main.js) by uncommenting the import statement for `Game` and other necessary core modules.
+*   [2025-05-13 11:02:40] - **Issue Status Update:** Applied fix for `Error: 找不到Game模块`. Waiting for user confirmation.
+*   [2025-05-13 11:04:45] - **Code Change:** Fixed `SyntaxError: The requested module './core/buildings.js' does not provide an export named 'default'` by adding `export default Buildings;` to [`src/js/core/buildings.js`](src/js/core/buildings.js).
+*   [2025-05-13 11:04:45] - **Issue Status Update:** Applied fix for `buildings.js` export error. Waiting for user confirmation.
+*   [2025-05-13 11:09:33] - **Code Change:** Removed import and script tag for `buildings.js` as per user request.
+*   [2025-05-13 11:09:33] - **Code Change:** Fixed `SyntaxError: The requested module './core/dungeon.js' does not provide an export named 'default'` by adding `export default Dungeon;` to [`src/js/core/dungeon.js`](src/js/core/dungeon.js).
+*   [2025-05-13 11:09:33] - **Issue Status Update:** Applied fix for `dungeon.js` export error and removed `buildings.js`. Waiting for user confirmation.
+*   [2025-05-13 11:12:20] - **Code Change:** Fixed `SyntaxError: The requested module './core/game.js' does not provide an export named 'default'` by adding `export default Game;` to [`src/js/core/game.js`](src/js/core/game.js).
+*   [2025-05-13 11:12:20] - **Issue Status Update:** Applied fix for `game.js` export error. Waiting for user confirmation.
+*   [2025-05-13 11:13:41] - **Code Change:** Fixed `SyntaxError: The requested module './core/inventory.js' does not provide an export named 'default'` by adding `export default Inventory;` to [`src/js/core/inventory.js`](src/js/core/inventory.js).
+*   [2025-05-13 11:13:41] - **Issue Status Update:** Applied fix for `inventory.js` export error. Waiting for user confirmation.
+*   [2025-05-13 11:14:59] - **Code Change:** Fixed `SyntaxError: The requested module './core/item.js' does not provide an export named 'default'` by adding `export default Item;` to [`src/js/core/item.js`](src/js/core/item.js).
+*   [2025-05-13 11:14:59] - **Issue Status Update:** Applied fix for `item.js` export error. Waiting for user confirmation.
+*   [2025-05-13 11:16:44] - **Code Change:** Fixed `SyntaxError: The requested module './core/job-skills-template.js' does not provide an export named 'default'` by adding `export default JobSkillsTemplate;` to [`src/js/core/job-skills-template.js`](src/js/core/job-skills-template.js).
+*   [2025-05-13 11:16:44] - **Issue Status Update:** Applied fix for `job-skills-template.js` export error. Continuing to check other modules.
+*   [2025-05-13 11:17:42] - **Code Change:** Added `export default JobSystem;` to [`src/js/core/job-system.js`](src/js/core/job-system.js) to fix missing default export.
+*   [2025-05-13 11:17:42] - **Issue Status Update:** Applied fix for `job-system.js` export error. Continuing to check other modules.
+*   [2025-05-13 11:18:49] - **Code Change:** Added `export default Team;` to [`src/js/core/team.js`](src/js/core/team.js) to fix missing default export.
+*   [2025-05-13 11:18:49] - **Issue Status Update:** Applied fix for `team.js` export error. Continuing to check other modules.
+*   [2025-05-13 11:20:04] - **Code Change:** Added `export default WeaponBoardBonusSystem;` to [`src/js/core/weapon-board-bonus-system.js`](src/js/core/weapon-board-bonus-system.js) to fix missing default export.
+*   [2025-05-13 11:20:04] - **Issue Status Update:** Applied fix for `weapon-board-bonus-system.js` export error. Continuing to check other modules.
+*   [2025-05-13 11:21:08] - **Code Change:** Added `export default SkillTooltip;` to [`src/js/components/skill-tooltip.js`](src/js/components/skill-tooltip.js) to fix missing default export.
+*   [2025-05-13 11:21:08] - **Issue Status Update:** Applied fix for `skill-tooltip.js` export error. All identified import/export issues in `main.js` should now be resolved. Waiting for user confirmation.
+*   [2025-05-13 11:29:16] - **Code Change:** Added `export default Resources;` to [`src/js/core/resources.js`](src/js/core/resources.js) to fix missing default export.
+*   [2025-05-13 11:29:16] - **Issue Status Update:** Applied fix for `resources.js` export error. Continuing to check other modules.
+* [2025-05-13 17:18:45] - **Debug Fix Applied:** 为 [`src/js/utils/file-utils.js`](src/js/utils/file-utils.js) 添加了 `export default FileUtils;` 以解决模块导入错误 "The requested module '../utils/file-utils.js' does not provide an export named 'default'" (at [`src/js/core/game.js:6`](src/js/core/game.js:6)).
+* [2025-05-13 17:39:00] - **Debug Fix Applied:** 为 [`src/js/core/weapon.js`](src/js/core/weapon.js) 添加了 `import Game from './game.js';` 以解决 `ReferenceError: Game is not defined` (at [`weapon.js:526`](src/js/core/weapon.js:526)).
+* [2025-05-13 17:39:00] - **Debug Fix Applied:** 为 [`src/js/core/inventory.js`](src/js/core/inventory.js) 添加了 `import Item from './item.js';` 以解决 `ReferenceError: Item is not defined` (at [`inventory.js:51`](src/js/core/inventory.js:51)).
+* [2025-05-13 18:00:00] - **Debug Fix Applied:** 为 [`src/js/core/character.js`](src/js/core/character.js) 添加了 `import Team from './team.js';`, `import Dungeon from './dungeon.js';`, `import BuffSystem from './buff-system.js';` 以解决初始化期间的 `ReferenceError: Team is not defined` (at [`character.js:1360`](src/js/core/character.js:1360))。
+* [2025-05-13 18:03:00] - **Debug Fix Applied:** 在 [`src/js/main.js`](src/js/main.js) 中，将导入的 `UI` 对象挂载到 `window.UI`，以解决 `index.html` 中内联 `onclick` 事件处理器无法找到 `UI` 对象的问题 ( `ReferenceError: UI is not defined` at `(索引):95`)。

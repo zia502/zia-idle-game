@@ -1,3 +1,5 @@
+import Character from './character.js';
+
 /**
  * 创建主角方法 - 添加到Character对象
  */

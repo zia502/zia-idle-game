@@ -671,3 +671,5 @@ const JobSystem = {
         return true;
     }
 };
+
+export default JobSystem;

@@ -6,7 +6,32 @@ This file tracks the project's progress using a task list format.
 *
 
 ## Completed Tasks
-
+*   [2025-05-13 16:45:00] - **Completed Task:** 修复了JavaScript模块导入错误。
+    *   为 [`src/js/core/dungeon-runner.js`](src/js/core/dungeon-runner.js) 添加了 `export default DungeonRunner;` 以解决 `game.js` 中默认导入失败的问题。
+    *   检查了 [`src/js/utils/storage.js`](src/js/utils/storage.js) 和 [`src/js/components/character-creation.js`](src/js/components/character-creation.js)，确认其默认导出正确，未做修改。
+*   [2025-05-13 14:21:59] - **Completed Task:** Fixed issue where character creation dialog might not appear after game reset.
+    *   Uncommented the import for `CharacterCreation` in [`src/js/core/game.js`](src/js/core/game.js).
+*   [2025-05-13 13:21:10] - **Completed Task:** Fixed `Character.createMainCharacter方法不存在` error in [`src/js/components/character-creation.js`](src/js/components/character-creation.js).
+    *   Added import for `Character` and other necessary modules.
+    *   Changed method call from `Character.createMainCharacter(characterData)` to `Character.addCharacter(characterData)`.
+*   [2025-05-13 13:18:40] - **Completed Task:** Fixed `SyntaxError: Identifier 'Inventory' has already been declared` in [`src/js/core/game.js`](src/js/core/game.js).
+    *   Removed internal `Inventory` object declaration from [`src/js/core/game.js`](src/js/core/game.js) to use the imported module.
+*   [2025-05-13 12:21:41] - **Completed Task:** Fixed multiple `ReferenceError` issues (Character, Team, DungeonRunner) in [`src/js/core/game.js`](src/js/core/game.js).
+    *   Added import statements for `Character`, `Team`, `DungeonRunner`, and other potentially missing modules to [`src/js/core/game.js`](src/js/core/game.js).
+*   [2025-05-13 12:17:44] - **Completed Task:** Fixed `ReferenceError: Dungeon is not defined` in [`src/js/components/UI.js`](src/js/components/UI.js).
+    *   Added `import Dungeon from '../core/dungeon.js';` to [`src/js/components/UI.js`](src/js/components/UI.js).
+*   [2025-05-13 12:15:59] - **Completed Task:** Fixed `ReferenceError: UI is not defined` in [`src/js/core/dungeon.js`](src/js/core/dungeon.js).
+    *   Added `import UI from '../components/UI.js';` to [`src/js/core/dungeon.js`](src/js/core/dungeon.js).
+*   [2025-05-13 11:49:40] - **Completed Task:** Fixed `SyntaxError: The requested module './core/weapon.js' does not provide an export named 'default'`.
+    *   Added `export default Weapon;` to [`src/js/core/weapon.js`](src/js/core/weapon.js).
+*   [2025-05-13 10:50:12] - **Completed Task:** 修复 JavaScript 模块加载和依赖错误。
+   *   修改了 [`index.html`](index.html) (为 [`main.js`](src/js/main.js:462) 添加 `type="module"`, 移除 [`shop.js`](src/js/core/shop.js:433))。
+   *   为 [`src/js/core/character-main.js`](src/js/core/character-main.js) 添加了 `Character` 导入。
+   *   为 [`src/js/components/UI.js`](src/js/components/UI.js) 添加了 `UI` 导出。
+   *   为多个组件 ([`ui-main-character.js`](src/js/components/ui-main-character.js), [`job-selection.js`](src/js/components/job-selection.js), [`tavern.js`](src/js/components/tavern.js), [`team-management.js`](src/js/components/team-management.js)) 添加了 `UI` 导入。
+*   [2025-05-13 10:27:00] - **Completed Task:** 修复 JavaScript 加载错误和文件未找到错误。
+    *   修改了 [`index.html`](index.html)，为核心脚本添加 `type="module"`。
+    *   移除了 [`index.html`](index.html) 中对不存在文件 (`quest.js`, `ui_init.js`, `character-creator.js`, `helpers.js`) 的引用。
 *   [2025-05-13 09:16:00] - **Completed Task:** 修正 [`src/data/items_definitions.json`](src/data/items_definitions.json) 中的物品 key-ID 不一致问题。
     *   确保了所有物品的顶层 key 与其内部 `id` 属性一致。
     *   确认了 "原初之砂", "治愈之水", "真理之土" 在之前的修改中已正确处理，本次无需修改。
@@ -211,6 +236,10 @@ This file tracks the project's progress using a task list format.
 * [2025-05-11 22:20:00] - Debugging Task Started: 调查 "一伐架式" 独立buff未在日志中正确显示且最终攻击倍率不符预期的问题。
 * [2025-05-11 22:20:00] - Debugging Action: 增强了 `calculateAttackPower` ([`src/js/core/character.js`](src/js/core/character.js:1512)) 的日志，以在函数入口处打印所有当前buff的详细信息。
 ## Current Tasks
+*   [2025-05-13 16:45:00] - **Debugging Task:** 修复 JavaScript 模块导入错误 (当前步骤：已为 `dungeon-runner.js` 添加默认导出，等待测试验证)。
+    *   错误1: `Uncaught SyntaxError: Unexpected token 'export'` (涉及 `storage.js`, `character-creation.js`)。
+    *   错误2: `Uncaught SyntaxError: The requested module './dungeon-runner.js' does not provide an export named 'default'` (涉及 `game.js`, `dungeon-runner.js`)。
+*   [2025-05-13 10:27:00] - **Debugging Task:** 修复 JavaScript 加载错误 (Unexpected token 'export', ReferenceError, Identifier already declared) 和 404 文件未找到错误。 (状态：已修改 `index.html`，等待测试验证)
 *   [2025-05-12 10:06:00] - **TDD Cycle End:** 设计并编写了针对 `stackable: true` 和 `stackable: false` 攻击buff同时生效时计算逻辑的测试用例。特别关注角色 '聂查瓦尔皮利' 的2格技能 "一伐架式"。测试用例设计文档位于 [`memory-bank/test-cases/buff-stacking-nezahualpilli.md`](memory-bank/test-cases/buff-stacking-nezahualpilli.md)，相应的Vitest测试代码已写入 [`test/buff-stacking.test.js`](test/buff-stacking.test.js)。
 *   [2025-05-12 09:46:00] - **TDD Cycle Start:** 开始为战斗系统“后排角色自动增援前排”功能编写单元/集成测试。目标文件：[`test/battle-reinforcement.test.js`](test/battle-reinforcement.test.js:0)。
 *   [2025-05-12 09:46:00] - **TDD Cycle End:** 完成为战斗系统“后排角色自动增援前排”功能编写的7个单元/集成测试，并通过 Vitest 在 JSDOM 环境下成功运行。测试覆盖了多种增援场景，包括空位、多空位、后排不足、后排无人、前排全灭以及回合效果导致阵亡等情况。测试文件：[`test/battle-reinforcement.test.js`](test/battle-reinforcement.test.js:0)。Memory Bank 已更新。
@@ -269,3 +298,38 @@ This file tracks the project's progress using a task list format.
     *   删除了 `copyTemplatesToDungeons()` 和 `loadTemplatesFallback()` 函数。
     *   移除了对 `copyTemplatesToDungeons()` 的调用。
     *   修改了 `loadTemplates()` 以增强模板加载的健壮性。
+*   [2025-05-13 11:03:06] - **Completed Task:** Fixed `Error: 找不到Game模块` in [`src/js/main.js`](src/js/main.js).
+    *   Uncommented the import statement for `Game` and other necessary core modules.
+    *   This also implicitly resolves the original `Error: 找不到Events模块` as `Events` module was loading correctly, and the error was likely due to subsequent import failures or incorrect error reporting.
+*   [2025-05-13 11:05:01] - **Completed Task:** Fixed `SyntaxError: The requested module './core/buildings.js' does not provide an export named 'default'`.
+    *   Added `export default Buildings;` to [`src/js/core/buildings.js`](src/js/core/buildings.js).
+*   [2025-05-13 11:09:48] - **Completed Task:** Removed `buildings.js` references from [`main.js`](src/js/main.js) and [`index.html`](index.html) as per user request.
+*   [2025-05-13 11:09:48] - **Completed Task:** Fixed `SyntaxError: The requested module './core/dungeon.js' does not provide an export named 'default'`.
+    *   Added `export default Dungeon;` to [`src/js/core/dungeon.js`](src/js/core/dungeon.js).
+*   [2025-05-13 11:12:31] - **Completed Task:** Fixed `SyntaxError: The requested module './core/game.js' does not provide an export named 'default'`.
+    *   Added `export default Game;` to [`src/js/core/game.js`](src/js/core/game.js).
+*   [2025-05-13 11:13:52] - **Completed Task:** Fixed `SyntaxError: The requested module './core/inventory.js' does not provide an export named 'default'`.
+    *   Added `export default Inventory;` to [`src/js/core/inventory.js`](src/js/core/inventory.js).
+*   [2025-05-13 11:15:09] - **Completed Task:** Fixed `SyntaxError: The requested module './core/item.js' does not provide an export named 'default'`.
+    *   Added `export default Item;` to [`src/js/core/item.js`](src/js/core/item.js).
+*   [2025-05-13 11:16:56] - **Completed Task:** Fixed `SyntaxError: The requested module './core/job-skills-template.js' does not provide an export named 'default'`.
+    *   Added `export default JobSkillsTemplate;` to [`src/js/core/job-skills-template.js`](src/js/core/job-skills-template.js).
+*   [2025-05-13 11:17:54] - **Completed Task:** Fixed missing default export for [`src/js/core/job-system.js`](src/js/core/job-system.js).
+    *   Added `export default JobSystem;` to the file.
+*   [2025-05-13 11:19:01] - **Completed Task:** Fixed missing default export for [`src/js/core/team.js`](src/js/core/team.js).
+    *   Added `export default Team;` to the file.
+*   [2025-05-13 11:20:17] - **Completed Task:** Fixed missing default export for [`src/js/core/weapon-board-bonus-system.js`](src/js/core/weapon-board-bonus-system.js).
+    *   Added `export default WeaponBoardBonusSystem;` to the file.
+*   [2025-05-13 11:21:20] - **Completed Task:** Fixed missing default export for [`src/js/components/skill-tooltip.js`](src/js/components/skill-tooltip.js).
+    *   Added `export default SkillTooltip;` to the file.
+*   [2025-05-13 11:29:29] - **Completed Task:** Fixed missing default export for [`src/js/core/resources.js`](src/js/core/resources.js).
+    *   Added `export default Resources;` to the file.
+* [2025-05-13 17:18:58] - **Completed Debugging Task:** 修复了 [`src/js/core/game.js`](src/js/core/game.js:6) 中的导入错误 "Uncaught SyntaxError: The requested module '../utils/file-utils.js' does not provide an export named 'default'".
+    *   为 [`src/js/utils/file-utils.js`](src/js/utils/file-utils.js) 添加了 `export default FileUtils;`。
+* [2025-05-13 17:39:00] - **Completed Debugging Task:** 修复了 `ReferenceError: Game is not defined` (at [`weapon.js:526`](src/js/core/weapon.js:526)) 和 `ReferenceError: Item is not defined` (at [`inventory.js:51`](src/js/core/inventory.js:51))。
+    *   为 [`src/js/core/weapon.js`](src/js/core/weapon.js) 添加了 `import Game from './game.js';`。
+    *   为 [`src/js/core/inventory.js`](src/js/core/inventory.js) 添加了 `import Item from './item.js';`。
+* [2025-05-13 18:00:00] - **Completed Debugging Task:** 修复了游戏初始化期间的 `ReferenceError: Team is not defined` (at [`character.js:1360`](src/js/core/character.js:1360))。
+    *   为 [`src/js/core/character.js`](src/js/core/character.js) 添加了 `import Team from './team.js';`, `import Dungeon from './dungeon.js';`, `import BuffSystem from './buff-system.js';`。
+* [2025-05-13 18:03:00] - **Completed Debugging Task:** 修复了 `index.html` 中内联 `onclick` 事件处理器无法找到 `UI` 对象的问题 (`ReferenceError: UI is not defined` at `(索引):95`)。
+    *   在 [`src/js/main.js`](src/js/main.js) 中，将导入的 `UI` 对象挂载到 `window.UI`。

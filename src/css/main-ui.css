@@ -78,7 +78,7 @@
 
 /* 各图标样式 */
 .team-icon {
-    background-image: url('../img/icons/team-icon.png');
+    background-image: url('../icon/team.png');
     /* 如果没有图片，可以使用以下备用样式 */
     background-color: #4CAF50;
     border-radius: 50%;
@@ -104,7 +104,7 @@
 }
 
 .tavern-icon {
-    background-image: url('../img/icons/tavern-icon.png');
+    background-image: url('../icon/beerbar.png');
     /* 备用样式 */
     background-color: #FFC107;
     position: relative;
@@ -131,7 +131,7 @@
 }
 
 .weapon-icon {
-    background-image: url('../img/icons/weapon-icon.png');
+    background-image: url('../icon/weapon.png');
     /* 备用样式 */
     background-color: #607D8B;
     position: relative;
@@ -157,7 +157,7 @@
 }
 
 .dungeon-icon {
-    background-image: url('../img/icons/dungeon-icon.png');
+    background-image: url('../icon/dungeon.png');
     /* 备用样式 */
     background-color: #795548;
     position: relative;
@@ -185,7 +185,7 @@
 }
 
 .shop-icon {
-    background-image: url('../img/icons/shop-icon.png');
+    background-image: url('../icon/bag.png');
     /* 备用样式 */
     background-color: #9C27B0;
     position: relative;

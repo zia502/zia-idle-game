@@ -437,3 +437,5 @@ const SkillTooltip = {
         return html;
     }
 };
+
+export default SkillTooltip;

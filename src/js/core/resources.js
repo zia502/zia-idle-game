@@ -230,3 +230,4 @@ const Resources = {
         this.init();
     }
 };
+export default Resources;

@@ -163,3 +163,5 @@ const JobSkillsTemplate = {
         };
     }
 };
+
+export default JobSkillsTemplate;

@@ -395,3 +395,5 @@ const WeaponBoardBonusSystem = {
 if (typeof window !== 'undefined') {
     window.WeaponBoardBonusSystem = WeaponBoardBonusSystem;
 }
+
+export default WeaponBoardBonusSystem;

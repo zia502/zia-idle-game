@@ -1504,3 +1504,5 @@ const DungeonRunner = {
         this.lastDungeonRecord = null;
     }
 };
+
+export default DungeonRunner;

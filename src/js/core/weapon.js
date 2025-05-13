@@ -1,6 +1,7 @@
 /**
  * 武器管理系统 - 负责游戏中武器的管理
  */
+import Game from './game.js';
 const Weapon = {
     // 武器数据
     weapons: {},
@@ -1196,3 +1197,5 @@ const Weapon = {
         return stats;
     }
 };
+
+export default Weapon;

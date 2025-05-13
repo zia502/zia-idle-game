@@ -1,3 +1,5 @@
+import UI from './UI.js';
+
 /**
  * UI模块扩展 - 主角信息渲染
  */

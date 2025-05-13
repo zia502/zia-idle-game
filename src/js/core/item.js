@@ -296,3 +296,4 @@ const Item = {
 //   await Item.init();
 //   ...
 // }
+export default Item;

@@ -1,6 +1,25 @@
 /**
  * 主入口文件 - 负责初始化游戏
  */
+import Events from './components/events.js';
+// 其他模块的导入
+import Resources from './core/resources.js';
+// import Buildings from './core/buildings.js'; // 用户要求移除
+import Item from './core/item.js';
+import Weapon from './core/weapon.js';
+import JobSkillsTemplate from './core/job-skills-template.js';
+import JobSystem from './core/job-system.js';
+import Character from './core/character.js';
+import Inventory from './core/inventory.js';
+// import Shop from './core/shop.js'; // Shop 已移除
+import Team from './core/team.js';
+import BuffSystem from './core/buff-system.js';
+import Dungeon from './core/dungeon.js';
+import WeaponBoardBonusSystem from './core/weapon-board-bonus-system.js';
+import SkillTooltip from './components/skill-tooltip.js';
+import Game from './core/game.js';
+// import Debug from './debug.js'; // Debug 模块可选
+
 document.addEventListener('DOMContentLoaded', function() {
     console.log('初始化游戏...');
 
@@ -176,6 +195,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (typeof UI !== 'undefined') {
                 console.log('初始化UI系统...');
                 UI.init();
+                window.UI = UI; // 将 UI 对象挂载到 window
             } else {
                 console.warn('找不到UI模块，跳过初始化');
             }

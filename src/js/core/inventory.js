@@ -1,6 +1,7 @@
 /**
  * 物品栏系统 - 负责管理玩家的物品
  */
+import Item from './item.js';
 const Inventory = {
     // 物品数据
     items: {},
@@ -199,3 +200,4 @@ const Inventory = {
         console.log('物品栏系统已重置');
     }
 }; 
+export default Inventory;

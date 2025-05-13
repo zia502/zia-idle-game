@@ -240,3 +240,5 @@ const FileUtils = {
         });
     }
 };
+
+export default FileUtils;

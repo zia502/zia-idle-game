@@ -4,6 +4,13 @@
  * 整合了character-creator.js和character-creation.js的功能
  */
 
+import Character from '../core/character.js';
+import Team from '../core/team.js';
+import Game from '../core/game.js';
+import UI from './UI.js';
+import Events from './events.js'; // 路径已更正 (events.js 与 character-creation.js 在同一目录下 components)
+import Storage from '../utils/storage.js';
+
 // 声明全局函数，以便Game.resetGame()可以调用
 let showCharacterCreationDialog;
 let closeCharacterCreationDialog;
@@ -14,6 +21,7 @@ const CharacterCreation = {
      * @param {boolean} forceShow - 是否强制显示角色创建对话框
      */
     init(forceShow = false) {
+        console.log('[DEBUG] CharacterCreation.init() 被调用, forceShow:', forceShow); // 添加调试日志
         console.log('角色创建系统初始化', forceShow ? '(强制显示)' : '');
 
         // 如果强制显示，直接显示对话框
@@ -66,6 +74,7 @@ const CharacterCreation = {
      * 显示角色创建对话框
      */
     showCharacterCreationDialog() {
+        console.log('[DEBUG] CharacterCreation.showCharacterCreationDialog() 被调用'); // 添加调试日志
         console.log('显示角色创建对话框');
 
         // 先移除可能存在的旧对话框
@@ -186,8 +195,8 @@ const CharacterCreation = {
                 isMainCharacter: true
             };
 
-            console.log('调用Character.createMainCharacter方法');
-            const characterId = Character.createMainCharacter(characterData);
+            console.log('调用Character.addCharacter方法'); // 修改日志
+            const characterId = Character.addCharacter(characterData); // 修改方法调用
 
             if (characterId) {
                 console.log(`创建主角成功: ${name} (ID: ${characterId})`);
@@ -271,6 +280,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     if (typeof Events !== 'undefined' && typeof Events.on === 'function') {
         Events.on('game:loaded', () => {
+            console.log('[DEBUG] character-creation.js: game:loaded 事件被触发'); // 添加调试日志
             console.log('游戏加载完成，初始化角色创建系统');
             CharacterCreation.init();
         });
@@ -282,3 +292,5 @@ document.addEventListener('DOMContentLoaded', function() {
         }, 1000);
     }
 });
+
+export default CharacterCreation;

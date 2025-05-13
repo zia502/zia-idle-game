@@ -1,3 +1,20 @@
+import Character from './character.js';
+import Team from './team.js';
+import DungeonRunner from './dungeon-runner.js';
+import Events from '../components/events.js'; // 路径已更正
+import Storage from '../utils/storage.js'; // 根据 game.js:586 的使用情况添加
+import FileUtils from '../utils/file-utils.js'; // 根据 game.js:595 的使用情况添加
+import Resources from './resources.js'; // 根据 game.js:367 的使用情况添加
+// import Shop from './shop.js'; // shop.js 已被移除
+import Weapon from './weapon.js'; // 根据 game.js:278 的使用情况添加
+import Inventory from './inventory.js'; // 根据 game.js:300 的使用情况添加
+import CharacterCreation from '../components/character-creation.js'; // 根据 game.js:1049 的使用情况添加
+// import Battle from './battle.js'; // 根据 game.js:876 的使用情况添加
+// import Dungeon from './dungeon.js'; // 根据 game.js:1169 的使用情况添加
+// import BuffSystem from './buff-system.js'; // 根据 game.js:1247 的使用情况添加
+// import UI from '../components/UI.js'; // 根据 game.js:1282 的使用情况添加
+
+
 /**
  * 游戏核心模块
  * 负责管理游戏状态、游戏循环和核心逻辑
@@ -78,6 +95,7 @@ const Game = {
 
         // 触发游戏加载完成事件
         if (typeof Events !== 'undefined') {
+            console.log('[DEBUG] Game.init() 即将触发 game:loaded 事件'); // 添加调试日志
             Events.emit('game:loaded', { version: this.state.version });
         }
     },
@@ -1345,111 +1363,5 @@ const Game = {
 // 注意: 队伍管理类已移至 team.js
 // 这里不再定义 Team 对象，而是使用 team.js 中定义的 Team 对象
 
-/**
- * 物品栏管理类
- */
-const Inventory = {
-    // 物品栏数据
-    items: {},
-
-    /**
-     * 初始化物品栏系统
-     */
-    init() {
-        console.log('物品栏系统已初始化');
-    },
-
-    /**
-     * 获取所有物品
-     * @returns {object} 所有物品对象
-     */
-    getAll() {
-        return this.items;
-    },
-
-    /**
-     * 获取物品
-     * @param {string} itemId - 物品ID
-     * @returns {object|null} 物品对象
-     */
-    getItem(itemId) {
-        return this.items[itemId] || null;
-    },
-
-    /**
-     * 获取物品数量
-     * @param {string} itemId - 物品ID
-     * @returns {number} 物品数量
-     */
-    getItemCount(itemId) {
-        const item = this.getItem(itemId);
-        return item ? item.count : 0;
-    },
-
-    /**
-     * 添加物品
-     * @param {string} itemId - 物品ID
-     * @param {number} count - 数量
-     */
-    addItem(itemId, count = 1) {
-        if (!itemId) return;
-
-        if (!this.items[itemId]) {
-            this.items[itemId] = {
-                id: itemId,
-                count: 0
-            };
-        }
-
-        this.items[itemId].count += count;
-        console.log(`添加物品 ${itemId} x${count}`);
-    },
-
-    /**
-     * 移除物品
-     * @param {string} itemId - 物品ID
-     * @param {number} count - 数量
-     * @returns {boolean} 是否移除成功
-     */
-    removeItem(itemId, count = 1) {
-        const item = this.getItem(itemId);
-        if (!item || item.count < count) return false;
-
-        item.count -= count;
-
-        // 如果数量为0，删除该物品
-        if (item.count <= 0) {
-            delete this.items[itemId];
-        }
-
-        console.log(`移除物品 ${itemId} x${count}`);
-        return true;
-    },
-
-    /**
-     * 检查是否有足够物品
-     * @param {string} itemId - 物品ID
-     * @param {number} count - 数量
-     * @returns {boolean} 是否有足够物品
-     */
-    hasEnoughItems(itemId, count = 1) {
-        return this.getItemCount(itemId) >= count;
-    },
-
-    /**
-     * 加载物品栏数据
-     * @param {object} data - 保存的物品栏数据
-     */
-    loadData(data) {
-        if (!data) return;
-        this.items = {...data};
-    },
-
-    /**
-     * 重置物品栏系统
-     */
-    reset() {
-        this.items = {};
-        this.init();
-    }
-};
+// 内部 Inventory 对象已移除，将使用从 './inventory.js' 导入的模块
+export default Game;

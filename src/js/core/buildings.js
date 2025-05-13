@@ -275,3 +275,5 @@ const Buildings = {
         this.init();
     }
 };
+
+export default Buildings;

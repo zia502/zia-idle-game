@@ -1,3 +1,5 @@
+import Dungeon from '../core/dungeon.js';
+
 /**
  * UI模块 - 负责管理游戏界面和用户交互元素
  */
@@ -266,6 +268,7 @@ const UI = {
      * 设置UI事件监听
      */
     setupEventListeners() {
+console.log('[DEBUG] UI.setupEventListeners() called.');
         // 防止重复绑定事件
         if (this.eventsInitialized) {
             console.log('UI事件已初始化，跳过重复绑定');
@@ -387,6 +390,7 @@ const UI = {
             const newResetBtn = document.getElementById('reset-btn');
 
             newResetBtn.addEventListener('click', () => {
+console.log('[DEBUG] Reset button clicked. Showing confirm dialog.');
                 if (confirm('确定要重置游戏吗？所有进度将会丢失。')) {
                     if (typeof Game !== 'undefined' && typeof Game.resetGame === 'function') {
                         Game.resetGame();
@@ -2959,3 +2963,5 @@ const UI = {
         });
     }
 };
+
+export default UI;

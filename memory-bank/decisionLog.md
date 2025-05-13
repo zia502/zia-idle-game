@@ -17,6 +17,139 @@ This file records architectural and implementation decisions using a list format
 
 *
 ---
+---
+### Decision (Debug)
+[2025-05-13 14:21:59] - **修复游戏重置后角色创建对话框不显示的问题**
+
+**Rationale:**
+用户反馈在游戏重置后，角色创建对话框没有按预期显示。经检查，[`src/js/core/game.js`](src/js/core/game.js) 的 `resetGame()` 方法在尝试调用角色创建逻辑时，依赖的 `CharacterCreation` 模块导入语句被注释掉了。
+
+**Details:**
+*   **修改 [`src/js/core/game.js`](src/js/core/game.js):**
+    *   取消了文件顶部对 `CharacterCreation` 模块的导入语句的注释: `import CharacterCreation from '../components/character-creation.js';` ([`src/js/core/game.js:11`](src/js/core/game.js:11))。
+*   **影响:**
+    *   确保 `Game.resetGame()` 方法能够正确调用 `CharacterCreation.init(true)`，从而在游戏重置后强制显示角色创建对话框。
+
+**Affected components/files:**
+*   [`src/js/core/game.js`](src/js/core/game.js)
+---
+### Decision (Debug)
+[2025-05-13 13:21:10] - **修复 `Character.createMainCharacter方法不存在` 错误**
+
+**Rationale:**
+用户反馈在 [`src/js/components/character-creation.js`](src/js/components/character-creation.js:234) 的 `createCharacter` 方法中出现 `Character.createMainCharacter方法不存在` 错误。经检查，[`src/js/components/character-creation.js`](src/js/components/character-creation.js) 未导入 `Character` 模块。此外，[`src/js/core/character.js`](src/js/core/character.js) 中不存在 `createMainCharacter` 方法，但存在 `addCharacter` 方法，该方法内部调用 `createCharacter` 并处理角色添加逻辑。
+
+**Details:**
+*   **修改 [`src/js/components/character-creation.js`](src/js/components/character-creation.js):**
+    *   在文件顶部添加了 `import Character from '../core/character.js';` 以及其他相关模块的导入语句。
+    *   在 `createCharacter` 方法中 ([`src/js/components/character-creation.js:191`](src/js/components/character-creation.js:191))，将对 `Character.createMainCharacter(characterData)` 的调用修改为 `Character.addCharacter(characterData)`。
+*   **影响:**
+    *   确保 `CharacterCreation` 模块能够正确访问 `Character` 模块的功能，并调用正确的方法来创建和添加主角。
+
+**Affected components/files:**
+*   [`src/js/components/character-creation.js`](src/js/components/character-creation.js)
+---
+### Decision (Debug)
+[2025-05-13 13:18:40] - **修复 `SyntaxError: Identifier 'Inventory' has already been declared` in `game.js`**
+
+**Rationale:**
+用户反馈在 [`src/js/core/game.js`](src/js/core/game.js:1368) 出现 `SyntaxError: Identifier 'Inventory' has already been declared` 错误。这是因为 [`src/js/core/game.js`](src/js/core/game.js) 文件顶部通过 `import Inventory from './inventory.js';` 导入了 `Inventory` 模块，同时在文件内部 ([`src/js/core/game.js:1368`](src/js/core/game.js:1368)) 又通过 `const Inventory = { ... };` 声明了一个同名对象，导致了声明冲突。
+
+**Details:**
+*   **修改 [`src/js/core/game.js`](src/js/core/game.js):**
+    *   移除了文件内部的 `const Inventory = { ... };` 对象声明 (从原第 1368 行到第 1470 行)。
+    *   保留了文件顶部的 `import Inventory from './inventory.js';` ([`src/js/core/game.js:10`](src/js/core/game.js:10)) 语句，确保游戏逻辑使用从 [`src/js/core/inventory.js`](src/js/core/inventory.js) 导入的 `Inventory` 模块。
+*   **影响:**
+    *   解决了 `Inventory` 标识符重复声明的 `SyntaxError`。
+
+**Affected components/files:**
+*   [`src/js/core/game.js`](src/js/core/game.js)
+---
+### Decision (Debug)
+[2025-05-13 12:21:41] - **修复 `game.js` 中的多个 `ReferenceError`**
+
+**Rationale:**
+用户反馈在 [`src/js/core/game.js`](src/js/core/game.js) 中出现多个 `ReferenceError`，包括：
+1.  `Character模块未加载或updateMainCharacterElement方法不存在` ([`game.js:139`](src/js/core/game.js:139))
+2.  `Team或Character模块未定义，无法更新weaponBonusStats` ([`game.js:111`](src/js/core/game.js:111))
+3.  `DungeonRunner模块未定义或init方法不存在` ([`game.js:98`](src/js/core/game.js:98))
+这些错误表明 [`src/js/core/game.js`](src/js/core/game.js) 文件试图使用 `Character`、`Team` 和 `DungeonRunner` 对象，但这些模块没有被正确导入。
+
+**Details:**
+*   **修改 [`src/js/core/game.js`](src/js/core/game.js):**
+    *   在文件顶部添加了以下导入语句：
+        *   `import Character from './character.js';`
+        *   `import Team from './team.js';`
+        *   `import DungeonRunner from './dungeon-runner.js';`
+        *   以及其他根据代码上下文推断可能需要的模块，如 `Events`, `Storage`, `FileUtils`, `Resources`, `Weapon`, `Inventory`。
+*   **影响:**
+    *   这使得 `Game` 模块能够正确访问所需的其他核心模块，解决了上述 `ReferenceError`。
+
+**Affected components/files:**
+*   [`src/js/core/game.js`](src/js/core/game.js)
+---
+### Decision (Debug)
+[2025-05-13 12:17:44] - **修复 `ReferenceError: Dungeon is not defined` in `UI.js`**
+
+**Rationale:**
+用户反馈在 [`src/js/components/UI.js`](src/js/components/UI.js:2849) 的 `updateDungeonList` 函数中出现 `ReferenceError: Dungeon is not defined` 错误。这是因为该文件试图使用 `Dungeon` 对象（调用 `Dungeon.currentRun`）但没有导入 `Dungeon` 模块。
+
+**Details:**
+*   **修改 [`src/js/components/UI.js`](src/js/components/UI.js):**
+    *   在文件顶部添加了 `import Dungeon from '../core/dungeon.js';` 语句。
+*   **影响:**
+    *   这使得 `UI` 模块能够正确访问 `Dungeon` 对象，解决了该 `ReferenceError`。
+
+**Affected components/files:**
+*   [`src/js/components/UI.js`](src/js/components/UI.js)
+---
+### Decision (Debug)
+[2025-05-13 12:15:59] - **修复 `ReferenceError: UI is not defined` in `dungeon.js`**
+
+**Rationale:**
+用户反馈在 [`src/js/core/dungeon.js`](src/js/core/dungeon.js:322) 的 `init` 函数中出现 `ReferenceError: UI is not defined` 错误。这是因为该文件试图使用 `UI` 对象（调用 `UI.showMessage`）但没有导入 `UI` 模块。
+
+**Details:**
+*   **修改 [`src/js/core/dungeon.js`](src/js/core/dungeon.js):**
+    *   在文件顶部添加了 `import UI from '../components/UI.js';` 语句。
+*   **影响:**
+    *   这使得 `Dungeon` 模块能够正确访问 `UI` 对象，解决了该 `ReferenceError`。
+
+**Affected components/files:**
+*   [`src/js/core/dungeon.js`](src/js/core/dungeon.js)
+---
+### Decision (Debug)
+[2025-05-13 11:49:40] - **修复 `SyntaxError: The requested module './core/weapon.js' does not provide an export named 'default'`**
+
+**Rationale:**
+用户报告的错误 `Uncaught SyntaxError: The requested module './core/weapon.js' does not provide an export named 'default' (at main.js:9:8)` 表明 [`src/js/main.js`](src/js/main.js:9) 尝试导入 [`src/js/core/weapon.js`](src/js/core/weapon.js) 的默认导出，但该文件未提供。检查 [`src/js/core/weapon.js`](src/js/core/weapon.js) 确认了它定义了 `Weapon` 对象但缺少 `export default Weapon;` 语句。
+
+**Details:**
+*   **修改 [`src/js/core/weapon.js`](src/js/core/weapon.js):**
+    *   在文件末尾 ([`src/js/core/weapon.js:1198`](src/js/core/weapon.js:1198)) 添加了 `export default Weapon;` 语句。
+*   **影响:**
+    *   这使得 [`main.js`](src/js/main.js) 中的 `import Weapon from './core/weapon.js';` 语句能够成功导入模块，解决了该 `SyntaxError`。
+
+**Affected components/files:**
+*   [`src/js/core/weapon.js`](src/js/core/weapon.js)
+---
+### Decision (Debug)
+[2025-05-13 10:27:00] - **修复JavaScript加载错误和文件未找到错误**
+
+**Rationale:**
+用户报告的错误包括 `Uncaught SyntaxError: Unexpected token 'export'`，`Uncaught ReferenceError`，以及多个 `404 (File not found)` 错误。这些问题主要源于：
+1.  ES6模块脚本未使用 `type="module"` 加载。
+2.  HTML中引用了不存在的JavaScript文件。
+
+**Details:**
+*   **修改 [`index.html`](index.html):**
+    *   为所有位于 `src/js/core/` 和 `src/js/components/` 目录下的 `<script>` 标签添加了 `type="module"` 属性。这解决了 `Unexpected token 'export'` 和相关的 `ReferenceError` 问题，确保模块正确加载和解析。
+    *   移除了对以下不存在文件的 `<script>` 引用：`src/js/core/quest.js` ([`index.html:431`](index.html:431)), `src/js/components/ui_init.js` ([`index.html:442`](index.html:442)), `src/js/components/character-creator.js` ([`index.html:444`](index.html:444)), `src/js/utils/helpers.js` ([`index.html:460`](index.html:460))。这些文件在 `src/js/` 目录结构中未找到，移除引用以解决 `404` 错误。
+*   **影响:** 这些更改旨在解决大部分初始报告的错误，特别是与模块加载和文件引用相关的错误。`Identifier 'Inventory' has already been declared` 错误也可能因此得到解决，因为模块化加载会改变作用域。
+
+**Affected components/files:**
+*   [`index.html`](index.html)
+---
 ### Decision (Architecture)
 [2025-05-12 16:14:00] - **修正：新设计物品（经验材料等）的掉落机制**
 
@@ -766,3 +899,323 @@ Modified [`src/js/core/battle.js`](src/js/core/battle.js) within the `startBattl
 
 *   **物品堆叠确认:**
     *   确认 [`src/js/core/inventory.js`](src/js/core/inventory.js) 中的 `addItem` 等相关方法能够正确处理基于物品 `stackable` 属性的堆叠逻辑。
+
+---
+### Decision (Debug)
+[2025-05-13 10:49:31] - **修复JavaScript模块加载和依赖错误**
+
+**Rationale:**
+用户报告的错误包括 `Uncaught ReferenceError: Character is not defined`，多个组件中 `UI module not loaded`，以及 `main.js` 中 `找不到Events模块`。这些问题主要源于：
+1.  主入口脚本 [`main.js`](src/js/main.js:462) 未使用 `type="module"` 加载，导致其无法导入其他模块。
+2.  [`character-main.js`](src/js/core/character-main.js) 未导入其依赖的 `Character` 模块。
+3.  [`UI.js`](src/js/components/UI.js) 未导出 `UI` 对象，导致其他依赖它的组件模块无法导入。
+
+**Details:**
+*   **修改 [`index.html`](index.html):**
+    *   为 `<script src="src/js/main.js"></script>` 添加了 `type="module"`。
+    *   移除了对已废弃脚本 `<script type="module" src="src/js/core/shop.js"></script>` 的引用。
+*   **修改 [`src/js/core/character-main.js`](src/js/core/character-main.js):**
+    *   在文件顶部添加了 `import Character from './character.js';`。
+*   **修改 [`src/js/components/UI.js`](src/js/components/UI.js):**
+    *   在文件末尾添加了 `export default UI;`。
+*   **修改以下组件文件以导入 `UI` 模块:**
+    *   [`src/js/components/ui-main-character.js`](src/js/components/ui-main-character.js): 添加 `import UI from './UI.js';`
+    *   [`src/js/components/job-selection.js`](src/js/components/job-selection.js): 添加 `import UI from './UI.js';`
+    *   [`src/js/components/tavern.js`](src/js/components/tavern.js): 添加 `import UI from './UI.js';`
+    *   [`src/js/components/team-management.js`](src/js/components/team-management.js): 添加 `import UI from './UI.js';`
+
+**Affected components/files:**
+*   [`index.html`](index.html)
+*   [`src/js/core/character-main.js`](src/js/core/character-main.js)
+*   [`src/js/components/UI.js`](src/js/components/UI.js)
+*   [`src/js/components/ui-main-character.js`](src/js/components/ui-main-character.js)
+*   [`src/js/components/job-selection.js`](src/js/components/job-selection.js)
+*   [`src/js/components/tavern.js`](src/js/components/tavern.js)
+*   [`src/js/components/team-management.js`](src/js/components/team-management.js)
+---
+### Decision (Debug)
+[2025-05-13 11:03:17] - **修复 `Error: 找不到Game模块` 以及间接修复 `Error: 找不到Events模块`**
+
+**Rationale:**
+用户最初报告 `Error: 找不到Events模块` ([`main.js:10`](src/js/main.js:10))。经过诊断，发现 `Events` 模块本身导入和导出均正确，且在 `DOMContentLoaded` 事件中 `Events.init()` 能够成功调用，表明 `Events` 模块已正确加载。
+后续的控制台日志显示新的主要错误为 `Error: 找不到Game模块` ([`main.js:231`](src/js/main.js:231) 附近)。检查 [`main.js`](src/js/main.js) 发现 `import Game from './core/game.js';` 以及其他多个核心模块的导入语句被注释掉了。
+
+**Details:**
+*   **修改 [`src/js/main.js`](src/js/main.js):**
+    *   取消了对 `Game`模块的导入语句 `// import Game from './core/game.js';` ([`src/js/main.js:21`](src/js/main.js:21) 附近) 的注释。
+    *   同时取消了对其他必要核心模块的导入注释，包括 `Resources`, `Buildings`, `Item`, `Weapon`, `JobSkillsTemplate`, `JobSystem`, `Character`, `Inventory`, `Team`, `BuffSystem`, `Dungeon`, `WeaponBoardBonusSystem`, `SkillTooltip`。
+    *   移除了之前为诊断 `Events` 模块问题而添加的 `console.log` 语句。
+*   **影响:**
+    *   取消对 `Game` 模块的导入，直接解决了 `Error: 找不到Game模块` 的问题。
+    *   由于 `Events` 模块的加载和初始化本身沒有问题，而最初的错误报告可能是由于后续 `Game` 模块或其他模块加载失败导致初始化流程中断或错误信息被不准确地归因。通过确保所有核心模块正确导入，预计最初报告的 `Events` 模块找不到的问题也将随之解决。
+
+**Affected components/files:**
+*   [`src/js/main.js`](src/js/main.js)
+---
+### Decision (Debug)
+[2025-05-13 11:05:12] - **修复 `SyntaxError: The requested module './core/buildings.js' does not provide an export named 'default'`**
+
+**Rationale:**
+在修复了 `Game` 模块导入问题后，用户报告了新的错误，指出 [`src/js/core/buildings.js`](src/js/core/buildings.js) 模块没有默认导出。检查该文件确认了它定义了 `Buildings` 对象但缺少导出语句。
+
+**Details:**
+*   **修改 [`src/js/core/buildings.js`](src/js/core/buildings.js):**
+    *   在文件末尾添加了 `export default Buildings;` 语句。
+*   **影响:**
+    *   这使得 [`main.js`](src/js/main.js) 中的 `import Buildings from './core/buildings.js';` 语句能够成功导入模块，解决了该 `SyntaxError`。
+
+**Affected components/files:**
+*   [`src/js/core/buildings.js`](src/js/core/buildings.js)
+---
+### Decision (Debug)
+[2025-05-13 11:09:58] - **移除 `buildings.js` 模块引用并修复 `dungeon.js` 导出错误**
+
+**Rationale:**
+用户明确表示不需要 `buildings.js` 模块。同时，在解决了 `buildings.js` 的导出问题后，出现了新的 `SyntaxError` 指出 [`src/js/core/dungeon.js`](src/js/core/dungeon.js) 模块没有默认导出。
+
+**Details:**
+*   **移除 `buildings.js`:**
+    *   在 [`src/js/main.js`](src/js/main.js) 中注释掉了 `import Buildings from './core/buildings.js';`。
+    *   在 [`index.html`](index.html) 中注释掉了 `<script type="module" src="src/js/core/buildings.js"></script>`。
+    *   建议用户可以手动删除 [`src/js/core/buildings.js`](src/js/core/buildings.js) 文件。
+*   **修复 `dungeon.js` 导出错误:**
+    *   检查了 [`src/js/core/dungeon.js`](src/js/core/dungeon.js)，确认其定义了 `Dungeon` 对象但缺少导出语句。
+    *   在 [`src/js/core/dungeon.js`](src/js/core/dungeon.js) 文件末尾添加了 `export default Dungeon;`。
+*   **影响:**
+    *   移除了不再需要的 `buildings.js` 模块的加载。
+    *   解决了 `dungeon.js` 模块的导入问题。
+
+**Affected components/files:**
+*   [`src/js/main.js`](src/js/main.js)
+*   [`index.html`](index.html)
+*   [`src/js/core/dungeon.js`](src/js/core/dungeon.js)
+---
+### Decision (Debug)
+[2025-05-13 11:12:42] - **修复 `SyntaxError: The requested module './core/game.js' does not provide an export named 'default'`**
+
+**Rationale:**
+在修复了 `dungeon.js` 的导出问题后，用户报告了新的 `SyntaxError`，指出 [`src/js/core/game.js`](src/js/core/game.js) 模块没有默认导出。检查该文件确认了它定义了 `Game` 对象但缺少导出语句。
+
+**Details:**
+*   **修改 [`src/js/core/game.js`](src/js/core/game.js):**
+    *   在文件末尾添加了 `export default Game;` 语句。
+*   **影响:**
+    *   这使得 [`main.js`](src/js/main.js) 中的 `import Game from './core/game.js';` 语句能够成功导入模块，解决了该 `SyntaxError`。
+
+**Affected components/files:**
+*   [`src/js/core/game.js`](src/js/core/game.js)
+---
+### Decision (Debug)
+[2025-05-13 11:14:02] - **修复 `SyntaxError: The requested module './core/inventory.js' does not provide an export named 'default'`**
+
+**Rationale:**
+在修复了 `game.js` 的导出问题后，用户报告了新的 `SyntaxError`，指出 [`src/js/core/inventory.js`](src/js/core/inventory.js) 模块没有默认导出。检查该文件确认了它定义了 `Inventory` 对象但缺少导出语句。
+
+**Details:**
+*   **修改 [`src/js/core/inventory.js`](src/js/core/inventory.js):**
+    *   在文件末尾添加了 `export default Inventory;` 语句。
+*   **影响:**
+    *   这使得 [`main.js`](src/js/main.js) 中的 `import Inventory from './core/inventory.js';` 语句能够成功导入模块，解决了该 `SyntaxError`。
+
+**Affected components/files:**
+*   [`src/js/core/inventory.js`](src/js/core/inventory.js)
+---
+### Decision (Debug)
+[2025-05-13 11:15:20] - **修复 `SyntaxError: The requested module './core/item.js' does not provide an export named 'default'`**
+
+**Rationale:**
+在修复了 `inventory.js` 的导出问题后，用户报告了新的 `SyntaxError`，指出 [`src/js/core/item.js`](src/js/core/item.js) 模块没有默认导出。检查该文件确认了它定义了 `Item` 对象但缺少导出语句。
+
+**Details:**
+*   **修改 [`src/js/core/item.js`](src/js/core/item.js):**
+    *   在文件末尾添加了 `export default Item;` 语句。
+*   **影响:**
+    *   这使得 [`main.js`](src/js/main.js) 中的 `import Item from './core/item.js';` 语句能够成功导入模块，解决了该 `SyntaxError`。
+
+**Affected components/files:**
+*   [`src/js/core/item.js`](src/js/core/item.js)
+---
+### Decision (Debug)
+[2025-05-13 11:17:08] - **修复 `SyntaxError: The requested module './core/job-skills-template.js' does not provide an export named 'default'`**
+
+**Rationale:**
+在修复了 `item.js` 的导出问题后，用户报告了新的 `SyntaxError`，指出 [`src/js/core/job-skills-template.js`](src/js/core/job-skills-template.js) 模块没有默认导出。检查该文件确认了它定义了 `JobSkillsTemplate` 对象但缺少导出语句。
+
+**Details:**
+*   **修改 [`src/js/core/job-skills-template.js`](src/js/core/job-skills-template.js):**
+    *   在文件末尾添加了 `export default JobSkillsTemplate;` 语句。
+*   **影响:**
+    *   这使得 [`main.js`](src/js/main.js) 中的 `import JobSkillsTemplate from './core/job-skills-template.js';` 语句能够成功导入模块，解决了该 `SyntaxError`。
+
+**Affected components/files:**
+*   [`src/js/core/job-skills-template.js`](src/js/core/job-skills-template.js)
+---
+### Decision (Debug)
+[2025-05-13 11:18:04] - **修复 [`src/js/core/job-system.js`](src/js/core/job-system.js) 缺少默认导出问题**
+
+**Rationale:**
+在处理一系列模块导入错误时，根据 [`main.js`](src/js/main.js) 的导入顺序，检查到 [`src/js/core/job-system.js`](src/js/core/job-system.js) 文件。该文件定义了 `JobSystem` 对象但缺少默认导出语句，这会导致 `import JobSystem from './core/job-system.js';` 失败。
+
+**Details:**
+*   **修改 [`src/js/core/job-system.js`](src/js/core/job-system.js):**
+    *   在文件末尾添加了 `export default JobSystem;` 语句。
+*   **影响:**
+    *   确保 `JobSystem` 模块可以被正确导入。
+
+**Affected components/files:**
+*   [`src/js/core/job-system.js`](src/js/core/job-system.js)
+---
+### Decision (Debug)
+[2025-05-13 11:19:14] - **修复 [`src/js/core/team.js`](src/js/core/team.js) 缺少默认导出问题**
+
+**Rationale:**
+在处理一系列模块导入错误时，根据 [`main.js`](src/js/main.js) 的导入顺序，检查到 [`src/js/core/team.js`](src/js/core/team.js) 文件。该文件定义了 `Team` 对象但缺少默认导出语句，这会导致 `import Team from './core/team.js';` 失败。
+
+**Details:**
+*   **修改 [`src/js/core/team.js`](src/js/core/team.js):**
+    *   在文件末尾添加了 `export default Team;` 语句。
+*   **影响:**
+    *   确保 `Team` 模块可以被正确导入。
+
+**Affected components/files:**
+*   [`src/js/core/team.js`](src/js/core/team.js)
+---
+### Decision (Debug)
+[2025-05-13 11:20:29] - **修复 [`src/js/core/weapon-board-bonus-system.js`](src/js/core/weapon-board-bonus-system.js) 缺少默认导出问题**
+
+**Rationale:**
+在处理一系列模块导入错误时，根据 [`main.js`](src/js/main.js) 的导入顺序，检查到 [`src/js/core/weapon-board-bonus-system.js`](src/js/core/weapon-board-bonus-system.js) 文件。该文件定义了 `WeaponBoardBonusSystem` 对象但缺少默认导出语句，这会导致 `import WeaponBoardBonusSystem from './core/weapon-board-bonus-system.js';` 失败。
+
+**Details:**
+*   **修改 [`src/js/core/weapon-board-bonus-system.js`](src/js/core/weapon-board-bonus-system.js):**
+    *   在文件末尾添加了 `export default WeaponBoardBonusSystem;` 语句。
+*   **影响:**
+    *   确保 `WeaponBoardBonusSystem` 模块可以被正确导入。
+
+**Affected components/files:**
+*   [`src/js/core/weapon-board-bonus-system.js`](src/js/core/weapon-board-bonus-system.js)
+---
+### Decision (Debug)
+[2025-05-13 11:21:34] - **修复 [`src/js/components/skill-tooltip.js`](src/js/components/skill-tooltip.js) 缺少默认导出问题**
+
+**Rationale:**
+在处理一系列模块导入错误时，根据 [`main.js`](src/js/main.js) 的导入顺序，检查到 [`src/js/components/skill-tooltip.js`](src/js/components/skill-tooltip.js) 文件。该文件定义了 `SkillTooltip` 对象但缺少默认导出语句，这会导致 `import SkillTooltip from './components/skill-tooltip.js';` 失败。
+
+**Details:**
+*   **修改 [`src/js/components/skill-tooltip.js`](src/js/components/skill-tooltip.js):**
+    *   在文件末尾添加了 `export default SkillTooltip;` 语句。
+*   **影响:**
+    *   确保 `SkillTooltip` 模块可以被正确导入。这是本次排查中最后一个在 `main.js` 中启用的、需要检查导出语句的模块。
+
+**Affected components/files:**
+*   [`src/js/components/skill-tooltip.js`](src/js/components/skill-tooltip.js)
+---
+### Decision (Debug)
+[2025-05-13 11:29:41] - **修复 [`src/js/core/resources.js`](src/js/core/resources.js) 缺少默认导出问题**
+
+**Rationale:**
+在处理一系列模块导入错误时，根据 [`main.js`](src/js/main.js) 的导入顺序，检查到 [`src/js/core/resources.js`](src/js/core/resources.js) 文件。该文件定义了 `Resources` 对象但缺少默认导出语句，这会导致 `import Resources from './core/resources.js';` 失败。
+
+**Details:**
+*   **修改 [`src/js/core/resources.js`](src/js/core/resources.js):**
+    *   在文件末尾添加了 `export default Resources;` 语句。
+*   **影响:**
+    *   确保 `Resources` 模块可以被正确导入。
+
+**Affected components/files:**
+*   [`src/js/core/resources.js`](src/js/core/resources.js)
+---
+### Decision (Debug)
+[2025-05-13 17:18:29] - **修复 `file-utils.js` 模块未提供默认导出问题**
+
+**Rationale:**
+错误 "Uncaught SyntaxError: The requested module '../utils/file-utils.js' does not provide an export named 'default' (at game.js:6:8)" 表明 [`src/js/core/game.js`](src/js/core/game.js:6) 尝试默认导入 [`src/js/utils/file-utils.js`](src/js/utils/file-utils.js)，但后者未提供默认导出。
+
+**Details:**
+*   **修改 [`src/js/utils/file-utils.js`](src/js/utils/file-utils.js):**
+    *   在文件末尾添加了 `export default FileUtils;` 语句。
+*   **影响:**
+    *   使得 [`src/js/core/game.js`](src/js/core/game.js:6) 中的 `import FileUtils from '../utils/file-utils.js';` 语句能够成功导入模块。
+
+**Affected components/files:**
+*   [`src/js/utils/file-utils.js`](src/js/utils/file-utils.js)
+*   [`src/js/core/game.js`](src/js/core/game.js)
+
+---
+### Decision (Debug)
+[2025-05-13 17:24:09] - 修复CSS中多个图标路径引用错误
+
+**Rationale:**
+用户报告多个图标文件（`team-icon.png`, `shop-icon.png`, `tavern-icon.png`, `weapon-icon.png`, `dungeon-icon.png`）返回404错误，且 `team-icon.png` 抛出 `SyntaxError`。经检查，所有这些图标都在 [`src/css/main-ui.css`](src/css/main-ui.css) 中通过 `background-image: url('../img/icons/...')` 引用，但实际图片位于 `src/icon/` 目录或需要用户提供。`SyntaxError` 已由用户确认为解决。
+
+**Details:**
+*   **修改 [`src/css/main-ui.css`](src/css/main-ui.css):**
+    *   将 `url('../img/icons/team-icon.png')` ([`src/css/main-ui.css:81`](src/css/main-ui.css:81)) 修改为 `url('../icon/team.png')`。
+    *   将 `url('../img/icons/shop-icon.png')` ([`src/css/main-ui.css:188`](src/css/main-ui.css:188)) 修改为 `url('../icon/bag.png')` (根据用户指示)。
+    *   将 `url('../img/icons/tavern-icon.png')` ([`src/css/main-ui.css:107`](src/css/main-ui.css:107)) 修改为 `url('../icon/beerbar.png')` (根据用户指示)。
+    *   将 `url('../img/icons/weapon-icon.png')` ([`src/css/main-ui.css:134`](src/css/main-ui.css:134)) 修改为 `url('../icon/weapon.png')` (根据用户指示，用户将提供此文件)。
+    *   将 `url('../img/icons/dungeon-icon.png')` ([`src/css/main-ui.css:160`](src/css/main-ui.css:160)) 修改为 `url('../icon/dungeon.png')`。
+*   **影响:**
+    *   解决了图标的404错误。
+    *   `SyntaxError` 已由用户确认为解决，可能与路径修正间接相关或为其他因素。
+
+**Affected components/files:**
+*   [`src/css/main-ui.css`](src/css/main-ui.css)
+
+---
+### Decision (Debug)
+[2025-05-13 17:39:00] - **修复 `weapon.js` 和 `inventory.js` 中的 `ReferenceError`**
+
+**Rationale:**
+用户报告了两个 `ReferenceError`：
+1.  `ReferenceError: Game is not defined` at [`weapon.js:526`](src/js/core/weapon.js:526)
+2.  `ReferenceError: Item is not defined` at [`inventory.js:51`](src/js/core/inventory.js:51)
+
+这些错误表明相关模块未能正确访问 `Game` 和 `Item` 对象，通常是由于缺少模块导入。
+
+**Details:**
+*   **修改 [`src/js/core/weapon.js`](src/js/core/weapon.js):**
+    *   在文件顶部 ([`src/js/core/weapon.js:4`](src/js/core/weapon.js:4)) 添加了 `import Game from './game.js';`。
+*   **修改 [`src/js/core/inventory.js`](src/js/core/inventory.js):**
+    *   在文件顶部 ([`src/js/core/inventory.js:4`](src/js/core/inventory.js:4)) 添加了 `import Item from './item.js';`。
+*   **影响:**
+    *   这些更改确保了 `Weapon` 模块可以访问 `Game` 对象，`Inventory` 模块可以访问 `Item` 对象，从而解决了 `ReferenceError`。
+
+**Affected components/files:**
+*   [`src/js/core/weapon.js`](src/js/core/weapon.js)
+*   [`src/js/core/inventory.js`](src/js/core/inventory.js)
+
+---
+### Decision (Debug)
+[2025-05-13 18:00:00] - **修复游戏初始化期间 `character.js` 中的 `ReferenceError: Team is not defined`**
+
+**Rationale:**
+用户报告在游戏初始化时发生 `ReferenceError: Team is not defined`，错误堆栈指向 [`character.js`](src/js/core/character.js) 的 `updateTeamWeaponBonusStats` 函数 ([`src/js/core/character.js:1360`](src/js/core/character.js:1360))。此函数尝试访问 `Team.getTeam()`，但 `Team` 模块未在该文件中导入。
+
+**Details:**
+*   **修改 [`src/js/core/character.js`](src/js/core/character.js):**
+    *   在文件顶部 ([`src/js/core/character.js:4`](src/js/core/character.js:4)) 添加了以下导入语句：
+        *   `import Team from './team.js';`
+        *   `import Dungeon from './dungeon.js';` (根据代码中对 `Dungeon.currentRun` 的使用情况添加)
+        *   `import BuffSystem from './buff-system.js';` (根据代码中对 `BuffSystem.clearAllBuffs` 的使用情况添加)
+*   **影响:**
+    *   确保 `Character` 模块能够正确访问 `Team` 模块以及其他依赖的模块，解决了初始化时的 `ReferenceError`。
+
+**Affected components/files:**
+*   [`src/js/core/character.js`](src/js/core/character.js)
+
+---
+### Decision (Debug)
+[2025-05-13 18:03:00] - **修复 `index.html` 中内联 `onclick` 事件处理器无法找到 `UI` 对象的问题**
+
+**Rationale:**
+用户报告在点击HTML元素上的内联 `onclick` 事件时发生 `ReferenceError: UI is not defined` (at `(索引):95`)。这是因为 `UI` 模块虽然在 [`main.js`](src/js/main.js) 中被导入并初始化，但并未挂载到全局 `window` 对象上，导致内联事件处理器无法在全局作用域中找到它。
+
+**Details:**
+*   **修改 [`src/js/main.js`](src/js/main.js):**
+    *   在 `UI.init()` 调用之后，添加了 `window.UI = UI;` ([`src/js/main.js:198`](src/js/main.js:198) 附近)。
+*   **影响:**
+    *   将 `UI` 对象暴露到全局作用域，使得 `index.html` 中的内联 `onclick="UI.switchScreen(...)"` 等调用能够正确执行。
+
+**Affected components/files:**
+*   [`src/js/main.js`](src/js/main.js)

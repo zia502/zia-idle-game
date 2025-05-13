@@ -7,6 +7,9 @@ This file tracks the project's progress using a task list format.
 
 ## Completed Tasks
 
+*   [2025-05-13 09:16:00] - **Completed Task:** 修正 [`src/data/items_definitions.json`](src/data/items_definitions.json) 中的物品 key-ID 不一致问题。
+    *   确保了所有物品的顶层 key 与其内部 `id` 属性一致。
+    *   确认了 "原初之砂", "治愈之水", "真理之土" 在之前的修改中已正确处理，本次无需修改。
 *   [2025-05-12 13:36:54] - **Completed Task: 物品系统重构**
     *   创建了新的物品定义文件 [`src/data/items_definitions.json`](src/data/items_definitions.json)。
     *   修改了 [`src/js/core/item.js`](src/js/core/item.js) 以支持新的物品定义和加载机制。

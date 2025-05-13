@@ -7,6 +7,7 @@ This file tracks the project's current status, including recent changes, current
 
 ## Current Focus
 
+*   [2025-05-13 09:16:00] - **Code Change:** 修改了 [`src/data/items_definitions.json`](src/data/items_definitions.json)，确保所有物品的顶层 key 与其内部 `id` 属性一致。
 *   [2025-05-12 16:17:00] - **物品系统重构：** 修正为通过宝箱掉落新物品，并更新 `chestDrops`。核心需求已根据用户最新反馈澄清，当前任务为架构设计与内存银行更新，并为 `code` 模式提供明确的实现指导。
 *   [2025-05-12 11:16:48] - **Code Change:** 修改了 [`src/js/core/character.js`](src/js/core/character.js) 中的 `Character.calculateNextLevelExp(level)` 函数，以实现新的角色升级经验计算方法。
     *   **新逻辑:**

@@ -4,6 +4,8 @@
 import Team from './team.js';
 import Dungeon from './dungeon.js'; // 根据第262行 Dungeon.currentRun 的使用情况添加
 import BuffSystem from './buff-system.js'; // 根据第275行 BuffSystem.clearAllBuffs 的使用情况添加
+import Weapon from './weapon.js'; // 添加Weapon模块导入
+import Events from '../components/events.js'; // 添加Events模块导入
 // Game 模块在 Character.recruitCharacter 中使用，但 CharacterCreation 依赖 Character，Game 依赖 CharacterCreation，可能导致循环依赖。
 // 暂时不导入 Game，如果 recruitCharacter 中的 Game.addGold 报错，再考虑解决方案。
 // import Game from './game.js';
@@ -117,6 +119,12 @@ const Character = {
         this.loadCharacterData('r', 'src/data/r.json');
         this.loadCharacterData('sr', 'src/data/sr.json');
         this.loadCharacterData('ssr', 'src/data/ssr.json');
+
+        // 发送角色系统初始化完成事件
+        if (typeof Events !== 'undefined') {
+            console.log('发送角色系统初始化完成事件');
+            Events.emit('character:initialized', { success: true });
+        }
     },
 
     /**
@@ -407,7 +415,7 @@ const Character = {
         };
 
         // 已移除传说加成 bonusMultiplier 的直接应用
-        
+
         // 如果角色在创建时就有 multiCount > 1 且 multiBonusStats 未提供，则计算初始的 multiBonusStats
         if (character.multiCount > 1 && !data.multiBonusStats) {
             this.updateMultiBonusStats(character); // updateMultiBonusStats 将填充 character.multiBonusStats
@@ -511,7 +519,7 @@ const Character = {
                 break;
             }
         }
-        
+
         // 如果等级在已定义数据点之间
         if (lowerBound && upperBound) {
             const x = level;
@@ -535,7 +543,7 @@ const Character = {
             // 这覆盖了99级升100级的情况，以及如果未来最大等级超过100，99级以上到最大等级前一级的情况
             return lastDataPoint.exp;
         }
-        
+
         // 如果 level 正好是最后一个数据点的 level (例如99)，并且上面直接匹配未处理（理论上不应发生）
         // 或者其他未覆盖的边缘情况，返回0或一个错误指示值
         if (level === lastDataPoint.level) {
@@ -581,10 +589,10 @@ const Character = {
 
             character.level++;
             statsChanged = true;
-            
+
             // 定义需要按新规则计算的基础属性列表
             const statsToUpdate = ['hp', 'attack', 'defense', 'critRate', 'critDamage', 'daRate', 'taRate'];
-            
+
             statsToUpdate.forEach(statKey => {
                 const expectedValue = this.getExpectedBaseStatAtLevel(statKey, template.baseStats, character.level, character.maxLevel);
                 if (expectedValue !== undefined) {
@@ -678,7 +686,7 @@ const Character = {
         let existingCharacter = null;
         if (!isLegendary && template.name) {
             existingCharacter = Object.values(this.characters).find(
-                character => character.name === template.name && 
+                character => character.name === template.name &&
                              character.rarity === template.rarity &&
                              character.isRecruited
             );
@@ -693,7 +701,7 @@ const Character = {
 
             // 计算并更新 multiBonusStats (纯增量)
             const refundInfo = this.updateMultiBonusStats(existingCharacter);
-            
+
             // 更新角色的 currentStats 和 weaponBonusStats
             let teamId = null;
             if (typeof Team !== 'undefined' && Team.findTeamByMember) {
@@ -775,7 +783,7 @@ const Character = {
             if (character.rarity === 'rare') refundAmount = 10;
             else if (character.rarity === 'epic') refundAmount = 100;
             else if (character.rarity === 'legendary') refundAmount = 1000;
-            
+
             refundInfo = {
                 refundAmount: refundAmount * (character.multiCount - MULTI_LIMIT),
                 characterName: character.name
@@ -784,18 +792,18 @@ const Character = {
         }
 
         const bonusCount = effectiveMultiCountForBonus - 1; // 实际产生加成的次数
-        
+
         // 使用角色的纯粹 baseStats 来计算增量
         const pureBaseStats = character.baseStats; // 假设此刻 baseStats 是纯净的
 
         character.multiBonusStats.hp = Math.floor((pureBaseStats.maxHp || pureBaseStats.hp || 0) * 0.01 * bonusCount);
         character.multiBonusStats.attack = Math.floor((pureBaseStats.maxAttack || pureBaseStats.attack || 0) * 0.01 * bonusCount);
         character.multiBonusStats.defense = bonusCount;
-        
+
         // console.log(`更新了 ${character.name} 的 multiBonusStats (纯增量): ${bonusCount} 次突破`, character.multiBonusStats);
         return refundInfo;
     },
-    
+
     // applyMultiBonusToStats 已废弃
 
     /**
@@ -853,7 +861,7 @@ const Character = {
 
                     // 在添加新角色前，检查是否已存在该角色
                     const existingCharacter = Object.values(this.characters).find(
-                        character => character.name === rTemplate.name && 
+                        character => character.name === rTemplate.name &&
                                      character.rarity === 'rare' &&
                                      character.isRecruited
                     );
@@ -864,13 +872,13 @@ const Character = {
                             existingCharacter.multiCount = 1;
                         }
                         existingCharacter.multiCount += 1;
-                        
+
                         // 更新多重加成属性
                         const refundInfo = this.updateMultiBonusStats(existingCharacter);
-                        
+
                         // 创建一个副本用于显示结果
                         const rCharacterCopy = {...existingCharacter};
-                        
+
                         // 添加返还金币信息
                         if (refundInfo) {
                             rCharacterCopy.refundInfo = refundInfo;
@@ -879,7 +887,7 @@ const Character = {
                                 Game.addGold(refundInfo.refundAmount);
                             }
                         }
-                        
+
                         result.push(rCharacterCopy);
                         continue;
                     }
@@ -925,7 +933,7 @@ const Character = {
 
                     // 在添加新角色前，检查是否已存在该角色
                     const existingCharacter = Object.values(this.characters).find(
-                        character => character.name === srTemplate.name && 
+                        character => character.name === srTemplate.name &&
                                      character.rarity === 'epic' &&
                                      character.isRecruited
                     );
@@ -936,13 +944,13 @@ const Character = {
                             existingCharacter.multiCount = 1;
                         }
                         existingCharacter.multiCount += 1;
-                        
+
                         // 更新多重加成属性
                         const refundInfo = this.updateMultiBonusStats(existingCharacter);
-                        
+
                         // 创建一个副本用于显示结果
                         const srCharacterCopy = {...existingCharacter};
-                        
+
                         // 添加返还金币信息
                         if (refundInfo) {
                             srCharacterCopy.refundInfo = refundInfo;
@@ -951,7 +959,7 @@ const Character = {
                                 Game.addGold(refundInfo.refundAmount);
                             }
                         }
-                        
+
                         result.push(srCharacterCopy);
                         continue;
                     }
@@ -997,7 +1005,7 @@ const Character = {
 
                     // 在添加新角色前，检查是否已存在该角色
                     const existingCharacter = Object.values(this.characters).find(
-                        character => character.name === ssrTemplate.name && 
+                        character => character.name === ssrTemplate.name &&
                                      character.rarity === 'legendary' &&
                                      character.isRecruited
                     );
@@ -1008,13 +1016,13 @@ const Character = {
                             existingCharacter.multiCount = 1;
                         }
                         existingCharacter.multiCount += 1;
-                        
+
                         // 更新多重加成属性
                         const refundInfo = this.updateMultiBonusStats(existingCharacter);
-                        
+
                         // 创建一个副本用于显示结果
                         const ssrCharacterCopy = {...existingCharacter};
-                        
+
                         // 添加返还金币信息
                         if (refundInfo) {
                             ssrCharacterCopy.refundInfo = refundInfo;
@@ -1023,7 +1031,7 @@ const Character = {
                                 Game.addGold(refundInfo.refundAmount);
                             }
                         }
-                        
+
                         result.push(ssrCharacterCopy);
                         continue;
                     }
@@ -1065,7 +1073,7 @@ const Character = {
 
                     // 在添加新角色前，检查是否已存在该角色
                     const existingCharacter = Object.values(this.characters).find(
-                        character => character.name === srTemplate.name && 
+                        character => character.name === srTemplate.name &&
                                      character.rarity === 'epic' &&
                                      character.isRecruited
                     );
@@ -1076,13 +1084,13 @@ const Character = {
                             existingCharacter.multiCount = 1;
                         }
                         existingCharacter.multiCount += 1;
-                        
+
                         // 更新多重加成属性
                         const refundInfo = this.updateMultiBonusStats(existingCharacter);
-                        
+
                         // 创建一个副本用于显示结果
                         const srCharacterCopy = {...existingCharacter};
-                        
+
                         // 添加返还金币信息
                         if (refundInfo) {
                             srCharacterCopy.refundInfo = refundInfo;
@@ -1091,7 +1099,7 @@ const Character = {
                                 Game.addGold(refundInfo.refundAmount);
                             }
                         }
-                        
+
                         result.push(srCharacterCopy);
                         continue;
                     }
@@ -1151,7 +1159,7 @@ const Character = {
 
                         // 在添加新角色前，检查是否已存在该角色
                         const existingCharacter = Object.values(this.characters).find(
-                            character => character.name === ssrTemplate.name && 
+                            character => character.name === ssrTemplate.name &&
                                          character.rarity === 'legendary' &&
                                          character.isRecruited
                         );
@@ -1162,13 +1170,13 @@ const Character = {
                                 existingCharacter.multiCount = 1;
                             }
                             existingCharacter.multiCount += 1;
-                            
+
                             // 更新多重加成属性
                             const refundInfo = this.updateMultiBonusStats(existingCharacter);
-                            
+
                             // 创建一个副本用于显示结果
                             const ssrCharacterCopy = {...existingCharacter};
-                            
+
                             // 添加返还金币信息
                             if (refundInfo) {
                                 ssrCharacterCopy.refundInfo = refundInfo;
@@ -1177,7 +1185,7 @@ const Character = {
                                     Game.addGold(refundInfo.refundAmount);
                                 }
                             }
-                            
+
                             result.push(ssrCharacterCopy);
                             continue; // 跳过其余的角色创建步骤
                         }
@@ -1219,7 +1227,7 @@ const Character = {
 
                         // 在添加新角色前，检查是否已存在该角色
                         const existingCharacter = Object.values(this.characters).find(
-                            character => character.name === srTemplate.name && 
+                            character => character.name === srTemplate.name &&
                                          character.rarity === 'epic' &&
                                          character.isRecruited
                         );
@@ -1230,13 +1238,13 @@ const Character = {
                                 existingCharacter.multiCount = 1;
                             }
                             existingCharacter.multiCount += 1;
-                            
+
                             // 更新多重加成属性
                             const refundInfo = this.updateMultiBonusStats(existingCharacter);
-                            
+
                             // 创建一个副本用于显示结果
                             const srCharacterCopy = {...existingCharacter};
-                            
+
                             // 添加返还金币信息
                             if (refundInfo) {
                                 srCharacterCopy.refundInfo = refundInfo;
@@ -1245,7 +1253,7 @@ const Character = {
                                     Game.addGold(refundInfo.refundAmount);
                                 }
                             }
-                            
+
                             result.push(srCharacterCopy);
                             continue; // 跳过其余的角色创建步骤
                         }
@@ -1391,14 +1399,14 @@ const Character = {
         }
         // 可以为其他属性添加类似逻辑
     },
-    
+
     // 新的私有辅助函数，用于计算 (纯粹 baseStats + 武器盘加成)
     _calculateWeaponAugmentedStats(character, teamId) {
         if (!character) return null;
 
         const inDungeon = typeof Dungeon !== 'undefined' && Dungeon.currentRun && character.dungeonOriginalStats;
         let sourceBaseStats = inDungeon ? { ...character.dungeonOriginalStats } : { ...character.baseStats };
-        
+
         // 确保 sourceBaseStats 完整性
         this._ensureStatsIntegrity(sourceBaseStats, character.baseStats);
 
@@ -1444,7 +1452,7 @@ const Character = {
                 }
             }
         }
-        
+
         // 确保 augmentedStats 完整性并取整
         this._ensureStatsIntegrity(augmentedStats, sourceBaseStats);
         // 移除主要属性的 Math.floor()，但保留百分比属性的特殊处理和非负值约束
@@ -1516,7 +1524,7 @@ const Character = {
                 finalStats[stat] = Math.max(0, finalStats[stat]);
             }
         }
-        
+
         return finalStats;
     },
 
@@ -1532,11 +1540,11 @@ const Character = {
             // console.error(`_updateCharacterEffectiveStats: 角色 ${characterId} 未找到`);
             return;
         }
-        
+
         // getCharacterFullStats 内部会更新 character.weaponBonusStats
         // 并返回最终的 (base + weapon + multi) 属性
         const finalEffectiveStats = this.getCharacterFullStats(characterId, teamId);
-        
+
         if (finalEffectiveStats) {
             character.currentStats = finalEffectiveStats;
             // console.log(`角色 ${character.name} 的 currentStats 已更新:`, character.currentStats);
@@ -1634,7 +1642,7 @@ const Character = {
         if (contributingStackableAttackUpBuffs.length > 0) {
             calculationSteps.push(`可叠加攻UP Buffs: ${contributingStackableAttackUpBuffs.join(', ')} -> 总计 +${(cumulativeAttackUpPercentage * 100).toFixed(1)}%`);
         }
-        
+
         let cumulativeAttackDownPercentage = 0;
         const contributingAttackDownBuffs = [];
         buffs.filter(b => b.type === 'attackDown') // 假设 attackDown 总是可叠加
@@ -1642,7 +1650,7 @@ const Character = {
                 cumulativeAttackDownPercentage += b.value;
                 contributingAttackDownBuffs.push(`'${b.name || '攻DOWN'}' (-${(b.value * 100).toFixed(1)}%)`);
              });
-        
+
         cumulativeAttackDownPercentage = Math.min(cumulativeAttackDownPercentage, 0.5); // 降低上限50%
         if (contributingAttackDownBuffs.length > 0) {
             calculationSteps.push(`攻DOWN Buffs: ${contributingAttackDownBuffs.join(', ')} -> 总计 -${(cumulativeAttackDownPercentage * 100).toFixed(1)}% (上限50%)`);
@@ -1672,7 +1680,7 @@ const Character = {
             attackPower *= hunshenModifier;
             calculationSteps.push(`应用浑身BUFF '${buff.name || '浑身'}' (来源: ${buff.source || '未知'}, x${hunshenModifier.toFixed(3)}, +${(hunshenValue * 100).toFixed(1)}%, HP: ${(hpPercentage * 100).toFixed(1)}%) 后: ${attackPower.toFixed(2)}`);
         });
-        
+
         const beishuiBuffs = buffs.filter(b => b.type === 'beishui'); // 背水
         beishuiBuffs.forEach(buff => {
             const beishuiValue = buff.value || (0.5 - (hpPercentage * 0.45));
@@ -1680,7 +1688,7 @@ const Character = {
             attackPower *= beishuiModifier;
             calculationSteps.push(`应用背水BUFF '${buff.name || '背水'}' (来源: ${buff.source || '未知'}, x${beishuiModifier.toFixed(3)}, +${(beishuiValue * 100).toFixed(1)}%, HP: ${(hpPercentage * 100).toFixed(1)}%) 后: ${attackPower.toFixed(2)}`);
         });
-        
+
         let totalExAttackBonus = 0;
         if (character.currentStats && typeof character.currentStats.exAttack === 'number') {
             totalExAttackBonus = character.currentStats.exAttack;
@@ -1702,10 +1710,10 @@ const Character = {
         if (flatDamageIncrease > 0) {
              calculationSteps.push(`应用总固定攻击力上升 (+${flatDamageIncrease}) 后: ${attackPower.toFixed(2)}`);
         }
-        
+
         const finalAttackPower = Math.max(0, Math.floor(attackPower));
         calculationSteps.push(`最终计算攻击力 (取整且不小于0): ${finalAttackPower}`);
-        
+
         const totalMultiplier = baseAttackForCalculation > 0 ? (finalAttackPower / baseAttackForCalculation) : (finalAttackPower > 0 ? Infinity : 1);
         calculationSteps.push(`总攻击力倍率 (相对计算起始攻击力): x${totalMultiplier.toFixed(3)}`);
 
@@ -1844,7 +1852,7 @@ const Character = {
         // 更新角色基础属性为新职业属性
         character.baseStats = {...newJobData.baseStats}; // 这是纯粹的 baseStats
         character.growthRates = {...newJobData.growthRates};
-        
+
         // 确保新 baseStats 的完整性
         this._ensureStatsIntegrity(character.baseStats, null); // 第二个参数为null，因为这是全新的base
 
@@ -1918,22 +1926,56 @@ const Character = {
 
             // 现在模板数据已准备好，可以安全地刷新属性和执行验证
             console.log('加载角色数据后，开始刷新所有角色的有效属性...');
-            if (typeof Team !== 'undefined' && Team.findTeamByMember && typeof Weapon !== 'undefined') {
-                Object.keys(this.characters).forEach(characterId => {
-                    const character = this.characters[characterId];
-                    if (character) {
-                        let teamId = null;
-                        const team = Team.findTeamByMember(characterId);
-                        if (team) {
-                            teamId = team.id;
+
+            // 使用Events系统等待Team和Weapon模块初始化完成
+            const refreshCharacterStats = () => {
+                console.log('开始刷新所有角色的有效属性...');
+                try {
+                    Object.keys(this.characters).forEach(characterId => {
+                        const character = this.characters[characterId];
+                        if (character) {
+                            let teamId = null;
+                            // 直接检查Team模块是否可用
+                            if (typeof Team !== 'undefined' && typeof Team.findTeamByMember === 'function') {
+                                const team = Team.findTeamByMember(characterId);
+                                if (team) {
+                                    teamId = team.id;
+                                }
+                            }
+                            this._updateCharacterEffectiveStats(characterId, teamId);
                         }
-                        this._updateCharacterEffectiveStats(characterId, teamId);
-                    }
-                });
-                console.log('所有角色的有效属性刷新完成。');
-            } else {
-                console.warn('Team 或 Weapon 模块未完全加载，暂时无法在加载角色数据后立即刷新所有角色属性。');
+                    });
+                    console.log('所有角色的有效属性刷新完成。');
+                } catch (error) {
+                    console.error('刷新角色属性时出错:', error);
+                }
+            };
+
+            // 立即尝试刷新一次
+            console.log('立即尝试刷新角色属性...');
+            if (typeof Team !== 'undefined' && typeof Weapon !== 'undefined') {
+                setTimeout(refreshCharacterStats, 100);
             }
+
+            // 监听Team初始化完成事件
+            Events.once('team:initialized', () => {
+                console.log('Team模块初始化完成，刷新角色属性');
+                setTimeout(refreshCharacterStats, 100);
+            });
+
+            // 监听Weapon初始化完成事件
+            Events.once('weapon:initialized', () => {
+                console.log('Weapon模块初始化完成，刷新角色属性');
+                setTimeout(refreshCharacterStats, 100);
+            });
+
+            // 如果3秒后仍未刷新，再次尝试
+            setTimeout(() => {
+                console.log('最终尝试刷新角色属性...');
+                if (typeof Team !== 'undefined' && typeof Weapon !== 'undefined') {
+                    refreshCharacterStats();
+                }
+            }, 3000); // 等待3秒
 
             console.log('对所有已加载角色执行 baseStats 验证 (并自动修正)...'); // 更新日志消息
             Object.keys(this.characters).forEach(charId => {
@@ -2011,14 +2053,14 @@ const Character = {
 
         // 确保等级在有效范围内
         currentLevel = Math.max(1, Math.min(currentLevel, characterMaxLevel));
-        
+
         if (characterMaxLevel <= 1) { // 对于最大等级为1的角色，属性总是1级时的值
             return level1Value;
         }
 
         // 线性插值
         const expectedValue = level1Value + (maxLevelValue - level1Value) * (currentLevel - 1) / (characterMaxLevel - 1);
-        
+
         // 对于非百分比的数值属性，通常向下取整
         if (!['critRate', 'critDamage', 'daRate', 'taRate'].includes(statName)) {
             return Math.floor(expectedValue);
@@ -2049,7 +2091,7 @@ const Character = {
             const actualValue = character.baseStats[statKey];
             const tolerance = 0.0001;
             let isDifferent = false;
-            
+
             if (expectedValue === undefined && actualValue !== undefined) {
                 isDifferent = true;
             } else if (expectedValue !== undefined && actualValue === undefined) {
@@ -2069,7 +2111,7 @@ const Character = {
                 console.warn(`角色 ${character.name} (ID: ${characterId}, Lvl: ${character.level}) 的 baseStats.${statKey} 不匹配! ` +
                              `期望值: ${expectedValue === undefined ? 'N/A' : expectedValue}, ` +
                              `实际值: ${actualValue === undefined ? 'N/A' : actualValue}`);
-                
+
                 if (autoCorrect && expectedValue !== undefined) {
                     console.log(`   自动修正 baseStats.${statKey} 从 ${actualValue} 为 ${expectedValue}`);
                     character.baseStats[statKey] = expectedValue;

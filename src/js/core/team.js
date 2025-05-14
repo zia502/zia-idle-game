@@ -1,6 +1,7 @@
 /**
  * 队伍管理系统 - 负责游戏中队伍的管理
  */
+import Events from '../components/events.js';
 const Team = {
     // 队伍数据
     teams: {},
@@ -10,6 +11,12 @@ const Team = {
      */
     init() {
         console.log('队伍系统已初始化');
+
+        // 发送队伍系统初始化完成事件
+        if (typeof Events !== 'undefined') {
+            console.log('发送队伍系统初始化完成事件');
+            Events.emit('team:initialized', { success: true });
+        }
     },
 
     /**

@@ -17,8 +17,12 @@ import BuffSystem from './core/buff-system.js';
 import Dungeon from './core/dungeon.js';
 import WeaponBoardBonusSystem from './core/weapon-board-bonus-system.js';
 import SkillTooltip from './components/skill-tooltip.js';
+import UI from './components/UI.js';
 import Game from './core/game.js';
-// import Debug from './debug.js'; // Debug 模块可选
+import Debug from './debug.js';
+
+// 将UI对象挂载到window，确保全局可访问
+window.UI = UI;
 
 document.addEventListener('DOMContentLoaded', function() {
     console.log('初始化游戏...');
@@ -62,10 +66,20 @@ document.addEventListener('DOMContentLoaded', function() {
             console.log('初始化武器系统...');
             Weapon.init();
 
+            // 确保武器系统初始化事件被触发
+            setTimeout(() => {
+                if (typeof Events !== 'undefined') {
+                    console.log('手动触发武器系统初始化完成事件');
+                    Events.emit('weapon:initialized', { success: true });
+                }
+            }, 500);
+
             // 监听武器模板加载完成事件
             Events.on('weaponTemplate:loaded', () => {
                 console.log('武器模板加载完成，更新UI');
-                UI.renderWeaponInventory();
+                if (typeof UI !== 'undefined' && typeof UI.renderWeaponInventory === 'function') {
+                    UI.renderWeaponInventory();
+                }
             });
         } else {
             console.warn('找不到Weapon模块，跳过初始化');
@@ -146,6 +160,14 @@ document.addEventListener('DOMContentLoaded', function() {
         if (typeof Team !== 'undefined') {
             console.log('初始化队伍系统...');
             Team.init();
+
+            // 确保队伍系统初始化事件被触发
+            setTimeout(() => {
+                if (typeof Events !== 'undefined') {
+                    console.log('手动触发队伍系统初始化完成事件');
+                    Events.emit('team:initialized', { success: true });
+                }
+            }, 500);
         } else {
             console.warn('找不到Team模块，跳过初始化');
         }
@@ -187,23 +209,32 @@ document.addEventListener('DOMContentLoaded', function() {
             console.warn('找不到SkillTooltip模块，跳过初始化');
         }
 
-        // 在职业系统就绪后初始化UI系统
+        // 直接初始化UI系统，不等待职业系统就绪
+        console.log('直接初始化UI系统...');
+
+        // 初始化UI系统
+        if (typeof UI !== 'undefined') {
+            console.log('初始化UI系统...');
+            UI.init();
+            // UI对象已在文件顶部挂载到window
+        } else {
+            console.warn('找不到UI模块，跳过初始化');
+        }
+
+        // 再次初始化技能提示框，确保它能正常工作
+        if (typeof SkillTooltip !== 'undefined') {
+            console.log('重新初始化技能提示框...');
+            SkillTooltip.init();
+        }
+
+        // 仍然监听职业系统就绪事件，以便在职业系统就绪后更新UI
         Events.on('jobSystem:ready', function() {
-            console.log('职业系统就绪，现在初始化UI系统...');
+            console.log('职业系统就绪，更新UI...');
 
-            // 初始化UI系统
-            if (typeof UI !== 'undefined') {
-                console.log('初始化UI系统...');
-                UI.init();
-                window.UI = UI; // 将 UI 对象挂载到 window
-            } else {
-                console.warn('找不到UI模块，跳过初始化');
-            }
-
-            // 再次初始化技能提示框，确保它能正常工作
-            if (typeof SkillTooltip !== 'undefined') {
-                console.log('重新初始化技能提示框...');
-                SkillTooltip.init();
+            // 更新主界面UI
+            if (typeof MainUI !== 'undefined') {
+                MainUI.updateMainHeroInfo();
+                MainUI.updateCurrentTeam();
             }
         });
 

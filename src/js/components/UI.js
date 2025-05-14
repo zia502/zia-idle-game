@@ -1,4 +1,7 @@
 import Dungeon from '../core/dungeon.js';
+import Events from './events.js';
+import Weapon from '../core/weapon.js';
+import Game from '../core/game.js';
 
 /**
  * UI模块 - 负责管理游戏界面和用户交互元素
@@ -283,9 +286,33 @@ console.log('[DEBUG] UI.setupEventListeners() called.');
         });
 
         // 添加导航按钮事件监听
-        document.querySelectorAll('[data-screen]').forEach(button => {
-            button.addEventListener('click', (e) => {
-                const targetScreen = e.target.getAttribute('data-screen');
+        const screenButtons = document.querySelectorAll('[data-screen]');
+        console.log(`找到 ${screenButtons.length} 个带有 data-screen 属性的元素`);
+
+        screenButtons.forEach(button => {
+            console.log(`为元素绑定点击事件: `, button);
+
+            // 移除可能存在的旧事件监听器
+            const newButton = button.cloneNode(true);
+            button.parentNode.replaceChild(newButton, button);
+
+            newButton.addEventListener('click', (e) => {
+                console.log(`点击了元素: `, e.target);
+
+                // 获取点击元素或其父元素的data-screen属性
+                let targetElement = e.target;
+                while (targetElement && !targetElement.getAttribute('data-screen')) {
+                    targetElement = targetElement.parentElement;
+                }
+
+                if (!targetElement) {
+                    console.log('未找到带有data-screen属性的目标元素');
+                    return;
+                }
+
+                const targetScreen = targetElement.getAttribute('data-screen');
+                console.log(`目标屏幕: ${targetScreen}`);
+
                 if (targetScreen) {
                     if (targetScreen === 'shop-screen') { // 检查是否是商店屏幕
                         console.warn('商店功能已移除，无法切换到 shop-screen。');
@@ -294,6 +321,39 @@ console.log('[DEBUG] UI.setupEventListeners() called.');
                     }
                     this.switchScreen(targetScreen);
                     console.log(`切换到屏幕: ${targetScreen}`);
+                    e.preventDefault(); // 阻止默认行为
+                    e.stopPropagation(); // 阻止事件冒泡
+                }
+            });
+        });
+
+        // 添加菜单图标事件监听
+        const menuIcons = document.querySelectorAll('.menu-icon');
+        console.log(`找到 ${menuIcons.length} 个菜单图标元素`);
+
+        menuIcons.forEach(icon => {
+            console.log(`为菜单图标绑定点击事件: `, icon);
+
+            // 移除可能存在的旧事件监听器
+            const newIcon = icon.cloneNode(true);
+            icon.parentNode.replaceChild(newIcon, icon);
+
+            newIcon.addEventListener('click', (e) => {
+                console.log(`点击了菜单图标: `, e.target);
+
+                const targetScreen = newIcon.getAttribute('data-screen');
+                console.log(`菜单图标目标屏幕: ${targetScreen}`);
+
+                if (targetScreen) {
+                    if (targetScreen === 'shop-screen') { // 检查是否是商店屏幕
+                        console.warn('商店功能已移除，无法切换到 shop-screen。');
+                        this.showNotification('商店功能已移除。', 'warning');
+                        return;
+                    }
+                    this.switchScreen(targetScreen);
+                    console.log(`菜单图标切换到屏幕: ${targetScreen}`);
+                    e.preventDefault(); // 阻止默认行为
+                    e.stopPropagation(); // 阻止事件冒泡
                 }
             });
         });
@@ -390,13 +450,105 @@ console.log('[DEBUG] UI.setupEventListeners() called.');
             const newResetBtn = document.getElementById('reset-btn');
 
             newResetBtn.addEventListener('click', () => {
-console.log('[DEBUG] Reset button clicked. Showing confirm dialog.');
-                if (confirm('确定要重置游戏吗？所有进度将会丢失。')) {
-                    if (typeof Game !== 'undefined' && typeof Game.resetGame === 'function') {
-                        Game.resetGame();
-                        this.showNotification('游戏已重置', 'info');
+                console.log('[DEBUG] Reset button clicked. Showing custom confirm dialog.');
+
+                // 创建自定义确认对话框
+                const createConfirmDialog = () => {
+                    // 先移除可能存在的旧对话框
+                    const oldOverlay = document.getElementById('confirm-dialog-overlay');
+                    if (oldOverlay) oldOverlay.remove();
+
+                    const oldDialog = document.getElementById('confirm-dialog');
+                    if (oldDialog) oldDialog.remove();
+
+                    // 创建遮罩层
+                    const overlay = document.createElement('div');
+                    overlay.className = 'dialog-overlay';
+                    overlay.id = 'confirm-dialog-overlay';
+                    overlay.style.position = 'fixed';
+                    overlay.style.top = '0';
+                    overlay.style.left = '0';
+                    overlay.style.width = '100%';
+                    overlay.style.height = '100%';
+                    overlay.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
+                    overlay.style.zIndex = '999';
+                    document.body.appendChild(overlay);
+
+                    // 创建对话框
+                    const dialog = document.createElement('div');
+                    dialog.className = 'dialog confirm-dialog';
+                    dialog.id = 'confirm-dialog';
+                    dialog.style.position = 'fixed';
+                    dialog.style.top = '50%';
+                    dialog.style.left = '50%';
+                    dialog.style.transform = 'translate(-50%, -50%)';
+                    dialog.style.backgroundColor = '#fff';
+                    dialog.style.padding = '20px';
+                    dialog.style.borderRadius = '5px';
+                    dialog.style.boxShadow = '0 0 10px rgba(0, 0, 0, 0.3)';
+                    dialog.style.zIndex = '1000';
+                    dialog.style.width = '300px';
+                    dialog.style.maxWidth = '90%';
+                    dialog.style.textAlign = 'center';
+
+                    // 设置对话框内容
+                    dialog.innerHTML = `
+                        <div class="dialog-header">
+                            <h3 style="margin-top: 0;">确认重置</h3>
+                        </div>
+                        <div class="dialog-content">
+                            <p>确定要重置游戏吗？所有进度将会丢失。</p>
+                        </div>
+                        <div class="dialog-buttons" style="display: flex; justify-content: center; gap: 10px; margin-top: 20px;">
+                            <button id="confirm-reset-btn" class="btn" style="padding: 8px 16px; background-color: #f44336; color: white; border: none; border-radius: 4px; cursor: pointer;">确定</button>
+                            <button id="cancel-reset-btn" class="btn" style="padding: 8px 16px; background-color: #ccc; color: black; border: none; border-radius: 4px; cursor: pointer;">取消</button>
+                        </div>
+                    `;
+
+                    // 添加到文档
+                    document.body.appendChild(dialog);
+
+                    // 添加按钮事件
+                    const confirmBtn = document.getElementById('confirm-reset-btn');
+                    const cancelBtn = document.getElementById('cancel-reset-btn');
+
+                    if (confirmBtn) {
+                        confirmBtn.addEventListener('click', () => {
+                            console.log('确认重置游戏');
+                            // 关闭对话框
+                            overlay.remove();
+                            dialog.remove();
+
+                            // 重置游戏
+                            if (typeof Game !== 'undefined' && typeof Game.resetGame === 'function') {
+                                console.log('调用Game.resetGame()方法');
+                                try {
+                                    Game.resetGame();
+                                    console.log('Game.resetGame()方法调用成功');
+                                    this.showNotification('游戏已重置', 'info');
+                                } catch (error) {
+                                    console.error('Game.resetGame()方法调用失败:', error);
+                                    this.showNotification('游戏重置失败: ' + error.message, 'error');
+                                }
+                            } else {
+                                console.error('Game模块未定义或resetGame方法不存在');
+                                this.showNotification('游戏重置功能不可用', 'error');
+                            }
+                        });
                     }
-                }
+
+                    if (cancelBtn) {
+                        cancelBtn.addEventListener('click', () => {
+                            console.log('取消重置游戏');
+                            // 关闭对话框
+                            overlay.remove();
+                            dialog.remove();
+                        });
+                    }
+                };
+
+                // 显示确认对话框
+                createConfirmDialog();
             });
         }
 
@@ -474,6 +626,11 @@ console.log('[DEBUG] Reset button clicked. Showing confirm dialog.');
             detail: { screen: screenId }
         });
         document.dispatchEvent(screenEvent);
+
+        // 触发UI模块的屏幕切换事件
+        if (typeof Events !== 'undefined') {
+            Events.emit('ui:screenChanged', { screen: screenId });
+        }
 
         // 更新导航按钮的活跃状态
         document.querySelectorAll('.nav-button').forEach(button => {
@@ -1058,6 +1215,21 @@ console.log('[DEBUG] Reset button clicked. Showing confirm dialog.');
             return;
         }
 
+        // 检查Weapon模块是否可用
+        if (typeof Weapon === 'undefined' || typeof Weapon.getAllWeapons !== 'function') {
+            console.warn('Weapon模块未完全加载，无法渲染武器库存');
+            inventoryContainer.innerHTML = '<div class="empty-message">武器系统加载中...</div>';
+
+            // 监听武器模块初始化完成事件，然后再次尝试渲染
+            if (typeof Events !== 'undefined') {
+                Events.once('weapon:initialized', () => {
+                    console.log('Weapon模块初始化完成，重新尝试渲染武器库存');
+                    setTimeout(() => this.renderWeaponInventory(), 500);
+                });
+            }
+            return;
+        }
+
         // 清空现有内容
         inventoryContainer.innerHTML = '';
 
@@ -1467,8 +1639,18 @@ console.log('[DEBUG] Reset button clicked. Showing confirm dialog.');
         const detailsContainer = document.getElementById('weapon-details');
         if (!detailsContainer) return;
 
+        // 检查Weapon模块是否可用
+        if (typeof Weapon === 'undefined' || typeof Weapon.getWeapon !== 'function') {
+            console.warn('Weapon模块未完全加载，无法显示武器详情');
+            detailsContainer.innerHTML = '<div class="empty-message">武器系统加载中...</div>';
+            return;
+        }
+
         const weapon = Weapon.getWeapon(weaponId);
-        if (!weapon) return;
+        if (!weapon) {
+            console.warn(`找不到武器ID: ${weaponId}`);
+            return;
+        }
 
         // 获取武器稀有度样式
         const rarityClass = this.getRarityClass(weapon.rarity);

@@ -8,11 +8,11 @@ import Resources from './resources.js'; // 根据 game.js:367 的使用情况添
 // import Shop from './shop.js'; // shop.js 已被移除
 import Weapon from './weapon.js'; // 根据 game.js:278 的使用情况添加
 import Inventory from './inventory.js'; // 根据 game.js:300 的使用情况添加
-import CharacterCreation from '../components/character-creation.js'; // 根据 game.js:1049 的使用情况添加
-// import Battle from './battle.js'; // 根据 game.js:876 的使用情况添加
-// import Dungeon from './dungeon.js'; // 根据 game.js:1169 的使用情况添加
-// import BuffSystem from './buff-system.js'; // 根据 game.js:1247 的使用情况添加
-// import UI from '../components/UI.js'; // 根据 game.js:1282 的使用情况添加
+// import CharacterCreation from '../components/character-creation.js'; // 不再需要导入，我们使用内联方法
+import Battle from './battle.js'; // 根据 game.js:876 的使用情况添加
+import Dungeon from './dungeon.js'; // 根据 game.js:1169 的使用情况添加
+import BuffSystem from './buff-system.js'; // 根据 game.js:1247 的使用情况添加
+import UI from '../components/UI.js'; // 根据 game.js:1282 的使用情况添加
 
 
 /**
@@ -435,10 +435,10 @@ const Game = {
      */
     addGold(amount) {
         if (!amount || amount <= 0) return false;
-        
+
         const oldAmount = this.state.gold;
         this.state.gold += amount;
-        
+
         // 触发金币更新事件
         if (typeof Events !== 'undefined') {
             Events.emit('gold:updated', {
@@ -447,7 +447,7 @@ const Game = {
                 change: amount
             });
         }
-        
+
         console.log(`添加了 ${amount} 金币，当前金币: ${this.state.gold}`);
         return true;
     },
@@ -828,8 +828,18 @@ const Game = {
      * 重置游戏
      */
     resetGame() {
+        console.log("Game.resetGame方法被调用");
         try {
             console.log("开始重置游戏...");
+
+            // 检查模块状态
+            console.log("模块状态检查:", {
+                Character: typeof Character !== 'undefined',
+                Team: typeof Team !== 'undefined',
+                Storage: typeof Storage !== 'undefined',
+                UI: typeof UI !== 'undefined',
+                Events: typeof Events !== 'undefined'
+            });
 
             // 清除本地存储 - 先执行这一步，确保数据被完全清除
             if (typeof Storage !== 'undefined') {
@@ -1061,61 +1071,208 @@ const Game = {
             // 强制显示角色创建对话框
             console.log("准备显示角色创建对话框...");
 
-            // 尝试关闭任何现有的对话框
-            try {
-                // 尝试使用CharacterCreation模块
-                if (typeof CharacterCreation !== 'undefined') {
-                    console.log("找到CharacterCreation模块");
+            // 创建一个简单的角色创建对话框
+            const createCharacterDialog = () => {
+                console.log("创建简单的角色创建对话框");
 
-                    if (typeof CharacterCreation.closeDialog === 'function') {
-                        CharacterCreation.closeDialog();
+                // 检查Character模块是否可用
+                console.log("Character模块状态:", {
+                    isDefined: typeof Character !== 'undefined',
+                    hasAddCharacter: typeof Character !== 'undefined' && typeof Character.addCharacter === 'function',
+                    hasGetMainCharacter: typeof Character !== 'undefined' && typeof Character.getMainCharacter === 'function',
+                    mainCharacter: typeof Character !== 'undefined' && typeof Character.getMainCharacter === 'function' ? Character.getMainCharacter() : null
+                });
+
+                // 先移除可能存在的旧对话框
+                const oldOverlay = document.getElementById('character-creation-overlay');
+                if (oldOverlay) oldOverlay.remove();
+
+                const oldDialog = document.getElementById('character-creation-dialog');
+                if (oldDialog) oldDialog.remove();
+
+                // 创建遮罩层
+                const overlay = document.createElement('div');
+                overlay.className = 'dialog-overlay';
+                overlay.id = 'character-creation-overlay';
+                overlay.style.position = 'fixed';
+                overlay.style.top = '0';
+                overlay.style.left = '0';
+                overlay.style.width = '100%';
+                overlay.style.height = '100%';
+                overlay.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
+                overlay.style.zIndex = '999';
+                document.body.appendChild(overlay);
+
+                // 创建对话框
+                const dialog = document.createElement('div');
+                dialog.className = 'dialog character-creation-dialog';
+                dialog.id = 'character-creation-dialog';
+                dialog.style.position = 'fixed';
+                dialog.style.top = '50%';
+                dialog.style.left = '50%';
+                dialog.style.transform = 'translate(-50%, -50%)';
+                dialog.style.backgroundColor = '#fff';
+                dialog.style.padding = '20px';
+                dialog.style.borderRadius = '5px';
+                dialog.style.boxShadow = '0 0 10px rgba(0, 0, 0, 0.3)';
+                dialog.style.zIndex = '1000';
+                dialog.style.width = '400px';
+                dialog.style.maxWidth = '90%';
+
+                // 设置对话框内容
+                dialog.innerHTML = `
+                    <div class="dialog-header">
+                        <h2>欢迎来到Zia的世界</h2>
+                    </div>
+                    <div class="dialog-content">
+                        <p>在开始你的冒险之前，请告诉我你的名字：</p>
+                        <div class="input-group">
+                            <label for="character-name">角色名称：</label>
+                            <input type="text" id="character-name" placeholder="输入你的名字" maxlength="12">
+                        </div>
+                        <div class="error-message" id="name-error" style="color: red;"></div>
+                    </div>
+                    <div class="dialog-buttons">
+                        <button id="start-adventure" class="btn" style="padding: 8px 16px; background-color: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer;">开始冒险</button>
+                    </div>
+                `;
+
+                // 添加到文档
+                document.body.appendChild(dialog);
+
+                // 聚焦到输入框
+                setTimeout(() => {
+                    const nameInput = document.getElementById('character-name');
+                    if (nameInput) {
+                        nameInput.focus();
                     }
+                }, 100);
 
-                    // 延迟一点时间再显示对话框，确保其他操作已完成
-                    setTimeout(() => {
-                        try {
-                            if (typeof CharacterCreation.init === 'function') {
-                                console.log("强制初始化角色创建系统");
-                                // 使用forceShow参数调用init方法
-                                CharacterCreation.init(true);
-                            } else if (typeof CharacterCreation.showCharacterCreationDialog === 'function') {
-                                console.log("直接显示角色创建对话框");
-                                CharacterCreation.showCharacterCreationDialog();
-                            } else {
-                                console.error("无法找到CharacterCreation方法，尝试使用备用方法");
-                                // 尝试使用character-creator.js中的函数
-                                showCharacterCreationDialog();
-                            }
-                        } catch (e) {
-                            console.error("显示角色创建对话框时出错:", e);
-                            // 尝试使用character-creator.js中的函数
-                            if (typeof showCharacterCreationDialog === 'function') {
-                                console.log("尝试使用备用的showCharacterCreationDialog函数");
-                                showCharacterCreationDialog();
-                            } else {
-                                console.error("所有尝试都失败，无法显示角色创建对话框");
-                                alert("重置游戏成功，请刷新页面重新开始游戏。");
-                            }
-                        }
-                    }, 1000);
-                } else {
-                    console.warn("找不到CharacterCreation模块，尝试使用备用方法");
-
-                    // 尝试使用character-creator.js中的函数
-                    setTimeout(() => {
-                        if (typeof showCharacterCreationDialog === 'function') {
-                            console.log("使用备用的showCharacterCreationDialog函数");
-                            showCharacterCreationDialog();
-                        } else {
-                            console.error("无法找到任何角色创建函数");
-                            alert("重置游戏成功，请刷新页面重新开始游戏。");
-                        }
-                    }, 1000);
+                // 添加按钮事件
+                const startButton = document.getElementById('start-adventure');
+                if (startButton) {
+                    startButton.onclick = function() {
+                        console.log('开始冒险按钮被点击');
+                        createCharacterFromDialog();
+                    };
                 }
-            } catch (error) {
-                console.error("处理角色创建对话框时出错:", error);
-                alert("重置游戏成功，请刷新页面重新开始游戏。");
-            }
+
+                // 添加回车键提交
+                const nameInput = document.getElementById('character-name');
+                if (nameInput) {
+                    nameInput.addEventListener('keydown', function(e) {
+                        if (e.key === 'Enter') {
+                            console.log('回车键被按下');
+                            createCharacterFromDialog();
+                        }
+                    });
+                }
+            };
+
+            // 从对话框创建角色
+            const createCharacterFromDialog = () => {
+                console.log('从对话框创建角色');
+                const nameInput = document.getElementById('character-name');
+                const errorElement = document.getElementById('name-error');
+
+                if (!nameInput || !errorElement) {
+                    console.error('找不到名称输入框或错误元素');
+                    return;
+                }
+
+                const name = nameInput.value.trim();
+                console.log(`输入的名称: "${name}"`);
+
+                // 验证名称
+                if (!name) {
+                    errorElement.textContent = '请输入角色名称';
+                    nameInput.focus();
+                    return;
+                }
+
+                if (name.length < 2) {
+                    errorElement.textContent = '角色名称至少需要2个字符';
+                    nameInput.focus();
+                    return;
+                }
+
+                // 清除错误信息
+                errorElement.textContent = '';
+
+                // 创建主角
+                if (typeof Character !== 'undefined' && typeof Character.addCharacter === 'function') {
+                    const characterData = {
+                        name: name,
+                        // 默认属性
+                        attribute: 'fire',
+                        type: 'attack',
+                        level: 1,
+                        isMainCharacter: true
+                    };
+
+                    console.log('调用Character.addCharacter方法');
+                    const characterId = Character.addCharacter(characterData);
+
+                    if (characterId) {
+                        console.log(`创建主角成功: ${name} (ID: ${characterId})`);
+
+                        // 创建初始队伍
+                        if (typeof Team !== 'undefined' && typeof Team.createTeam === 'function') {
+                            const teamData = {
+                                name: `${name}的队伍`,
+                                members: [characterId]
+                            };
+
+                            const teamId = Team.createTeam(teamData);
+
+                            if (teamId) {
+                                // 设置为活动队伍
+                                this.state.activeTeamId = teamId;
+                                console.log(`创建初始队伍成功: ${teamData.name} (ID: ${teamId})`);
+                            }
+                        }
+
+                        // 显示欢迎消息
+                        if (typeof UI !== 'undefined' && typeof UI.showNotification === 'function') {
+                            UI.showNotification(`欢迎，${name}！你的冒险即将开始！`, 'success', 5000);
+                        }
+
+                        // 关闭对话框
+                        const overlay = document.getElementById('character-creation-overlay');
+                        if (overlay) overlay.remove();
+
+                        const dialog = document.getElementById('character-creation-dialog');
+                        if (dialog) dialog.remove();
+
+                        // 触发角色创建完成事件
+                        if (typeof Events !== 'undefined' && typeof Events.emit === 'function') {
+                            Events.emit('character:created', { characterId });
+                        }
+
+                        // 保存游戏状态
+                        this.saveGame();
+
+                        // 刷新UI
+                        if (typeof UI !== 'undefined' && typeof UI.switchScreen === 'function') {
+                            UI.switchScreen('main-screen');
+                        }
+                    } else {
+                        console.error('创建角色失败');
+                        errorElement.textContent = '创建角色失败，请重试';
+                    }
+                } else {
+                    console.error('Character.addCharacter方法不存在');
+                    errorElement.textContent = '角色系统未就绪，请刷新页面重试';
+                }
+            };
+
+            // 延迟一点时间再显示对话框，确保其他操作已完成
+            console.log("即将显示角色创建对话框...");
+            setTimeout(() => {
+                console.log("现在显示角色创建对话框");
+                createCharacterDialog();
+                console.log("角色创建对话框已创建");
+            }, 1000);
 
             if (typeof Events !== 'undefined') {
                 Events.emit('game:reset');

@@ -1,3 +1,11 @@
+import Character from '../core/character.js';
+import JobSystem from '../core/job-system.js';
+import UI from './UI.js';
+import Events from './events.js';
+import Game from '../core/game.js';
+import Team from '../core/team.js';
+import Weapon from '../core/weapon.js';
+
 class MainCharacterInfo {
     constructor(character) {
         this.character = character;
@@ -436,3 +444,5 @@ class MainCharacterInfo {
         `;
     }
 }
+
+export default MainCharacterInfo;

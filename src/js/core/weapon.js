@@ -2,6 +2,7 @@
  * 武器管理系统 - 负责游戏中武器的管理
  */
 import Game from './game.js';
+import Events from '../components/events.js';
 const Weapon = {
     // 武器数据
     weapons: {},
@@ -336,6 +337,12 @@ const Weapon = {
         this.loadTemplates();
 
         console.log('武器系统初始化完成');
+
+        // 发送武器系统初始化完成事件
+        if (typeof Events !== 'undefined') {
+            console.log('发送武器系统初始化完成事件');
+            Events.emit('weapon:initialized', { success: true });
+        }
     },
 
     /**

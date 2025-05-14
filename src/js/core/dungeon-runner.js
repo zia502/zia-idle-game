@@ -1,6 +1,14 @@
 /**
  * 地下城运行器 - 负责处理地下城战斗的逐步执行
  */
+import Events from '../components/events.js';
+import Character from './character.js';
+import Dungeon from './dungeon.js';
+import Game from './game.js';
+import Battle from './battle.js';
+import BuffSystem from './buff-system.js';
+import Team from './team.js';
+
 const DungeonRunner = {
     /**
      * 当前运行状态
@@ -249,7 +257,7 @@ const DungeonRunner = {
                         }
                         member.dungeonOriginalStats = JSON.parse(JSON.stringify(member.baseStats));
                         // console.log(`为 ${member.name} 设置进入地下城时的属性快照:`, member.dungeonOriginalStats);
-                        
+
                         // 初始化或重置地下城相关的其他状态
                         member.dungeonAppliedPassives = {};
                         member.skillCooldowns = {};
@@ -550,8 +558,11 @@ const DungeonRunner = {
             let team;
             if (typeof Game.getActiveTeam === 'function') {
                 team = Game.getActiveTeam();
-            } else if (Game.activeTeam) {
-                team = Game.activeTeam;
+            } else if (Game.state && Game.state.activeTeamId) {
+                // 如果没有getActiveTeam方法，尝试从Team模块获取
+                if (typeof Team !== 'undefined' && typeof Team.getTeam === 'function') {
+                    team = Team.getTeam(Game.state.activeTeamId);
+                }
             }
 
             if (!team) {

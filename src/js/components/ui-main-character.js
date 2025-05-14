@@ -1,4 +1,8 @@
 import UI from './UI.js';
+import Character from '../core/character.js';
+import Events from './events.js';
+import JobSystem from '../core/job-system.js';
+import MainCharacterInfo from './main-character-info.js';
 
 /**
  * UI模块扩展 - 主角信息渲染
@@ -117,9 +121,7 @@ import UI from './UI.js';
 
         // 获取技能信息
         let skills = [];
-        if (typeof Character.getCharacterSkills === 'function') {
-            skills = Character.getCharacterSkills(character);
-        } else if (character.skills) {
+        if (character.skills) {
             skills = character.skills;
         }
 
@@ -212,7 +214,7 @@ import UI from './UI.js';
 
     // 添加到Events监听器，在角色创建完成后渲染主角信息
     if (typeof Events !== 'undefined' && typeof Events.on === 'function') {
-        Events.on('character:created', (data) => {
+        Events.on('character:created', () => {
             // console.log('角色创建完成事件触发，渲染主角信息');
             UI.renderMainCharacter();
         });
@@ -231,15 +233,15 @@ import UI from './UI.js';
         });
 
         // 在武器更新时重新渲染主角信息
-        Events.on('weapon:updated', (data) => {
-            // console.log('武器更新事件触发，重新渲染主角信息', data);
+        Events.on('weapon:updated', () => {
+            // console.log('武器更新事件触发，重新渲染主角信息');
             // 武器盘更新时，主角的属性可能会受到影响，所以需要重新渲染
             UI.renderMainCharacter();
         });
 
         // 在职业经验更新时重新渲染主角信息
-        Events.on('character:exp-updated', (data) => {
-            // console.log('职业经验更新事件触发，重新渲染主角信息', data);
+        Events.on('character:exp-updated', () => {
+            // console.log('职业经验更新事件触发，重新渲染主角信息');
 
             // 设置标志，表示正在处理经验更新事件
             isHandlingExpUpdate = true;

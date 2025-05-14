@@ -17,7 +17,7 @@
 
     <style>
         /* ... existing styles ... */
-        
+
         /* 多重抽取角色显示相关样式 */
         .multi-count-badge {
             display: inline-block;
@@ -45,7 +45,7 @@
             padding: 4px 8px;
             border-radius: 4px;
         }
-        
+
         /* 金币返还提示样式 */
         .refund-info {
             margin-top: 8px;
@@ -54,14 +54,14 @@
             border-radius: 4px;
             border-left: 3px solid #f1c40f;
         }
-        
+
         .refund-info p {
             color: #f39c12;
             font-weight: bold;
             margin: 0;
             font-size: 0.9em;
         }
-        
+
         /* 多重上限提示 */
         .multi-count-max {
             display: inline-block;
@@ -92,23 +92,23 @@
                     <div class="main-ui-left">
                         <!-- 左上角菜单图标 -->
                         <div class="menu-icons">
-                            <a href="#" class="menu-icon" onclick="UI.switchScreen('character-screen'); return false;" title="角色与队伍">
+                            <a href="#" class="menu-icon" data-screen="character-screen" title="角色与队伍">
                                 <div class="icon-image team-icon"></div>
                                 <div class="icon-tooltip">角色与队伍</div>
                             </a>
-                            <a href="#" class="menu-icon" onclick="UI.switchScreen('tavern-screen'); return false;" title="酒馆招募">
+                            <a href="#" class="menu-icon" data-screen="tavern-screen" title="酒馆招募">
                                 <div class="icon-image tavern-icon"></div>
                                 <div class="icon-tooltip">酒馆招募</div>
                             </a>
-                            <a href="#" class="menu-icon" onclick="UI.switchScreen('weapon-screen'); return false;" title="武器管理">
+                            <a href="#" class="menu-icon" data-screen="weapon-screen" title="武器管理">
                                 <div class="icon-image weapon-icon"></div>
                                 <div class="icon-tooltip">武器管理</div>
                             </a>
-                            <a href="#" class="menu-icon" onclick="UI.switchScreen('dungeon-screen'); return false;" title="地下城探索">
+                            <a href="#" class="menu-icon" data-screen="dungeon-screen" title="地下城探索">
                                 <div class="icon-image dungeon-icon"></div>
                                 <div class="icon-tooltip">地下城探索</div>
                             </a>
-                            <a href="#" class="menu-icon" onclick="UI.switchScreen('shop-screen'); return false;" title="商店交易">
+                            <a href="#" class="menu-icon" data-screen="shop-screen" title="商店交易">
                                 <div class="icon-image shop-icon"></div>
                                 <div class="icon-tooltip">商店交易</div>
                             </a>
@@ -453,9 +453,9 @@
     <script type="module" src="src/js/ui/main-current-dungeon.js"></script>
 
     <!-- 工具函数 -->
-    <script src="src/js/utils/storage.js"></script>
-    <script src="src/js/utils/file-utils.js"></script>
-    <script src="src/js/debug.js"></script>
+    <script type="module" src="src/js/utils/storage.js"></script>
+    <script type="module" src="src/js/utils/file-utils.js"></script>
+    <script type="module" src="src/js/debug.js"></script>
 
     <!-- 主入口 -->
     <script type="module" src="src/js/main.js"></script>

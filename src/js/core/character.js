@@ -103,28 +103,34 @@ const Character = {
     },
 
 
-    init(){
-        // 初始化传说角色数组
+    init() {
+        console.log('角色系统初始化开始...');
         this.legendaryCharacters = [];
-
-        // 初始化可招募角色数组
         this.recruitableCharacters = [];
-
-        // 初始化R、SR和SSR角色数组
         this.rCharacters = [];
         this.srCharacters = [];
         this.ssrCharacters = [];
 
-        // 加载R、SR和SSR角色数据
-        this.loadCharacterData('r', 'src/data/r.json');
-        this.loadCharacterData('sr', 'src/data/sr.json');
-        this.loadCharacterData('ssr', 'src/data/ssr.json');
-
-        // 发送角色系统初始化完成事件
-        if (typeof Events !== 'undefined') {
-            console.log('发送角色系统初始化完成事件');
-            Events.emit('character:initialized', { success: true });
-        }
+        // 返回一个 Promise，以便其他模块可以等待初始化完成
+        return Promise.all([
+            this.loadCharacterData('r', 'src/data/r.json'),
+            this.loadCharacterData('sr', 'src/data/sr.json'),
+            this.loadCharacterData('ssr', 'src/data/ssr.json')
+        ]).then(() => {
+            console.log('所有角色模板数据已加载 (init)');
+            // 发送角色系统初始化完成事件
+            if (typeof Events !== 'undefined') {
+                console.log('发送角色系统初始化完成事件 (init)');
+                Events.emit('character:initialized', { success: true });
+            }
+            return true; // 表示初始化成功
+        }).catch(error => {
+            console.error('角色系统初始化过程中加载角色数据失败:', error);
+            if (typeof Events !== 'undefined') {
+                Events.emit('character:initialized', { success: false, error: error });
+            }
+            return false; // 表示初始化失败
+        });
     },
 
     /**
@@ -1885,14 +1891,18 @@ const Character = {
      * 加载角色系统保存数据
      * @param {object} data - 保存的数据对象
      */
-    async loadSaveData(data) { // 将函数标记为 async
+    async loadSaveData(data) { // 保持 async
         console.log('加载角色系统数据');
 
-        if (!data) return;
+        if (!data) {
+            // 如果没有存档数据，则执行正常的初始化流程
+            console.log('没有存档数据，执行 Character.init()');
+            return this.init(); // 等待并返回 init 的 Promise
+        }
 
         if (data.characters) {
             this.characters = data.characters;
-            console.log(`加载了 ${Object.keys(this.characters).length} 个角色`);
+            console.log(`加载了 ${Object.keys(this.characters).length} 个角色 (存档)`);
 
             Object.values(this.characters).forEach(character => {
                 if (character.hasOwnProperty('bonusMultiplier')) {
@@ -1910,32 +1920,26 @@ const Character = {
         }
 
         const templateLoadPromises = [];
-        if (!this.rCharacters || this.rCharacters.length === 0) {
-            templateLoadPromises.push(this.loadCharacterData('r', 'src/data/r.json'));
-        }
-        if (!this.srCharacters || this.srCharacters.length === 0) {
-            templateLoadPromises.push(this.loadCharacterData('sr', 'src/data/sr.json'));
-        }
-        if (!this.ssrCharacters || this.ssrCharacters.length === 0) {
-            templateLoadPromises.push(this.loadCharacterData('ssr', 'src/data/ssr.json'));
-        }
+        // 确保模板数据也加载，即使是从存档加载，因为模板可能已更新
+        templateLoadPromises.push(this.loadCharacterData('r', 'src/data/r.json'));
+        templateLoadPromises.push(this.loadCharacterData('sr', 'src/data/sr.json'));
+        templateLoadPromises.push(this.loadCharacterData('ssr', 'src/data/ssr.json'));
 
         try {
-            await Promise.all(templateLoadPromises); // 等待所有模板加载完成
-            console.log('所有角色模板数据已加载/确认。');
+            await Promise.all(templateLoadPromises);
+            console.log('所有角色模板数据已加载/确认 (loadSaveData)。');
 
             // 现在模板数据已准备好，可以安全地刷新属性和执行验证
             console.log('加载角色数据后，开始刷新所有角色的有效属性...');
 
-            // 使用Events系统等待Team和Weapon模块初始化完成
+             // 使用Events系统等待Team和Weapon模块初始化完成
             const refreshCharacterStats = () => {
-                console.log('开始刷新所有角色的有效属性...');
+                console.log('开始刷新所有角色的有效属性 (loadSaveData)...');
                 try {
                     Object.keys(this.characters).forEach(characterId => {
                         const character = this.characters[characterId];
                         if (character) {
                             let teamId = null;
-                            // 直接检查Team模块是否可用
                             if (typeof Team !== 'undefined' && typeof Team.findTeamByMember === 'function') {
                                 const team = Team.findTeamByMember(characterId);
                                 if (team) {
@@ -1945,45 +1949,43 @@ const Character = {
                             this._updateCharacterEffectiveStats(characterId, teamId);
                         }
                     });
-                    console.log('所有角色的有效属性刷新完成。');
+                    console.log('所有角色的有效属性刷新完成 (loadSaveData)。');
                 } catch (error) {
-                    console.error('刷新角色属性时出错:', error);
+                    console.error('刷新角色属性时出错 (loadSaveData):', error);
                 }
             };
 
-            // 立即尝试刷新一次
-            console.log('立即尝试刷新角色属性...');
-            if (typeof Team !== 'undefined' && typeof Weapon !== 'undefined') {
-                setTimeout(refreshCharacterStats, 100);
+            // 确保Team和Weapon模块已加载，如果已加载则立即刷新，否则等待事件
+            if (typeof Team !== 'undefined' && typeof Weapon !== 'undefined' && Team.initialized && Weapon.initialized) {
+                 console.log('Team 和 Weapon 已初始化, 立即刷新角色属性 (loadSaveData)');
+                 setTimeout(refreshCharacterStats, 100); // 短暂延迟以确保DOM更新等
+            } else {
+                Events.once('team:initialized', () => {
+                    console.log('Team模块初始化完成，尝试刷新角色属性 (loadSaveData)');
+                    if (typeof Weapon !== 'undefined' && Weapon.initialized) setTimeout(refreshCharacterStats, 100);
+                });
+                Events.once('weapon:initialized', () => {
+                    console.log('Weapon模块初始化完成，尝试刷新角色属性 (loadSaveData)');
+                     if (typeof Team !== 'undefined' && Team.initialized) setTimeout(refreshCharacterStats, 100);
+                });
             }
-
-            // 监听Team初始化完成事件
-            Events.once('team:initialized', () => {
-                console.log('Team模块初始化完成，刷新角色属性');
-                setTimeout(refreshCharacterStats, 100);
-            });
-
-            // 监听Weapon初始化完成事件
-            Events.once('weapon:initialized', () => {
-                console.log('Weapon模块初始化完成，刷新角色属性');
-                setTimeout(refreshCharacterStats, 100);
-            });
-
-            // 如果3秒后仍未刷新，再次尝试
-            setTimeout(() => {
-                console.log('最终尝试刷新角色属性...');
-                if (typeof Team !== 'undefined' && typeof Weapon !== 'undefined') {
-                    refreshCharacterStats();
-                }
-            }, 3000); // 等待3秒
-
-            console.log('对所有已加载角色执行 baseStats 验证 (并自动修正)...'); // 更新日志消息
+            
+            console.log('对所有已加载角色执行 baseStats 验证 (并自动修正) (loadSaveData)...');
             Object.keys(this.characters).forEach(charId => {
-                this.validateCharacterBaseStats(charId, true); // 启用自动修正
+                this.validateCharacterBaseStats(charId, true);
             });
-
+            
+            console.log('角色系统数据从存档加载完成。');
+            if (typeof Events !== 'undefined') {
+                Events.emit('character:loadedFromSave', { success: true });
+            }
+            return true;
         } catch (error) {
-            console.error('加载角色模板数据时发生错误:', error);
+            console.error('加载角色模板数据时发生错误 (loadSaveData):', error);
+            if (typeof Events !== 'undefined') {
+                Events.emit('character:loadedFromSave', { success: false, error: error });
+            }
+            return false;
         }
     },
 
@@ -2140,4 +2142,5 @@ const Character = {
     }
 };
 
+window.Character = Character; // Make Character globally accessible
 export default Character;

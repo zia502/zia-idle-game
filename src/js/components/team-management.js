@@ -84,6 +84,18 @@ import UI from './UI.js';
      * 刷新队伍管理界面
      */
     function refreshTeamManagement() {
+console.log('[DEBUG TeamManagement] refreshTeamManagement called.');
+        if (typeof Character !== 'undefined') {
+            console.log('[DEBUG TeamManagement] Character module IS defined.');
+            console.log('[DEBUG TeamManagement] Character.characters:', Character.characters);
+            if (Character.characters && Object.keys(Character.characters).length > 0) {
+                console.log('[DEBUG TeamManagement] Character.characters has data.');
+            } else {
+                console.log('[DEBUG TeamManagement] Character.characters is empty or not yet populated.');
+            }
+        } else {
+            console.log('[DEBUG TeamManagement] Character module IS UNDEFINED at the start of refreshTeamManagement.');
+        }
         console.log('刷新队伍管理界面');
 
         // 检查是否需要创建或设置活动队伍

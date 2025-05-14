@@ -74,9 +74,9 @@ const Game = {
     /**
      * 初始化游戏
      */
-    init() {
+    async init() { // 改为 async
         console.log("初始化游戏核心...");
-        this.loadGame();
+        await this.loadGame(); // 等待 loadGame 完成
         this.setupEventListeners();
 
         // 检查活动队伍是否存在
@@ -95,7 +95,7 @@ const Game = {
 
         // 触发游戏加载完成事件
         if (typeof Events !== 'undefined') {
-            console.log('[DEBUG] Game.init() 即将触发 game:loaded 事件'); // 添加调试日志
+            console.log('[DEBUG] Game.init() 即将触发 game:loaded 事件 (所有核心异步加载已完成)');
             Events.emit('game:loaded', { version: this.state.version });
         }
     },
@@ -655,7 +655,7 @@ const Game = {
      * @param {object} [externalSaveData] - 外部存档数据（从文件加载）
      * @returns {boolean} 是否加载成功
      */
-    loadGame(externalSaveData = null) {
+    async loadGame(externalSaveData = null) { // 改为 async
         try {
             let saveData = externalSaveData;
 
@@ -668,16 +668,22 @@ const Game = {
 
                 saveData = Storage.load('gameData');
                 if (!saveData) {
-                    console.log("没有找到保存的游戏数据");
-                    // 确保初始金币为10000
-                    this.state.gold = 100000;
-
-                    // 更新UI显示
+                    console.log("没有找到保存的游戏数据，将执行 Character.init()");
+                    this.state.gold = 100000; // 确保初始金币
                     const goldElement = document.getElementById('gold-display');
                     if (goldElement) {
                         goldElement.textContent = `金币: ${this.state.gold}`;
                     }
-                    return false;
+                    // 初始化角色系统（包括加载模板数据）
+                    if (typeof Character !== 'undefined' && typeof Character.init === 'function') {
+                        await Character.init(); // 等待 Character 初始化
+                        console.log("Character.init() 完成 (loadGame - 无存档)");
+                    }
+                    // 初始化其他可能依赖角色模板的系统，例如队伍
+                    if (typeof Team !== 'undefined' && typeof Team.init === 'function') {
+                         Team.init(); // 假设Team.init是同步的或内部处理异步
+                    }
+                    return false; // 表示从新游戏开始
                 }
             }
 
@@ -687,9 +693,9 @@ const Game = {
 
             // 加载其他模块数据 - 先加载角色数据，再加载队伍数据
             if (typeof Character !== 'undefined' && saveData.character && typeof Character.loadSaveData === 'function') {
-                console.log('加载角色数据');
-                Character.loadSaveData(saveData.character);
-
+                console.log('加载角色数据 (Game.loadGame)');
+                await Character.loadSaveData(saveData.character); // 等待角色数据加载
+                console.log("Character.loadSaveData() 完成 (loadGame - 有存档)");
                 // 检查是否有异常的地下城状态
                 this.checkAbnormalDungeonState();
             }
@@ -700,9 +706,10 @@ const Game = {
                 Inventory.items = saveData.inventory.items || {};
             }
 
-            if (typeof Shop !== 'undefined' && saveData.shop && typeof Shop.loadSaveData === 'function') {
-                Shop.loadSaveData(saveData.shop);
-            }
+            // Shop 模块已移除
+            // if (typeof Shop !== 'undefined' && saveData.shop && typeof Shop.loadSaveData === 'function') {
+            //     Shop.loadSaveData(saveData.shop);
+            // }
 
             // 加载武器系统数据
             if (typeof Weapon !== 'undefined' && saveData.weapon) {
@@ -713,18 +720,24 @@ const Game = {
                 if (saveData.weapon.weaponBoards) {
                     Weapon.weaponBoards = saveData.weapon.weaponBoards;
                 }
+                 if (typeof Weapon.init === 'function' && !Weapon.initialized) { // 确保Weapon也初始化
+                    Weapon.init();
+                }
             }
+
 
             // 确保在加载角色数据后再加载队伍数据
             if (typeof Team !== 'undefined' && saveData.team && typeof Team.loadSaveData === 'function') {
                 console.log('加载队伍数据');
                 Team.loadSaveData(saveData.team);
+                 if (typeof Team.init === 'function' && !Team.initialized) { // 确保Team也初始化
+                    Team.init();
+                }
 
                 // 验证队伍成员是否存在
                 if (typeof Character !== 'undefined' && Team.teams) {
                     Object.values(Team.teams).forEach(team => {
                         if (team.members && Array.isArray(team.members)) {
-                            // 过滤掉不存在的角色ID
                             team.members = team.members.filter(memberId => {
                                 const exists = Character.getCharacter(memberId) !== null;
                                 if (!exists) {
@@ -737,39 +750,27 @@ const Game = {
                 }
             }
 
-            console.log("游戏数据已加载");
+            console.log("游戏数据已加载 (Game.loadGame)");
 
-            // 如果是从外部文件加载的，保存到本地存储
             if (externalSaveData && typeof Storage !== 'undefined') {
                 Storage.save('gameData', saveData);
                 console.log("从外部文件加载的游戏数据已保存到本地存储");
             }
 
-            // 更新UI显示
             if (typeof UI !== 'undefined') {
-                // 更新金币显示
-                if (typeof UI.updateGoldDisplay === 'function') {
-                    UI.updateGoldDisplay();
-                }
-
-                // 更新主角信息
-                if (typeof UI.renderMainCharacter === 'function') {
-                    UI.renderMainCharacter();
-                }
-
-                // 更新队伍显示
-                if (typeof UI.renderTeam === 'function') {
-                    UI.renderTeam();
-                }
+                if (typeof UI.updateGoldDisplay === 'function') UI.updateGoldDisplay();
+                if (typeof UI.renderMainCharacter === 'function') UI.renderMainCharacter();
+                if (typeof UI.renderTeam === 'function') UI.renderTeam();
             }
-
-            if (typeof Events !== 'undefined') {
-                Events.emit('game:loaded', { version: this.state.version });
-            }
+            
+            // game:loaded 事件移至 Game.init() 末尾，确保所有异步加载完成后再触发
+            // if (typeof Events !== 'undefined') {
+            //     Events.emit('game:loaded', { version: this.state.version });
+            // }
 
             return true;
         } catch (error) {
-            console.error("加载游戏失败:", error);
+            console.error("加载游戏失败 (Game.loadGame):", error);
             return false;
         }
     },
@@ -1521,4 +1522,5 @@ const Game = {
 // 这里不再定义 Team 对象，而是使用 team.js 中定义的 Team 对象
 
 // 内部 Inventory 对象已移除，将使用从 './inventory.js' 导入的模块
+window.Game = Game; // Make Game globally accessible
 export default Game;

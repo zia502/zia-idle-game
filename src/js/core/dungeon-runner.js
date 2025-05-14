@@ -1516,4 +1516,5 @@ const DungeonRunner = {
     }
 };
 
+window.DungeonRunner = DungeonRunner; // Make DungeonRunner globally accessible
 export default DungeonRunner;

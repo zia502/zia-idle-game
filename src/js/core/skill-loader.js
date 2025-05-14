@@ -47,21 +47,20 @@ const SkillLoader = {
                 targetGlobal[skillKey] = {}; // Initialize to prevent errors
             }
         } else if (!isNodeEnvironment && typeof fetch === 'function') { // Browser environment with fetch
-            fetch(filePath)
-                .then(response => {
+            (async () => {
+                try {
+                    const response = await fetch(filePath);
                     if (!response.ok) {
                         throw new Error(`HTTP error! Status: ${response.status} for ${filePath}`);
                     }
-                    return response.json();
-                })
-                .then(data => {
-                    console.log(`R角色技能加载成功 (fetch ${filePath}):`, Object.keys(data).length);
+                    const data = await response.json();
+                    console.log(`R角色技能加载成功 (fetch async ${filePath}):`, Object.keys(data).length);
                     targetGlobal[skillKey] = data;
-                })
-                .catch(error => {
-                    console.error(`加载R角色技能失败 (fetch ${filePath}):`, error);
+                } catch (error) {
+                    console.error(`加载R角色技能失败 (fetch async ${filePath}):`, error);
                     targetGlobal[skillKey] = {}; // Initialize to prevent errors
-                });
+                }
+            })();
         } else {
             console.error(`SkillLoader: Cannot load ${filePath}. Environment not supported or fs/path/fetch missing.`);
             targetGlobal[skillKey] = {}; // Initialize to prevent errors
@@ -88,21 +87,20 @@ const SkillLoader = {
                 targetGlobal[skillKey] = {}; // Initialize to prevent errors
             }
         } else if (!isNodeEnvironment && typeof fetch === 'function') { // Browser environment with fetch
-            fetch(filePath)
-                .then(response => {
+            (async () => {
+                try {
+                    const response = await fetch(filePath);
                     if (!response.ok) {
                         throw new Error(`HTTP error! Status: ${response.status} for ${filePath}`);
                     }
-                    return response.json();
-                })
-                .then(data => {
-                    console.log(`SR角色技能加载成功 (fetch ${filePath}):`, Object.keys(data).length);
+                    const data = await response.json();
+                    console.log(`SR角色技能加载成功 (fetch async ${filePath}):`, Object.keys(data).length);
                     targetGlobal[skillKey] = data;
-                })
-                .catch(error => {
-                    console.error(`加载SR角色技能失败 (fetch ${filePath}):`, error);
+                } catch (error) {
+                    console.error(`加载SR角色技能失败 (fetch async ${filePath}):`, error);
                     targetGlobal[skillKey] = {}; // Initialize to prevent errors
-                });
+                }
+            })();
         } else {
             console.error(`SkillLoader: Cannot load ${filePath}. Environment not supported or fs/path/fetch missing.`);
             targetGlobal[skillKey] = {}; // Initialize to prevent errors
@@ -129,21 +127,20 @@ const SkillLoader = {
                 targetGlobal[skillKey] = {}; // Initialize to prevent errors
             }
         } else if (!isNodeEnvironment && typeof fetch === 'function') { // Browser environment with fetch
-            fetch(filePath)
-                .then(response => {
+            (async () => {
+                try {
+                    const response = await fetch(filePath);
                     if (!response.ok) {
                         throw new Error(`HTTP error! Status: ${response.status} for ${filePath}`);
                     }
-                    return response.json();
-                })
-                .then(data => {
-                    console.log(`SSR角色技能加载成功 (fetch ${filePath}):`, Object.keys(data).length);
+                    const data = await response.json();
+                    console.log(`SSR角色技能加载成功 (fetch async ${filePath}):`, Object.keys(data).length);
                     targetGlobal[skillKey] = data; // 存储到 window.ssr_skills
-                })
-                .catch(error => {
-                    console.error(`加载SSR角色技能失败 (fetch ${filePath}):`, error);
+                } catch (error) {
+                    console.error(`加载SSR角色技能失败 (fetch async ${filePath}):`, error);
                     targetGlobal[skillKey] = {}; // Initialize to prevent errors
-                });
+                }
+            })();
         } else {
             console.error(`SkillLoader: Cannot load ${filePath}. Environment not supported or fs/path/fetch missing.`);
             targetGlobal[skillKey] = {}; // Initialize to prevent errors
@@ -175,26 +172,25 @@ const SkillLoader = {
                 targetGlobal[skillKey] = {};
             }
         } else if (!isNodeEnvironment && typeof fetch === 'function') { // Browser environment with fetch
-            fetch(filePath)
-                .then(response => {
+            (async () => {
+                try {
+                    const response = await fetch(filePath);
                     if (!response.ok) {
                         throw new Error(`HTTP error! Status: ${response.status} for ${filePath}`);
                     }
-                    return response.json();
-                })
-                .then(data => {
+                    const data = await response.json();
                     if (data && data.bossSkills) {
-                        console.log(`Boss技能加载成功 (fetch ${filePath}):`, Object.keys(data.bossSkills).length);
+                        console.log(`Boss技能加载成功 (fetch async ${filePath}):`, Object.keys(data.bossSkills).length);
                         targetGlobal[skillKey] = data.bossSkills;
                     } else {
-                        console.error(`加载Boss技能失败 (fetch ${filePath}): ${filePath} 格式不正确，缺少 bossSkills 顶层对象。`);
+                        console.error(`加载Boss技能失败 (fetch async ${filePath}): ${filePath} 格式不正确，缺少 bossSkills 顶层对象。`);
                         targetGlobal[skillKey] = {};
                     }
-                })
-                .catch(error => {
-                    console.error(`加载Boss技能失败 (fetch ${filePath}):`, error);
+                } catch (error) {
+                    console.error(`加载Boss技能失败 (fetch async ${filePath}):`, error);
                     targetGlobal[skillKey] = {};
-                });
+                }
+            })();
         } else {
             console.error(`SkillLoader: Cannot load ${filePath}. Environment not supported or fs/path/fetch missing.`);
             targetGlobal[skillKey] = {}; // Initialize to prevent errors

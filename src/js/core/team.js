@@ -455,4 +455,5 @@ const Team = {
     }
 };
 
+window.Team = Team; // Make Team globally accessible
 export default Team;

@@ -1232,83 +1232,66 @@ const DungeonRunner = {
      * 退出地下城
      */
     exitDungeon() {
-        // console.log('开始退出地下城，当前状态:', {
-        //     currentRun: this.currentRun,
-        //     isRunning: this.isRunning,
-        //     lastDungeonRecord: this.lastDungeonRecord
-        // });
+        console.log('DungeonRunner: 开始退出地下城...');
+
+        const currentDungeonId = this.currentRun ? this.currentRun.dungeonId : (Dungeon.currentRun ? Dungeon.currentRun.dungeonId : null);
 
         // 刷新主角信息
         if (typeof UI !== 'undefined' && typeof UI.renderMainCharacter === 'function') {
              UI.renderMainCharacter();
         }
 
-        // 保存战斗记录
-        if (this.currentRun) {
-            // 恢复队伍成员的地下城原始属性
-            if (this.currentRun.team && this.currentRun.team.members) {
-                for (const member of this.currentRun.team.members) {
-                    const character = Character.getCharacter(member);
-                    if (character && character.dungeonOriginalStats) {
-                        character.currentStats = JSON.parse(JSON.stringify(character.dungeonOriginalStats));
-                        delete character.dungeonOriginalStats;
-                    }
-                }
-
-                // 清除所有BUFF
-                for (const member of this.currentRun.team.members) {
-                    const character = Character.getCharacter(member);
-                    if (character && typeof BuffSystem !== 'undefined') {
-                        BuffSystem.clearAllBuffs(character);
+        // 即使没有 this.currentRun，也尝试从 Dungeon.currentRun 获取信息并调用 Dungeon.completeDungeon
+        if (typeof Dungeon !== 'undefined' && typeof Dungeon.completeDungeon === 'function') {
+            if (currentDungeonId) {
+                console.log(`DungeonRunner: 调用 Dungeon.completeDungeon('${currentDungeonId}', false)`);
+                Dungeon.completeDungeon(currentDungeonId, false); // false 表示非成功完成 (主动退出)
+            } else {
+                console.warn('DungeonRunner: 退出时无法确定当前地城ID，可能无法正确触发 dungeon:updated 事件的退出状态。');
+                // 尝试直接清除 Dungeon.currentRun 并触发事件
+                if (Dungeon.currentRun) {
+                    Dungeon.currentRun = null;
+                     if (typeof Events !== 'undefined' && Events.trigger) {
+                        Events.trigger('dungeon:updated', { currentRun: null, action: 'exited_unknown' });
                     }
                 }
             }
+        } else {
+            // 如果 Dungeon.completeDungeon 不可用，执行旧的清理逻辑
+            console.warn('DungeonRunner: Dungeon.completeDungeon 未定义，执行旧的退出逻辑。');
+            if (this.currentRun) {
+                 // 恢复队伍成员的地下城原始属性等... (这部分逻辑现在应该在 Dungeon.completeDungeon 中)
+            }
+            this.currentRun = null; // Dungeon.completeDungeon 应该已经处理了这个
+            if (typeof Dungeon !== 'undefined') {
+                 Dungeon.currentRun = null; // Dungeon.completeDungeon 应该已经处理了这个
+            }
+             if (typeof Events !== 'undefined' && Events.trigger) {
+                Events.trigger('dungeon:updated', { currentRun: null, action: 'exited_legacy' });
+            }
         }
+        
+        this.isRunning = false; // DungeonRunner 自身状态
 
-        // 重置地下城运行状态
-        this.currentRun = null;
-        this.isRunning = false;
-
-        // 清除Dungeon.currentRun
-        if (typeof Dungeon !== 'undefined') {
-            Dungeon.currentRun = null;
-        }
-
-        // 清除保存的地下城进度
+        // 清除本地存储的进度 (这部分可能也应该由 Dungeon 模块管理)
         if (typeof Storage !== 'undefined') {
             Storage.remove('dungeonProgress');
         }
+        // Game.state.currentDungeon 的清理也应该由 Dungeon.completeDungeon 或 Dungeon.reset 处理
 
-        // 清除Game.state中的地下城进度
-        if (typeof Game !== 'undefined' && Game.state) {
-            delete Game.state.currentDungeon;
-            if (typeof Game.saveGame === 'function') {
-                Game.saveGame();
-            }
-        }
+        console.log('DungeonRunner: 地下城退出处理完成。');
 
-        // console.log('地下城状态已清理，当前状态:', {
-        //     currentRun: this.currentRun,
-        //     isRunning: this.isRunning,
-        //     lastDungeonRecord: this.lastDungeonRecord
-        // });
-
-        // 更新UI显示
-        if (typeof MainUI !== 'undefined') {
-            console.log('退出地下城后更新UI显示');
-            MainUI.updateCurrentDungeon();
-        }
-
-        // 如果MainCurrentDungeon组件存在，直接调用它的update方法
-        if (typeof MainCurrentDungeon !== 'undefined' && typeof MainCurrentDungeon.update === 'function') {
-            console.log('使用MainCurrentDungeon组件更新地下城显示');
-            MainCurrentDungeon.update();
-        }
-
-        // 更新地下城列表显示
-        if (typeof UI !== 'undefined' && typeof UI.updateDungeonList === 'function') {
-            UI.updateDungeonList();
-        }
+        // UI 更新应该由 dungeon:updated 事件驱动
+        // MainUI 和 MainCurrentDungeon 应该监听 dungeon:updated 事件并相应更新
+        // if (typeof MainUI !== 'undefined') {
+        //     MainUI.updateCurrentDungeonDisplay(); // 或者让事件驱动
+        // }
+        // if (typeof MainCurrentDungeon !== 'undefined' && typeof MainCurrentDungeon.update === 'function') {
+        //    MainCurrentDungeon.update(); // 或者让事件驱动
+        // }
+        // if (typeof UI !== 'undefined' && typeof UI.updateDungeonList === 'function') {
+        //    UI.updateDungeonList();
+        // }
     },
 
     /**

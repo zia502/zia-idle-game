@@ -3,28 +3,37 @@ const MainCurrentDungeon = {
      * 初始化
      */
     init() {
-        console.log('初始化MainCurrentDungeon组件');
+        console.log('MainCurrentDungeon: 初始化组件');
 
         // 注册事件监听
         if (typeof Events !== 'undefined') {
-            // 监听地下城更新事件
-            Events.on('dungeon:updated', () => {
-                console.log('MainCurrentDungeon收到地下城更新事件');
+            Events.on('dungeon:updated', (data) => {
+                console.log('MainCurrentDungeon: 收到 dungeon:updated 事件', data);
                 this.update();
             });
 
-            // 监听战斗结束事件
             Events.on('battle:end', (data) => {
-                console.log('MainCurrentDungeon收到战斗结束事件:', data.victory ? '胜利' : '失败');
-                // 如果在地下城中，且战斗失败，更新显示
+                console.log('MainCurrentDungeon: 收到 battle:end 事件:', data.victory ? '胜利' : '失败');
                 if (typeof Dungeon !== 'undefined' && Dungeon.currentRun && !data.victory) {
-                    setTimeout(() => this.update(), 500); // 延迟更新，确保DungeonRunner处理完战斗结果
+                    setTimeout(() => this.update(), 500);
                 }
+            });
+            
+            Events.on('dungeon:initialized', () => {
+                console.log('MainCurrentDungeon: 收到 dungeon:initialized 事件');
+                this.update();
             });
         }
 
         // 初始更新
-        this.update();
+        if (typeof Dungeon !== 'undefined' && Dungeon.isInitialized) {
+            console.log('MainCurrentDungeon: Dungeon 已初始化，立即更新');
+            this.update();
+        } else {
+            console.log('MainCurrentDungeon: Dungeon 未初始化，等待 dungeon:initialized 事件');
+            // 可以在此处显示一个初始的“加载中”状态，如果 update 方法还没有处理
+            this.showNoDungeon("地城数据加载中...");
+        }
     },
     /**
      * 更新当前地下城显示
@@ -32,44 +41,38 @@ const MainCurrentDungeon = {
     update() {
         const container = document.getElementById('main-current-dungeon');
         if (!container) {
-            console.error('找不到main-current-dungeon容器');
+            console.error('MainCurrentDungeon: 找不到 main-current-dungeon 容器');
             return;
         }
 
-        // 首先检查是否有当前正在进行的地下城
-        if (Dungeon.currentRun && Dungeon.currentRun.dungeonId) {
-            console.log('检测到当前有活跃的地下城运行，显示当前地下城进度');
-            this.showCurrentDungeon();
+        if (typeof Dungeon === 'undefined' || !Dungeon.isInitialized) {
+            console.log('MainCurrentDungeon: Dungeon 模块未定义或未初始化，显示加载中...');
+            this.showNoDungeon("地城数据加载中...");
             return;
         }
 
-        // 如果没有当前地下城，检查是否有上一次地下城记录
-        const lastRecord = DungeonRunner.getLastDungeonRecord();
-        if (lastRecord) {
-            // 强制修正森林洞穴地下城的怪物数量
-            if (lastRecord.dungeonName === '森林洞穴' || lastRecord.dungeonId === 'forest_cave') {
-                console.log('在update方法中强制修正森林洞穴地下城的怪物数量');
-                lastRecord.totalMonsters = 5;
-                lastRecord.totalMiniBosses = 2;
+        const currentRunData = Dungeon.currentRun;
+
+        if (currentRunData && currentRunData.dungeonId) {
+            console.log('MainCurrentDungeon: 检测到当前有活跃的地下城运行，显示当前地下城进度', currentRunData);
+            this.showCurrentDungeon(currentRunData);
+        } else {
+            // 如果没有当前地下城，检查是否有上一次地下城记录
+            const lastRecord = typeof DungeonRunner !== 'undefined' && DungeonRunner.getLastDungeonRecord ? DungeonRunner.getLastDungeonRecord() : null;
+            if (lastRecord) {
+                // 强制修正森林洞穴地下城的怪物数量 (此逻辑可考虑是否保留或移至 DungeonRunner)
+                if (lastRecord.dungeonName === '森林洞穴' || lastRecord.dungeonId === 'forest_cave') {
+                    lastRecord.totalMonsters = 5;
+                    lastRecord.totalMiniBosses = 2;
+                }
+                console.log('MainCurrentDungeon: 显示上一次地下城记录:', JSON.stringify(lastRecord, null, 2));
+                this.showLastDungeonRecord(lastRecord);
+            } else {
+                // 如果既没有当前地下城，也没有上一次记录，显示未进入地下城状态
+                console.log('MainCurrentDungeon: 没有当前运行的地下城，也没有上一条记录');
+                this.showNoDungeon();
             }
-
-            console.log('显示上一次地下城记录:', JSON.stringify(lastRecord, null, 2));
-
-            // 检查记录中的关键数据
-            console.log('地下城名称:', lastRecord.dungeonName);
-            console.log('怪物名称:', lastRecord.monsterName);
-            console.log('怪物类型:', lastRecord.monsterType);
-            console.log('战败原因:', lastRecord.defeatReason);
-            console.log('已击败怪物:', lastRecord.defeatedMonsters, '/', lastRecord.totalMonsters);
-            console.log('已击败小BOSS:', lastRecord.defeatedMiniBosses, '/', lastRecord.totalMiniBosses);
-            console.log('队伍统计:', lastRecord.teamStats);
-
-            this.showLastDungeonRecord(lastRecord);
-            return;
         }
-
-        // 如果既没有当前地下城，也没有上一次记录，显示未进入地下城状态
-        this.showNoDungeon();
     },
 
     /**
@@ -153,48 +156,52 @@ const MainCurrentDungeon = {
     /**
      * 显示当前地下城信息
      */
-    showCurrentDungeon() {
+    showCurrentDungeon(currentRunData) {
         const container = document.getElementById('main-current-dungeon');
         if (!container) {
-            console.error('找不到main-current-dungeon容器');
+            console.error('MainCurrentDungeon: 找不到 main-current-dungeon 容器');
             return;
         }
 
-        if (!Dungeon.currentRun) {
+        if (!currentRunData || !currentRunData.dungeonId) {
+            console.log('MainCurrentDungeon: showCurrentDungeon - 无效的 currentRunData 或 dungeonId，显示无地城状态');
             this.showNoDungeon();
             return;
         }
 
         // 清除上一次地下城记录，确保UI显示当前地下城进度
         if (typeof DungeonRunner !== 'undefined' && typeof DungeonRunner.clearLastDungeonRecord === 'function') {
-            console.log('在showCurrentDungeon中清除上一次地下城记录');
+            console.log('MainCurrentDungeon: 在 showCurrentDungeon 中清除上一次地下城记录');
             DungeonRunner.clearLastDungeonRecord();
         }
 
-        const dungeon = Dungeon.getDungeon(Dungeon.currentRun.dungeonId);
-        if (!dungeon) {
-            this.showNoDungeon();
+        const staticDungeonData = Dungeon.getDungeon(currentRunData.dungeonId);
+        if (!staticDungeonData) {
+            console.error(`MainCurrentDungeon: showCurrentDungeon - 无法获取地城静态数据 for ID: ${currentRunData.dungeonId}`);
+            this.showNoDungeon("地城数据错误");
             return;
         }
 
-        console.log('显示当前地下城进度:', Dungeon.currentRun);
+        const dungeonName = currentRunData.dungeonName || staticDungeonData.name;
+        console.log('MainCurrentDungeon: 显示当前地下城进度:', currentRunData);
 
-        // 使用Dungeon.currentRun.progress作为进度百分比
-        let progressPercent = Dungeon.currentRun.progress || 0;
+        let progressPercent = currentRunData.progress || 0;
 
-        // 计算总怪物数量和已击败的怪物数量，仅用于显示
-        const totalMonsters = Dungeon.currentRun.monsters.length +
-                             Dungeon.currentRun.miniBosses.length +
-                             (Dungeon.currentRun.finalBoss ? 1 : 0);
+        // 确保 monsters 和 miniBosses 是数组
+        const monstersArray = Array.isArray(currentRunData.monsters) ? currentRunData.monsters : [];
+        const miniBossesArray = Array.isArray(currentRunData.miniBosses) ? currentRunData.miniBosses : [];
+        
+        const totalMonstersInRun = monstersArray.length +
+                                   miniBossesArray.length +
+                                   (currentRunData.finalBoss ? 1 : 0);
 
-        const defeatedMonsters = Dungeon.currentRun.currentMonsterIndex +
-                                Dungeon.currentRun.defeatedMiniBosses +
-                                (Dungeon.currentRun.isCompleted ? 1 : 0);
+        const defeatedMonstersInRun = (currentRunData.currentMonsterIndex || 0) +
+                                      (currentRunData.defeatedMiniBosses || 0) +
+                                      (currentRunData.isCompleted && currentRunData.finalBossAppeared ? 1 : 0);
 
-        // 显示当前地下城进度信息
         const html = `
             <div class="current-dungeon-info">
-                <h3>${dungeon.name}</h3>
+                <h3>${dungeonName}</h3>
                 <div class="dungeon-progress">
                     <div class="progress-bar">
                         <div class="progress-fill" style="width: ${progressPercent}%"></div>
@@ -202,11 +209,11 @@ const MainCurrentDungeon = {
                     <div class="progress-text">${progressPercent}%</div>
                 </div>
                 <div class="dungeon-stats">
-                    <p>普通怪物：${Dungeon.currentRun.currentMonsterIndex}/${Dungeon.currentRun.monsters.length}</p>
-                    <p>已击败怪物：${Dungeon.currentRun.defeatedMonsters || 0}</p>
-                    <p>小BOSS：${Dungeon.currentRun.defeatedMiniBosses}/${Dungeon.currentRun.miniBosses.length}</p>
-                    <p>大BOSS：${Dungeon.currentRun.finalBossAppeared ? '已出现' : '未出现'}</p>
-                    <p>总进度：${defeatedMonsters}/${totalMonsters}</p>
+                    <p>普通怪物：${currentRunData.currentMonsterIndex || 0}/${monstersArray.length}</p>
+                    <p>已击败怪物（本轮）：${currentRunData.defeatedMonsters || 0}</p>
+                    <p>小BOSS：${currentRunData.defeatedMiniBosses || 0}/${miniBossesArray.length}</p>
+                    <p>大BOSS：${currentRunData.finalBossAppeared ? '已出现' : '未出现'}</p>
+                    <p>总进度（本轮）：${defeatedMonstersInRun}/${totalMonstersInRun}</p>
                 </div>
                 <div class="dungeon-controls">
                     <button id="main-dungeon-exit-btn" class="dungeon-btn exit-btn">退出地下城</button>
@@ -216,18 +223,16 @@ const MainCurrentDungeon = {
 
         container.innerHTML = html;
 
-        // 添加退出按钮事件监听器
         const exitButton = document.getElementById('main-dungeon-exit-btn');
         if (exitButton) {
             exitButton.addEventListener('click', () => {
                 if (typeof DungeonRunner !== 'undefined' && typeof DungeonRunner.exitDungeon === 'function') {
-                    // 确认是否退出地下城
                     if (confirm('确定要退出地下城吗？')) {
-                        console.log('用户点击了退出地下城按钮');
-                        DungeonRunner.exitDungeon();
+                        console.log('MainCurrentDungeon: 用户点击了退出地下城按钮');
+                        DungeonRunner.exitDungeon(); // DungeonRunner.exitDungeon 应该会触发 dungeon:updated 事件
                     }
                 } else {
-                    console.error('DungeonRunner.exitDungeon 方法不存在');
+                    console.error('MainCurrentDungeon: DungeonRunner.exitDungeon 方法不存在');
                 }
             });
         }
@@ -236,16 +241,16 @@ const MainCurrentDungeon = {
     /**
      * 显示未进入地下城状态
      */
-    showNoDungeon() {
+    showNoDungeon(message = "未进入地下城") {
         const container = document.getElementById('main-current-dungeon');
         if (!container) {
-            console.error('找不到main-current-dungeon容器');
+            console.error('MainCurrentDungeon: 找不到 main-current-dungeon 容器');
             return;
         }
 
         container.innerHTML = `
             <div class="no-dungeon">
-                <p>未进入地下城</p>
+                <p>${message}</p>
             </div>
         `;
     },

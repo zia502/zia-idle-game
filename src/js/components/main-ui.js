@@ -5,57 +5,82 @@ const MainUI = {
     /**
      * 初始化主界面
      */
-    init() {
+    async init() {
         try {
-            console.log('初始化主界面UI');
+            console.log('MainUI: 初始化主界面UI');
 
             // 初始化菜单图标点击事件
             this.initMenuIcons();
 
-            // 初始化主界面数据 - 使用try-catch分别处理每个部分，确保一个部分失败不会影响其他部分
+            // 初始化非地城依赖的UI部分
             try {
                 this.updateMainHeroInfo();
             } catch (error) {
-                console.error('初始化主角信息时出错:', error);
+                console.error('MainUI: 初始化主角信息时出错:', error);
             }
 
             try {
                 this.updateCurrentTeam();
             } catch (error) {
-                console.error('初始化队伍信息时出错:', error);
+                console.error('MainUI: 初始化队伍信息时出错:', error);
             }
 
             try {
                 this.updateWeaponBoard();
             } catch (error) {
-                console.error('初始化武器盘时出错:', error);
+                console.error('MainUI: 初始化武器盘时出错:', error);
             }
-
-            try {
-                // 如果MainCurrentDungeon组件存在，初始化它
-                if (typeof MainCurrentDungeon !== 'undefined' && typeof MainCurrentDungeon.init === 'function') {
-                    console.log('初始化MainCurrentDungeon组件');
-                    MainCurrentDungeon.init();
-                } else {
-                    // 否则使用内置方法更新
-                    this.updateCurrentDungeon();
-                }
-            } catch (error) {
-                console.error('初始化地下城信息时出错:', error);
-            }
-
+            
             try {
                 this.updateBattleLog();
             } catch (error) {
-                console.error('初始化战斗日志时出错:', error);
+                console.error('MainUI: 初始化战斗日志时出错:', error);
+            }
+
+            // 等待 Dungeon 初始化完成
+            if (typeof Dungeon !== 'undefined' && typeof Dungeon.init === 'function') {
+                try {
+                    console.log('MainUI: 等待 Dungeon 初始化...');
+                    await Dungeon.init();
+                    console.log('MainUI: Dungeon 初始化完成。');
+                    this.initializeDungeonDependentUI();
+                } catch (dungeonError) {
+                    console.error('MainUI: Dungeon 初始化失败:', dungeonError);
+                    // 即使 Dungeon 初始化失败，也尝试初始化依赖 Dungeon 的 UI，它们内部应有错误处理
+                    this.initializeDungeonDependentUI();
+                }
+            } else {
+                console.warn('MainUI: Dungeon 模块或 Dungeon.init 方法未定义。跳过地城依赖UI的初始化。');
+                // 如果 Dungeon.init 不存在，也尝试初始化，让组件自己处理 Dungeon 未就绪的情况
+                this.initializeDungeonDependentUI();
             }
 
             // 注册事件监听
             this.registerEventListeners();
 
-            console.log('主界面UI初始化完成');
+            console.log('MainUI: 主界面UI初始化完成');
         } catch (error) {
-            console.error('初始化主界面UI时出错:', error);
+            console.error('MainUI: 初始化主界面UI时出错:', error);
+        }
+    },
+
+    /**
+     * 初始化依赖 Dungeon 模块的UI组件
+     */
+    initializeDungeonDependentUI() {
+        console.log('MainUI: 初始化依赖 Dungeon 的 UI 组件...');
+        try {
+            // 如果MainCurrentDungeon组件存在，初始化它
+            if (typeof MainCurrentDungeon !== 'undefined' && typeof MainCurrentDungeon.init === 'function') {
+                console.log('MainUI: 初始化 MainCurrentDungeon 组件');
+                MainCurrentDungeon.init();
+            } else {
+                // 否则使用内置方法更新 (如果 MainUI 自己处理地城显示)
+                console.log('MainUI: MainCurrentDungeon 组件未定义，尝试使用内置方法更新地城显示');
+                this.updateCurrentDungeonDisplay(); // 重命名
+            }
+        } catch (error) {
+            console.error('MainUI: 初始化地城相关UI时出错:', error);
         }
     },
 
@@ -929,22 +954,25 @@ const MainUI = {
     /**
      * 更新当前地下城信息
      */
-    updateCurrentDungeon() {
+    updateCurrentDungeonDisplay() { // 重命名
         try {
             const dungeonContainer = document.getElementById('main-current-dungeon');
             if (!dungeonContainer) return;
 
-            // 如果MainCurrentDungeon组件存在，优先使用它来更新显示
-            if (typeof MainCurrentDungeon !== 'undefined' && typeof MainCurrentDungeon.update === 'function') {
-                console.log('使用MainCurrentDungeon组件更新地下城显示');
-                MainCurrentDungeon.update();
+            // 如果MainCurrentDungeon组件存在，它会自己处理更新，MainUI不应干预其内部update调用
+            // MainCurrentDungeon.init() 应该已经处理了初始渲染和事件监听
+            if (typeof MainCurrentDungeon !== 'undefined') {
+                 console.log('MainUI: MainCurrentDungeon 组件存在，由其自行更新。');
+                // MainCurrentDungeon.update(); // 不应由 MainUI 直接调用 MainCurrentDungeon.update()
                 return;
             }
+            
+            console.log('MainUI: MainCurrentDungeon 组件不存在，MainUI 将尝试更新地城显示。');
 
-            // 检查Dungeon模块是否存在
-            if (typeof Dungeon === 'undefined') {
-                console.error('Dungeon模块未定义');
-                dungeonContainer.innerHTML = '<div class="empty-message">地下城系统未加载</div>';
+            // 检查Dungeon模块是否存在且已初始化
+            if (typeof Dungeon === 'undefined' || !Dungeon.isInitialized) {
+                console.error('MainUI: Dungeon模块未定义或未初始化，无法更新地城显示。');
+                dungeonContainer.innerHTML = '<div class="empty-message">地下城数据加载中...</div>';
                 return;
             }
 
@@ -1341,8 +1369,16 @@ const MainUI = {
                 this.updateCurrentTeam();
             });
 
-            Events.on('dungeon:updated', () => {
-                this.updateCurrentDungeon();
+            Events.on('dungeon:updated', (data) => {
+                // 如果 MainCurrentDungeon 存在，它会自己处理更新
+                // 否则，MainUI 自己更新（如果它负责显示地城信息）
+                if (typeof MainCurrentDungeon === 'undefined' || typeof MainCurrentDungeon.update !== 'function') {
+                    console.log('MainUI: MainCurrentDungeon 未定义，MainUI 将处理 dungeon:updated 事件');
+                    this.updateCurrentDungeonDisplay();
+                } else {
+                    console.log('MainUI: MainCurrentDungeon 已定义，将由其处理 dungeon:updated 事件');
+                    // MainCurrentDungeon 应该已经通过 Events.on('dungeon:updated', this.update.bind(this)) 监听了
+                }
             });
 
             Events.on('battle:log', () => {

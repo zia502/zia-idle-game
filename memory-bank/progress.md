@@ -251,3 +251,7 @@ This file tracks the project's progress using a task list format.
 *   [2025-05-11 20:44:15] - [Debugging Task Status Update: Completed] Investigated and fixed issue where backline units would not join combat. Ensured backline units have full HP at the start of battle by modifying [`src/js/core/battle.js`](src/js/core/battle.js).
 * [2025-05-11 22:30:00] - Debugging Task Status Update: Added diagnostic logs to trace "一伐架式" buff lifecycle. Files modified: [`src/js/core/job-skills.js`](src/js/core/job-skills.js), [`src/js/core/buff-system.js`](src/js/core/buff-system.js).
 * [2025-05-12 09:49:34] - **Completed Task:** 创建/更新了 `.gitignore` 文件，内容为 `node_modules/`。
+* [2025-05-15 16:34:00] - **Completed Task:** SSR技能ID翻译和数据文件更新。
+    *   将 [`src/data/ssr_skill.json`](src/data/ssr_skill.json:1) 中的拼音技能ID翻译成英文（小驼峰格式）。
+    *   使用新的英文ID更新了 [`src/data/ssr_skill.json`](src/data/ssr_skill.json:1) 的键名。
+    *   使用新的英文ID更新了 [`src/data/ssr.json`](src/data/ssr.json:1) 中角色技能列表内的技能ID。

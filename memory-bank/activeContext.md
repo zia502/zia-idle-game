@@ -367,3 +367,8 @@ This file tracks the project's current status, including recent changes, current
 * [2025-05-11 22:30:00] - Debug Task: "一伐架式" buff 未在 `calculateAttackPower` 时出现在角色buff列表。
 * [2025-05-11 22:30:00] - Debug Action: 在 [`src/js/core/job-skills.js`](src/js/core/job-skills.js) 和 [`src/js/core/buff-system.js`](src/js/core/buff-system.js) 中添加了针对 "一伐架式" 技能和buff的诊断日志，以追踪其使用、应用和移除流程。
 * [2025-05-12 09:49:23] - 创建/更新了 `.gitignore` 文件，内容为 `node_modules/`。
+* [2025-05-15 16:34:00] - **SSR技能ID翻译任务完成:**
+    *   成功将 [`src/data/ssr_skill.json`](src/data/ssr_skill.json:1) 中的48个拼音技能ID翻译为英文小驼峰格式。
+    *   使用新的英文ID更新了 [`src/data/ssr_skill.json`](src/data/ssr_skill.json:1) 的键名。
+    *   使用新的英文ID更新了 [`src/data/ssr.json`](src/data/ssr.json:1) 中各角色技能列表内的技能ID。
+    *   相关数据文件已同步。

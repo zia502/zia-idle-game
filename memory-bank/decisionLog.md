@@ -711,3 +711,15 @@ Modified [`src/js/core/battle.js`](src/js/core/battle.js) within the `startBattl
 *   **统一日志输出：** 所有 `calculationSteps` 通过 `BattleLogger.log` 的 `details` 参数在 `CONSOLE_DETAIL` 级别一次性输出，提供完整的计算链路。
 *   **Affected components/files:**
     *   [`src/js/core/character.js`](src/js/core/character.js)
+---
+### Decision (Code)
+[2025-05-15 16:34:00] - 执行SSR技能ID翻译和数据文件更新
+
+**Rationale:**
+根据用户请求和架构师规划，将 [`src/data/ssr_skill.json`](src/data/ssr_skill.json:1) 中的拼音技能ID翻译为英文（小驼峰格式），并使用这些新的英文ID更新 [`src/data/ssr.json`](src/data/ssr.json:1) 和 [`src/data/ssr_skill.json`](src/data/ssr_skill.json:1) 本身，以提高数据一致性和可读性。
+
+**Details:**
+*   共处理了48个SSR技能ID的翻译。
+*   翻译规则：基于技能中文名称生成小驼峰格式的英文ID。
+*   更新了 [`src/data/ssr_skill.json`](src/data/ssr_skill.json:1) 中的技能键名。
+*   更新了 [`src/data/ssr.json`](src/data/ssr.json:1) 中角色技能列表内的技能ID。

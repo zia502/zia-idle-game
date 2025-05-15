@@ -105,7 +105,7 @@
       "daRate": 0.04,
       "taRate": 0.01
     },
-    "skills": ["bingJingJieJie", "bingFengKuangFeng", "shanYaoShuiJing"]
+    "skills": ["iceCrystalBarrier", "frozenGale", "shiningCrystal"]
   },
   "ssr_27": {
     "id": "character_027",
@@ -123,7 +123,7 @@
       "daRate": 0.07,
       "taRate": 0.03
     },
-    "skills": ["zhanShuCeFangYuan", "zhanShuCeHeYi", "bingHuoZhiShu"]
+    "skills": ["strategyFangYuan", "strategyHeYi", "artOfWarfare"]
   },
   "ssr_28": {
     "id": "character_028",
@@ -141,7 +141,7 @@
       "daRate": 0.1,
       "taRate": 0.05
     },
-    "skills": ["baiCheng", "qianZhuan", "shiQi"]
+    "skills": ["hundredEndurance", "thousandTurns", "tenStrikes"]
   },
   "ssr_29": {
     "id": "character_029",
@@ -159,7 +159,7 @@
       "daRate": 0.04,
       "taRate": 0.01
     },
-    "skills": ["faLiChongJi", "tuiLuoChengBi", "shengQuanDeXingHua", "xuNuanZhiGuang"]
+    "skills": ["tyreRamparts","manaImpact",  "sacredSpringStarbloom", "warmLight"]
   },
   "ssr_30": {
     "id": "character_030",
@@ -177,7 +177,7 @@
       "daRate": 0.07,
       "taRate": 0.03
     },
-    "skills": ["zuAiShu", "gongZhuDeYinLing", "xueYuanZhiShouHuJi"]
+    "skills": ["hindranceJutsu", "princessGuidance", "academyGuardianPrincess"]
   },
   "ssr_31": {
     "id": "character_031",
@@ -195,7 +195,7 @@
       "daRate": 0.04,
       "taRate": 0.01
     },
-    "skills": ["tanSuo", "huanJueChengXiang", "buQiang"]
+    "skills": ["illusionImaging","collapse",  "reinforce"]
   },
   "ssr_32": {
     "id": "character_032",
@@ -213,7 +213,7 @@
       "daRate": 0.07,
       "taRate": 0.03
     },
-    "skills": ["yueTian", "xinRuBaiZhi", "weiLaiHuanShi"]
+    "skills": ["moonSky", "heartLikeBlankPaper", "futureVision"]
   },
   "ssr_33": {
     "id": "character_033",
@@ -231,7 +231,7 @@
       "daRate": 0.1,
       "taRate": 0.05
     },
-    "skills": ["daBuZhongWo", "baNiDuoSui", "jiuZheMeDingLe"]
+    "skills": ["cantHitMe", "itsDecided", "chopYouUp"]
   },
   "ssr_34": {
     "id": "character_034",
@@ -249,7 +249,7 @@
       "daRate": 0.07,
       "taRate": 0.03
     },
-    "skills": ["kongBuJunShi", "lingHunDuanZao", "meiYouTongJueDeRouTi"]
+    "skills": ["terrorLegion", "soulForge", "painlessBody"]
   },
   "ssr_35": {
     "id": "character_035",
@@ -267,7 +267,7 @@
       "daRate": 0.1,
       "taRate": 0.05
     },
-    "skills": ["niBoLongGenZhiDun", "xiErDeBuLanTeZhiJian", "shenYuDeShouHuZhe", "buKeQinShenYu"]
+    "skills": ["nibelungenShield", "hildebrandSword", "sanctuaryGuardian", "inviolableSanctuary"]
   },
   "ssr_36": {
     "id": "character_036",
@@ -285,7 +285,7 @@
       "daRate": 0.1,
       "taRate": 0.05
     },
-    "skills": ["baZhuangJiaShi", "yiFaJiaShi", "lieFeiJiaShi"]
+    "skills": ["overlordStance", "firstStrikeStance", "fierceFlyStance"]
   },
   "ssr_37": {
     "id": "character_037",
@@ -303,7 +303,7 @@
       "daRate": 0.07,
       "taRate": 0.03
     },
-    "skills": ["duanGu", "mouPan", "guiZuYiWu"]
+    "skills": ["rebellionPlot","boneBreaker",  "noblesseOblige"]
   },
   "ssr_38": {
     "id": "character_038",
@@ -321,7 +321,7 @@
       "daRate": 0.04,
       "taRate": 0.01
     },
-    "skills": ["hanFengHuaShuQuSan", "fuXing", "wuWangWo"]
+    "skills": ["chillingBouquet", "revival", "forgetMeNot"]
   },
   "ssr_39": {
     "id": "character_039",
@@ -339,7 +339,7 @@
       "daRate": 0.07,
       "taRate": 0.03
     },
-    "skills": ["huanXiang", "yuanSuZhuFu", "qiangFengFuNeng"]
+    "skills": ["galeEmpowerment","phantasm", "elementalBlessing"]
   },
   "ssr_40": {
     "id": "character_040",
@@ -357,7 +357,7 @@
       "daRate": 0.07,
       "taRate": 0.03
     },
-    "skills": ["yongHengDeLiuFeng", "tianXiangShenShengDuanMiePo", "kuangWuDeBaoFeng", "tianKuJuFengLuoXuanJin"]
+    "skills": ["eternalZephyr", "skyGlideSacredAnnihilation", "dancingStorm", "skyCryHurricaneSpiral"]
   },
   "leFenye": {
     "id": "character_ssr_lefenye",

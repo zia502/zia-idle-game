@@ -483,7 +483,7 @@
       }
     ]
   },
-  "bingJingJieJie": {
+  "iceCrystalBarrier": {
     "name": "冰晶结界",
     "description": "我方全体获得以下强化：火属性伤害70%减免，持续2回合。自身获得3层春风buff, 自己受到伤害时，治疗全队2000HP,并净化1个debuff (CD: 6回合)。",
     "type": "buff",
@@ -524,7 +524,7 @@
       }
     ]
   },
-  "bingFengKuangFeng": {
+  "frozenGale": {
     "name": "冰封狂风",
     "description": "对敌方全体造成2.5~3倍伤害, 并施加 攻击力 -20% 防御力-20% DEBUFF 2回合 (CD: 5回合)。",
     "type": "attack",
@@ -557,7 +557,7 @@
       }
     ]
   },
-  "shanYaoShuiJing": {
+  "shiningCrystal": {
     "name": "闪耀水晶",
     "description": "[被动] 我方全体防御力加15， 火属性伤害减轻 15%",
     "type": "passive",
@@ -582,7 +582,7 @@
       }
     ]
   },
-  "zhanShuCeFangYuan": {
+  "strategyFangYuan": {
     "name": "戦術策：方円",
     "description": "我方全体获得以下强化，持续5回合 攻击力 +80% 防御力 +50 (CD: 8回合)。",
     "type": "buff",
@@ -609,7 +609,7 @@
       }
     ]
   },
-  "zhanShuCeHeYi": {
+  "strategyHeYi": {
     "name": "戦術策：鶴翼",
     "description": "对敌方全体施加以下弱体，持续3回合 攻击力- 20% 防御力-30 (CD: 5回合)。",
     "type": "debuff",
@@ -636,7 +636,7 @@
       }
     ]
   },
-  "bingHuoZhiShu": {
+  "artOfWarfare": {
     "name": "兵活の书",
     "description": "[被动] 免疫沉默DEBUFF",
     "type": "passive",
@@ -654,7 +654,7 @@
       }
     ]
   },
-  "zuAiShu": {
+  "hindranceJutsu": {
     "name": "阻碍术",
     "description": "我方全体获得以下强化 防御力 +100，持续3回合 ， 火属性伤害40%减免，持续1回合 (CD: 8回合)。",
     "type": "buff",
@@ -682,7 +682,7 @@
       }
     ]
   },
-  "gongZhuDeYinLing": {
+  "princessGuidance": {
     "name": "公主的引领",
     "description": "自身获得以下状态，持续2回合，敌对心 +200%，HP回复HOT 1500 (CD: 5回合)。",
     "type": "buff",
@@ -709,7 +709,7 @@
       }
     ]
   },
-  "xueYuanZhiShouHuJi": {
+  "academyGuardianPrincess": {
     "name": "学院の守護姫",
     "description": "[被动] 被攻击时，获得1层英灵BUFF（最大5层/永续/消去不可） 英灵效果 攻击力UP （每层10%/最大50%） 防御力UP（每层20/最大100） DA UP（每层20%/最大100%） TA UP（每层5%/最大25%） 敌对心UP（每层40%/最大200%）",
     "type": "passive",
@@ -759,7 +759,7 @@
       }
     ]
   },
-  "shiQi": {
+  "tenStrikes": {
     "name": "十起",
     "description": "10回合后才可使用。 对敌方单体进行3次攻击，每次造成16倍伤害, 自身获得 TA+100% 5回合 (初始CD: 10回合, 后续CD: 14回合)。",
     "type": "attack",
@@ -786,7 +786,7 @@
       }
     ]
   },
-  "baiCheng": {
+  "hundredEndurance": {
     "name": "百承",
     "description": "自身获得以下效果，持续1回合，完全回避，援护 (CD: 7回合)。",
     "type": "defense",
@@ -810,7 +810,7 @@
       }
     ]
   },
-  "qianZhuan": {
+  "thousandTurns": {
     "name": "千転",
     "description": "自身获得以下效果 浑身+10-30 ，TA +100% ，持续3回合。 HP 回复2000 (CD: 7回合)。",
     "type": "buff",
@@ -843,7 +843,7 @@
       }
     ]
   },
-  "faLiChongJi": {
+  "manaImpact": {
     "name": "法力冲击",
     "description": "对敌方单体进行3次攻击，每次造成2倍伤害，我方全体获得以下效果 HP回复2000，净化一个DEBUFF (CD: 6回合)。",
     "type": "attack",
@@ -871,7 +871,7 @@
       }
     ]
   },
-  "tuiLuoChengBi": {
+  "tyreRamparts": {
     "name": "推罗城壁",
     "description": "我方全体获得以下强化: 5000护盾，攻击力+45%， 受到伤害转为火属性，火属性伤害减轻50%， 持续5回合 (CD: 12回合)。",
     "type": "buff",
@@ -914,7 +914,7 @@
       }
     ]
   },
-  "xuNuanZhiGuang": {
+  "warmLight": {
     "name": "煦暖之光",
     "description": "10回合后才可使用，仅一次。 自身与主角获得 [慈爱的星芒] BUFF: TA+100% ,攻击上限+10%，技能上限+10% (初始CD: 10回合, 仅一次)。",
     "type": "buff",
@@ -948,7 +948,7 @@
       }
     ]
   },
-  "shengQuanDeXingHua": {
+  "sacredSpringStarbloom": {
     "name": "圣泉的星华",
     "description": "[被动] 我方全体水属性角色获得 攻击力+30%，自身攻击时获得 攻击力+10% 防御力+10， 追击+3%的永续BUFF，最高10层",
     "type": "passive",
@@ -999,7 +999,7 @@
       }
     ]
   },
-  "tanSuo": {
+  "collapse": {
     "name": "坍缩",
     "description": "对敌方全体造成4-4.5 倍土属性伤害并施加以下弱体，持续3回合 防御力-40 (CD: 6回合)。",
     "type": "attack",
@@ -1025,7 +1025,7 @@
       }
     ]
   },
-  "huanJueChengXiang": {
+  "illusionImaging": {
     "name": "幻觉成像",
     "description": "我方全体获得以下强化： 暴击率+50%， 攻击力+30% 防御力 +30， DA+35%，TA+15% 持续3回合 (CD: 7回合)。",
     "type": "buff",
@@ -1076,7 +1076,7 @@
       }
     ]
   },
-  "buQiang": {
+  "reinforce": {
     "name": "补强",
     "description": "我方全体获得以下效果： HP回复2000，净化一个debuff (CD: 5回合)。",
     "type": "support",
@@ -1098,7 +1098,7 @@
       }
     ]
   },
-  "yueTian": {
+  "moonSky": {
     "name": "月天",
     "description": "对敌方全体造成7倍伤害，并施加 以下弱体: 攻击力-40% 持续3回合 (CD: 6回合)。",
     "type": "attack",
@@ -1122,7 +1122,7 @@
       }
     ]
   },
-  "xinRuBaiZhi": {
+  "heartLikeBlankPaper": {
     "name": "心如白纸",
     "description": "我方全体获得3000 护盾 (CD: 7回合)。",
     "type": "defense",
@@ -1140,7 +1140,7 @@
       }
     ]
   },
-  "weiLaiHuanShi": {
+  "futureVision": {
     "name": "未来幻視",
     "description": "[被动] 回合开始时 50% 概率 我方全体获得 水属性伤害减轻70% BUFF,持续1回合",
     "type": "passive",
@@ -1169,7 +1169,7 @@
       }
     ]
   },
-  "daBuZhongWo": {
+  "cantHitMe": {
     "name": "打不中我",
     "description": "自身获得 完全回避 2回合 (CD: 8回合)。",
     "type": "defense",
@@ -1186,7 +1186,7 @@
       }
     ]
   },
-  "baNiDuoSui": {
+  "chopYouUp": {
     "name": "把你剁碎",
     "description": "对敌方目标进行6次攻击，每次造成1倍伤害并对敌方全体施加以下弱体，持续2回合。 DA-100% TA-100% (CD: 6回合)。",
     "type": "attack",
@@ -1219,7 +1219,7 @@
       }
     ]
   },
-  "jiuZheMeDingLe": {
+  "itsDecided": {
     "name": "就这么定了",
     "description": "自身获得以下强化，持续1回合：TA+100%, 攻击力+100% 追击+50% (CD: 6回合)。",
     "type": "buff",
@@ -1254,7 +1254,7 @@
       }
     ]
   },
-  "lingHunDuanZao": {
+  "soulForge": {
     "name": "灵魂锻造",
     "description": "自身获得灵魂锻造（消去不可），持续8回合 灵魂锻造效果： 攻击力 +30% 暴击率 + 100% DA +100% 弱体免疫 敌对心 +200% (CD: 10回合)。",
     "type": "buff",
@@ -1293,7 +1293,7 @@
       }
     ]
   },
-  "kongBuJunShi": {
+  "terrorLegion": {
     "name": "恐怖军势",
     "description": "对敌方单体造成2~9倍伤害，自身HP百分比越低，伤害倍率越高 (CD: 5回合)。",
     "type": "attack",
@@ -1311,7 +1311,7 @@
       }
     ]
   },
-  "meiYouTongJueDeRouTi": {
+  "painlessBody": {
     "name": "没有痛觉的肉体",
     "description": "[被动] 回合结束时，HP低于25% 触发HP回复100%效果，仅生效一次。",
     "type": "passive",
@@ -1337,7 +1337,7 @@
       }
     ]
   },
-  "buKeQinShenYu": {
+  "inviolableSanctuary": {
     "name": "不可侵神域",
     "description": "我方全体获得以下强化：不可侵神域BUFF，消去不可 持续3回合： 防御力+100，受到伤害转为水属性。 并获得 水属性伤害70%减免，持续1回合 (CD: 6回合)。",
     "type": "defense",
@@ -1374,7 +1374,7 @@
       }
     ]
   },
-  "niBoLongGenZhiDun": {
+  "nibelungenShield": {
     "name": "尼伯龙根之盾",
     "description": "对敌方全体造成6倍伤害，我方全体获得以下强化：无敌 1回合 (CD: 12回合)。",
     "type": "attack",
@@ -1396,7 +1396,7 @@
       }
     ]
   },
-  "xiErDeBuLanTeZhiJian": {
+  "hildebrandSword": {
     "name": "希尔德布兰特之剑",
     "description": "对敌方目标进行6次攻击，每次造成1.5倍土属性伤害。并对敌方全体施加攻击力-30% 持续3回合DEBUFF (CD: 7回合)。",
     "type": "attack",
@@ -1422,7 +1422,7 @@
       }
     ]
   },
-  "shenYuDeShouHuZhe": {
+  "sanctuaryGuardian": {
     "name": "神域的守护者",
     "description": "[被动] 我方全体土属性角色获得 攻击力+30%，自身攻击时获得：攻击力+10%，防御力+10，技能伤害上限+3% 永续BUFF，最大10层。",
     "type": "passive",
@@ -1473,7 +1473,7 @@
       }
     ]
   },
-  "baZhuangJiaShi": {
+  "overlordStance": {
     "name": "霸装架式",
     "description": "自身获得以下状态，持续5回合： 攻击力+45%， 防御力-20 (CD: 6回合)。",
     "type": "buff",
@@ -1500,7 +1500,7 @@
       }
     ]
   },
-  "yiFaJiaShi": {
+  "firstStrikeStance": {
     "name": "一伐架式",
     "description": "自身获得以下强化，持续1回合：攻击力+300% (CD: 6回合)。",
     "type": "buff",
@@ -1519,7 +1519,7 @@
       }
     ]
   },
-  "lieFeiJiaShi": {
+  "fierceFlyStance": {
     "name": "烈飞架式",
     "description": "自身获得TA+100%，再攻击（攻击阶段进行2次攻击步骤），持续1回合 (CD: 6回合)。",
     "type": "buff",
@@ -1545,7 +1545,7 @@
       }
     ]
   },
-  "duanGu": {
+  "boneBreaker": {
     "name": "断骨",
     "description": "对敌方单体造成3.5~5倍伤害，并施加 攻击力-40% DEBUFF 持续3回合 (CD: 6回合)。",
     "type": "attack",
@@ -1570,7 +1570,7 @@
       }
     ]
   },
-  "mouPan": {
+  "rebellionPlot": {
     "name": "谋叛",
     "description": "对敌方全体造成10倍伤害, 自身获得背水+20 BUFF 持续8回合，当前HP -30% (CD: 6回合)。",
     "type": "attack",
@@ -1599,7 +1599,7 @@
       }
     ]
   },
-  "guiZuYiWu": {
+  "noblesseOblige": {
     "name": "贵族义务",
     "description": "我方全体获得以下强化，持续1回合: 伤害降低70% (CD: 5回合)。",
     "type": "defense",
@@ -1618,7 +1618,7 @@
       }
     ]
   },
-  "hanFengHuaShuQuSan": {
+  "chillingBouquet": {
     "name": "寒风花束",
     "description": "驱散敌方全体1个强化状态，并施加剧毒DEBUFF（每回合损失1万HP） ，持续3回合 (CD: 4回合)。",
     "type": "debuff",
@@ -1644,7 +1644,7 @@
       }
     ]
   },
-  "fuXing": {
+  "revival": {
     "name": "复兴",
     "description": "我方全体获得以下效果：HP回复2000，净化一个弱体， HP持续回复500（持续3回合） (CD: 6回合)。",
     "type": "support",
@@ -1674,7 +1674,7 @@
       }
     ]
   },
-  "wuWangWo": {
+  "forgetMeNot": {
     "name": "勿忘我",
     "description": "使我方一位角色复活（复活时拥有100%生命值）。◆被复活的队友排序会移动到最后一位 (CD: 16回合)。",
     "type": "support",
@@ -1691,7 +1691,7 @@
       }
     ]
   },
-  "huanXiang": {
+  "phantasm": {
     "name": "幻像",
     "description": "我方全体获得 完全回避 持续1回合 (CD: 5回合)。",
     "type": "defense",
@@ -1708,7 +1708,7 @@
       }
     ]
   },
-  "yuanSuZhuFu": {
+  "elementalBlessing": {
     "name": "元素祝福",
     "description": "对敌方全体进行4次攻击，每次造成2倍伤害， 并施加 防御力-25% 持续3回合 (CD: 7回合)。",
     "type": "attack",
@@ -1733,7 +1733,7 @@
       }
     ]
   },
-  "qiangFengFuNeng": {
+  "galeEmpowerment": {
     "name": "强风赋能",
     "description": "我方全体获得以下强化，持续3回合： 攻击力+50%，暴击率+50%, TA+50% (CD: 8回合)。",
     "type": "buff",
@@ -1768,7 +1768,7 @@
       }
     ]
   },
-  "yongHengDeLiuFeng": {
+  "eternalZephyr": {
     "name": "永恒的流风",
     "description": "我方全体角色获得以下强化：2000护盾，完全回避 1回合， 弱体无效1次 (CD: 8回合)。",
     "type": "defense",
@@ -1798,7 +1798,7 @@
       }
     ]
   },
-  "tianXiangShenShengDuanMiePo": {
+  "skyGlideSacredAnnihilation": {
     "name": "天翔·神圣断灭破",
     "description": "对敌方单体进行6次攻击，每次造成1.5倍伤害，自身 获得 攻击力+30% 持续3回合 (CD: 7回合)。",
     "type": "attack",
@@ -1823,7 +1823,7 @@
       }
     ]
   },
-  "tianKuJuFengLuoXuanJin": {
+  "skyCryHurricaneSpiral": {
     "name": "天哭·飓风螺旋尽",
     "description": "对敌方单体进行5次攻击，每次造成8倍伤害，并驱散其全部强化状态，并对敌方施加 攻击力-20% 防御力-20 持续3回合 (初始CD: 10回合, 仅一次)。",
     "type": "attack",
@@ -1863,7 +1863,7 @@
       }
     ]
   },
-  "kuangWuDeBaoFeng": {
+  "dancingStorm": {
     "name": "狂舞的暴风",
     "description": "[被动] 我方全体风属性角色获得 攻击力+30%，自身攻击时获得：攻击力+10%，防御力+10，TA+10% 永续BUFF，最大10层。",
     "type": "passive",

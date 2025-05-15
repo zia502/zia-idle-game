@@ -1,0 +1,17 @@
+{
+  "enemy": "敌方单体",
+  "self": "自身",
+  "all_allies": "我方全体",
+  "random_enemy": "随机敌方单体",
+  "all_enemies": "敌方全体",
+  "all_allies_fire": "我方火属性全体",
+  "all_allies_water": "我方水属性全体",
+  "all_allies_earth": "我方土属性全体",
+  "all_allies_wind": "我方风属性全体",
+  "ally_dead": "已阵亡队友",
+  "ally_lowest_hp": "我方生命值最低者",
+  "single_ally": "单个队友 (优先HP百分比最低的非自身队友，若无则自身)",
+  "target": "目标 (当前代码中此类型无效)",
+  "all": "全体 (当前代码中此类型无效，且不区分敌我)",
+  "self_and_main": "自身与主要目标 (当前代码中此类型无效)"
+}

@@ -7,6 +7,11 @@ This file tracks the project's progress using a task list format.
 
 ## Completed Tasks
 
+*   [2025-05-15 17:12:00] - **Completed Task: 技能效果类型翻译与提示框更新**
+    *   提取了所有技能数据文件和相关JS模块中的唯一原子技能效果类型。
+    *   与用户确认了这些类型的中文翻译。
+    *   创建了翻译映射文件 [`src/data/translations/effect_type_translations_zh.json`](src/data/translations/effect_type_translations_zh.json)。
+    *   修改了 [`src/js/components/skill-tooltip.js`](src/js/components/skill-tooltip.js) 以加载翻译文件并在技能提示框中显示翻译后的效果类型名称。
 *   [2025-05-09 21:18:00] - **Completed Debugging Task:** 调查并修复了战斗日志中指出的4个新问题。
     *   问题1 (怪物 `maxHp` 初始化): 修改了 [`src/js/core/battle.js`](src/js/core/battle.js:1) 的HP初始化逻辑。
     *   问题2 (“护甲破坏”两次伤害) & 问题3 (“护甲破坏”0伤害日志矛盾): 修改了 [`src/js/core/job-skills.js`](src/js/core/job-skills.js:1) 以统一伤害应用和日志。
@@ -256,3 +261,8 @@ This file tracks the project's progress using a task list format.
     *   更新了 [`src/data/ssr_skill.json`](src/data/ssr_skill.json:1) 的键名，使用了修正后的英文ID。
     *   更新了 [`src/data/ssr.json`](src/data/ssr.json:1) 中各角色技能列表内的技能ID，使用了修正后的英文ID。
     *   所有相关的SSR技能数据文件已同步更新。
+*   [2025-05-15 17:35:00] - **Completed Task: 技能目标类型 (targetType) 翻译与提示框更新**
+    *   澄清了模糊的 `targetType` 值 (`target`, `all`, `self_and_main`) 在 [`src/js/core/job-skills.js`](src/js/core/job-skills.js) 中的实际行为。
+    *   与用户确认了所有 `targetType` 的中文翻译。
+    *   创建了新的翻译文件 [`src/data/translations/target_type_translations_zh.json`](src/data/translations/target_type_translations_zh.json)。
+    *   修改了 [`src/js/components/skill-tooltip.js`](src/js/components/skill-tooltip.js) 以加载并显示新的 `targetType` 翻译。

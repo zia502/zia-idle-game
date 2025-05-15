@@ -2,13 +2,48 @@
  * 技能提示框组件 - 显示技能详细信息
  */
 const SkillTooltip = {
+    translations: {
+        effect_type: {},
+        target_type: {}
+    }, // 用于存储加载的翻译
+
     /**
      * 初始化技能提示框
      */
-    init() {
+    async init() { // 改为异步函数以加载翻译
         console.log('初始化技能提示框');
+        await this.loadTranslations(); // 加载翻译
         this.createTooltipElement();
         this.attachEventListeners();
+    },
+
+    /**
+     * 加载翻译文件
+     */
+    async loadTranslations() {
+        try {
+            const [effectTypeResponse, targetTypeResponse] = await Promise.all([
+                fetch('src/data/translations/effect_type_translations_zh.json'),
+                fetch('src/data/translations/target_type_translations_zh.json')
+            ]);
+
+            if (!effectTypeResponse.ok) {
+                console.error('无法加载技能效果翻译文件:', effectTypeResponse.statusText);
+            } else {
+                this.translations.effect_type = await effectTypeResponse.json();
+                console.log('技能效果翻译已加载:', this.translations.effect_type);
+            }
+
+            if (!targetTypeResponse.ok) {
+                console.error('无法加载目标类型翻译文件:', targetTypeResponse.statusText);
+            } else {
+                this.translations.target_type = await targetTypeResponse.json();
+                console.log('目标类型翻译已加载:', this.translations.target_type);
+            }
+
+        } catch (error) {
+            console.error('加载翻译文件时出错:', error);
+        }
     },
 
     /**
@@ -274,16 +309,8 @@ const SkillTooltip = {
 
         // 目标类型
         if (skill.targetType) {
-            const targetTypes = {
-                'self': '自身',
-                'ally': '单个队友',
-                'all_allies': '所有队友',
-                'enemy': '单个敌人',
-                'all_enemies': '所有敌人',
-                'all': '所有单位'
-            };
-
-            html += `<div class="skill-tooltip-stat"><span class="skill-tooltip-stat-icon">🎯</span> 目标: ${targetTypes[skill.targetType] || skill.targetType}</div>`;
+            const translatedTargetType = this.translations.target_type[skill.targetType] || skill.targetType;
+            html += `<div class="skill-tooltip-stat"><span class="skill-tooltip-stat-icon">🎯</span> 目标: ${translatedTargetType}</div>`;
         }
 
         html += '</div>';
@@ -294,108 +321,109 @@ const SkillTooltip = {
 
             skill.effects.forEach(effect => {
                 const effectIcon = effectIcons[effect.type] || '✨';
+                const translatedEffectType = this.translations.effect_type[effect.type] || effect.type;
                 let effectText = '';
 
                 // 根据效果类型生成描述
                 switch (effect.type) {
                     case 'attackUp':
-                        effectText = `增加攻击力 ${effect.value * 100}%`;
+                        effectText = `${this.translations.effect_type['attackUp'] || '攻击力提升'} ${effect.value * 100}%`;
                         if (effect.duration) effectText += ` (持续${effect.duration}回合)`;
                         break;
                     case 'defenseUp':
-                        effectText = `增加防御力 ${typeof effect.value === 'number' && effect.value > 1 ? effect.value : effect.value * 100 + '%'}`;
+                        effectText = `${this.translations.effect_type['defenseUp'] || '防御力提升'} ${typeof effect.value === 'number' && effect.value > 1 ? effect.value : effect.value * 100 + '%'}`;
                         if (effect.duration) effectText += ` (持续${effect.duration}回合)`;
                         break;
                     case 'attackDown':
-                        effectText = `降低攻击力 ${effect.value * 100}%`;
+                        effectText = `${this.translations.effect_type['attackDown'] || '攻击力下降'} ${effect.value * 100}%`;
                         if (effect.duration) effectText += ` (持续${effect.duration}回合)`;
                         break;
                     case 'defenseDown':
-                        effectText = `降低防御力 ${effect.value * 100}%`;
+                        effectText = `${this.translations.effect_type['defenseDown'] || '防御力下降'} ${effect.value * 100}%`;
                         if (effect.duration) effectText += ` (持续${effect.duration}回合)`;
                         break;
                     case 'heal':
-                        effectText = `恢复生命值 ${effect.value}`;
+                        effectText = `${this.translations.effect_type['heal'] || '治疗'} ${effect.value}`;
                         break;
                     case 'damage':
                         if (effect.minMultiplier && effect.maxMultiplier) {
-                            effectText = `造成 ${effect.minMultiplier * 100}%-${effect.maxMultiplier * 100}% 攻击力的伤害`;
+                            effectText = `造成 ${effect.minMultiplier * 100}%-${effect.maxMultiplier * 100}% 攻击力的${this.translations.effect_type['damage'] || '伤害'}`;
                         } else if (effect.multiplier) {
-                            effectText = `造成 ${effect.multiplier * 100}% 攻击力的伤害`;
+                            effectText = `造成 ${effect.multiplier * 100}% 攻击力的${this.translations.effect_type['damage'] || '伤害'}`;
                         } else {
-                            effectText = '造成伤害';
+                            effectText = `${this.translations.effect_type['damage'] || '造成伤害'}`;
                         }
                         break;
                     case 'dot':
-                        effectText = `每回合造成 ${effect.value} 点伤害`;
+                        effectText = `每回合造成 ${effect.value} 点${this.translations.effect_type['dot'] || '持续伤害'}`;
                         if (effect.duration) effectText += ` (持续${effect.duration}回合)`;
                         break;
                     case 'shield':
-                        effectText = `创建 ${effect.value} 点护盾`;
+                        effectText = `创建 ${effect.value} 点${this.translations.effect_type['shield'] || '护盾'}`;
                         break;
                     case 'dispel':
-                        effectText = `驱散 ${effect.count} 个${effect.dispelPositive ? '增益' : '减益'}效果`;
+                        effectText = `${this.translations.effect_type['dispel'] || '驱散增益'} ${effect.count} 个${effect.dispelPositive ? '增益' : '减益'}效果`;
                         break;
                     case 'invincible':
-                        effectText = `无敌 ${effect.maxHits} 次`;
+                        effectText = `${this.translations.effect_type['invincible'] || '无敌'} ${effect.maxHits} 次`;
                         if (effect.duration) effectText += ` (持续${effect.duration}回合)`;
                         break;
                     case 'daBoost':
-                        effectText = `增加双重攻击率 ${effect.value * 100}%`;
+                        effectText = `${this.translations.effect_type['daBoost'] || '双重攻击概率提升'} ${effect.value * 100}%`;
                         if (effect.duration) effectText += ` (持续${effect.duration}回合)`;
                         break;
                     case 'taBoost':
-                        effectText = `增加三重攻击率 ${effect.value * 100}%`;
+                        effectText = `${this.translations.effect_type['taBoost'] || '三重攻击概率提升'} ${effect.value * 100}%`;
                         if (effect.duration) effectText += ` (持续${effect.duration}回合)`;
                         break;
                     case 'daDown':
-                        effectText = `降低双重攻击率 ${effect.value * 100}%`;
+                        effectText = `${this.translations.effect_type['daDown'] || '双重攻击概率下降'} ${effect.value * 100}%`;
                         if (effect.duration) effectText += ` (持续${effect.duration}回合)`;
                         break;
                     case 'taDown':
-                        effectText = `降低三重攻击率 ${effect.value * 100}%`;
+                        effectText = `${this.translations.effect_type['taDown'] || '三重攻击概率下降'} ${effect.value * 100}%`;
                         if (effect.duration) effectText += ` (持续${effect.duration}回合)`;
                         break;
                     case 'missRate':
-                        effectText = `降低命中率 ${effect.value * 100}%`;
+                        effectText = `${this.translations.effect_type['missRate'] || '命中率下降'} ${effect.value * 100}%`;
                         if (effect.duration) effectText += ` (持续${effect.duration}回合)`;
                         break;
                     case 'damageReduction':
-                        effectText = `减少受到的伤害 ${effect.value * 100}%`;
+                        effectText = `${this.translations.effect_type['damageReduction'] || '伤害减免'} ${effect.value * 100}%`;
                         if (effect.duration) effectText += ` (持续${effect.duration}回合)`;
                         break;
                     case 'multi_attack':
                         if (effect.minMultiplier && effect.maxMultiplier) {
-                            effectText = `造成 ${effect.count} 次 ${effect.minMultiplier * 100}%-${effect.maxMultiplier * 100}% 攻击力的伤害`;
+                            effectText = `造成 ${effect.count} 次 ${effect.minMultiplier * 100}%-${effect.maxMultiplier * 100}% 攻击力的${this.translations.effect_type['multi_attack'] || '多段攻击'}`;
                         } else if (effect.multiplier) {
-                            effectText = `造成 ${effect.count} 次 ${effect.multiplier * 100}% 攻击力的伤害`;
+                            effectText = `造成 ${effect.count} 次 ${effect.multiplier * 100}% 攻击力的${this.translations.effect_type['multi_attack'] || '多段攻击'}`;
                         } else {
-                            effectText = `造成 ${effect.count} 次伤害`;
+                            effectText = `造成 ${effect.count} 次${this.translations.effect_type['multi_attack'] || '多段攻击'}`;
                         }
                         break;
                     case 'proc':
-                        effectText = `${effect.chance * 100}% 几率触发`;
+                        effectText = `${effect.chance * 100}% 几率${this.translations.effect_type['proc'] || '效果触发'}`;
                         if (effect.onAttack) effectText += '（攻击时）';
                         break;
                     case 'endOfTurn':
-                        effectText = '回合结束时触发';
+                        effectText = `${this.translations.effect_type['endOfTurn'] || '回合结束效果'}`;
                         break;
                     case 'cover':
                         if (effect.chance) {
-                            effectText = `${effect.chance * 100}% 几率代替队友承受伤害`;
+                            effectText = `${effect.chance * 100}% 几率代替队友承受${this.translations.effect_type['cover'] || '援护'}伤害`;
                         } else {
-                            effectText = '代替队友承受伤害';
+                            effectText = `代替队友承受${this.translations.effect_type['cover'] || '援护'}伤害`;
                         }
                         if (effect.duration) effectText += ` (持续${effect.duration}回合)`;
                         break;
                     case 'revive':
-                        effectText = `复活倒下的队友，恢复 ${effect.hpRatio * 100}% 生命值`;
+                        effectText = `${this.translations.effect_type['revive'] || '复活'}倒下的队友，恢复 ${effect.hpRatio * 100}% 生命值`;
                         break;
                     case 'ignoreDebuff':
-                        effectText = `无视 ${effect.debuffType === 'missRate' ? '命中率降低' : effect.debuffType} 减益效果`;
+                        effectText = `${this.translations.effect_type['ignoreDebuff'] || '无视弱体'} ${effect.debuffType === 'missRate' ? (this.translations.effect_type['missRate'] || '命中率降低') : effect.debuffType} 减益效果`;
                         break;
                     default:
-                        effectText = effect.name || effect.type;
+                        effectText = effect.name || translatedEffectType;
                 }
 
                 html += `

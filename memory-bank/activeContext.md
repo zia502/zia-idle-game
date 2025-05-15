@@ -61,6 +61,11 @@ This file tracks the project's current status, including recent changes, current
     *   **Affected Files ( अनुमानित ):** [`src/js/core/battle.js`](src/js/core/battle.js:0), potentially [`src/js/core/team.js`](src/js/core/team.js:0).
     *   **Related User Task:** "前排4名角色全部阵亡，战斗会直接结束，而不是让后排2名角色移动到前排继续战斗。"
 ## Recent Changes
+*   [2025-05-15 17:11:00] - **技能效果类型翻译与提示框更新任务:**
+    *   提取了所有技能数据文件和相关JS模块中的唯一原子技能效果类型。
+    *   与用户确认了这些类型的中文翻译。
+    *   创建了翻译映射文件 [`src/data/translations/effect_type_translations_zh.json`](src/data/translations/effect_type_translations_zh.json)。
+    *   修改了 [`src/js/components/skill-tooltip.js`](src/js/components/skill-tooltip.js) 以加载翻译文件并在技能提示框中显示翻译后的效果类型名称。
 *   [2025-05-12 09:46:00] - **TDD Cycle Completed for Backline Reinforcement:**
     *   Successfully wrote and passed 7 unit/integration tests for the "backline reinforcement" feature in [`src/js/core/battle.js`](src/js/core/battle.js:0).
     *   Tests were executed using Vitest in a JSDOM environment, configured via `vitest.config.js` and `test/setup.js`.
@@ -377,3 +382,8 @@ This file tracks the project's current status, including recent changes, current
     *   更新了 [`src/data/ssr_skill.json`](src/data/ssr_skill.json:1) 的键名，使用了修正后的英文ID。
     *   更新了 [`src/data/ssr.json`](src/data/ssr.json:1) 中各角色技能列表内的技能ID，使用了修正后的英文ID。
     *   所有相关的SSR技能数据文件已同步更新。
+*   [2025-05-15 17:34:00] - **技能目标类型 (targetType) 翻译与提示框更新任务完成:**
+    *   澄清了模糊的 `targetType` 值 (`target`, `all`, `self_and_main`) 在当前代码中的实际行为。
+    *   与用户确认了所有 `targetType` 的中文翻译。
+    *   创建了新的翻译文件 [`src/data/translations/target_type_translations_zh.json`](src/data/translations/target_type_translations_zh.json)。
+    *   修改了 [`src/js/components/skill-tooltip.js`](src/js/components/skill-tooltip.js) 以并行加载新的目标类型翻译文件和已有的效果类型翻译文件，并在技能提示框中显示翻译后的 `targetType` 名称。

@@ -726,3 +726,52 @@ Modified [`src/js/core/battle.js`](src/js/core/battle.js) within the `startBattl
     *   [`src/data/ssr_skill.json`](src/data/ssr_skill.json:1): 使用新的、修正后的英文ID替换了原有的技能键名。技能详情保持不变。
     *   [`src/data/ssr.json`](src/data/ssr.json:1): 在每个角色的 `skills` 数组中，将所有原始拼音技能ID替换为对应修正后的英文技能ID。
 *   共处理了48个SSR技能ID的重新映射和文件更新。
+---
+### Decision (Code)
+[2025-05-15 17:12:00] - 实施技能效果类型翻译及Tooltip更新
+
+**Rationale:**
+根据用户请求，为了在技能提示框中显示中文的技能效果类型，需要提取所有原子效果类型，与用户确认翻译，创建翻译映射文件，并修改技能提示框组件以使用这些翻译。
+
+**Details:**
+*   **提取唯一原子技能效果类型:**
+    *   扫描了所有相关技能数据文件 ([`src/data/ssr_skill.json`](src/data/ssr_skill.json), [`src/data/sr_skills.json`](src/data/sr_skills.json), [`src/data/r_skills.json`](src/data/r_skills.json), [`src/data/boss-skills.json`](src/data/boss-skills.json))、参考文档 ([`docs/skill_effect_types_reference.md`](docs/skill_effect_types_reference.md)) 以及核心JS文件 ([`src/js/core/job-skills.js`](src/js/core/job-skills.js), [`src/js/core/buff-system.js`](src/js/core/buff-system.js))。
+    *   生成了一个包含56个唯一原子 `effect.type` 字符串的列表。
+*   **用户确认翻译:**
+    *   使用 `ask_followup_question` 工具向用户展示了提取的类型及其初步翻译。
+    *   用户确认了大部分翻译，并对 `applyBuffPackage` 和 `extraAttackTurn` 提供了修正。
+*   **创建翻译映射文件:**
+    *   创建了 [`src/data/translations/effect_type_translations_zh.json`](src/data/translations/effect_type_translations_zh.json) 文件。
+    *   该文件包含英文效果类型到中文翻译的键值对。
+*   **修改技能提示逻辑 ([`src/js/components/skill-tooltip.js`](src/js/components/skill-tooltip.js)):**
+    *   在 `SkillTooltip` 对象中添加了 `translations` 属性。
+    *   修改了 `init()` 方法为异步函数，并在其中添加了 `loadTranslations()` 方法以异步加载JSON翻译文件。
+    *   修改了 `generateTooltipContent()` 方法，使其在显示效果类型时，优先从 `this.translations` 获取中文名称，如果找不到则回退到原始英文类型。
+*   **组合描述性文本处理:**
+    *   分析确认如 `all_allies_water` 这样的字符串是目标类型和参数的组合，而非单一效果类型，因此当前不需要单独翻译。原子类型如 `elementConversion` 和 `elementalResistance` 已包含在翻译中。
+---
+### Decision (Code)
+[2025-05-15 17:34:00] - 实现技能目标类型 (targetType) 的中文翻译及Tooltip显示
+
+**Rationale:**
+根据用户请求，在技能提示框中显示中文的技能目标类型，以提升用户体验。
+
+**Details:**
+*   **最终确认的 `targetType` 翻译映射表:**
+    *   `enemy`: 敌方单体
+    *   `self`: 自身
+    *   `all_allies`: 我方全体
+    *   `random_enemy`: 随机敌方单体
+    *   `all_enemies`: 敌方全体
+    *   `all_allies_fire`: 我方火属性全体
+    *   `all_allies_water`: 我方水属性全体
+    *   `all_allies_earth`: 我方土属性全体
+    *   `all_allies_wind`: 我方风属性全体
+    *   `ally_dead`: 已阵亡队友
+    *   `ally_lowest_hp`: 我方生命值最低者
+    *   `single_ally`: 单个队友 (优先HP百分比最低的非自身队友，若无则自身)
+    *   `target`: 目标 (当前代码中此类型无效)
+    *   `all`: 全体 (当前代码中此类型无效，且不区分敌我)
+    *   `self_and_main`: 自身与主要目标 (当前代码中此类型无效)
+*   **新创建的翻译文件路径:** [`src/data/translations/target_type_translations_zh.json`](src/data/translations/target_type_translations_zh.json)
+*   **修改的逻辑文件路径:** [`src/js/components/skill-tooltip.js`](src/js/components/skill-tooltip.js)

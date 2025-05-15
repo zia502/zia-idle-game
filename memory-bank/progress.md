@@ -6,7 +6,18 @@ This file tracks the project's progress using a task list format.
 *
 
 ## Completed Tasks
-
+*   [2025-05-15 18:15:00] - **Completed Debugging Task: 修复 SkillLoader 和 JobSystem 异步加载问题**
+    *   **Issue:** `JobSystem` 在 `SkillLoader` 完成异步技能加载前尝试获取技能信息，导致警告。
+    *   **Fix:**
+        *   修改了 [`src/js/core/skill-loader.js`](src/js/core/skill-loader.js): `init()` 方法现在返回一个 Promise，该 Promise 在所有技能数据 `fetch` 完成后解析，并管理加载状态以防重复加载。移除了自动初始化。
+        *   修改了 [`src/js/core/job-system.js`](src/js/core/job-system.js): `init()` 方法现在是 `async` 函数，并在其开始处 `await SkillLoader.init()`，确保在 `JobSystem` 继续初始化前 `SkillLoader` 已完成加载。
+    *   **Result:** `JobSystem` 现在会等待 `SkillLoader` 加载完毕后再尝试获取技能，解决了相关警告。
+    *   Memory Bank (`activeContext.md`, `progress.md`, `decisionLog.md`) 已更新。
+*   [2025-05-15 17:58:00] - **Debugging Task Partially Addressed:** `character.js` 警告。
+    *   **Warning 1 (`Team` / `Weapon` 模块未加载):** 通过在 [`src/js/core/team.js`](src/js/core/team.js) 中添加 `findTeamByMember` 方法，解决了一个明确的依赖缺失。
+    *   **Warning 2 (模板未找到):** 通过在 [`src/js/core/character.js`](src/js/core/character.js) 的 `_getCharacterTemplate` 方法中添加详细日志，为进一步诊断铺平道路。
+    *   Memory Bank (`activeContext.md`, `progress.md`, `decisionLog.md`) 已更新。
+    *   等待用户测试反馈。
 *   [2025-05-15 17:12:00] - **Completed Task: 技能效果类型翻译与提示框更新**
     *   提取了所有技能数据文件和相关JS模块中的唯一原子技能效果类型。
     *   与用户确认了这些类型的中文翻译。

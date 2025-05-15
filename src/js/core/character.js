@@ -1870,45 +1870,62 @@ const Character = {
             console.warn(`_getCharacterTemplate: 无效的 character 对象或 character.id`);
             return null;
         }
+        console.log(`_getCharacterTemplate: 开始为角色ID ${character.id} (名称: ${character.name}, 稀有度: ${character.rarity}) 查找模板。`);
+
         // 假设角色ID的格式是 templateId_instanceSuffix (例如 "ssr_heroName_12345")
         // 或者对于直接从模板创建的第一个实例，ID可能就是templateId
         const idParts = character.id.split('_');
         let templateIdToSearch = character.id; // 默认尝试完整ID
+        let searchStrategy = "原始角色ID";
 
-        if (idParts.length > 1) {
-            // 尝试移除最后一个部分（通常是时间戳或唯一后缀）来获取原始模板ID
-            // 例如: "ssr_somechar_123456" -> "ssr_somechar"
-            // 如果原始模板ID本身包含下划线，例如 "r_goblin_archer", 实例ID可能是 "r_goblin_archer_ts"
-            // 这个逻辑需要根据实际ID命名约定调整，目前假设最后一个下划线后的部分是实例特有后缀
-            let potentialTemplateId = idParts.slice(0, -1).join('_');
-            // 检查这个 potentialTemplateId 是否真的存在于模板列表中
-            const allPossibleTemplates = [
-                ...(this.rCharacters || []),
-                ...(this.srCharacters || []),
-                ...(this.ssrCharacters || [])
-            ];
-            if (allPossibleTemplates.some(t => t.id === potentialTemplateId)) {
-                templateIdToSearch = potentialTemplateId;
-            } else if (!allPossibleTemplates.some(t => t.id === character.id)) {
-                 // 如果完整ID和去掉后缀的ID都找不到模板，则可能无法定位
-                 // console.warn(`_getCharacterTemplate: 无法从角色ID ${character.id} 准确推断模板ID。`);
-                 // 尝试使用角色名和稀有度作为最后的查找手段（如果模板ID不可靠）
-                 const foundByNameAndRarity = allPossibleTemplates.find(t => t.name === character.name && t.rarity === character.rarity);
-                 if (foundByNameAndRarity) return foundByNameAndRarity;
-                 return null;
-            }
-        }
-
-
-        const allTemplates = [
+        const allPossibleTemplates = [
             ...(this.rCharacters || []),
             ...(this.srCharacters || []),
             ...(this.ssrCharacters || [])
         ];
+        // console.log(`_getCharacterTemplate: R模板数量: ${this.rCharacters?.length || 0}, SR: ${this.srCharacters?.length || 0}, SSR: ${this.ssrCharacters?.length || 0}`);
 
-        const foundTemplate = allTemplates.find(t => t.id === templateIdToSearch);
+
+        if (idParts.length > 1) {
+            let potentialTemplateId = idParts.slice(0, -1).join('_');
+            searchStrategy = `移除后缀后的ID (${potentialTemplateId}) 或 原始ID (${character.id})`;
+            console.log(`_getCharacterTemplate: 角色ID包含下划线。尝试移除后缀: ${potentialTemplateId}`);
+
+            if (allPossibleTemplates.some(t => t.id === potentialTemplateId)) {
+                templateIdToSearch = potentialTemplateId;
+                searchStrategy = `移除后缀后的ID (${potentialTemplateId})`;
+                console.log(`_getCharacterTemplate: 找到潜在模板ID (移除后缀): ${templateIdToSearch}`);
+            } else if (allPossibleTemplates.some(t => t.id === character.id)) {
+                templateIdToSearch = character.id;
+                searchStrategy = `原始ID (${character.id})`;
+                console.log(`_getCharacterTemplate: 移除后缀未找到，但原始ID匹配模板: ${templateIdToSearch}`);
+            } else {
+                 console.log(`_getCharacterTemplate: 移除后缀 (${potentialTemplateId}) 和原始ID (${character.id}) 均未直接匹配模板。尝试按名称和稀有度查找。`);
+                 const foundByNameAndRarity = allPossibleTemplates.find(t => t.name === character.name && t.rarity === character.rarity);
+                 if (foundByNameAndRarity) {
+                    console.log(`_getCharacterTemplate: 通过名称 "${character.name}" 和稀有度 "${character.rarity}" 找到模板: ${foundByNameAndRarity.id}`);
+                    return foundByNameAndRarity;
+                 }
+                 console.warn(`_getCharacterTemplate: 无法通过ID或名称/稀有度为角色 ${character.name} (ID: ${character.id}) 推断模板。`);
+                 return null;
+            }
+        } else {
+             console.log(`_getCharacterTemplate: 角色ID不包含下划线，直接使用原始ID ${character.id} 搜索。`);
+        }
+        
+        console.log(`_getCharacterTemplate: 最终尝试搜索的模板ID: "${templateIdToSearch}" (策略: ${searchStrategy})`);
+        const foundTemplate = allPossibleTemplates.find(t => t.id === templateIdToSearch);
+
         if (!foundTemplate) {
-            // console.warn(`_getCharacterTemplate: 未找到ID为 "${templateIdToSearch}" 的模板 (源自角色ID: ${character.id})`);
+            console.warn(`_getCharacterTemplate: 未找到ID为 "${templateIdToSearch}" 的模板 (源自角色ID: ${character.id}, 名称: ${character.name})。`);
+             // 再次尝试按名称和稀有度查找，以防万一
+            const foundByNameAndRarityAgain = allPossibleTemplates.find(t => t.name === character.name && t.rarity === character.rarity);
+            if (foundByNameAndRarityAgain) {
+                console.log(`_getCharacterTemplate: (二次尝试) 通过名称 "${character.name}" 和稀有度 "${character.rarity}" 找到模板: ${foundByNameAndRarityAgain.id}`);
+                return foundByNameAndRarityAgain;
+            }
+        } else {
+            console.log(`_getCharacterTemplate: 成功找到模板 ${foundTemplate.id} (名称: ${foundTemplate.name}) 为角色 ${character.name} (ID: ${character.id})`);
         }
         return foundTemplate || null;
     },

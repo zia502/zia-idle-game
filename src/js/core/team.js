@@ -30,6 +30,24 @@ const Team = {
     },
 
     /**
+     * 根据成员ID查找队伍
+     * @param {string} characterId - 角色ID
+     * @returns {object|null} 包含该成员的队伍对象，如果未找到则返回null
+     */
+    findTeamByMember(characterId) {
+        if (!characterId) return null;
+        for (const teamId in this.teams) {
+            if (this.teams.hasOwnProperty(teamId)) {
+                const team = this.teams[teamId];
+                if (team.members && team.members.includes(characterId)) {
+                    return team;
+                }
+            }
+        }
+        return null;
+    },
+
+    /**
      * 创建队伍
      * @param {object} data - 队伍数据
      * @returns {string|null} 队伍ID或null

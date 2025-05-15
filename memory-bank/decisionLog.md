@@ -17,6 +17,44 @@ This file records architectural and implementation decisions using a list format
 
 *
 ---
+### Decision (Debug)
+[2025-05-15 18:15:00] - [Bug Fix Strategy: Synchronize Skill Loading] 解决 SkillLoader 和 JobSystem 之间的异步加载冲突。
+
+**Rationale:**
+`JobSystem.getSkill` 同步调用 `SkillLoader.getSkillInfo`，但 `SkillLoader` 的技能数据是通过异步 `fetch` 加载的。这导致 `JobSystem` 可能在技能数据完全加载前尝试获取技能，从而引发警告“找不到技能”或“SkillLoader未定义”。
+解决方案是确保 `SkillLoader` 的初始化过程是异步的，并且 `JobSystem` 在其初始化时等待 `SkillLoader` 完成。
+
+**Details:**
+*   **`src/js/core/skill-loader.js`**:
+    *   `SkillLoader.init()` 方法被修改为返回一个 `Promise`。这个 Promise 通过 `Promise.all()` 聚合了所有单独技能文件（R, SR, SSR, Boss）的 `fetch` 操作。
+    *   每个单独的 `load<Type>Skills()` 方法（如 `loadRSkills`）现在也返回其 `fetch` Promise，并在发生网络或解析错误时 `throw` 错误，以便 `Promise.all` 可以捕获它们。如果加载失败，对应的 `window.xxx_skills` 会被设置为空对象以防止后续引用错误。
+    *   添加了 `loadingPromise` 和 `isInitialized` 状态变量到 `SkillLoader` 对象，以防止 `init()` 方法被重复执行实际的加载操作。如果 `init()` 再次被调用，它将返回已存在的 `loadingPromise`。
+    *   移除了原先在脚本末尾和 `DOMContentLoaded` 事件中对 `SkillLoader.init()` 的自动调用。初始化现在应由更高层级的应用逻辑（如 `main.js` 或通过 `JobSystem.init`）来控制。
+    *   在所有技能加载完成后，`SkillLoader.init()` 的 Promise 会触发一个 `skillLoader:ready` 事件（如果 `Events` 模块可用）。
+*   **`src/js/core/job-system.js`**:
+    *   `JobSystem.init()` 方法被修改为 `async` 函数。
+    *   在该函数的开始部分，添加了 `await SkillLoader.init();`。这会暂停 `JobSystem` 的初始化，直到 `SkillLoader` 的 `loadingPromise` 被解决（即所有技能文件都已尝试加载）。
+    *   如果 `SkillLoader.init()` 失败（Promise被拒绝），错误会被捕获并记录，`JobSystem` 的初始化会继续，但可能功能受限。
+*   **Affected components/files:**
+    *   [`src/js/core/skill-loader.js`](src/js/core/skill-loader.js)
+    *   [`src/js/core/job-system.js`](src/js/core/job-system.js)
+---
+### Decision (Debug)
+[2025-05-15 17:58:00] - 添加 `Team.findTeamByMember` 方法并增强 `_getCharacterTemplate` 日志。
+
+**Rationale:**
+1.  **`Team.findTeamByMember`缺失:** `character.js` 中的 `loadSaveData` 函数依赖 `Team.findTeamByMember` 来刷新角色属性，但该方法在 `Team.js` 中未定义，导致警告 "Team 或 Weapon 模块未完全加载"。添加此方法是直接修复。
+2.  **模板查找不透明:** `character.js` 中的警告 "模板或模板baseStats未找到" 表明 `_getCharacterTemplate` 方法未能成功定位角色模板。增强此方法的日志记录有助于追踪ID解析过程和模板匹配情况，从而诊断失败原因。
+
+**Details:**
+*   **`src/js/core/team.js`**:
+    *   添加了 `findTeamByMember(characterId)` 方法。该方法遍历 `this.teams`，查找并返回第一个包含指定 `characterId` 的队伍对象，如果未找到则返回 `null`。
+*   **`src/js/core/character.js`**:
+    *   修改了 `_getCharacterTemplate(character)` 方法：
+        *   在函数开头添加日志，记录传入的角色ID、名称和稀有度。
+        *   在尝试不同的模板ID搜索策略（原始ID、移除后缀的ID、按名称和稀有度查找）时，添加了详细的日志输出，说明当前尝试的搜索ID和策略。
+        *   在找到模板或最终未找到时，记录结果。
+---
 ### Decision (Architecture)
 [2025-05-10 19:26:00] - 采纳新的三阶段战斗顺序：我方技能 -> 我方普攻 -> 敌方行动。
 

@@ -2,25 +2,51 @@
  * 技能加载器 - 负责加载R和SR角色技能
  */
 const SkillLoader = {
+    loadingPromise: null,
+    isInitialized: false,
+
     /**
      * 初始化技能加载器
+     * @returns {Promise} 当所有技能加载完成时解析的 Promise
      */
     init() {
+        if (this.isInitialized && this.loadingPromise) {
+            console.log('技能加载器已初始化，返回现有 Promise');
+            return this.loadingPromise;
+        }
+        this.isInitialized = true;
         console.log('技能加载器初始化');
-        this.loadRSkills();
-        this.loadSRSkills();
-        this.loadSSRSkills(); // 添加 SSR 技能加载
-        this.loadBossSkills(); // 添加 Boss 技能加载
+
+        this.loadingPromise = Promise.all([
+            this.loadRSkills(),
+            this.loadSRSkills(),
+            this.loadSSRSkills(),
+            this.loadBossSkills()
+        ]).then(() => {
+            console.log('所有技能数据加载完成');
+            if (typeof Events !== 'undefined' && typeof Events.emit === 'function') {
+                Events.emit('skillLoader:ready'); // 发射技能加载完成事件
+            }
+        }).catch(error => {
+            console.error('一个或多个技能文件加载失败:', error);
+            // 即使部分失败，也尝试继续，但标记错误
+            if (typeof Events !== 'undefined' && typeof Events.emit === 'function') {
+                Events.emit('skillLoader:error', error);
+            }
+            return Promise.reject(error); // 将错误传递下去
+        });
+        return this.loadingPromise;
     },
 
     /**
      * 加载R角色技能
+     * @returns {Promise}
      */
     loadRSkills() {
-        fetch('src/data/r_skills.json')
+        return fetch('src/data/r_skills.json')
             .then(response => {
                 if (!response.ok) {
-                    throw new Error(`HTTP error! Status: ${response.status}`);
+                    throw new Error(`HTTP error! Status: ${response.status} for r_skills.json`);
                 }
                 return response.json();
             })
@@ -30,17 +56,20 @@ const SkillLoader = {
             })
             .catch(error => {
                 console.error('加载R角色技能失败:', error);
+                window.r_skills = {}; // 确保即使失败也有定义
+                throw error; // 重新抛出错误以被 Promise.all 捕获
             });
     },
 
     /**
      * 加载SR角色技能
+     * @returns {Promise}
      */
     loadSRSkills() {
-        fetch('src/data/sr_skills.json')
+        return fetch('src/data/sr_skills.json')
             .then(response => {
                 if (!response.ok) {
-                    throw new Error(`HTTP error! Status: ${response.status}`);
+                    throw new Error(`HTTP error! Status: ${response.status} for sr_skills.json`);
                 }
                 return response.json();
             })
@@ -50,14 +79,17 @@ const SkillLoader = {
             })
             .catch(error => {
                 console.error('加载SR角色技能失败:', error);
+                window.sr_skills = {}; // 确保即使失败也有定义
+                throw error; // 重新抛出错误以被 Promise.all 捕获
             });
     },
 
     /**
      * 加载SSR角色技能
+     * @returns {Promise}
      */
     loadSSRSkills() {
-        fetch('src/data/ssr_skill.json') // 注意文件名可能是 ssr_skills.json 或 ssr_skill.json
+        return fetch('src/data/ssr_skill.json') // 注意文件名可能是 ssr_skills.json 或 ssr_skill.json
             .then(response => {
                 if (!response.ok) {
                     throw new Error(`HTTP error! Status: ${response.status} for ssr_skill.json`);
@@ -70,14 +102,17 @@ const SkillLoader = {
             })
             .catch(error => {
                 console.error('加载SSR角色技能失败:', error);
+                window.ssr_skills = {}; // 确保即使失败也有定义
+                throw error; // 重新抛出错误以被 Promise.all 捕获
             });
     },
 
     /**
      * 加载Boss技能
+     * @returns {Promise}
      */
     loadBossSkills() {
-        fetch('src/data/boss-skills.json')
+        return fetch('src/data/boss-skills.json')
             .then(response => {
                 if (!response.ok) {
                     throw new Error(`HTTP error! Status: ${response.status} for boss-skills.json`);
@@ -91,11 +126,13 @@ const SkillLoader = {
                 } else {
                     console.error('加载Boss技能失败: boss-skills.json 格式不正确，缺少 bossSkills 顶层对象。');
                     window.bossSkills = {}; // 初始化为空对象以避免后续错误
+                    // 不再抛出错误，允许其他技能加载继续
                 }
             })
             .catch(error => {
                 console.error('加载Boss技能失败:', error);
                 window.bossSkills = {}; // 初始化为空对象以避免后续错误
+                // 不再抛出错误，允许其他技能加载继续
             });
     },
 
@@ -145,13 +182,9 @@ const SkillLoader = {
     }
 };
 
-// 立即初始化
-SkillLoader.init();
+// 初始化不再在此处自动调用，将由主应用逻辑控制
+// SkillLoader.init();
 
-// 在页面加载完成后再次初始化，确保数据已加载
-// DOMContentLoaded 可能在 fetch 完成前触发，所以 init 多次调用是合理的，
-// 但要注意 fetch 可能被多次调用。理想情况下，应有加载状态防止重复 fetch。
-// 为简单起见，暂时保留现有逻辑。
-document.addEventListener('DOMContentLoaded', () => {
-    SkillLoader.init();
-});
+// document.addEventListener('DOMContentLoaded', () => {
+//     SkillLoader.init(); // 这个也移除，由主逻辑控制
+// });

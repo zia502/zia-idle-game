@@ -6,7 +6,17 @@ This file tracks the project's current status, including recent changes, current
 *
 
 ## Current Focus
-
+*   [2025-05-15 18:15:00] - **Debug Task Started:** 分析并解决 `skill-loader.js` 和 `job-system.js` 中的技能加载警告。
+    *   **Issue:** `JobSystem` 尝试在 `SkillLoader` 完成异步技能加载前获取技能信息。
+    *   **Symptoms:**
+        *   `skill-loader.js:143 SkillLoader.getSkillInfo: 找不到技能 [skillName] 在任何已知数据源中。`
+        *   `job-system.js:307 JobSystem.getSkill: 无法通过 SkillLoader 获取技能 [skillName]，或 SkillLoader 未定义。`
+*   [2025-05-15 17:58:00] - **Debug Task Started:** 分析并解决 `character.js` 中的两个警告：
+    1.  `character.js:1855 Team 或 Weapon 模块未完全加载...`
+    2.  `character.js:1958 validateCharacterBaseStats: 角色 123 (ID: char_1747299374644) 的模板或模板baseStats未找到。`
+*   [2025-05-15 17:58:00] - **Debug Action (Warning 1):** 在 [`src/js/core/team.js`](src/js/core/team.js) 中添加了缺失的 `findTeamByMember` 方法，以解决 `Character.loadSaveData` 中因该方法未定义而导致的条件判断失败。
+*   [2025-05-15 17:58:00] - **Debug Action (Warning 2):** 在 [`src/js/core/character.js`](src/js/core/character.js) 的 `_getCharacterTemplate` 方法中添加了详细的日志记录，以帮助诊断模板查找失败的具体原因。
+*   [2025-05-15 17:58:00] - **Debug Status Update:** 等待用户测试并提供新的控制台日志，以评估修复效果并进一步诊断警告2。
 *   初始化 Memory Bank。
 *   [2025-05-08 11:44:17] - 为 `test-battle-new.html` 调整角色和职业选择逻辑的任务已进入架构阶段。
 *   [2025-05-08 11:48:58] - 完成 `test-battle-new.html` 中角色和职业选择逻辑的修改。合并了选择下拉框，实现了主角专属职业逻辑和无角色提示。
@@ -61,6 +71,15 @@ This file tracks the project's current status, including recent changes, current
     *   **Affected Files ( अनुमानित ):** [`src/js/core/battle.js`](src/js/core/battle.js:0), potentially [`src/js/core/team.js`](src/js/core/team.js:0).
     *   **Related User Task:** "前排4名角色全部阵亡，战斗会直接结束，而不是让后排2名角色移动到前排继续战斗。"
 ## Recent Changes
+*   [2025-05-15 18:15:00] - **Debug Fix Applied (Skill Loading):**
+    *   修改了 [`src/js/core/skill-loader.js`](src/js/core/skill-loader.js):
+        *   `init()` 方法现在返回一个 `Promise`，该 Promise 在所有技能数据 `fetch` 完成后解析。
+        *   添加了 `loadingPromise` 和 `isInitialized` 状态以防止重复加载。
+        *   各个 `load<Type>Skills()` 方法现在返回各自的 `fetch` Promise，并在失败时抛出错误以便 `Promise.all` 捕获。
+        *   移除了文件末尾和 `DOMContentLoaded` 中的自动初始化调用。
+    *   修改了 [`src/js/core/job-system.js`](src/js/core/job-system.js):
+        *   `init()` 方法现在是 `async` 函数。
+        *   在 `init()` 方法开始处 `await SkillLoader.init()`，以确保在 `JobSystem` 继续其初始化之前，`SkillLoader` 已完成所有技能数据的加载。
 *   [2025-05-15 17:11:00] - **技能效果类型翻译与提示框更新任务:**
     *   提取了所有技能数据文件和相关JS模块中的唯一原子技能效果类型。
     *   与用户确认了这些类型的中文翻译。
@@ -108,6 +127,11 @@ This file tracks the project's current status, including recent changes, current
 *   [2025-05-11 21:59:00] - 修改了 [`src/js/core/character.js`](src/js/core/character.js) 中的 `calculateAttackPower` 函数 ([`src/js/core/character.js:1512`](src/js/core/character.js:1512))，增强了其日志记录功能，以详细追踪攻击力倍率的构成。
 
 ## Open Questions/Issues
+*   [2025-05-15 18:15:00] - **Issue Resolved (Skill Loading):** `JobSystem` 在 `SkillLoader` 完成加载前获取技能信息的问题已通过修改 [`src/js/core/skill-loader.js`](src/js/core/skill-loader.js) 和 [`src/js/core/job-system.js`](src/js/core/job-system.js) 的初始化逻辑解决。`SkillLoader.init` 现在返回 Promise，`JobSystem.init` 等待此 Promise。
+*   [2025-05-15 17:58:00] - **Issue Status Update:** 针对 `character.js` 中的两个警告应用了初步修复/诊断增强：
+    1.  `character.js:1855 Team 或 Weapon 模块未完全加载...`: 通过在 [`src/js/core/team.js`](src/js/core/team.js) 中添加 `findTeamByMember` 方法解决了一个潜在的未定义方法问题。
+    2.  `character.js:1958 validateCharacterBaseStats: ...模板或模板baseStats未找到。`: 通过在 [`src/js/core/character.js`](src/js/core/character.js) 的 `_getCharacterTemplate` 方法中添加详细日志以辅助诊断。
+    *   等待用户测试并提供新的控制台日志。
 *   [2025-05-09 21:18:00] - **Issue Status Update:** 针对战斗日志分析出的4个新问题已应用修复：
     *   怪物 `maxHp` 初始化问题 ([`src/js/core/battle.js`](src/js/core/battle.js:1))。
     *   技能“护甲破坏”造成两次伤害及日志矛盾问题 ([`src/js/core/job-skills.js`](src/js/core/job-skills.js:1))。

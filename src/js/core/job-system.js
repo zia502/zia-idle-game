@@ -5,8 +5,21 @@ const JobSystem = {
     /**
      * 初始化职业系统
      */
-    init() {
+    async init() {
         console.log('初始化职业系统');
+
+        // 等待 SkillLoader 完成加载
+        if (typeof SkillLoader !== 'undefined' && typeof SkillLoader.init === 'function') {
+            try {
+                await SkillLoader.init();
+                console.log('SkillLoader 加载完成，JobSystem 继续初始化');
+            } catch (error) {
+                console.error('SkillLoader 初始化失败，JobSystem 可能无法正常工作:', error);
+                // 根据需要决定是否在此处停止或允许部分功能
+            }
+        } else {
+            console.warn('SkillLoader 未定义，JobSystem 可能无法正确加载技能数据。');
+        }
 
         // 检查JobSkillsTemplate是否已加载
         if (typeof JobSkillsTemplate !== 'undefined' && JobSkillsTemplate.templates) {

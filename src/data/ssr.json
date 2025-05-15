@@ -15,7 +15,7 @@
       "daRate": 0.1,
       "taRate": 0.05
     },
-    "skills": ["shadowStrike", "darknessVeil", "assassinate"]
+    "skills": ["rhapsody", "albesSpear", "albesContractor"]
   },
   "ssr_22": {
     "id": "character_022",
@@ -33,7 +33,7 @@
       "daRate": 0.04,
       "taRate": 0.01
     },
-    "skills": ["holyStrike", "divineProtection", "heavenlyLight"]
+    "skills": ["fortitude", "transform", "magnanimous"]
   },
   "ssr_23": {
     "id": "character_023",
@@ -51,7 +51,7 @@
       "daRate": 0.07,
       "taRate": 0.03
     },
-    "skills": ["elementalBurst", "magicShield", "elementalStorm"]
+    "skills": ["divineShieldAegis", "tetragrammaton", "protectingValkyrie"]
   },
   "ssr_24": {
     "id": "character_024",
@@ -69,7 +69,7 @@
       "daRate": 0.07,
       "taRate": 0.03
     },
-    "skills": ["windArrow", "stormShot", "hurricaneArrow"]
+    "skills": ["brahmanaRudra", "trident", "crownMoonBlessing","worshippedDeity"]
   },
   "ssr_25": {
     "id": "character_025",
@@ -87,7 +87,7 @@
       "daRate": 0.1,
       "taRate": 0.05
     },
-    "skills": ["earthShield", "mountainGuard", "earthquake"]
+    "skills": ["dragonHeart", "explosiveBurst", "fireMantra"]
   },
   "ssr_26": {
     "id": "character_026",

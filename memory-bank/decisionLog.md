@@ -713,13 +713,16 @@ Modified [`src/js/core/battle.js`](src/js/core/battle.js) within the `startBattl
     *   [`src/js/core/character.js`](src/js/core/character.js)
 ---
 ### Decision (Code)
-[2025-05-15 16:34:00] - 执行SSR技能ID翻译和数据文件更新
+[2025-05-15 16:49:00] - 根据用户反馈调整SSR技能ID命名约定并重新更新文件
 
 **Rationale:**
-根据用户请求和架构师规划，将 [`src/data/ssr_skill.json`](src/data/ssr_skill.json:1) 中的拼音技能ID翻译为英文（小驼峰格式），并使用这些新的英文ID更新 [`src/data/ssr.json`](src/data/ssr.json:1) 和 [`src/data/ssr_skill.json`](src/data/ssr_skill.json:1) 本身，以提高数据一致性和可读性。
+根据用户最新反馈（"这种名字 `lefenye_s1_rainIris` 只保留后面的， `_` 之前都不需要"），重新调整了SSR技能ID的翻译规则。主要目标是移除ID中的前缀部分（如果存在下划线），并对无下划线的ID维持或应用适当的小驼峰命名。此举旨在进一步提高技能ID的可读性和一致性，并确保与用户期望的命名风格对齐。
 
 **Details:**
-*   共处理了48个SSR技能ID的翻译。
-*   翻译规则：基于技能中文名称生成小驼峰格式的英文ID。
-*   更新了 [`src/data/ssr_skill.json`](src/data/ssr_skill.json:1) 中的技能键名。
-*   更新了 [`src/data/ssr.json`](src/data/ssr.json:1) 中角色技能列表内的技能ID。
+*   **翻译规则调整:**
+    *   **规则A (带下划线):** 对于包含下划线的ID (例如, `lefenye_s1_rainIris`)，提取最后一个下划线之后的部分 (例如, `rainIris`) 作为新的英文ID，并确保其为小驼峰格式。
+    *   **规则B (不带下划线):** 对于不包含下划线的ID (例如, `zhanShenYiJi`)，维持其现有的小驼峰格式或根据项目已有的命名风格进行翻译（此部分依赖于先前已建立的翻译逻辑或手动映射，本次主要侧重规则A的执行）。
+*   **文件更新:**
+    *   [`src/data/ssr_skill.json`](src/data/ssr_skill.json:1): 使用新的、修正后的英文ID替换了原有的技能键名。技能详情保持不变。
+    *   [`src/data/ssr.json`](src/data/ssr.json:1): 在每个角色的 `skills` 数组中，将所有原始拼音技能ID替换为对应修正后的英文技能ID。
+*   共处理了48个SSR技能ID的重新映射和文件更新。

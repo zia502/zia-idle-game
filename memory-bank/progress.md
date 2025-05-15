@@ -251,7 +251,8 @@ This file tracks the project's progress using a task list format.
 *   [2025-05-11 20:44:15] - [Debugging Task Status Update: Completed] Investigated and fixed issue where backline units would not join combat. Ensured backline units have full HP at the start of battle by modifying [`src/js/core/battle.js`](src/js/core/battle.js).
 * [2025-05-11 22:30:00] - Debugging Task Status Update: Added diagnostic logs to trace "一伐架式" buff lifecycle. Files modified: [`src/js/core/job-skills.js`](src/js/core/job-skills.js), [`src/js/core/buff-system.js`](src/js/core/buff-system.js).
 * [2025-05-12 09:49:34] - **Completed Task:** 创建/更新了 `.gitignore` 文件，内容为 `node_modules/`。
-* [2025-05-15 16:34:00] - **Completed Task:** SSR技能ID翻译和数据文件更新。
-    *   将 [`src/data/ssr_skill.json`](src/data/ssr_skill.json:1) 中的拼音技能ID翻译成英文（小驼峰格式）。
-    *   使用新的英文ID更新了 [`src/data/ssr_skill.json`](src/data/ssr_skill.json:1) 的键名。
-    *   使用新的英文ID更新了 [`src/data/ssr.json`](src/data/ssr.json:1) 中角色技能列表内的技能ID。
+* [2025-05-15 16:49:00] - **Completed Task (修正):** 根据用户反馈调整SSR技能ID命名约定并重新更新文件。
+    *   根据用户反馈（移除ID前缀，保留最后一个下划线后的部分），重新生成了SSR技能ID的翻译映射。
+    *   更新了 [`src/data/ssr_skill.json`](src/data/ssr_skill.json:1) 的键名，使用了修正后的英文ID。
+    *   更新了 [`src/data/ssr.json`](src/data/ssr.json:1) 中各角色技能列表内的技能ID，使用了修正后的英文ID。
+    *   所有相关的SSR技能数据文件已同步更新。

@@ -15,7 +15,11 @@
       "daRate": 0.1,
       "taRate": 0.05
     },
-    "skills": ["rhapsody", "albesSpear", "albesContractor"]
+    "skills": [
+      "rhapsody",
+      "albesSpear",
+      "albesContractor"
+    ]
   },
   "ssr_22": {
     "id": "character_022",
@@ -33,7 +37,11 @@
       "daRate": 0.04,
       "taRate": 0.01
     },
-    "skills": ["fortitude", "transform", "magnanimous"]
+    "skills": [
+      "fortitude",
+      "transform",
+      "magnanimous"
+    ]
   },
   "ssr_23": {
     "id": "character_023",
@@ -51,7 +59,11 @@
       "daRate": 0.07,
       "taRate": 0.03
     },
-    "skills": ["divineShieldAegis", "tetragrammaton", "protectingValkyrie"]
+    "skills": [
+      "divineShieldAegis",
+      "tetragrammaton",
+      "protectingValkyrie"
+    ]
   },
   "ssr_24": {
     "id": "character_024",
@@ -69,7 +81,12 @@
       "daRate": 0.07,
       "taRate": 0.03
     },
-    "skills": ["brahmanaRudra", "trident", "crownMoonBlessing","worshippedDeity"]
+    "skills": [
+      "brahmanaRudra",
+      "trident",
+      "crownMoonBlessing",
+      "worshippedDeity"
+    ]
   },
   "ssr_25": {
     "id": "character_025",
@@ -87,7 +104,11 @@
       "daRate": 0.1,
       "taRate": 0.05
     },
-    "skills": ["dragonHeart", "explosiveBurst", "fireMantra"]
+    "skills": [
+      "dragonHeart",
+      "explosiveBurst",
+      "fireMantra"
+    ]
   },
   "ssr_26": {
     "id": "character_026",
@@ -105,7 +126,11 @@
       "daRate": 0.04,
       "taRate": 0.01
     },
-    "skills": ["iceCrystalBarrier", "frozenGale", "shiningCrystal"]
+    "skills": [
+      "iceCrystalBarrier",
+      "frozenGale",
+      "shiningCrystal"
+    ]
   },
   "ssr_27": {
     "id": "character_027",
@@ -123,7 +148,11 @@
       "daRate": 0.07,
       "taRate": 0.03
     },
-    "skills": ["strategyFangYuan", "strategyHeYi", "artOfWarfare"]
+    "skills": [
+      "strategyFangYuan",
+      "strategyHeYi",
+      "artOfWarfare"
+    ]
   },
   "ssr_28": {
     "id": "character_028",
@@ -141,7 +170,11 @@
       "daRate": 0.1,
       "taRate": 0.05
     },
-    "skills": ["hundredEndurance", "thousandTurns", "tenStrikes"]
+    "skills": [
+      "hundredEndurance",
+      "thousandTurns",
+      "tenStrikes"
+    ]
   },
   "ssr_29": {
     "id": "character_029",
@@ -159,7 +192,12 @@
       "daRate": 0.04,
       "taRate": 0.01
     },
-    "skills": ["tyreRamparts","manaImpact",  "sacredSpringStarbloom", "warmLight"]
+    "skills": [
+      "tyreRamparts",
+      "manaImpact",
+      "sacredSpringStarbloom",
+      "warmLight"
+    ]
   },
   "ssr_30": {
     "id": "character_030",
@@ -177,7 +215,11 @@
       "daRate": 0.07,
       "taRate": 0.03
     },
-    "skills": ["hindranceJutsu", "princessGuidance", "academyGuardianPrincess"]
+    "skills": [
+      "hindranceJutsu",
+      "princessGuidance",
+      "academyGuardianPrincess"
+    ]
   },
   "ssr_31": {
     "id": "character_031",
@@ -195,7 +237,11 @@
       "daRate": 0.04,
       "taRate": 0.01
     },
-    "skills": ["illusionImaging","collapse",  "reinforce"]
+    "skills": [
+      "illusionImaging",
+      "collapse",
+      "reinforce"
+    ]
   },
   "ssr_32": {
     "id": "character_032",
@@ -213,7 +259,11 @@
       "daRate": 0.07,
       "taRate": 0.03
     },
-    "skills": ["moonSky", "heartLikeBlankPaper", "futureVision"]
+    "skills": [
+      "moonSky",
+      "heartLikeBlankPaper",
+      "futureVision"
+    ]
   },
   "ssr_33": {
     "id": "character_033",
@@ -231,7 +281,11 @@
       "daRate": 0.1,
       "taRate": 0.05
     },
-    "skills": ["cantHitMe", "itsDecided", "chopYouUp"]
+    "skills": [
+      "cantHitMe",
+      "itsDecided",
+      "chopYouUp"
+    ]
   },
   "ssr_34": {
     "id": "character_034",
@@ -249,7 +303,11 @@
       "daRate": 0.07,
       "taRate": 0.03
     },
-    "skills": ["terrorLegion", "soulForge", "painlessBody"]
+    "skills": [
+      "terrorLegion",
+      "soulForge",
+      "painlessBody"
+    ]
   },
   "ssr_35": {
     "id": "character_035",
@@ -267,7 +325,12 @@
       "daRate": 0.1,
       "taRate": 0.05
     },
-    "skills": ["nibelungenShield", "hildebrandSword", "sanctuaryGuardian", "inviolableSanctuary"]
+    "skills": [
+      "nibelungenShield",
+      "hildebrandSword",
+      "sanctuaryGuardian",
+      "inviolableSanctuary"
+    ]
   },
   "ssr_36": {
     "id": "character_036",
@@ -285,7 +348,11 @@
       "daRate": 0.1,
       "taRate": 0.05
     },
-    "skills": ["overlordStance", "firstStrikeStance", "fierceFlyStance"]
+    "skills": [
+      "overlordStance",
+      "firstStrikeStance",
+      "fierceFlyStance"
+    ]
   },
   "ssr_37": {
     "id": "character_037",
@@ -303,7 +370,11 @@
       "daRate": 0.07,
       "taRate": 0.03
     },
-    "skills": ["rebellionPlot","boneBreaker",  "noblesseOblige"]
+    "skills": [
+      "rebellionPlot",
+      "boneBreaker",
+      "noblesseOblige"
+    ]
   },
   "ssr_38": {
     "id": "character_038",
@@ -321,7 +392,11 @@
       "daRate": 0.04,
       "taRate": 0.01
     },
-    "skills": ["chillingBouquet", "revival", "forgetMeNot"]
+    "skills": [
+      "chillingBouquet",
+      "revival",
+      "forgetMeNot"
+    ]
   },
   "ssr_39": {
     "id": "character_039",
@@ -339,7 +414,11 @@
       "daRate": 0.07,
       "taRate": 0.03
     },
-    "skills": ["galeEmpowerment","phantasm", "elementalBlessing"]
+    "skills": [
+      "galeEmpowerment",
+      "phantasm",
+      "elementalBlessing"
+    ]
   },
   "ssr_40": {
     "id": "character_040",
@@ -357,7 +436,12 @@
       "daRate": 0.07,
       "taRate": 0.03
     },
-    "skills": ["eternalZephyr", "skyGlideSacredAnnihilation", "dancingStorm", "skyCryHurricaneSpiral"]
+    "skills": [
+      "eternalZephyr",
+      "skyGlideSacredAnnihilation",
+      "dancingStorm",
+      "skyCryHurricaneSpiral"
+    ]
   },
   "leFenye": {
     "id": "character_ssr_lefenye",
@@ -365,12 +449,21 @@
     "attribute": "light",
     "type": "healing",
     "baseStats": {
-      "hp": 275, "maxHp": 3900,
-      "attack": 1900, "maxAttack": 7600,
-      "defense": 10, "critRate": 0.05, "critDamage": 1.5,
-      "daRate": 0.07, "taRate": 0.03
+      "hp": 275,
+      "maxHp": 3900,
+      "attack": 1900,
+      "maxAttack": 7600,
+      "defense": 10,
+      "critRate": 0.05,
+      "critDamage": 1.5,
+      "daRate": 0.07,
+      "taRate": 0.03
     },
-    "skills": ["lefenye_s1_rainIris", "lefenye_s2_radiantFlame", "lefenye_p1_blessingOfLight"]
+    "skills": [
+      "rainIris",
+      "radiantFlame",
+      "blessingOfLight"
+    ]
   },
   "jeanne": {
     "id": "character_ssr_jeanne",
@@ -378,12 +471,21 @@
     "attribute": "light",
     "type": "special",
     "baseStats": {
-      "hp": 260, "maxHp": 3840,
-      "attack": 2462, "maxAttack": 9850,
-      "defense": 10, "critRate": 0.05, "critDamage": 1.5,
-      "daRate": 0.10, "taRate": 0.05
+      "hp": 260,
+      "maxHp": 3840,
+      "attack": 2462,
+      "maxAttack": 9850,
+      "defense": 10,
+      "critRate": 0.05,
+      "critDamage": 1.5,
+      "daRate": 0.1,
+      "taRate": 0.05
     },
-    "skills": ["jeanne_s1_reversal", "jeanne_s2_eternalAdvent", "jeanne_p1_saint"]
+    "skills": [
+      "reversal",
+      "eternalAdvent",
+      "saint"
+    ]
   },
   "albert": {
     "id": "character_ssr_albert",
@@ -391,12 +493,21 @@
     "attribute": "light",
     "type": "attack",
     "baseStats": {
-      "hp": 280, "maxHp": 3520,
-      "attack": 2270, "maxAttack": 9080,
-      "defense": 10, "critRate": 0.05, "critDamage": 1.5,
-      "daRate": 0.05, "taRate": 0.03
+      "hp": 280,
+      "maxHp": 3520,
+      "attack": 2270,
+      "maxAttack": 9080,
+      "defense": 10,
+      "critRate": 0.05,
+      "critDamage": 1.5,
+      "daRate": 0.05,
+      "taRate": 0.03
     },
-    "skills": ["albert_s1_impulseEdge", "albert_s2_electrifiedBlade", "albert_p1_levinSword"]
+    "skills": [
+      "impulseEdge",
+      "electrifiedBlade",
+      "levinSword"
+    ]
   },
   "rosamia": {
     "id": "character_ssr_rosamia",
@@ -404,12 +515,22 @@
     "attribute": "light",
     "type": "special",
     "baseStats": {
-      "hp": 275, "maxHp": 3900,
-      "attack": 2375, "maxAttack": 9500,
-      "defense": 10, "critRate": 0.05, "critDamage": 1.5,
-      "daRate": 0.10, "taRate": 0.05
+      "hp": 275,
+      "maxHp": 3900,
+      "attack": 2375,
+      "maxAttack": 9500,
+      "defense": 10,
+      "critRate": 0.05,
+      "critDamage": 1.5,
+      "daRate": 0.1,
+      "taRate": 0.05
     },
-    "skills": ["rosamia_s1_resonanceSigil", "rosamia_s2_armorBreakSigil", "rosamia_s3_earthStompSigil", "rosamia_p1_unwaveringSelf"]
+    "skills": [
+      "resonanceSigil",
+      "armorBreakSigil",
+      "earthStompSigil",
+      "unwaveringSelf"
+    ]
   },
   "lucioL": {
     "id": "character_ssr_luciol",
@@ -417,11 +538,21 @@
     "attribute": "light",
     "type": "special",
     "baseStats": {
-      "hp": 292, "maxHp": 3970,
-      "attack": 2287, "maxAttack": 9150,
-      "defense": 10, "critRate": 0.05, "critDamage": 1.5,
-      "daRate": 0.10, "taRate": 0.05
+      "hp": 292,
+      "maxHp": 3970,
+      "attack": 2287,
+      "maxAttack": 9150,
+      "defense": 10,
+      "critRate": 0.05,
+      "critDamage": 1.5,
+      "daRate": 0.1,
+      "taRate": 0.05
     },
-    "skills": ["luciol_s1_evesTemptation", "luciol_s2_fromTheAshes", "luciol_s3_awakening", "luciol_p1_sacredWings"]
+    "skills": [
+      "evesTemptation",
+      "fromTheAshes",
+      "awakening",
+      "sacredWings"
+    ]
   }
 }

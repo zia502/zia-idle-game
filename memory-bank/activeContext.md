@@ -372,3 +372,8 @@ This file tracks the project's current status, including recent changes, current
     *   使用新的英文ID更新了 [`src/data/ssr_skill.json`](src/data/ssr_skill.json:1) 的键名。
     *   使用新的英文ID更新了 [`src/data/ssr.json`](src/data/ssr.json:1) 中各角色技能列表内的技能ID。
     *   相关数据文件已同步。
+* [2025-05-15 16:49:00] - **SSR技能ID命名约定修正与文件更新:**
+    *   根据用户反馈（移除ID前缀，保留最后一个下划线后的部分），重新生成了SSR技能ID的翻译映射。
+    *   更新了 [`src/data/ssr_skill.json`](src/data/ssr_skill.json:1) 的键名，使用了修正后的英文ID。
+    *   更新了 [`src/data/ssr.json`](src/data/ssr.json:1) 中各角色技能列表内的技能ID，使用了修正后的英文ID。
+    *   所有相关的SSR技能数据文件已同步更新。

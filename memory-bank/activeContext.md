@@ -6,6 +6,7 @@ This file tracks the project's current status, including recent changes, current
 *
 
 ## Current Focus
+*   [2025-05-16 09:22:00] - **Debug Fix Applied (TypeError):** 修复了在 [`src/js/core/dungeon-runner.js`](src/js/core/dungeon-runner.js) 和 [`src/js/components/UI.js`](src/js/components/UI.js) 中因调用未定义的 `MainUI.updateCurrentDungeon` 方法而导致的 `TypeError`。已将其更正为调用已定义的 `MainUI.updateCurrentDungeonDisplay` 方法。
 *   [2025-05-15 18:15:00] - **Debug Task Started:** 分析并解决 `skill-loader.js` 和 `job-system.js` 中的技能加载警告。
     *   **Issue:** `JobSystem` 尝试在 `SkillLoader` 完成异步技能加载前获取技能信息。
     *   **Symptoms:**
@@ -71,6 +72,8 @@ This file tracks the project's current status, including recent changes, current
     *   **Affected Files ( अनुमानित ):** [`src/js/core/battle.js`](src/js/core/battle.js:0), potentially [`src/js/core/team.js`](src/js/core/team.js:0).
     *   **Related User Task:** "前排4名角色全部阵亡，战斗会直接结束，而不是让后排2名角色移动到前排继续战斗。"
 ## Recent Changes
+*   [2025-05-16 09:22:00] - **Debug Fix Applied (TypeError):** 修复了在 [`src/js/core/dungeon-runner.js`](src/js/core/dungeon-runner.js) 和 [`src/js/components/UI.js`](src/js/components/UI.js) 中因调用未定义的 `MainUI.updateCurrentDungeon` 方法而导致的 `TypeError`。已将其更正为调用已定义的 `MainUI.updateCurrentDungeonDisplay` 方法。
+*   [2025-05-16 09:12:00] - **Debug Fix Applied (UI Error):** 修复了在 [`src/js/components/UI.js:490`](src/js/components/UI.js:490) 的 `switchScreen` 函数中因调用未定义的 `MainUI.updateCurrentDungeon` 方法而导致的 `TypeError`。已将其更正为调用已定义的 `MainUI.updateCurrentDungeonDisplay` 方法。
 *   [2025-05-15 18:15:00] - **Debug Fix Applied (Skill Loading):**
     *   修改了 [`src/js/core/skill-loader.js`](src/js/core/skill-loader.js):
         *   `init()` 方法现在返回一个 `Promise`，该 Promise 在所有技能数据 `fetch` 完成后解析。
@@ -127,6 +130,8 @@ This file tracks the project's current status, including recent changes, current
 *   [2025-05-11 21:59:00] - 修改了 [`src/js/core/character.js`](src/js/core/character.js) 中的 `calculateAttackPower` 函数 ([`src/js/core/character.js:1512`](src/js/core/character.js:1512))，增强了其日志记录功能，以详细追踪攻击力倍率的构成。
 
 ## Open Questions/Issues
+*   [2025-05-16 09:22:00] - **Issue Resolved (TypeError):** 修复了在 [`src/js/core/dungeon-runner.js`](src/js/core/dungeon-runner.js) 和 [`src/js/components/UI.js`](src/js/components/UI.js) 中因调用 `MainUI.updateCurrentDungeon` (应为 `MainUI.updateCurrentDungeonDisplay`) 导致的 `TypeError`。
+*   [2025-05-16 09:12:00] - **Issue Resolved (UI Error):** 修复了在 [`src/js/components/UI.js:490`](src/js/components/UI.js:490) 中因调用 `MainUI.updateCurrentDungeon` (应为 `MainUI.updateCurrentDungeonDisplay`) 导致的 `TypeError`。
 *   [2025-05-15 18:15:00] - **Issue Resolved (Skill Loading):** `JobSystem` 在 `SkillLoader` 完成加载前获取技能信息的问题已通过修改 [`src/js/core/skill-loader.js`](src/js/core/skill-loader.js) 和 [`src/js/core/job-system.js`](src/js/core/job-system.js) 的初始化逻辑解决。`SkillLoader.init` 现在返回 Promise，`JobSystem.init` 等待此 Promise。
 *   [2025-05-15 17:58:00] - **Issue Status Update:** 针对 `character.js` 中的两个警告应用了初步修复/诊断增强：
     1.  `character.js:1855 Team 或 Weapon 模块未完全加载...`: 通过在 [`src/js/core/team.js`](src/js/core/team.js) 中添加 `findTeamByMember` 方法解决了一个潜在的未定义方法问题。

@@ -18,6 +18,42 @@ This file records architectural and implementation decisions using a list format
 *
 ---
 ### Decision (Debug)
+[2025-05-16 09:22:00] - [Bug Fix Strategy: Correct Mismatched Method Name in Multiple Files] 修复 `dungeon-runner.js` 和 `UI.js` 中调用未定义函数 `MainUI.updateCurrentDungeon` 的 TypeError。
+
+**Rationale:**
+错误 `TypeError: MainUI.updateCurrentDungeon is not a function` 在多个文件中出现，均因为调用了错误的方法名。
+经检查，[`src/js/components/main-ui.js`](src/js/components/main-ui.js) 中定义的相关方法名为 `updateCurrentDungeonDisplay`。
+因此，直接原因为方法名不匹配。
+
+**Details:**
+*   **`src/js/core/dungeon-runner.js`**:
+    *   在 `updateDungeonProgress` 函数内 (约 1227 行)，将 `MainUI.updateCurrentDungeon()` 修改为 `MainUI.updateCurrentDungeonDisplay()`。
+    *   在 `processBattleResult` 函数的战斗失败逻辑中 (约 1049 行)，将 `MainUI.updateCurrentDungeon()` 修改为 `MainUI.updateCurrentDungeonDisplay()`。
+    *   在 `completeDungeon` 函数中 (约 1124 行)，将 `MainUI.updateCurrentDungeon()` 修改为 `MainUI.updateCurrentDungeonDisplay()`。
+    *   在 `completeDungeon` 函数的 catch 块中 (约 1140 行)，将 `MainUI.updateCurrentDungeon()` 修改为 `MainUI.updateCurrentDungeonDisplay()`。
+    *   在 `processBattleResult` 函数的 catch 块中 (约 1064 行)，将 `MainUI.updateCurrentDungeon()` 修改为 `MainUI.updateCurrentDungeonDisplay()`。
+*   **`src/js/components/UI.js`**:
+    *   在 `switchScreen` 函数内，`Events.once('jobSystem:ready', ...)` 回调中 (约 501 行)，将 `MainUI.updateCurrentDungeon()` 修改为 `MainUI.updateCurrentDungeonDisplay()`。
+    *   在 `updateDungeonList` 函数内，进入地下城按钮点击事件后 (约 3014 行)，将 `MainUI.updateCurrentDungeon()` 修改为 `MainUI.updateCurrentDungeonDisplay()`。
+*   **Affected components/files:**
+    *   [`src/js/core/dungeon-runner.js`](src/js/core/dungeon-runner.js)
+    *   [`src/js/components/UI.js`](src/js/components/UI.js)
+---
+### Decision (Debug)
+[2025-05-16 09:12:00] - [Bug Fix Strategy: Correct Mismatched Method Name] 修复 `UI.js` 中调用未定义函数 `MainUI.updateCurrentDungeon` 的 TypeError。
+
+**Rationale:**
+错误 `TypeError: MainUI.updateCurrentDungeon is not a function` 发生在 [`src/js/components/UI.js:490`](src/js/components/UI.js:490) 的 `switchScreen` 函数中。
+经检查，[`src/js/components/main-ui.js`](src/js/components/main-ui.js) 中定义的相关方法名为 `updateCurrentDungeonDisplay`。
+因此，直接原因为方法名不匹配。
+
+**Details:**
+*   **`src/js/components/UI.js`**:
+    *   在 `switchScreen` 函数中，当 `screenId === 'main-screen'` 时，将对 `MainUI.updateCurrentDungeon()` 的调用修改为 `MainUI.updateCurrentDungeonDisplay()`。
+*   **Affected components/files:**
+    *   [`src/js/components/UI.js`](src/js/components/UI.js)
+---
+### Decision (Debug)
 [2025-05-15 18:15:00] - [Bug Fix Strategy: Synchronize Skill Loading] 解决 SkillLoader 和 JobSystem 之间的异步加载冲突。
 
 **Rationale:**

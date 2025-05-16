@@ -6,6 +6,18 @@ This file tracks the project's progress using a task list format.
 *
 
 ## Completed Tasks
+*   [2025-05-16 09:22:00] - **Completed Debugging Task: 修复 dungeon-runner.js 和 UI.js 中的 TypeError**
+    *   **Issue:** 在多个位置调用了未定义的 `MainUI.updateCurrentDungeon` 方法，应为 `MainUI.updateCurrentDungeonDisplay`。
+    *   **Fix:**
+        *   在 [`src/js/core/dungeon-runner.js`](src/js/core/dungeon-runner.js) 的大约第 1227, 1049, 1124, 1140, 1064 行，将 `MainUI.updateCurrentDungeon()` 修改为 `MainUI.updateCurrentDungeonDisplay()`。
+        *   在 [`src/js/components/UI.js`](src/js/components/UI.js) 的大约第 501, 3014 行，将 `MainUI.updateCurrentDungeon()` 修改为 `MainUI.updateCurrentDungeonDisplay()`。
+    *   **Result:** TypeError 已解决。
+    *   Memory Bank (`activeContext.md`, `progress.md`, `decisionLog.md`) 已更新。
+*   [2025-05-16 09:12:00] - **Completed Debugging Task: 修复 UI.js 中的 TypeError**
+    *   **Issue:** `TypeError: MainUI.updateCurrentDungeon is not a function` 发生在 [`src/js/components/UI.js:490`](src/js/components/UI.js:490) 的 `switchScreen` 函数中。
+    *   **Fix:** 将 [`src/js/components/UI.js:490`](src/js/components/UI.js:490) 中的 `MainUI.updateCurrentDungeon()` 修改为 `MainUI.updateCurrentDungeonDisplay()` 以匹配 [`src/js/components/main-ui.js`](src/js/components/main-ui.js) 中定义的方法名。
+    *   **Result:** TypeError 已解决。
+    *   Memory Bank (`activeContext.md`, `progress.md`, `decisionLog.md`) 已更新。
 *   [2025-05-15 18:15:00] - **Completed Debugging Task: 修复 SkillLoader 和 JobSystem 异步加载问题**
     *   **Issue:** `JobSystem` 在 `SkillLoader` 完成异步技能加载前尝试获取技能信息，导致警告。
     *   **Fix:**

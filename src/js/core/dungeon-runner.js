@@ -1045,7 +1045,7 @@ const DungeonRunner = {
                 // 更新UI显示
                 if (typeof MainUI !== 'undefined') {
                     console.log('战斗失败后更新UI显示');
-                    MainUI.updateCurrentDungeon();
+                    MainUI.updateCurrentDungeonDisplay();
                 }
 
                 // 如果MainCurrentDungeon组件存在，直接调用它的update方法
@@ -1061,7 +1061,7 @@ const DungeonRunner = {
 
             // 更新地下城信息显示
             if (typeof MainUI !== 'undefined') {
-                MainUI.updateCurrentDungeon();
+                MainUI.updateCurrentDungeonDisplay();
             }
         }
     },
@@ -1120,7 +1120,7 @@ const DungeonRunner = {
             // 更新地下城信息显示
             if (typeof MainUI !== 'undefined') {
                 console.log('地下城完成后更新UI显示');
-                MainUI.updateCurrentDungeon();
+                MainUI.updateCurrentDungeonDisplay();
             }
 
             // 如果MainCurrentDungeon组件存在，直接调用它的update方法
@@ -1136,7 +1136,7 @@ const DungeonRunner = {
             // 更新地下城信息显示
             if (typeof MainUI !== 'undefined') {
                 console.log('地下城完成出错后更新UI显示');
-                MainUI.updateCurrentDungeon();
+                MainUI.updateCurrentDungeonDisplay();
             }
 
             // 如果MainCurrentDungeon组件存在，直接调用它的update方法
@@ -1224,7 +1224,7 @@ const DungeonRunner = {
 
         // 更新地下城信息显示
         if (typeof MainUI !== 'undefined') {
-            MainUI.updateCurrentDungeon();
+            MainUI.updateCurrentDungeonDisplay();
         }
     },
 

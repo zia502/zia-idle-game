@@ -487,7 +487,7 @@ const UI = {
                     MainUI.updateMainHeroInfo();
                     MainUI.updateCurrentTeam();
                     MainUI.updateWeaponBoard();
-                    MainUI.updateCurrentDungeon();
+                    MainUI.updateCurrentDungeonDisplay();
                     MainUI.updateBattleLog();
                 } else {
                     console.log('JobSystem未就绪，暂不更新主界面UI');
@@ -498,7 +498,7 @@ const UI = {
                             MainUI.updateMainHeroInfo();
                             MainUI.updateCurrentTeam();
                             MainUI.updateWeaponBoard();
-                            MainUI.updateCurrentDungeon();
+                            MainUI.updateCurrentDungeonDisplay();
                             MainUI.updateBattleLog();
                         });
                     }
@@ -3011,7 +3011,7 @@ const UI = {
                     }
                     // 更新当前地下城信息和战斗日志
                     if (typeof MainUI !== 'undefined') {
-                        MainUI.updateCurrentDungeon();
+                        MainUI.updateCurrentDungeonDisplay();
                         MainUI.updateBattleLog();
                     }
                 }
